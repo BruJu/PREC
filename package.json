@@ -1,0 +1,6 @@
+{
+    "dependencies": {
+        "@graphy/core.data.factory": "^4.3.3",
+        "@graphy/memory.dataset.fast": "^4.3.3"
+    }
+}

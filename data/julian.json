@@ -1,0 +1,13 @@
+{"type":"node","id":"0","labels":["Person"],"properties":{"name":"Julian Bruyat"}}
+{"type":"node","id":"1","labels":["Diploma"],"properties":{"name":"Master Informatique Université Lyon 1"}}
+{"type":"node","id":"2","labels":["Organization"],"properties":{"name":"Université Lyon 1"}}
+{"type":"node","id":"3","labels":["Book"],"properties":{"author":"George Orwell","name":"1984"}}
+{"type":"node","id":"4","labels":["Recipee"],"properties":{"name":"Oeufs à la poele"}}
+{"type":"node","id":"5","labels":["Food"],"properties":{"name":"Oeufs"}}
+{"type":"node","id":"6","labels":["Person"],"properties":{"name":"Pierre-Antoine Champin"}}
+{"id":"0","type":"relationship","label":"has","properties":{"since":"2020-10-15"},"start":{"id":"0","labels":["Person"]},"end":{"id":"1","labels":["Diploma"]}}
+{"id":"1","type":"relationship","label":"deliveredBy","start":{"id":"1","labels":["Diploma"]},"end":{"id":"2","labels":["Organization"]}}
+{"id":"2","type":"relationship","label":"has","start":{"id":"0","labels":["Person"]},"end":{"id":"3","labels":["Book"]}}
+{"id":"3","type":"relationship","label":"knows","start":{"id":"0","labels":["Person"]},"end":{"id":"4","labels":["Recipee"]}}
+{"id":"4","type":"relationship","label":"requires","properties":{"quantity":3},"start":{"id":"4","labels":["Recipee"]},"end":{"id":"5","labels":["Food"]}}
+{"id":"5","type":"relationship","label":"knows","start":{"id":"0","labels":["Person"]},"end":{"id":"6","labels":["Person"]}}
