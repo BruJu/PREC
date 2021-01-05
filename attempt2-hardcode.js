@@ -179,15 +179,26 @@ function jsarray_to_nodesedges(ar) {
             // Attributes
             if (object.properties) {
                 for (let property in object.properties) {
-                    resultingQuads.push(
-                        N3.DataFactory.quad(
-                            // TODO: `associatedTerm` is horrible design as the parameter of the function is not const.
-                            // Change it
-                            object.associatedTerm,  
-                            makeAnnotationIdentifier(property),
-                            N3.DataFactory.literal(object.properties[property]) // ???
-                        )
-                    );
+                    // If there are multiple values, with need to create a triple per value
+                    let props;
+
+                    if (Array.isArray(object.properties[property])) {
+                        props = object.properties[property];
+                    } else {
+                        props = [object.properties[property]];
+                    }
+
+                    for (let propValue of props) {
+                        resultingQuads.push(
+                            N3.DataFactory.quad(
+                                // TODO: `associatedTerm` is horrible design as the parameter of the function is not const.
+                                // Change it
+                                object.associatedTerm,  
+                                makeAnnotationIdentifier(property),
+                                N3.DataFactory.literal(propValue) // ???
+                            )
+                        );
+                    }
                 }
             }
 

@@ -1,0 +1,424 @@
+{"type":"node","id":"0","labels":["Movie"],"properties":{"tagline":"Welcome to the Real World","title":"The Matrix","released":1999}}
+{"type":"node","id":"1","labels":["Person"],"properties":{"born":1964,"name":"Keanu Reeves"}}
+{"type":"node","id":"2","labels":["Person"],"properties":{"born":1967,"name":"Carrie-Anne Moss"}}
+{"type":"node","id":"3","labels":["Person"],"properties":{"born":1961,"name":"Laurence Fishburne"}}
+{"type":"node","id":"4","labels":["Person"],"properties":{"born":1960,"name":"Hugo Weaving"}}
+{"type":"node","id":"5","labels":["Person"],"properties":{"born":1967,"name":"Lilly Wachowski"}}
+{"type":"node","id":"6","labels":["Person"],"properties":{"born":1965,"name":"Lana Wachowski"}}
+{"type":"node","id":"7","labels":["Person"],"properties":{"born":1952,"name":"Joel Silver"}}
+{"type":"node","id":"8","labels":["Person"],"properties":{"born":1978,"name":"Emil Eifrem"}}
+{"type":"node","id":"11","labels":["Movie"],"properties":{"tagline":"Free your mind","title":"The Matrix Reloaded","released":2003}}
+{"type":"node","id":"12","labels":["Movie"],"properties":{"tagline":"Everything that has a beginning has an end","title":"The Matrix Revolutions","released":2003}}
+{"type":"node","id":"13","labels":["Movie"],"properties":{"tagline":"Evil has its winning ways","title":"The Devil's Advocate","released":1997}}
+{"type":"node","id":"14","labels":["Person"],"properties":{"born":1975,"name":"Charlize Theron"}}
+{"type":"node","id":"15","labels":["Person"],"properties":{"born":1940,"name":"Al Pacino"}}
+{"type":"node","id":"16","labels":["Person"],"properties":{"born":1944,"name":"Taylor Hackford"}}
+{"type":"node","id":"17","labels":["Movie"],"properties":{"tagline":"In the heart of the nation's capital, in a courthouse of the U.S. government, one man will stop at nothing to keep his honor, and one will stop at nothing to find the truth.","title":"A Few Good Men","released":1992}}
+{"type":"node","id":"18","labels":["Person"],"properties":{"born":1962,"name":"Tom Cruise"}}
+{"type":"node","id":"19","labels":["Person"],"properties":{"born":1937,"name":"Jack Nicholson"}}
+{"type":"node","id":"20","labels":["Person"],"properties":{"born":1962,"name":"Demi Moore"}}
+{"type":"node","id":"21","labels":["Person"],"properties":{"born":1958,"name":"Kevin Bacon"}}
+{"type":"node","id":"22","labels":["Person"],"properties":{"born":1966,"name":"Kiefer Sutherland"}}
+{"type":"node","id":"23","labels":["Person"],"properties":{"born":1971,"name":"Noah Wyle"}}
+{"type":"node","id":"24","labels":["Person"],"properties":{"born":1968,"name":"Cuba Gooding Jr."}}
+{"type":"node","id":"25","labels":["Person"],"properties":{"born":1957,"name":"Kevin Pollak"}}
+{"type":"node","id":"26","labels":["Person"],"properties":{"born":1943,"name":"J.T. Walsh"}}
+{"type":"node","id":"27","labels":["Person"],"properties":{"born":1967,"name":"James Marshall"}}
+{"type":"node","id":"28","labels":["Person"],"properties":{"born":1948,"name":"Christopher Guest"}}
+{"type":"node","id":"29","labels":["Person"],"properties":{"born":1947,"name":"Rob Reiner"}}
+{"type":"node","id":"30","labels":["Person"],"properties":{"born":1961,"name":"Aaron Sorkin"}}
+{"type":"node","id":"31","labels":["Movie"],"properties":{"tagline":"I feel the need, the need for speed.","title":"Top Gun","released":1986}}
+{"type":"node","id":"32","labels":["Person"],"properties":{"born":1957,"name":"Kelly McGillis"}}
+{"type":"node","id":"33","labels":["Person"],"properties":{"born":1959,"name":"Val Kilmer"}}
+{"type":"node","id":"34","labels":["Person"],"properties":{"born":1962,"name":"Anthony Edwards"}}
+{"type":"node","id":"35","labels":["Person"],"properties":{"born":1933,"name":"Tom Skerritt"}}
+{"type":"node","id":"36","labels":["Person"],"properties":{"born":1961,"name":"Meg Ryan"}}
+{"type":"node","id":"37","labels":["Person"],"properties":{"born":1944,"name":"Tony Scott"}}
+{"type":"node","id":"38","labels":["Person"],"properties":{"born":1941,"name":"Jim Cash"}}
+{"type":"node","id":"39","labels":["Movie"],"properties":{"tagline":"The rest of his life begins now.","title":"Jerry Maguire","released":2000}}
+{"type":"node","id":"40","labels":["Person"],"properties":{"born":1969,"name":"Renee Zellweger"}}
+{"type":"node","id":"41","labels":["Person"],"properties":{"born":1962,"name":"Kelly Preston"}}
+{"type":"node","id":"42","labels":["Person"],"properties":{"born":1974,"name":"Jerry O'Connell"}}
+{"type":"node","id":"43","labels":["Person"],"properties":{"born":1970,"name":"Jay Mohr"}}
+{"type":"node","id":"44","labels":["Person"],"properties":{"born":1961,"name":"Bonnie Hunt"}}
+{"type":"node","id":"45","labels":["Person"],"properties":{"born":1971,"name":"Regina King"}}
+{"type":"node","id":"46","labels":["Person"],"properties":{"born":1996,"name":"Jonathan Lipnicki"}}
+{"type":"node","id":"47","labels":["Person"],"properties":{"born":1957,"name":"Cameron Crowe"}}
+{"type":"node","id":"48","labels":["Movie"],"properties":{"tagline":"For some, it's the last real taste of innocence, and the first real taste of life. But for everyone, it's the time that memories are made of.","title":"Stand By Me","released":1986}}
+{"type":"node","id":"49","labels":["Person"],"properties":{"born":1970,"name":"River Phoenix"}}
+{"type":"node","id":"50","labels":["Person"],"properties":{"born":1971,"name":"Corey Feldman"}}
+{"type":"node","id":"51","labels":["Person"],"properties":{"born":1972,"name":"Wil Wheaton"}}
+{"type":"node","id":"52","labels":["Person"],"properties":{"born":1966,"name":"John Cusack"}}
+{"type":"node","id":"53","labels":["Person"],"properties":{"born":1942,"name":"Marshall Bell"}}
+{"type":"node","id":"54","labels":["Movie"],"properties":{"tagline":"A comedy from the heart that goes for the throat.","title":"As Good as It Gets","released":1997}}
+{"type":"node","id":"55","labels":["Person"],"properties":{"born":1963,"name":"Helen Hunt"}}
+{"type":"node","id":"56","labels":["Person"],"properties":{"born":1963,"name":"Greg Kinnear"}}
+{"type":"node","id":"57","labels":["Person"],"properties":{"born":1940,"name":"James L. Brooks"}}
+{"type":"node","id":"58","labels":["Movie"],"properties":{"tagline":"After life there is more. The end is just the beginning.","title":"What Dreams May Come","released":1998}}
+{"type":"node","id":"59","labels":["Person"],"properties":{"born":1960,"name":"Annabella Sciorra"}}
+{"type":"node","id":"60","labels":["Person"],"properties":{"born":1929,"name":"Max von Sydow"}}
+{"type":"node","id":"61","labels":["Person"],"properties":{"born":1942,"name":"Werner Herzog"}}
+{"type":"node","id":"62","labels":["Person"],"properties":{"born":1951,"name":"Robin Williams"}}
+{"type":"node","id":"63","labels":["Person"],"properties":{"born":1956,"name":"Vincent Ward"}}
+{"type":"node","id":"64","labels":["Movie"],"properties":{"tagline":"First loves last. Forever.","title":"Snow Falling on Cedars","released":1999}}
+{"type":"node","id":"65","labels":["Person"],"properties":{"born":1970,"name":"Ethan Hawke"}}
+{"type":"node","id":"66","labels":["Person"],"properties":{"born":1971,"name":"Rick Yune"}}
+{"type":"node","id":"67","labels":["Person"],"properties":{"born":1940,"name":"James Cromwell"}}
+{"type":"node","id":"68","labels":["Person"],"properties":{"born":1953,"name":"Scott Hicks"}}
+{"type":"node","id":"69","labels":["Movie"],"properties":{"tagline":"At odds in life... in love on-line.","title":"You've Got Mail","released":1998}}
+{"type":"node","id":"70","labels":["Person"],"properties":{"born":1968,"name":"Parker Posey"}}
+{"type":"node","id":"71","labels":["Person"],"properties":{"born":1973,"name":"Dave Chappelle"}}
+{"type":"node","id":"72","labels":["Person"],"properties":{"born":1967,"name":"Steve Zahn"}}
+{"type":"node","id":"73","labels":["Person"],"properties":{"born":1956,"name":"Tom Hanks"}}
+{"type":"node","id":"74","labels":["Person"],"properties":{"born":1941,"name":"Nora Ephron"}}
+{"type":"node","id":"75","labels":["Movie"],"properties":{"tagline":"What if someone you never met, someone you never saw, someone you never knew was the only someone for you?","title":"Sleepless in Seattle","released":1993}}
+{"type":"node","id":"76","labels":["Person"],"properties":{"born":1956,"name":"Rita Wilson"}}
+{"type":"node","id":"77","labels":["Person"],"properties":{"born":1953,"name":"Bill Pullman"}}
+{"type":"node","id":"78","labels":["Person"],"properties":{"born":1949,"name":"Victor Garber"}}
+{"type":"node","id":"79","labels":["Person"],"properties":{"born":1962,"name":"Rosie O'Donnell"}}
+{"type":"node","id":"80","labels":["Movie"],"properties":{"tagline":"A story of love, lava and burning desire.","title":"Joe Versus the Volcano","released":1990}}
+{"type":"node","id":"81","labels":["Person"],"properties":{"born":1950,"name":"John Patrick Stanley"}}
+{"type":"node","id":"82","labels":["Person"],"properties":{"born":1956,"name":"Nathan Lane"}}
+{"type":"node","id":"83","labels":["Movie"],"properties":{"tagline":"Can two friends sleep together and still love each other in the morning?","title":"When Harry Met Sally","released":1998}}
+{"type":"node","id":"84","labels":["Person"],"properties":{"born":1948,"name":"Billy Crystal"}}
+{"type":"node","id":"85","labels":["Person"],"properties":{"born":1956,"name":"Carrie Fisher"}}
+{"type":"node","id":"86","labels":["Person"],"properties":{"born":1949,"name":"Bruno Kirby"}}
+{"type":"node","id":"87","labels":["Movie"],"properties":{"tagline":"In every life there comes a time when that thing you dream becomes that thing you do","title":"That Thing You Do","released":1996}}
+{"type":"node","id":"88","labels":["Person"],"properties":{"born":1977,"name":"Liv Tyler"}}
+{"type":"node","id":"89","labels":["Movie"],"properties":{"tagline":"Pain heals, Chicks dig scars... Glory lasts forever","title":"The Replacements","released":2000}}
+{"type":"node","id":"90","labels":["Person"],"properties":{"born":1970,"name":"Brooke Langton"}}
+{"type":"node","id":"91","labels":["Person"],"properties":{"born":1930,"name":"Gene Hackman"}}
+{"type":"node","id":"92","labels":["Person"],"properties":{"born":1968,"name":"Orlando Jones"}}
+{"type":"node","id":"93","labels":["Person"],"properties":{"born":1950,"name":"Howard Deutch"}}
+{"type":"node","id":"94","labels":["Movie"],"properties":{"tagline":"Based on the extraordinary true story of one man's fight for freedom","title":"RescueDawn","released":2006}}
+{"type":"node","id":"95","labels":["Person"],"properties":{"born":1974,"name":"Christian Bale"}}
+{"type":"node","id":"96","labels":["Person"],"properties":{"born":1954,"name":"Zach Grenier"}}
+{"type":"node","id":"97","labels":["Movie"],"properties":{"tagline":"Come as you are","title":"The Birdcage","released":1996}}
+{"type":"node","id":"98","labels":["Person"],"properties":{"born":1931,"name":"Mike Nichols"}}
+{"type":"node","id":"99","labels":["Movie"],"properties":{"tagline":"It's a hell of a thing, killing a man","title":"Unforgiven","released":1992}}
+{"type":"node","id":"100","labels":["Person"],"properties":{"born":1930,"name":"Richard Harris"}}
+{"type":"node","id":"101","labels":["Person"],"properties":{"born":1930,"name":"Clint Eastwood"}}
+{"type":"node","id":"102","labels":["Movie"],"properties":{"tagline":"The hottest data on earth. In the coolest head in town","title":"Johnny Mnemonic","released":1995}}
+{"type":"node","id":"103","labels":["Person"],"properties":{"born":1947,"name":"Takeshi Kitano"}}
+{"type":"node","id":"104","labels":["Person"],"properties":{"born":1968,"name":"Dina Meyer"}}
+{"type":"node","id":"105","labels":["Person"],"properties":{"born":1958,"name":"Ice-T"}}
+{"type":"node","id":"106","labels":["Person"],"properties":{"born":1953,"name":"Robert Longo"}}
+{"type":"node","id":"107","labels":["Movie"],"properties":{"tagline":"Everything is connected","title":"Cloud Atlas","released":2012}}
+{"type":"node","id":"108","labels":["Person"],"properties":{"born":1966,"name":"Halle Berry"}}
+{"type":"node","id":"109","labels":["Person"],"properties":{"born":1949,"name":"Jim Broadbent"}}
+{"type":"node","id":"110","labels":["Person"],"properties":{"born":1965,"name":"Tom Tykwer"}}
+{"type":"node","id":"111","labels":["Person"],"properties":{"born":1969,"name":"David Mitchell"}}
+{"type":"node","id":"112","labels":["Person"],"properties":{"born":1961,"name":"Stefan Arndt"}}
+{"type":"node","id":"113","labels":["Movie"],"properties":{"tagline":"Break The Codes","title":"The Da Vinci Code","released":2006}}
+{"type":"node","id":"114","labels":["Person"],"properties":{"born":1939,"name":"Ian McKellen"}}
+{"type":"node","id":"115","labels":["Person"],"properties":{"born":1976,"name":"Audrey Tautou"}}
+{"type":"node","id":"116","labels":["Person"],"properties":{"born":1971,"name":"Paul Bettany"}}
+{"type":"node","id":"117","labels":["Person"],"properties":{"born":1954,"name":"Ron Howard"}}
+{"type":"node","id":"118","labels":["Movie"],"properties":{"tagline":"Freedom! Forever!","title":"V for Vendetta","released":2006}}
+{"type":"node","id":"119","labels":["Person"],"properties":{"born":1981,"name":"Natalie Portman"}}
+{"type":"node","id":"120","labels":["Person"],"properties":{"born":1946,"name":"Stephen Rea"}}
+{"type":"node","id":"121","labels":["Person"],"properties":{"born":1940,"name":"John Hurt"}}
+{"type":"node","id":"122","labels":["Person"],"properties":{"born":1967,"name":"Ben Miles"}}
+{"type":"node","id":"123","labels":["Movie"],"properties":{"tagline":"Speed has no limits","title":"Speed Racer","released":2008}}
+{"type":"node","id":"124","labels":["Person"],"properties":{"born":1985,"name":"Emile Hirsch"}}
+{"type":"node","id":"125","labels":["Person"],"properties":{"born":1960,"name":"John Goodman"}}
+{"type":"node","id":"126","labels":["Person"],"properties":{"born":1946,"name":"Susan Sarandon"}}
+{"type":"node","id":"127","labels":["Person"],"properties":{"born":1966,"name":"Matthew Fox"}}
+{"type":"node","id":"128","labels":["Person"],"properties":{"born":1980,"name":"Christina Ricci"}}
+{"type":"node","id":"129","labels":["Person"],"properties":{"born":1982,"name":"Rain"}}
+{"type":"node","id":"130","labels":["Movie"],"properties":{"tagline":"Prepare to enter a secret world of assassins","title":"Ninja Assassin","released":2009}}
+{"type":"node","id":"131","labels":["Person"],"properties":{"name":"Naomie Harris"}}
+{"type":"node","id":"132","labels":["Movie"],"properties":{"tagline":"Walk a mile you'll never forget.","title":"The Green Mile","released":1999}}
+{"type":"node","id":"133","labels":["Person"],"properties":{"born":1957,"name":"Michael Clarke Duncan"}}
+{"type":"node","id":"134","labels":["Person"],"properties":{"born":1953,"name":"David Morse"}}
+{"type":"node","id":"135","labels":["Person"],"properties":{"born":1968,"name":"Sam Rockwell"}}
+{"type":"node","id":"136","labels":["Person"],"properties":{"born":1955,"name":"Gary Sinise"}}
+{"type":"node","id":"137","labels":["Person"],"properties":{"born":1959,"name":"Patricia Clarkson"}}
+{"type":"node","id":"138","labels":["Person"],"properties":{"born":1959,"name":"Frank Darabont"}}
+{"type":"node","id":"139","labels":["Movie"],"properties":{"tagline":"400 million people were waiting for the truth.","title":"Frost/Nixon","released":2008}}
+{"type":"node","id":"140","labels":["Person"],"properties":{"born":1938,"name":"Frank Langella"}}
+{"type":"node","id":"141","labels":["Person"],"properties":{"born":1969,"name":"Michael Sheen"}}
+{"type":"node","id":"142","labels":["Person"],"properties":{"born":1960,"name":"Oliver Platt"}}
+{"type":"node","id":"143","labels":["Movie"],"properties":{"tagline":"He didn't want law. He wanted justice.","title":"Hoffa","released":1992}}
+{"type":"node","id":"144","labels":["Person"],"properties":{"born":1944,"name":"Danny DeVito"}}
+{"type":"node","id":"145","labels":["Person"],"properties":{"born":1965,"name":"John C. Reilly"}}
+{"type":"node","id":"146","labels":["Movie"],"properties":{"tagline":"Houston, we have a problem.","title":"Apollo 13","released":1995}}
+{"type":"node","id":"147","labels":["Person"],"properties":{"born":1950,"name":"Ed Harris"}}
+{"type":"node","id":"148","labels":["Person"],"properties":{"born":1955,"name":"Bill Paxton"}}
+{"type":"node","id":"149","labels":["Movie"],"properties":{"tagline":"Don't Breathe. Don't Look Back.","title":"Twister","released":1996}}
+{"type":"node","id":"150","labels":["Person"],"properties":{"born":1967,"name":"Philip Seymour Hoffman"}}
+{"type":"node","id":"151","labels":["Person"],"properties":{"born":1943,"name":"Jan de Bont"}}
+{"type":"node","id":"152","labels":["Movie"],"properties":{"tagline":"At the edge of the world, his journey begins.","title":"Cast Away","released":2000}}
+{"type":"node","id":"153","labels":["Person"],"properties":{"born":1951,"name":"Robert Zemeckis"}}
+{"type":"node","id":"154","labels":["Movie"],"properties":{"tagline":"If he's crazy, what does that make you?","title":"One Flew Over the Cuckoo's Nest","released":1975}}
+{"type":"node","id":"155","labels":["Person"],"properties":{"born":1932,"name":"Milos Forman"}}
+{"type":"node","id":"156","labels":["Movie"],"properties":{"title":"Something's Gotta Give","released":2003}}
+{"type":"node","id":"157","labels":["Person"],"properties":{"born":1946,"name":"Diane Keaton"}}
+{"type":"node","id":"158","labels":["Person"],"properties":{"born":1949,"name":"Nancy Meyers"}}
+{"type":"node","id":"159","labels":["Movie"],"properties":{"tagline":"One robot's 200 year journey to become an ordinary man.","title":"Bicentennial Man","released":1999}}
+{"type":"node","id":"160","labels":["Person"],"properties":{"born":1958,"name":"Chris Columbus"}}
+{"type":"node","id":"161","labels":["Movie"],"properties":{"tagline":"A stiff drink. A little mascara. A lot of nerve. Who said they couldn't bring down the Soviet empire.","title":"Charlie Wilson's War","released":2007}}
+{"type":"node","id":"162","labels":["Person"],"properties":{"born":1967,"name":"Julia Roberts"}}
+{"type":"node","id":"163","labels":["Movie"],"properties":{"tagline":"This Holiday Season... Believe","title":"The Polar Express","released":2004}}
+{"type":"node","id":"164","labels":["Movie"],"properties":{"tagline":"Once in a lifetime you get a chance to do something different.","title":"A League of Their Own","released":1992}}
+{"type":"node","id":"165","labels":["Person"],"properties":{"born":1954,"name":"Madonna"}}
+{"type":"node","id":"166","labels":["Person"],"properties":{"born":1956,"name":"Geena Davis"}}
+{"type":"node","id":"167","labels":["Person"],"properties":{"born":1963,"name":"Lori Petty"}}
+{"type":"node","id":"168","labels":["Person"],"properties":{"born":1943,"name":"Penny Marshall"}}
+{"type":"node","id":"169","labels":["Person"],"properties":{"name":"Paul Blythe"}}
+{"type":"node","id":"170","labels":["Person"],"properties":{"name":"Angela Scope"}}
+{"type":"node","id":"171","labels":["Person"],"properties":{"name":"Jessica Thompson"}}
+{"type":"node","id":"172","labels":["Person"],"properties":{"name":"James Thompson"}}
+{"id":"0","type":"relationship","label":"ACTED_IN","properties":{"roles":["Neo"]},"start":{"id":"1","labels":["Person"]},"end":{"id":"0","labels":["Movie"]}}
+{"id":"1","type":"relationship","label":"ACTED_IN","properties":{"roles":["Trinity"]},"start":{"id":"2","labels":["Person"]},"end":{"id":"0","labels":["Movie"]}}
+{"id":"2","type":"relationship","label":"ACTED_IN","properties":{"roles":["Morpheus"]},"start":{"id":"3","labels":["Person"]},"end":{"id":"0","labels":["Movie"]}}
+{"id":"3","type":"relationship","label":"ACTED_IN","properties":{"roles":["Agent Smith"]},"start":{"id":"4","labels":["Person"]},"end":{"id":"0","labels":["Movie"]}}
+{"id":"4","type":"relationship","label":"DIRECTED","start":{"id":"5","labels":["Person"]},"end":{"id":"0","labels":["Movie"]}}
+{"id":"5","type":"relationship","label":"DIRECTED","start":{"id":"6","labels":["Person"]},"end":{"id":"0","labels":["Movie"]}}
+{"id":"6","type":"relationship","label":"PRODUCED","start":{"id":"7","labels":["Person"]},"end":{"id":"0","labels":["Movie"]}}
+{"id":"7","type":"relationship","label":"ACTED_IN","properties":{"roles":["Emil"]},"start":{"id":"8","labels":["Person"]},"end":{"id":"0","labels":["Movie"]}}
+{"id":"8","type":"relationship","label":"ACTED_IN","properties":{"roles":["Neo"]},"start":{"id":"1","labels":["Person"]},"end":{"id":"11","labels":["Movie"]}}
+{"id":"9","type":"relationship","label":"ACTED_IN","properties":{"roles":["Trinity"]},"start":{"id":"2","labels":["Person"]},"end":{"id":"11","labels":["Movie"]}}
+{"id":"10","type":"relationship","label":"ACTED_IN","properties":{"roles":["Morpheus"]},"start":{"id":"3","labels":["Person"]},"end":{"id":"11","labels":["Movie"]}}
+{"id":"11","type":"relationship","label":"ACTED_IN","properties":{"roles":["Agent Smith"]},"start":{"id":"4","labels":["Person"]},"end":{"id":"11","labels":["Movie"]}}
+{"id":"15","type":"relationship","label":"DIRECTED","start":{"id":"5","labels":["Person"]},"end":{"id":"11","labels":["Movie"]}}
+{"id":"16","type":"relationship","label":"DIRECTED","start":{"id":"6","labels":["Person"]},"end":{"id":"11","labels":["Movie"]}}
+{"id":"17","type":"relationship","label":"PRODUCED","start":{"id":"7","labels":["Person"]},"end":{"id":"11","labels":["Movie"]}}
+{"id":"18","type":"relationship","label":"ACTED_IN","properties":{"roles":["Neo"]},"start":{"id":"1","labels":["Person"]},"end":{"id":"12","labels":["Movie"]}}
+{"id":"19","type":"relationship","label":"ACTED_IN","properties":{"roles":["Trinity"]},"start":{"id":"2","labels":["Person"]},"end":{"id":"12","labels":["Movie"]}}
+{"id":"20","type":"relationship","label":"ACTED_IN","properties":{"roles":["Morpheus"]},"start":{"id":"3","labels":["Person"]},"end":{"id":"12","labels":["Movie"]}}
+{"id":"21","type":"relationship","label":"ACTED_IN","properties":{"roles":["Agent Smith"]},"start":{"id":"4","labels":["Person"]},"end":{"id":"12","labels":["Movie"]}}
+{"id":"22","type":"relationship","label":"DIRECTED","start":{"id":"5","labels":["Person"]},"end":{"id":"12","labels":["Movie"]}}
+{"id":"23","type":"relationship","label":"DIRECTED","start":{"id":"6","labels":["Person"]},"end":{"id":"12","labels":["Movie"]}}
+{"id":"24","type":"relationship","label":"PRODUCED","start":{"id":"7","labels":["Person"]},"end":{"id":"12","labels":["Movie"]}}
+{"id":"25","type":"relationship","label":"ACTED_IN","properties":{"roles":["Kevin Lomax"]},"start":{"id":"1","labels":["Person"]},"end":{"id":"13","labels":["Movie"]}}
+{"id":"26","type":"relationship","label":"ACTED_IN","properties":{"roles":["Mary Ann Lomax"]},"start":{"id":"14","labels":["Person"]},"end":{"id":"13","labels":["Movie"]}}
+{"id":"27","type":"relationship","label":"ACTED_IN","properties":{"roles":["John Milton"]},"start":{"id":"15","labels":["Person"]},"end":{"id":"13","labels":["Movie"]}}
+{"id":"28","type":"relationship","label":"DIRECTED","start":{"id":"16","labels":["Person"]},"end":{"id":"13","labels":["Movie"]}}
+{"id":"29","type":"relationship","label":"ACTED_IN","properties":{"roles":["Lt. Daniel Kaffee"]},"start":{"id":"18","labels":["Person"]},"end":{"id":"17","labels":["Movie"]}}
+{"id":"30","type":"relationship","label":"ACTED_IN","properties":{"roles":["Col. Nathan R. Jessup"]},"start":{"id":"19","labels":["Person"]},"end":{"id":"17","labels":["Movie"]}}
+{"id":"31","type":"relationship","label":"ACTED_IN","properties":{"roles":["Lt. Cdr. JoAnne Galloway"]},"start":{"id":"20","labels":["Person"]},"end":{"id":"17","labels":["Movie"]}}
+{"id":"32","type":"relationship","label":"ACTED_IN","properties":{"roles":["Capt. Jack Ross"]},"start":{"id":"21","labels":["Person"]},"end":{"id":"17","labels":["Movie"]}}
+{"id":"33","type":"relationship","label":"ACTED_IN","properties":{"roles":["Lt. Jonathan Kendrick"]},"start":{"id":"22","labels":["Person"]},"end":{"id":"17","labels":["Movie"]}}
+{"id":"34","type":"relationship","label":"ACTED_IN","properties":{"roles":["Cpl. Jeffrey Barnes"]},"start":{"id":"23","labels":["Person"]},"end":{"id":"17","labels":["Movie"]}}
+{"id":"35","type":"relationship","label":"ACTED_IN","properties":{"roles":["Cpl. Carl Hammaker"]},"start":{"id":"24","labels":["Person"]},"end":{"id":"17","labels":["Movie"]}}
+{"id":"36","type":"relationship","label":"ACTED_IN","properties":{"roles":["Lt. Sam Weinberg"]},"start":{"id":"25","labels":["Person"]},"end":{"id":"17","labels":["Movie"]}}
+{"id":"37","type":"relationship","label":"ACTED_IN","properties":{"roles":["Lt. Col. Matthew Andrew Markinson"]},"start":{"id":"26","labels":["Person"]},"end":{"id":"17","labels":["Movie"]}}
+{"id":"38","type":"relationship","label":"ACTED_IN","properties":{"roles":["Pfc. Louden Downey"]},"start":{"id":"27","labels":["Person"]},"end":{"id":"17","labels":["Movie"]}}
+{"id":"39","type":"relationship","label":"ACTED_IN","properties":{"roles":["Dr. Stone"]},"start":{"id":"28","labels":["Person"]},"end":{"id":"17","labels":["Movie"]}}
+{"id":"40","type":"relationship","label":"ACTED_IN","properties":{"roles":["Man in Bar"]},"start":{"id":"30","labels":["Person"]},"end":{"id":"17","labels":["Movie"]}}
+{"id":"41","type":"relationship","label":"DIRECTED","start":{"id":"29","labels":["Person"]},"end":{"id":"17","labels":["Movie"]}}
+{"id":"42","type":"relationship","label":"WROTE","start":{"id":"30","labels":["Person"]},"end":{"id":"17","labels":["Movie"]}}
+{"id":"43","type":"relationship","label":"ACTED_IN","properties":{"roles":["Maverick"]},"start":{"id":"18","labels":["Person"]},"end":{"id":"31","labels":["Movie"]}}
+{"id":"44","type":"relationship","label":"ACTED_IN","properties":{"roles":["Charlie"]},"start":{"id":"32","labels":["Person"]},"end":{"id":"31","labels":["Movie"]}}
+{"id":"45","type":"relationship","label":"ACTED_IN","properties":{"roles":["Iceman"]},"start":{"id":"33","labels":["Person"]},"end":{"id":"31","labels":["Movie"]}}
+{"id":"46","type":"relationship","label":"ACTED_IN","properties":{"roles":["Goose"]},"start":{"id":"34","labels":["Person"]},"end":{"id":"31","labels":["Movie"]}}
+{"id":"47","type":"relationship","label":"ACTED_IN","properties":{"roles":["Viper"]},"start":{"id":"35","labels":["Person"]},"end":{"id":"31","labels":["Movie"]}}
+{"id":"48","type":"relationship","label":"ACTED_IN","properties":{"roles":["Carole"]},"start":{"id":"36","labels":["Person"]},"end":{"id":"31","labels":["Movie"]}}
+{"id":"49","type":"relationship","label":"DIRECTED","start":{"id":"37","labels":["Person"]},"end":{"id":"31","labels":["Movie"]}}
+{"id":"50","type":"relationship","label":"WROTE","start":{"id":"38","labels":["Person"]},"end":{"id":"31","labels":["Movie"]}}
+{"id":"51","type":"relationship","label":"ACTED_IN","properties":{"roles":["Jerry Maguire"]},"start":{"id":"18","labels":["Person"]},"end":{"id":"39","labels":["Movie"]}}
+{"id":"52","type":"relationship","label":"ACTED_IN","properties":{"roles":["Rod Tidwell"]},"start":{"id":"24","labels":["Person"]},"end":{"id":"39","labels":["Movie"]}}
+{"id":"53","type":"relationship","label":"ACTED_IN","properties":{"roles":["Dorothy Boyd"]},"start":{"id":"40","labels":["Person"]},"end":{"id":"39","labels":["Movie"]}}
+{"id":"54","type":"relationship","label":"ACTED_IN","properties":{"roles":["Avery Bishop"]},"start":{"id":"41","labels":["Person"]},"end":{"id":"39","labels":["Movie"]}}
+{"id":"55","type":"relationship","label":"ACTED_IN","properties":{"roles":["Frank Cushman"]},"start":{"id":"42","labels":["Person"]},"end":{"id":"39","labels":["Movie"]}}
+{"id":"56","type":"relationship","label":"ACTED_IN","properties":{"roles":["Bob Sugar"]},"start":{"id":"43","labels":["Person"]},"end":{"id":"39","labels":["Movie"]}}
+{"id":"57","type":"relationship","label":"ACTED_IN","properties":{"roles":["Laurel Boyd"]},"start":{"id":"44","labels":["Person"]},"end":{"id":"39","labels":["Movie"]}}
+{"id":"58","type":"relationship","label":"ACTED_IN","properties":{"roles":["Marcee Tidwell"]},"start":{"id":"45","labels":["Person"]},"end":{"id":"39","labels":["Movie"]}}
+{"id":"59","type":"relationship","label":"ACTED_IN","properties":{"roles":["Ray Boyd"]},"start":{"id":"46","labels":["Person"]},"end":{"id":"39","labels":["Movie"]}}
+{"id":"60","type":"relationship","label":"DIRECTED","start":{"id":"47","labels":["Person"]},"end":{"id":"39","labels":["Movie"]}}
+{"id":"61","type":"relationship","label":"PRODUCED","start":{"id":"47","labels":["Person"]},"end":{"id":"39","labels":["Movie"]}}
+{"id":"62","type":"relationship","label":"WROTE","start":{"id":"47","labels":["Person"]},"end":{"id":"39","labels":["Movie"]}}
+{"id":"63","type":"relationship","label":"ACTED_IN","properties":{"roles":["Gordie Lachance"]},"start":{"id":"51","labels":["Person"]},"end":{"id":"48","labels":["Movie"]}}
+{"id":"64","type":"relationship","label":"ACTED_IN","properties":{"roles":["Chris Chambers"]},"start":{"id":"49","labels":["Person"]},"end":{"id":"48","labels":["Movie"]}}
+{"id":"65","type":"relationship","label":"ACTED_IN","properties":{"roles":["Vern Tessio"]},"start":{"id":"42","labels":["Person"]},"end":{"id":"48","labels":["Movie"]}}
+{"id":"66","type":"relationship","label":"ACTED_IN","properties":{"roles":["Teddy Duchamp"]},"start":{"id":"50","labels":["Person"]},"end":{"id":"48","labels":["Movie"]}}
+{"id":"67","type":"relationship","label":"ACTED_IN","properties":{"roles":["Denny Lachance"]},"start":{"id":"52","labels":["Person"]},"end":{"id":"48","labels":["Movie"]}}
+{"id":"68","type":"relationship","label":"ACTED_IN","properties":{"roles":["Ace Merrill"]},"start":{"id":"22","labels":["Person"]},"end":{"id":"48","labels":["Movie"]}}
+{"id":"69","type":"relationship","label":"ACTED_IN","properties":{"roles":["Mr. Lachance"]},"start":{"id":"53","labels":["Person"]},"end":{"id":"48","labels":["Movie"]}}
+{"id":"70","type":"relationship","label":"DIRECTED","start":{"id":"29","labels":["Person"]},"end":{"id":"48","labels":["Movie"]}}
+{"id":"71","type":"relationship","label":"ACTED_IN","properties":{"roles":["Melvin Udall"]},"start":{"id":"19","labels":["Person"]},"end":{"id":"54","labels":["Movie"]}}
+{"id":"72","type":"relationship","label":"ACTED_IN","properties":{"roles":["Carol Connelly"]},"start":{"id":"55","labels":["Person"]},"end":{"id":"54","labels":["Movie"]}}
+{"id":"73","type":"relationship","label":"ACTED_IN","properties":{"roles":["Simon Bishop"]},"start":{"id":"56","labels":["Person"]},"end":{"id":"54","labels":["Movie"]}}
+{"id":"74","type":"relationship","label":"ACTED_IN","properties":{"roles":["Frank Sachs"]},"start":{"id":"24","labels":["Person"]},"end":{"id":"54","labels":["Movie"]}}
+{"id":"75","type":"relationship","label":"DIRECTED","start":{"id":"57","labels":["Person"]},"end":{"id":"54","labels":["Movie"]}}
+{"id":"76","type":"relationship","label":"ACTED_IN","properties":{"roles":["Chris Nielsen"]},"start":{"id":"62","labels":["Person"]},"end":{"id":"58","labels":["Movie"]}}
+{"id":"77","type":"relationship","label":"ACTED_IN","properties":{"roles":["Albert Lewis"]},"start":{"id":"24","labels":["Person"]},"end":{"id":"58","labels":["Movie"]}}
+{"id":"78","type":"relationship","label":"ACTED_IN","properties":{"roles":["Annie Collins-Nielsen"]},"start":{"id":"59","labels":["Person"]},"end":{"id":"58","labels":["Movie"]}}
+{"id":"79","type":"relationship","label":"ACTED_IN","properties":{"roles":["The Tracker"]},"start":{"id":"60","labels":["Person"]},"end":{"id":"58","labels":["Movie"]}}
+{"id":"80","type":"relationship","label":"ACTED_IN","properties":{"roles":["The Face"]},"start":{"id":"61","labels":["Person"]},"end":{"id":"58","labels":["Movie"]}}
+{"id":"81","type":"relationship","label":"DIRECTED","start":{"id":"63","labels":["Person"]},"end":{"id":"58","labels":["Movie"]}}
+{"id":"82","type":"relationship","label":"ACTED_IN","properties":{"roles":["Ishmael Chambers"]},"start":{"id":"65","labels":["Person"]},"end":{"id":"64","labels":["Movie"]}}
+{"id":"83","type":"relationship","label":"ACTED_IN","properties":{"roles":["Kazuo Miyamoto"]},"start":{"id":"66","labels":["Person"]},"end":{"id":"64","labels":["Movie"]}}
+{"id":"84","type":"relationship","label":"ACTED_IN","properties":{"roles":["Nels Gudmundsson"]},"start":{"id":"60","labels":["Person"]},"end":{"id":"64","labels":["Movie"]}}
+{"id":"85","type":"relationship","label":"ACTED_IN","properties":{"roles":["Judge Fielding"]},"start":{"id":"67","labels":["Person"]},"end":{"id":"64","labels":["Movie"]}}
+{"id":"86","type":"relationship","label":"DIRECTED","start":{"id":"68","labels":["Person"]},"end":{"id":"64","labels":["Movie"]}}
+{"id":"87","type":"relationship","label":"ACTED_IN","properties":{"roles":["Joe Fox"]},"start":{"id":"73","labels":["Person"]},"end":{"id":"69","labels":["Movie"]}}
+{"id":"88","type":"relationship","label":"ACTED_IN","properties":{"roles":["Kathleen Kelly"]},"start":{"id":"36","labels":["Person"]},"end":{"id":"69","labels":["Movie"]}}
+{"id":"89","type":"relationship","label":"ACTED_IN","properties":{"roles":["Frank Navasky"]},"start":{"id":"56","labels":["Person"]},"end":{"id":"69","labels":["Movie"]}}
+{"id":"90","type":"relationship","label":"ACTED_IN","properties":{"roles":["Patricia Eden"]},"start":{"id":"70","labels":["Person"]},"end":{"id":"69","labels":["Movie"]}}
+{"id":"91","type":"relationship","label":"ACTED_IN","properties":{"roles":["Kevin Jackson"]},"start":{"id":"71","labels":["Person"]},"end":{"id":"69","labels":["Movie"]}}
+{"id":"92","type":"relationship","label":"ACTED_IN","properties":{"roles":["George Pappas"]},"start":{"id":"72","labels":["Person"]},"end":{"id":"69","labels":["Movie"]}}
+{"id":"93","type":"relationship","label":"DIRECTED","start":{"id":"74","labels":["Person"]},"end":{"id":"69","labels":["Movie"]}}
+{"id":"94","type":"relationship","label":"ACTED_IN","properties":{"roles":["Sam Baldwin"]},"start":{"id":"73","labels":["Person"]},"end":{"id":"75","labels":["Movie"]}}
+{"id":"95","type":"relationship","label":"ACTED_IN","properties":{"roles":["Annie Reed"]},"start":{"id":"36","labels":["Person"]},"end":{"id":"75","labels":["Movie"]}}
+{"id":"96","type":"relationship","label":"ACTED_IN","properties":{"roles":["Suzy"]},"start":{"id":"76","labels":["Person"]},"end":{"id":"75","labels":["Movie"]}}
+{"id":"97","type":"relationship","label":"ACTED_IN","properties":{"roles":["Walter"]},"start":{"id":"77","labels":["Person"]},"end":{"id":"75","labels":["Movie"]}}
+{"id":"98","type":"relationship","label":"ACTED_IN","properties":{"roles":["Greg"]},"start":{"id":"78","labels":["Person"]},"end":{"id":"75","labels":["Movie"]}}
+{"id":"99","type":"relationship","label":"ACTED_IN","properties":{"roles":["Becky"]},"start":{"id":"79","labels":["Person"]},"end":{"id":"75","labels":["Movie"]}}
+{"id":"100","type":"relationship","label":"DIRECTED","start":{"id":"74","labels":["Person"]},"end":{"id":"75","labels":["Movie"]}}
+{"id":"101","type":"relationship","label":"ACTED_IN","properties":{"roles":["Joe Banks"]},"start":{"id":"73","labels":["Person"]},"end":{"id":"80","labels":["Movie"]}}
+{"id":"102","type":"relationship","label":"ACTED_IN","properties":{"roles":["DeDe","Angelica Graynamore","Patricia Graynamore"]},"start":{"id":"36","labels":["Person"]},"end":{"id":"80","labels":["Movie"]}}
+{"id":"103","type":"relationship","label":"ACTED_IN","properties":{"roles":["Baw"]},"start":{"id":"82","labels":["Person"]},"end":{"id":"80","labels":["Movie"]}}
+{"id":"104","type":"relationship","label":"DIRECTED","start":{"id":"81","labels":["Person"]},"end":{"id":"80","labels":["Movie"]}}
+{"id":"105","type":"relationship","label":"ACTED_IN","properties":{"roles":["Harry Burns"]},"start":{"id":"84","labels":["Person"]},"end":{"id":"83","labels":["Movie"]}}
+{"id":"106","type":"relationship","label":"ACTED_IN","properties":{"roles":["Sally Albright"]},"start":{"id":"36","labels":["Person"]},"end":{"id":"83","labels":["Movie"]}}
+{"id":"107","type":"relationship","label":"ACTED_IN","properties":{"roles":["Marie"]},"start":{"id":"85","labels":["Person"]},"end":{"id":"83","labels":["Movie"]}}
+{"id":"108","type":"relationship","label":"ACTED_IN","properties":{"roles":["Jess"]},"start":{"id":"86","labels":["Person"]},"end":{"id":"83","labels":["Movie"]}}
+{"id":"109","type":"relationship","label":"DIRECTED","start":{"id":"29","labels":["Person"]},"end":{"id":"83","labels":["Movie"]}}
+{"id":"110","type":"relationship","label":"PRODUCED","start":{"id":"29","labels":["Person"]},"end":{"id":"83","labels":["Movie"]}}
+{"id":"111","type":"relationship","label":"PRODUCED","start":{"id":"74","labels":["Person"]},"end":{"id":"83","labels":["Movie"]}}
+{"id":"112","type":"relationship","label":"WROTE","start":{"id":"74","labels":["Person"]},"end":{"id":"83","labels":["Movie"]}}
+{"id":"113","type":"relationship","label":"ACTED_IN","properties":{"roles":["Mr. White"]},"start":{"id":"73","labels":["Person"]},"end":{"id":"87","labels":["Movie"]}}
+{"id":"114","type":"relationship","label":"ACTED_IN","properties":{"roles":["Faye Dolan"]},"start":{"id":"88","labels":["Person"]},"end":{"id":"87","labels":["Movie"]}}
+{"id":"115","type":"relationship","label":"ACTED_IN","properties":{"roles":["Tina"]},"start":{"id":"14","labels":["Person"]},"end":{"id":"87","labels":["Movie"]}}
+{"id":"116","type":"relationship","label":"DIRECTED","start":{"id":"73","labels":["Person"]},"end":{"id":"87","labels":["Movie"]}}
+{"id":"117","type":"relationship","label":"ACTED_IN","properties":{"roles":["Shane Falco"]},"start":{"id":"1","labels":["Person"]},"end":{"id":"89","labels":["Movie"]}}
+{"id":"118","type":"relationship","label":"ACTED_IN","properties":{"roles":["Annabelle Farrell"]},"start":{"id":"90","labels":["Person"]},"end":{"id":"89","labels":["Movie"]}}
+{"id":"119","type":"relationship","label":"ACTED_IN","properties":{"roles":["Jimmy McGinty"]},"start":{"id":"91","labels":["Person"]},"end":{"id":"89","labels":["Movie"]}}
+{"id":"120","type":"relationship","label":"ACTED_IN","properties":{"roles":["Clifford Franklin"]},"start":{"id":"92","labels":["Person"]},"end":{"id":"89","labels":["Movie"]}}
+{"id":"121","type":"relationship","label":"DIRECTED","start":{"id":"93","labels":["Person"]},"end":{"id":"89","labels":["Movie"]}}
+{"id":"122","type":"relationship","label":"ACTED_IN","properties":{"roles":["Admiral"]},"start":{"id":"53","labels":["Person"]},"end":{"id":"94","labels":["Movie"]}}
+{"id":"123","type":"relationship","label":"ACTED_IN","properties":{"roles":["Dieter Dengler"]},"start":{"id":"95","labels":["Person"]},"end":{"id":"94","labels":["Movie"]}}
+{"id":"124","type":"relationship","label":"ACTED_IN","properties":{"roles":["Squad Leader"]},"start":{"id":"96","labels":["Person"]},"end":{"id":"94","labels":["Movie"]}}
+{"id":"125","type":"relationship","label":"ACTED_IN","properties":{"roles":["Duane"]},"start":{"id":"72","labels":["Person"]},"end":{"id":"94","labels":["Movie"]}}
+{"id":"126","type":"relationship","label":"DIRECTED","start":{"id":"61","labels":["Person"]},"end":{"id":"94","labels":["Movie"]}}
+{"id":"127","type":"relationship","label":"ACTED_IN","properties":{"roles":["Armand Goldman"]},"start":{"id":"62","labels":["Person"]},"end":{"id":"97","labels":["Movie"]}}
+{"id":"128","type":"relationship","label":"ACTED_IN","properties":{"roles":["Albert Goldman"]},"start":{"id":"82","labels":["Person"]},"end":{"id":"97","labels":["Movie"]}}
+{"id":"129","type":"relationship","label":"ACTED_IN","properties":{"roles":["Sen. Kevin Keeley"]},"start":{"id":"91","labels":["Person"]},"end":{"id":"97","labels":["Movie"]}}
+{"id":"130","type":"relationship","label":"DIRECTED","start":{"id":"98","labels":["Person"]},"end":{"id":"97","labels":["Movie"]}}
+{"id":"131","type":"relationship","label":"ACTED_IN","properties":{"roles":["English Bob"]},"start":{"id":"100","labels":["Person"]},"end":{"id":"99","labels":["Movie"]}}
+{"id":"132","type":"relationship","label":"ACTED_IN","properties":{"roles":["Bill Munny"]},"start":{"id":"101","labels":["Person"]},"end":{"id":"99","labels":["Movie"]}}
+{"id":"133","type":"relationship","label":"ACTED_IN","properties":{"roles":["Little Bill Daggett"]},"start":{"id":"91","labels":["Person"]},"end":{"id":"99","labels":["Movie"]}}
+{"id":"134","type":"relationship","label":"DIRECTED","start":{"id":"101","labels":["Person"]},"end":{"id":"99","labels":["Movie"]}}
+{"id":"135","type":"relationship","label":"ACTED_IN","properties":{"roles":["Johnny Mnemonic"]},"start":{"id":"1","labels":["Person"]},"end":{"id":"102","labels":["Movie"]}}
+{"id":"136","type":"relationship","label":"ACTED_IN","properties":{"roles":["Takahashi"]},"start":{"id":"103","labels":["Person"]},"end":{"id":"102","labels":["Movie"]}}
+{"id":"137","type":"relationship","label":"ACTED_IN","properties":{"roles":["Jane"]},"start":{"id":"104","labels":["Person"]},"end":{"id":"102","labels":["Movie"]}}
+{"id":"138","type":"relationship","label":"ACTED_IN","properties":{"roles":["J-Bone"]},"start":{"id":"105","labels":["Person"]},"end":{"id":"102","labels":["Movie"]}}
+{"id":"139","type":"relationship","label":"DIRECTED","start":{"id":"106","labels":["Person"]},"end":{"id":"102","labels":["Movie"]}}
+{"id":"140","type":"relationship","label":"ACTED_IN","properties":{"roles":["Zachry","Dr. Henry Goose","Isaac Sachs","Dermot Hoggins"]},"start":{"id":"73","labels":["Person"]},"end":{"id":"107","labels":["Movie"]}}
+{"id":"141","type":"relationship","label":"ACTED_IN","properties":{"roles":["Bill Smoke","Haskell Moore","Tadeusz Kesselring","Nurse Noakes","Boardman Mephi","Old Georgie"]},"start":{"id":"4","labels":["Person"]},"end":{"id":"107","labels":["Movie"]}}
+{"id":"142","type":"relationship","label":"ACTED_IN","properties":{"roles":["Luisa Rey","Jocasta Ayrs","Ovid","Meronym"]},"start":{"id":"108","labels":["Person"]},"end":{"id":"107","labels":["Movie"]}}
+{"id":"143","type":"relationship","label":"ACTED_IN","properties":{"roles":["Vyvyan Ayrs","Captain Molyneux","Timothy Cavendish"]},"start":{"id":"109","labels":["Person"]},"end":{"id":"107","labels":["Movie"]}}
+{"id":"144","type":"relationship","label":"DIRECTED","start":{"id":"110","labels":["Person"]},"end":{"id":"107","labels":["Movie"]}}
+{"id":"145","type":"relationship","label":"DIRECTED","start":{"id":"5","labels":["Person"]},"end":{"id":"107","labels":["Movie"]}}
+{"id":"146","type":"relationship","label":"DIRECTED","start":{"id":"6","labels":["Person"]},"end":{"id":"107","labels":["Movie"]}}
+{"id":"147","type":"relationship","label":"WROTE","start":{"id":"111","labels":["Person"]},"end":{"id":"107","labels":["Movie"]}}
+{"id":"148","type":"relationship","label":"PRODUCED","start":{"id":"112","labels":["Person"]},"end":{"id":"107","labels":["Movie"]}}
+{"id":"149","type":"relationship","label":"ACTED_IN","properties":{"roles":["Dr. Robert Langdon"]},"start":{"id":"73","labels":["Person"]},"end":{"id":"113","labels":["Movie"]}}
+{"id":"150","type":"relationship","label":"ACTED_IN","properties":{"roles":["Sir Leight Teabing"]},"start":{"id":"114","labels":["Person"]},"end":{"id":"113","labels":["Movie"]}}
+{"id":"151","type":"relationship","label":"ACTED_IN","properties":{"roles":["Sophie Neveu"]},"start":{"id":"115","labels":["Person"]},"end":{"id":"113","labels":["Movie"]}}
+{"id":"152","type":"relationship","label":"ACTED_IN","properties":{"roles":["Silas"]},"start":{"id":"116","labels":["Person"]},"end":{"id":"113","labels":["Movie"]}}
+{"id":"153","type":"relationship","label":"DIRECTED","start":{"id":"117","labels":["Person"]},"end":{"id":"113","labels":["Movie"]}}
+{"id":"154","type":"relationship","label":"ACTED_IN","properties":{"roles":["V"]},"start":{"id":"4","labels":["Person"]},"end":{"id":"118","labels":["Movie"]}}
+{"id":"155","type":"relationship","label":"ACTED_IN","properties":{"roles":["Evey Hammond"]},"start":{"id":"119","labels":["Person"]},"end":{"id":"118","labels":["Movie"]}}
+{"id":"156","type":"relationship","label":"ACTED_IN","properties":{"roles":["Eric Finch"]},"start":{"id":"120","labels":["Person"]},"end":{"id":"118","labels":["Movie"]}}
+{"id":"157","type":"relationship","label":"ACTED_IN","properties":{"roles":["High Chancellor Adam Sutler"]},"start":{"id":"121","labels":["Person"]},"end":{"id":"118","labels":["Movie"]}}
+{"id":"158","type":"relationship","label":"ACTED_IN","properties":{"roles":["Dascomb"]},"start":{"id":"122","labels":["Person"]},"end":{"id":"118","labels":["Movie"]}}
+{"id":"159","type":"relationship","label":"DIRECTED","start":{"id":"27","labels":["Person"]},"end":{"id":"118","labels":["Movie"]}}
+{"id":"160","type":"relationship","label":"PRODUCED","start":{"id":"5","labels":["Person"]},"end":{"id":"118","labels":["Movie"]}}
+{"id":"161","type":"relationship","label":"PRODUCED","start":{"id":"6","labels":["Person"]},"end":{"id":"118","labels":["Movie"]}}
+{"id":"162","type":"relationship","label":"PRODUCED","start":{"id":"7","labels":["Person"]},"end":{"id":"118","labels":["Movie"]}}
+{"id":"163","type":"relationship","label":"WROTE","start":{"id":"5","labels":["Person"]},"end":{"id":"118","labels":["Movie"]}}
+{"id":"164","type":"relationship","label":"WROTE","start":{"id":"6","labels":["Person"]},"end":{"id":"118","labels":["Movie"]}}
+{"id":"165","type":"relationship","label":"ACTED_IN","properties":{"roles":["Speed Racer"]},"start":{"id":"124","labels":["Person"]},"end":{"id":"123","labels":["Movie"]}}
+{"id":"166","type":"relationship","label":"ACTED_IN","properties":{"roles":["Pops"]},"start":{"id":"125","labels":["Person"]},"end":{"id":"123","labels":["Movie"]}}
+{"id":"167","type":"relationship","label":"ACTED_IN","properties":{"roles":["Mom"]},"start":{"id":"126","labels":["Person"]},"end":{"id":"123","labels":["Movie"]}}
+{"id":"168","type":"relationship","label":"ACTED_IN","properties":{"roles":["Racer X"]},"start":{"id":"127","labels":["Person"]},"end":{"id":"123","labels":["Movie"]}}
+{"id":"169","type":"relationship","label":"ACTED_IN","properties":{"roles":["Trixie"]},"start":{"id":"128","labels":["Person"]},"end":{"id":"123","labels":["Movie"]}}
+{"id":"170","type":"relationship","label":"ACTED_IN","properties":{"roles":["Taejo Togokahn"]},"start":{"id":"129","labels":["Person"]},"end":{"id":"123","labels":["Movie"]}}
+{"id":"171","type":"relationship","label":"ACTED_IN","properties":{"roles":["Cass Jones"]},"start":{"id":"122","labels":["Person"]},"end":{"id":"123","labels":["Movie"]}}
+{"id":"172","type":"relationship","label":"DIRECTED","start":{"id":"5","labels":["Person"]},"end":{"id":"123","labels":["Movie"]}}
+{"id":"173","type":"relationship","label":"DIRECTED","start":{"id":"6","labels":["Person"]},"end":{"id":"123","labels":["Movie"]}}
+{"id":"174","type":"relationship","label":"WROTE","start":{"id":"5","labels":["Person"]},"end":{"id":"123","labels":["Movie"]}}
+{"id":"175","type":"relationship","label":"WROTE","start":{"id":"6","labels":["Person"]},"end":{"id":"123","labels":["Movie"]}}
+{"id":"176","type":"relationship","label":"PRODUCED","start":{"id":"7","labels":["Person"]},"end":{"id":"123","labels":["Movie"]}}
+{"id":"177","type":"relationship","label":"ACTED_IN","properties":{"roles":["Raizo"]},"start":{"id":"129","labels":["Person"]},"end":{"id":"130","labels":["Movie"]}}
+{"id":"178","type":"relationship","label":"ACTED_IN","properties":{"roles":["Mika Coretti"]},"start":{"id":"131","labels":["Person"]},"end":{"id":"130","labels":["Movie"]}}
+{"id":"179","type":"relationship","label":"ACTED_IN","properties":{"roles":["Takeshi"]},"start":{"id":"66","labels":["Person"]},"end":{"id":"130","labels":["Movie"]}}
+{"id":"180","type":"relationship","label":"ACTED_IN","properties":{"roles":["Ryan Maslow"]},"start":{"id":"122","labels":["Person"]},"end":{"id":"130","labels":["Movie"]}}
+{"id":"181","type":"relationship","label":"DIRECTED","start":{"id":"27","labels":["Person"]},"end":{"id":"130","labels":["Movie"]}}
+{"id":"182","type":"relationship","label":"PRODUCED","start":{"id":"5","labels":["Person"]},"end":{"id":"130","labels":["Movie"]}}
+{"id":"183","type":"relationship","label":"PRODUCED","start":{"id":"6","labels":["Person"]},"end":{"id":"130","labels":["Movie"]}}
+{"id":"184","type":"relationship","label":"PRODUCED","start":{"id":"7","labels":["Person"]},"end":{"id":"130","labels":["Movie"]}}
+{"id":"185","type":"relationship","label":"ACTED_IN","properties":{"roles":["Paul Edgecomb"]},"start":{"id":"73","labels":["Person"]},"end":{"id":"132","labels":["Movie"]}}
+{"id":"186","type":"relationship","label":"ACTED_IN","properties":{"roles":["John Coffey"]},"start":{"id":"133","labels":["Person"]},"end":{"id":"132","labels":["Movie"]}}
+{"id":"187","type":"relationship","label":"ACTED_IN","properties":{"roles":["Brutus \"Brutal\" Howell"]},"start":{"id":"134","labels":["Person"]},"end":{"id":"132","labels":["Movie"]}}
+{"id":"188","type":"relationship","label":"ACTED_IN","properties":{"roles":["Jan Edgecomb"]},"start":{"id":"44","labels":["Person"]},"end":{"id":"132","labels":["Movie"]}}
+{"id":"189","type":"relationship","label":"ACTED_IN","properties":{"roles":["Warden Hal Moores"]},"start":{"id":"67","labels":["Person"]},"end":{"id":"132","labels":["Movie"]}}
+{"id":"190","type":"relationship","label":"ACTED_IN","properties":{"roles":["\"Wild Bill\" Wharton"]},"start":{"id":"135","labels":["Person"]},"end":{"id":"132","labels":["Movie"]}}
+{"id":"191","type":"relationship","label":"ACTED_IN","properties":{"roles":["Burt Hammersmith"]},"start":{"id":"136","labels":["Person"]},"end":{"id":"132","labels":["Movie"]}}
+{"id":"192","type":"relationship","label":"ACTED_IN","properties":{"roles":["Melinda Moores"]},"start":{"id":"137","labels":["Person"]},"end":{"id":"132","labels":["Movie"]}}
+{"id":"193","type":"relationship","label":"DIRECTED","start":{"id":"138","labels":["Person"]},"end":{"id":"132","labels":["Movie"]}}
+{"id":"194","type":"relationship","label":"ACTED_IN","properties":{"roles":["Richard Nixon"]},"start":{"id":"140","labels":["Person"]},"end":{"id":"139","labels":["Movie"]}}
+{"id":"195","type":"relationship","label":"ACTED_IN","properties":{"roles":["David Frost"]},"start":{"id":"141","labels":["Person"]},"end":{"id":"139","labels":["Movie"]}}
+{"id":"196","type":"relationship","label":"ACTED_IN","properties":{"roles":["Jack Brennan"]},"start":{"id":"21","labels":["Person"]},"end":{"id":"139","labels":["Movie"]}}
+{"id":"197","type":"relationship","label":"ACTED_IN","properties":{"roles":["Bob Zelnick"]},"start":{"id":"142","labels":["Person"]},"end":{"id":"139","labels":["Movie"]}}
+{"id":"198","type":"relationship","label":"ACTED_IN","properties":{"roles":["James Reston, Jr."]},"start":{"id":"135","labels":["Person"]},"end":{"id":"139","labels":["Movie"]}}
+{"id":"199","type":"relationship","label":"DIRECTED","start":{"id":"117","labels":["Person"]},"end":{"id":"139","labels":["Movie"]}}
+{"id":"200","type":"relationship","label":"ACTED_IN","properties":{"roles":["Hoffa"]},"start":{"id":"19","labels":["Person"]},"end":{"id":"143","labels":["Movie"]}}
+{"id":"201","type":"relationship","label":"ACTED_IN","properties":{"roles":["Robert \"Bobby\" Ciaro"]},"start":{"id":"144","labels":["Person"]},"end":{"id":"143","labels":["Movie"]}}
+{"id":"202","type":"relationship","label":"ACTED_IN","properties":{"roles":["Frank Fitzsimmons"]},"start":{"id":"26","labels":["Person"]},"end":{"id":"143","labels":["Movie"]}}
+{"id":"203","type":"relationship","label":"ACTED_IN","properties":{"roles":["Peter \"Pete\" Connelly"]},"start":{"id":"145","labels":["Person"]},"end":{"id":"143","labels":["Movie"]}}
+{"id":"204","type":"relationship","label":"DIRECTED","start":{"id":"144","labels":["Person"]},"end":{"id":"143","labels":["Movie"]}}
+{"id":"205","type":"relationship","label":"ACTED_IN","properties":{"roles":["Jim Lovell"]},"start":{"id":"73","labels":["Person"]},"end":{"id":"146","labels":["Movie"]}}
+{"id":"206","type":"relationship","label":"ACTED_IN","properties":{"roles":["Jack Swigert"]},"start":{"id":"21","labels":["Person"]},"end":{"id":"146","labels":["Movie"]}}
+{"id":"207","type":"relationship","label":"ACTED_IN","properties":{"roles":["Gene Kranz"]},"start":{"id":"147","labels":["Person"]},"end":{"id":"146","labels":["Movie"]}}
+{"id":"208","type":"relationship","label":"ACTED_IN","properties":{"roles":["Fred Haise"]},"start":{"id":"148","labels":["Person"]},"end":{"id":"146","labels":["Movie"]}}
+{"id":"209","type":"relationship","label":"ACTED_IN","properties":{"roles":["Ken Mattingly"]},"start":{"id":"136","labels":["Person"]},"end":{"id":"146","labels":["Movie"]}}
+{"id":"210","type":"relationship","label":"DIRECTED","start":{"id":"117","labels":["Person"]},"end":{"id":"146","labels":["Movie"]}}
+{"id":"211","type":"relationship","label":"ACTED_IN","properties":{"roles":["Bill Harding"]},"start":{"id":"148","labels":["Person"]},"end":{"id":"149","labels":["Movie"]}}
+{"id":"212","type":"relationship","label":"ACTED_IN","properties":{"roles":["Dr. Jo Harding"]},"start":{"id":"55","labels":["Person"]},"end":{"id":"149","labels":["Movie"]}}
+{"id":"213","type":"relationship","label":"ACTED_IN","properties":{"roles":["Eddie"]},"start":{"id":"96","labels":["Person"]},"end":{"id":"149","labels":["Movie"]}}
+{"id":"214","type":"relationship","label":"ACTED_IN","properties":{"roles":["Dustin \"Dusty\" Davis"]},"start":{"id":"150","labels":["Person"]},"end":{"id":"149","labels":["Movie"]}}
+{"id":"215","type":"relationship","label":"DIRECTED","start":{"id":"151","labels":["Person"]},"end":{"id":"149","labels":["Movie"]}}
+{"id":"216","type":"relationship","label":"ACTED_IN","properties":{"roles":["Chuck Noland"]},"start":{"id":"73","labels":["Person"]},"end":{"id":"152","labels":["Movie"]}}
+{"id":"217","type":"relationship","label":"ACTED_IN","properties":{"roles":["Kelly Frears"]},"start":{"id":"55","labels":["Person"]},"end":{"id":"152","labels":["Movie"]}}
+{"id":"218","type":"relationship","label":"DIRECTED","start":{"id":"153","labels":["Person"]},"end":{"id":"152","labels":["Movie"]}}
+{"id":"219","type":"relationship","label":"ACTED_IN","properties":{"roles":["Randle McMurphy"]},"start":{"id":"19","labels":["Person"]},"end":{"id":"154","labels":["Movie"]}}
+{"id":"220","type":"relationship","label":"ACTED_IN","properties":{"roles":["Martini"]},"start":{"id":"144","labels":["Person"]},"end":{"id":"154","labels":["Movie"]}}
+{"id":"221","type":"relationship","label":"DIRECTED","start":{"id":"155","labels":["Person"]},"end":{"id":"154","labels":["Movie"]}}
+{"id":"222","type":"relationship","label":"ACTED_IN","properties":{"roles":["Harry Sanborn"]},"start":{"id":"19","labels":["Person"]},"end":{"id":"156","labels":["Movie"]}}
+{"id":"223","type":"relationship","label":"ACTED_IN","properties":{"roles":["Erica Barry"]},"start":{"id":"157","labels":["Person"]},"end":{"id":"156","labels":["Movie"]}}
+{"id":"224","type":"relationship","label":"ACTED_IN","properties":{"roles":["Julian Mercer"]},"start":{"id":"1","labels":["Person"]},"end":{"id":"156","labels":["Movie"]}}
+{"id":"225","type":"relationship","label":"DIRECTED","start":{"id":"158","labels":["Person"]},"end":{"id":"156","labels":["Movie"]}}
+{"id":"226","type":"relationship","label":"PRODUCED","start":{"id":"158","labels":["Person"]},"end":{"id":"156","labels":["Movie"]}}
+{"id":"227","type":"relationship","label":"WROTE","start":{"id":"158","labels":["Person"]},"end":{"id":"156","labels":["Movie"]}}
+{"id":"228","type":"relationship","label":"ACTED_IN","properties":{"roles":["Andrew Marin"]},"start":{"id":"62","labels":["Person"]},"end":{"id":"159","labels":["Movie"]}}
+{"id":"229","type":"relationship","label":"ACTED_IN","properties":{"roles":["Rupert Burns"]},"start":{"id":"142","labels":["Person"]},"end":{"id":"159","labels":["Movie"]}}
+{"id":"230","type":"relationship","label":"DIRECTED","start":{"id":"160","labels":["Person"]},"end":{"id":"159","labels":["Movie"]}}
+{"id":"231","type":"relationship","label":"ACTED_IN","properties":{"roles":["Rep. Charlie Wilson"]},"start":{"id":"73","labels":["Person"]},"end":{"id":"161","labels":["Movie"]}}
+{"id":"232","type":"relationship","label":"ACTED_IN","properties":{"roles":["Joanne Herring"]},"start":{"id":"162","labels":["Person"]},"end":{"id":"161","labels":["Movie"]}}
+{"id":"233","type":"relationship","label":"ACTED_IN","properties":{"roles":["Gust Avrakotos"]},"start":{"id":"150","labels":["Person"]},"end":{"id":"161","labels":["Movie"]}}
+{"id":"234","type":"relationship","label":"DIRECTED","start":{"id":"98","labels":["Person"]},"end":{"id":"161","labels":["Movie"]}}
+{"id":"235","type":"relationship","label":"ACTED_IN","properties":{"roles":["Hero Boy","Father","Conductor","Hobo","Scrooge","Santa Claus"]},"start":{"id":"73","labels":["Person"]},"end":{"id":"163","labels":["Movie"]}}
+{"id":"236","type":"relationship","label":"DIRECTED","start":{"id":"153","labels":["Person"]},"end":{"id":"163","labels":["Movie"]}}
+{"id":"237","type":"relationship","label":"ACTED_IN","properties":{"roles":["Jimmy Dugan"]},"start":{"id":"73","labels":["Person"]},"end":{"id":"164","labels":["Movie"]}}
+{"id":"238","type":"relationship","label":"ACTED_IN","properties":{"roles":["Dottie Hinson"]},"start":{"id":"166","labels":["Person"]},"end":{"id":"164","labels":["Movie"]}}
+{"id":"239","type":"relationship","label":"ACTED_IN","properties":{"roles":["Kit Keller"]},"start":{"id":"167","labels":["Person"]},"end":{"id":"164","labels":["Movie"]}}
+{"id":"240","type":"relationship","label":"ACTED_IN","properties":{"roles":["Doris Murphy"]},"start":{"id":"79","labels":["Person"]},"end":{"id":"164","labels":["Movie"]}}
+{"id":"241","type":"relationship","label":"ACTED_IN","properties":{"roles":["\"All the Way\" Mae Mordabito"]},"start":{"id":"165","labels":["Person"]},"end":{"id":"164","labels":["Movie"]}}
+{"id":"242","type":"relationship","label":"ACTED_IN","properties":{"roles":["Bob Hinson"]},"start":{"id":"148","labels":["Person"]},"end":{"id":"164","labels":["Movie"]}}
+{"id":"243","type":"relationship","label":"DIRECTED","start":{"id":"168","labels":["Person"]},"end":{"id":"164","labels":["Movie"]}}
+{"id":"244","type":"relationship","label":"FOLLOWS","start":{"id":"172","labels":["Person"]},"end":{"id":"171","labels":["Person"]}}
+{"id":"245","type":"relationship","label":"FOLLOWS","start":{"id":"170","labels":["Person"]},"end":{"id":"171","labels":["Person"]}}
+{"id":"246","type":"relationship","label":"FOLLOWS","start":{"id":"169","labels":["Person"]},"end":{"id":"170","labels":["Person"]}}
+{"id":"247","type":"relationship","label":"REVIEWED","properties":{"summary":"An amazing journey","rating":95},"start":{"id":"171","labels":["Person"]},"end":{"id":"107","labels":["Movie"]}}
+{"id":"248","type":"relationship","label":"REVIEWED","properties":{"summary":"Silly, but fun","rating":65},"start":{"id":"171","labels":["Person"]},"end":{"id":"89","labels":["Movie"]}}
+{"id":"249","type":"relationship","label":"REVIEWED","properties":{"summary":"The coolest football movie ever","rating":100},"start":{"id":"172","labels":["Person"]},"end":{"id":"89","labels":["Movie"]}}
+{"id":"250","type":"relationship","label":"REVIEWED","properties":{"summary":"Pretty funny at times","rating":62},"start":{"id":"170","labels":["Person"]},"end":{"id":"89","labels":["Movie"]}}
+{"id":"251","type":"relationship","label":"REVIEWED","properties":{"summary":"Dark, but compelling","rating":85},"start":{"id":"171","labels":["Person"]},"end":{"id":"99","labels":["Movie"]}}
+{"id":"252","type":"relationship","label":"REVIEWED","properties":{"summary":"Slapstick redeemed only by the Robin Williams and Gene Hackman's stellar performances","rating":45},"start":{"id":"171","labels":["Person"]},"end":{"id":"97","labels":["Movie"]}}
+{"id":"253","type":"relationship","label":"REVIEWED","properties":{"summary":"A solid romp","rating":68},"start":{"id":"171","labels":["Person"]},"end":{"id":"113","labels":["Movie"]}}
+{"id":"254","type":"relationship","label":"REVIEWED","properties":{"summary":"Fun, but a little far fetched","rating":65},"start":{"id":"172","labels":["Person"]},"end":{"id":"113","labels":["Movie"]}}
+{"id":"255","type":"relationship","label":"REVIEWED","properties":{"summary":"You had me at Jerry","rating":92},"start":{"id":"171","labels":["Person"]},"end":{"id":"39","labels":["Movie"]}}

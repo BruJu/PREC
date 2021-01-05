@@ -1,0 +1,1252 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix neovoc: <neo4j://vocabulary#> .
+@prefix neoind: <neo4j://individuals#> .
+
+neoind:7 a neovoc:Person;
+  neovoc:born "1952"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:PRODUCED neoind:0, neoind:11, neoind:12, neoind:118, neoind:123, neoind:130;
+  neovoc:name "Joel Silver" .
+
+neoind:0 a neovoc:Movie;
+  neovoc:title "The Matrix";
+  neovoc:released "1999"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:tagline "Welcome to the Real World" .
+
+neoind:8 a neovoc:Person;
+  neovoc:name "Emil Eifrem";
+  neovoc:ACTED_IN neoind:0;
+  neovoc:born "1978"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:8 neovoc:ACTED_IN neoind:0>> neovoc:roles "Emil" .
+
+neoind:3 a neovoc:Person;
+  neovoc:name "Laurence Fishburne";
+  neovoc:born "1961"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:0, neoind:11, neoind:12 .
+
+<<neoind:3 neovoc:ACTED_IN neoind:0>> neovoc:roles "Morpheus" .
+
+neoind:6 a neovoc:Person;
+  neovoc:born "1965"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:DIRECTED neoind:0, neoind:11, neoind:12, neoind:107, neoind:123;
+  neovoc:name "Lana Wachowski";
+  neovoc:WROTE neoind:118, neoind:123;
+  neovoc:PRODUCED neoind:118, neoind:130 .
+
+neoind:4 a neovoc:Person;
+  neovoc:name "Hugo Weaving";
+  neovoc:born "1960"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:0, neoind:11, neoind:12, neoind:107, neoind:118 .
+
+<<neoind:4 neovoc:ACTED_IN neoind:0>> neovoc:roles "Agent Smith" .
+
+neoind:5 a neovoc:Person;
+  neovoc:name "Lilly Wachowski";
+  neovoc:born "1967"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:DIRECTED neoind:0, neoind:11, neoind:12, neoind:107, neoind:123;
+  neovoc:PRODUCED neoind:118, neoind:130;
+  neovoc:WROTE neoind:118, neoind:123 .
+
+neoind:2 a neovoc:Person;
+  neovoc:born "1967"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Carrie-Anne Moss";
+  neovoc:ACTED_IN neoind:0, neoind:11, neoind:12 .
+
+<<neoind:2 neovoc:ACTED_IN neoind:0>> neovoc:roles "Trinity" .
+
+<<neoind:1 neovoc:ACTED_IN neoind:0>> neovoc:roles "Neo" .
+
+neoind:1 a neovoc:Person;
+  neovoc:born "1964"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:0, neoind:11, neoind:12, neoind:13, neoind:89, neoind:102,
+    neoind:156;
+  neovoc:name "Keanu Reeves" .
+
+neoind:11 a neovoc:Movie;
+  neovoc:released "2003"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:title "The Matrix Reloaded";
+  neovoc:tagline "Free your mind" .
+
+<<neoind:1 neovoc:ACTED_IN neoind:11>> neovoc:roles "Neo" .
+
+<<neoind:4 neovoc:ACTED_IN neoind:11>> neovoc:roles "Agent Smith" .
+
+<<neoind:3 neovoc:ACTED_IN neoind:11>> neovoc:roles "Morpheus" .
+
+<<neoind:2 neovoc:ACTED_IN neoind:11>> neovoc:roles "Trinity" .
+
+neoind:12 a neovoc:Movie;
+  neovoc:title "The Matrix Revolutions";
+  neovoc:tagline "Everything that has a beginning has an end";
+  neovoc:released "2003"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:3 neovoc:ACTED_IN neoind:12>> neovoc:roles "Morpheus" .
+
+<<neoind:1 neovoc:ACTED_IN neoind:12>> neovoc:roles "Neo" .
+
+<<neoind:2 neovoc:ACTED_IN neoind:12>> neovoc:roles "Trinity" .
+
+<<neoind:4 neovoc:ACTED_IN neoind:12>> neovoc:roles "Agent Smith" .
+
+neoind:15 a neovoc:Person;
+  neovoc:ACTED_IN neoind:13;
+  neovoc:name "Al Pacino";
+  neovoc:born "1940"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+neoind:13 a neovoc:Movie;
+  neovoc:tagline "Evil has its winning ways";
+  neovoc:released "1997"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:title "The Devil's Advocate" .
+
+<<neoind:15 neovoc:ACTED_IN neoind:13>> neovoc:roles "John Milton" .
+
+neoind:16 a neovoc:Person;
+  neovoc:DIRECTED neoind:13;
+  neovoc:name "Taylor Hackford";
+  neovoc:born "1944"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:1 neovoc:ACTED_IN neoind:13>> neovoc:roles "Kevin Lomax" .
+
+neoind:14 a neovoc:Person;
+  neovoc:ACTED_IN neoind:13, neoind:87;
+  neovoc:name "Charlize Theron";
+  neovoc:born "1975"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:14 neovoc:ACTED_IN neoind:13>> neovoc:roles "Mary Ann Lomax" .
+
+neoind:26 a neovoc:Person;
+  neovoc:ACTED_IN neoind:17, neoind:143;
+  neovoc:born "1943"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "J.T. Walsh" .
+
+neoind:17 a neovoc:Movie;
+  neovoc:released "1992"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:tagline "In the heart of the nation's capital, in a courthouse of the U.S. government, one man will stop at nothing to keep his honor, and one will stop at nothing to find the truth.";
+  neovoc:title "A Few Good Men" .
+
+<<neoind:26 neovoc:ACTED_IN neoind:17>> neovoc:roles "Lt. Col. Matthew Andrew Markinson" .
+
+neoind:29 a neovoc:Person;
+  neovoc:DIRECTED neoind:17, neoind:48, neoind:83;
+  neovoc:born "1947"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Rob Reiner";
+  neovoc:PRODUCED neoind:83 .
+
+neoind:30 a neovoc:Person;
+  neovoc:ACTED_IN neoind:17;
+  neovoc:name "Aaron Sorkin";
+  neovoc:born "1961"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:WROTE neoind:17 .
+
+<<neoind:30 neovoc:ACTED_IN neoind:17>> neovoc:roles "Man in Bar" .
+
+neoind:22 a neovoc:Person;
+  neovoc:born "1966"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Kiefer Sutherland";
+  neovoc:ACTED_IN neoind:17, neoind:48 .
+
+<<neoind:22 neovoc:ACTED_IN neoind:17>> neovoc:roles "Lt. Jonathan Kendrick" .
+
+neoind:21 a neovoc:Person;
+  neovoc:name "Kevin Bacon";
+  neovoc:born "1958"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:17, neoind:139, neoind:146 .
+
+<<neoind:21 neovoc:ACTED_IN neoind:17>> neovoc:roles "Capt. Jack Ross" .
+
+neoind:24 a neovoc:Person;
+  neovoc:ACTED_IN neoind:17, neoind:39, neoind:54, neoind:58;
+  neovoc:name "Cuba Gooding Jr.";
+  neovoc:born "1968"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:24 neovoc:ACTED_IN neoind:17>> neovoc:roles "Cpl. Carl Hammaker" .
+
+neoind:18 a neovoc:Person;
+  neovoc:ACTED_IN neoind:17, neoind:31, neoind:39;
+  neovoc:born "1962"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Tom Cruise" .
+
+<<neoind:18 neovoc:ACTED_IN neoind:17>> neovoc:roles "Lt. Daniel Kaffee" .
+
+neoind:19 a neovoc:Person;
+  neovoc:born "1937"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:17, neoind:54, neoind:143, neoind:154, neoind:156;
+  neovoc:name "Jack Nicholson" .
+
+<<neoind:19 neovoc:ACTED_IN neoind:17>> neovoc:roles "Col. Nathan R. Jessup" .
+
+neoind:28 a neovoc:Person;
+  neovoc:born "1948"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:17;
+  neovoc:name "Christopher Guest" .
+
+<<neoind:28 neovoc:ACTED_IN neoind:17>> neovoc:roles "Dr. Stone" .
+
+neoind:25 a neovoc:Person;
+  neovoc:ACTED_IN neoind:17;
+  neovoc:born "1957"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Kevin Pollak" .
+
+<<neoind:25 neovoc:ACTED_IN neoind:17>> neovoc:roles "Lt. Sam Weinberg" .
+
+neoind:27 a neovoc:Person;
+  neovoc:name "James Marshall";
+  neovoc:ACTED_IN neoind:17;
+  neovoc:born "1967"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:DIRECTED neoind:118, neoind:130 .
+
+<<neoind:27 neovoc:ACTED_IN neoind:17>> neovoc:roles "Pfc. Louden Downey" .
+
+neoind:23 a neovoc:Person;
+  neovoc:ACTED_IN neoind:17;
+  neovoc:born "1971"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Noah Wyle" .
+
+<<neoind:23 neovoc:ACTED_IN neoind:17>> neovoc:roles "Cpl. Jeffrey Barnes" .
+
+neoind:20 a neovoc:Person;
+  neovoc:name "Demi Moore";
+  neovoc:ACTED_IN neoind:17;
+  neovoc:born "1962"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:20 neovoc:ACTED_IN neoind:17>> neovoc:roles "Lt. Cdr. JoAnne Galloway" .
+
+<<neoind:36 neovoc:ACTED_IN neoind:31>> neovoc:roles "Carole" .
+
+neoind:31 a neovoc:Movie;
+  neovoc:released "1986"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:tagline "I feel the need, the need for speed.";
+  neovoc:title "Top Gun" .
+
+neoind:36 a neovoc:Person;
+  neovoc:name "Meg Ryan";
+  neovoc:ACTED_IN neoind:31, neoind:69, neoind:75, neoind:80, neoind:83;
+  neovoc:born "1961"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:18 neovoc:ACTED_IN neoind:31>> neovoc:roles "Maverick" .
+
+neoind:37 a neovoc:Person;
+  neovoc:name "Tony Scott";
+  neovoc:born "1944"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:DIRECTED neoind:31 .
+
+<<neoind:33 neovoc:ACTED_IN neoind:31>> neovoc:roles "Iceman" .
+
+neoind:33 a neovoc:Person;
+  neovoc:born "1959"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Val Kilmer";
+  neovoc:ACTED_IN neoind:31 .
+
+<<neoind:34 neovoc:ACTED_IN neoind:31>> neovoc:roles "Goose" .
+
+neoind:34 a neovoc:Person;
+  neovoc:ACTED_IN neoind:31;
+  neovoc:name "Anthony Edwards";
+  neovoc:born "1962"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+neoind:32 a neovoc:Person;
+  neovoc:born "1957"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:31;
+  neovoc:name "Kelly McGillis" .
+
+<<neoind:32 neovoc:ACTED_IN neoind:31>> neovoc:roles "Charlie" .
+
+neoind:35 a neovoc:Person;
+  neovoc:born "1933"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Tom Skerritt";
+  neovoc:ACTED_IN neoind:31 .
+
+<<neoind:35 neovoc:ACTED_IN neoind:31>> neovoc:roles "Viper" .
+
+neoind:38 a neovoc:Person;
+  neovoc:name "Jim Cash";
+  neovoc:born "1941"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:WROTE neoind:31 .
+
+neoind:39 a neovoc:Movie;
+  neovoc:tagline "The rest of his life begins now.";
+  neovoc:released "2000"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:title "Jerry Maguire" .
+
+<<neoind:42 neovoc:ACTED_IN neoind:39>> neovoc:roles "Frank Cushman" .
+
+neoind:42 a neovoc:Person;
+  neovoc:born "1974"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Jerry O'Connell";
+  neovoc:ACTED_IN neoind:39, neoind:48 .
+
+neoind:41 a neovoc:Person;
+  neovoc:ACTED_IN neoind:39;
+  neovoc:born "1962"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Kelly Preston" .
+
+<<neoind:41 neovoc:ACTED_IN neoind:39>> neovoc:roles "Avery Bishop" .
+
+<<neoind:45 neovoc:ACTED_IN neoind:39>> neovoc:roles "Marcee Tidwell" .
+
+neoind:45 a neovoc:Person;
+  neovoc:name "Regina King";
+  neovoc:ACTED_IN neoind:39;
+  neovoc:born "1971"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+neoind:43 a neovoc:Person;
+  neovoc:name "Jay Mohr";
+  neovoc:ACTED_IN neoind:39;
+  neovoc:born "1970"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:43 neovoc:ACTED_IN neoind:39>> neovoc:roles "Bob Sugar" .
+
+<<neoind:24 neovoc:ACTED_IN neoind:39>> neovoc:roles "Rod Tidwell" .
+
+neoind:40 a neovoc:Person;
+  neovoc:name "Renee Zellweger";
+  neovoc:ACTED_IN neoind:39;
+  neovoc:born "1969"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:40 neovoc:ACTED_IN neoind:39>> neovoc:roles "Dorothy Boyd" .
+
+neoind:47 a neovoc:Person;
+  neovoc:born "1957"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Cameron Crowe";
+  neovoc:WROTE neoind:39;
+  neovoc:DIRECTED neoind:39;
+  neovoc:PRODUCED neoind:39 .
+
+<<neoind:18 neovoc:ACTED_IN neoind:39>> neovoc:roles "Jerry Maguire" .
+
+neoind:44 a neovoc:Person;
+  neovoc:name "Bonnie Hunt";
+  neovoc:ACTED_IN neoind:39, neoind:132;
+  neovoc:born "1961"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:44 neovoc:ACTED_IN neoind:39>> neovoc:roles "Laurel Boyd" .
+
+<<neoind:171 neovoc:REVIEWED neoind:39>> neovoc:rating "92"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:summary "You had me at Jerry" .
+
+neoind:171 a neovoc:Person;
+  neovoc:name "Jessica Thompson";
+  neovoc:REVIEWED neoind:39, neoind:89, neoind:97, neoind:99, neoind:107, neoind:113 .
+
+neoind:46 a neovoc:Person;
+  neovoc:born "1996"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Jonathan Lipnicki";
+  neovoc:ACTED_IN neoind:39 .
+
+<<neoind:46 neovoc:ACTED_IN neoind:39>> neovoc:roles "Ray Boyd" .
+
+neoind:51 a neovoc:Person;
+  neovoc:ACTED_IN neoind:48;
+  neovoc:name "Wil Wheaton";
+  neovoc:born "1972"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+neoind:48 a neovoc:Movie;
+  neovoc:tagline "For some, it's the last real taste of innocence, and the first real taste of life. But for everyone, it's the time that memories are made of.";
+  neovoc:released "1986"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:title "Stand By Me" .
+
+<<neoind:51 neovoc:ACTED_IN neoind:48>> neovoc:roles "Gordie Lachance" .
+
+<<neoind:22 neovoc:ACTED_IN neoind:48>> neovoc:roles "Ace Merrill" .
+
+neoind:53 a neovoc:Person;
+  neovoc:ACTED_IN neoind:48, neoind:94;
+  neovoc:name "Marshall Bell";
+  neovoc:born "1942"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:53 neovoc:ACTED_IN neoind:48>> neovoc:roles "Mr. Lachance" .
+
+<<neoind:42 neovoc:ACTED_IN neoind:48>> neovoc:roles "Vern Tessio" .
+
+neoind:49 a neovoc:Person;
+  neovoc:ACTED_IN neoind:48;
+  neovoc:name "River Phoenix";
+  neovoc:born "1970"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:49 neovoc:ACTED_IN neoind:48>> neovoc:roles "Chris Chambers" .
+
+neoind:50 a neovoc:Person;
+  neovoc:born "1971"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:48;
+  neovoc:name "Corey Feldman" .
+
+<<neoind:50 neovoc:ACTED_IN neoind:48>> neovoc:roles "Teddy Duchamp" .
+
+neoind:52 a neovoc:Person;
+  neovoc:ACTED_IN neoind:48;
+  neovoc:born "1966"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "John Cusack" .
+
+<<neoind:52 neovoc:ACTED_IN neoind:48>> neovoc:roles "Denny Lachance" .
+
+neoind:54 a neovoc:Movie;
+  neovoc:tagline "A comedy from the heart that goes for the throat.";
+  neovoc:title "As Good as It Gets";
+  neovoc:released "1997"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:24 neovoc:ACTED_IN neoind:54>> neovoc:roles "Frank Sachs" .
+
+neoind:56 a neovoc:Person;
+  neovoc:name "Greg Kinnear";
+  neovoc:ACTED_IN neoind:54, neoind:69;
+  neovoc:born "1963"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:56 neovoc:ACTED_IN neoind:54>> neovoc:roles "Simon Bishop" .
+
+neoind:55 a neovoc:Person;
+  neovoc:ACTED_IN neoind:54, neoind:149, neoind:152;
+  neovoc:born "1963"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Helen Hunt" .
+
+<<neoind:55 neovoc:ACTED_IN neoind:54>> neovoc:roles "Carol Connelly" .
+
+<<neoind:19 neovoc:ACTED_IN neoind:54>> neovoc:roles "Melvin Udall" .
+
+neoind:57 a neovoc:Person;
+  neovoc:name "James L. Brooks";
+  neovoc:born "1940"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:DIRECTED neoind:54 .
+
+neoind:58 a neovoc:Movie;
+  neovoc:released "1998"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:title "What Dreams May Come";
+  neovoc:tagline "After life there is more. The end is just the beginning." .
+
+neoind:61 a neovoc:Person;
+  neovoc:born "1942"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:58;
+  neovoc:name "Werner Herzog";
+  neovoc:DIRECTED neoind:94 .
+
+<<neoind:61 neovoc:ACTED_IN neoind:58>> neovoc:roles "The Face" .
+
+neoind:60 a neovoc:Person;
+  neovoc:name "Max von Sydow";
+  neovoc:ACTED_IN neoind:58, neoind:64;
+  neovoc:born "1929"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:60 neovoc:ACTED_IN neoind:58>> neovoc:roles "The Tracker" .
+
+neoind:59 a neovoc:Person;
+  neovoc:name "Annabella Sciorra";
+  neovoc:ACTED_IN neoind:58;
+  neovoc:born "1960"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:59 neovoc:ACTED_IN neoind:58>> neovoc:roles "Annie Collins-Nielsen" .
+
+<<neoind:24 neovoc:ACTED_IN neoind:58>> neovoc:roles "Albert Lewis" .
+
+neoind:63 a neovoc:Person;
+  neovoc:name "Vincent Ward";
+  neovoc:born "1956"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:DIRECTED neoind:58 .
+
+neoind:62 a neovoc:Person;
+  neovoc:name "Robin Williams";
+  neovoc:born "1951"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:58, neoind:97, neoind:159 .
+
+<<neoind:62 neovoc:ACTED_IN neoind:58>> neovoc:roles "Chris Nielsen" .
+
+neoind:64 a neovoc:Movie;
+  neovoc:released "1999"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:title "Snow Falling on Cedars";
+  neovoc:tagline "First loves last. Forever." .
+
+neoind:68 a neovoc:Person;
+  neovoc:born "1953"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Scott Hicks";
+  neovoc:DIRECTED neoind:64 .
+
+neoind:65 a neovoc:Person;
+  neovoc:name "Ethan Hawke";
+  neovoc:ACTED_IN neoind:64;
+  neovoc:born "1970"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:65 neovoc:ACTED_IN neoind:64>> neovoc:roles "Ishmael Chambers" .
+
+neoind:67 a neovoc:Person;
+  neovoc:ACTED_IN neoind:64, neoind:132;
+  neovoc:born "1940"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "James Cromwell" .
+
+<<neoind:67 neovoc:ACTED_IN neoind:64>> neovoc:roles "Judge Fielding" .
+
+<<neoind:66 neovoc:ACTED_IN neoind:64>> neovoc:roles "Kazuo Miyamoto" .
+
+neoind:66 a neovoc:Person;
+  neovoc:ACTED_IN neoind:64, neoind:130;
+  neovoc:name "Rick Yune";
+  neovoc:born "1971"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:60 neovoc:ACTED_IN neoind:64>> neovoc:roles "Nels Gudmundsson" .
+
+neoind:69 a neovoc:Movie;
+  neovoc:title "You've Got Mail";
+  neovoc:tagline "At odds in life... in love on-line.";
+  neovoc:released "1998"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:71 neovoc:ACTED_IN neoind:69>> neovoc:roles "Kevin Jackson" .
+
+neoind:71 a neovoc:Person;
+  neovoc:name "Dave Chappelle";
+  neovoc:ACTED_IN neoind:69;
+  neovoc:born "1973"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+neoind:73 a neovoc:Person;
+  neovoc:name "Tom Hanks";
+  neovoc:ACTED_IN neoind:69, neoind:75, neoind:80, neoind:87, neoind:107, neoind:113,
+    neoind:132, neoind:146, neoind:152, neoind:161, neoind:163, neoind:164;
+  neovoc:born "1956"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:DIRECTED neoind:87 .
+
+<<neoind:73 neovoc:ACTED_IN neoind:69>> neovoc:roles "Joe Fox" .
+
+neoind:74 a neovoc:Person;
+  neovoc:born "1941"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:DIRECTED neoind:69, neoind:75;
+  neovoc:name "Nora Ephron";
+  neovoc:PRODUCED neoind:83;
+  neovoc:WROTE neoind:83 .
+
+<<neoind:56 neovoc:ACTED_IN neoind:69>> neovoc:roles "Frank Navasky" .
+
+neoind:72 a neovoc:Person;
+  neovoc:ACTED_IN neoind:69, neoind:94;
+  neovoc:name "Steve Zahn";
+  neovoc:born "1967"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:72 neovoc:ACTED_IN neoind:69>> neovoc:roles "George Pappas" .
+
+neoind:70 a neovoc:Person;
+  neovoc:born "1968"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Parker Posey";
+  neovoc:ACTED_IN neoind:69 .
+
+<<neoind:70 neovoc:ACTED_IN neoind:69>> neovoc:roles "Patricia Eden" .
+
+<<neoind:36 neovoc:ACTED_IN neoind:69>> neovoc:roles "Kathleen Kelly" .
+
+<<neoind:36 neovoc:ACTED_IN neoind:75>> neovoc:roles "Annie Reed" .
+
+neoind:75 a neovoc:Movie;
+  neovoc:released "1993"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:tagline "What if someone you never met, someone you never saw, someone you never knew was the only someone for you?";
+  neovoc:title "Sleepless in Seattle" .
+
+neoind:77 a neovoc:Person;
+  neovoc:name "Bill Pullman";
+  neovoc:ACTED_IN neoind:75;
+  neovoc:born "1953"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:77 neovoc:ACTED_IN neoind:75>> neovoc:roles "Walter" .
+
+<<neoind:73 neovoc:ACTED_IN neoind:75>> neovoc:roles "Sam Baldwin" .
+
+neoind:76 a neovoc:Person;
+  neovoc:ACTED_IN neoind:75;
+  neovoc:born "1956"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Rita Wilson" .
+
+<<neoind:76 neovoc:ACTED_IN neoind:75>> neovoc:roles "Suzy" .
+
+neoind:78 a neovoc:Person;
+  neovoc:born "1949"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:75;
+  neovoc:name "Victor Garber" .
+
+<<neoind:78 neovoc:ACTED_IN neoind:75>> neovoc:roles "Greg" .
+
+neoind:79 a neovoc:Person;
+  neovoc:ACTED_IN neoind:75, neoind:164;
+  neovoc:name "Rosie O'Donnell";
+  neovoc:born "1962"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:79 neovoc:ACTED_IN neoind:75>> neovoc:roles "Becky" .
+
+neoind:80 a neovoc:Movie;
+  neovoc:tagline "A story of love, lava and burning desire.";
+  neovoc:released "1990"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:title "Joe Versus the Volcano" .
+
+<<neoind:36 neovoc:ACTED_IN neoind:80>> neovoc:roles "Angelica Graynamore", "Patricia Graynamore",
+    "DeDe" .
+
+neoind:82 a neovoc:Person;
+  neovoc:born "1956"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Nathan Lane";
+  neovoc:ACTED_IN neoind:80, neoind:97 .
+
+<<neoind:82 neovoc:ACTED_IN neoind:80>> neovoc:roles "Baw" .
+
+<<neoind:73 neovoc:ACTED_IN neoind:80>> neovoc:roles "Joe Banks" .
+
+neoind:81 a neovoc:Person;
+  neovoc:DIRECTED neoind:80;
+  neovoc:name "John Patrick Stanley";
+  neovoc:born "1950"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+neoind:86 a neovoc:Person;
+  neovoc:name "Bruno Kirby";
+  neovoc:ACTED_IN neoind:83;
+  neovoc:born "1949"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+neoind:83 a neovoc:Movie;
+  neovoc:released "1998"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:title "When Harry Met Sally";
+  neovoc:tagline "Can two friends sleep together and still love each other in the morning?" .
+
+<<neoind:86 neovoc:ACTED_IN neoind:83>> neovoc:roles "Jess" .
+
+neoind:84 a neovoc:Person;
+  neovoc:ACTED_IN neoind:83;
+  neovoc:name "Billy Crystal";
+  neovoc:born "1948"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:84 neovoc:ACTED_IN neoind:83>> neovoc:roles "Harry Burns" .
+
+<<neoind:36 neovoc:ACTED_IN neoind:83>> neovoc:roles "Sally Albright" .
+
+<<neoind:85 neovoc:ACTED_IN neoind:83>> neovoc:roles "Marie" .
+
+neoind:85 a neovoc:Person;
+  neovoc:ACTED_IN neoind:83;
+  neovoc:born "1956"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Carrie Fisher" .
+
+neoind:88 a neovoc:Person;
+  neovoc:name "Liv Tyler";
+  neovoc:ACTED_IN neoind:87;
+  neovoc:born "1977"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+neoind:87 a neovoc:Movie;
+  neovoc:tagline "In every life there comes a time when that thing you dream becomes that thing you do";
+  neovoc:released "1996"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:title "That Thing You Do" .
+
+<<neoind:88 neovoc:ACTED_IN neoind:87>> neovoc:roles "Faye Dolan" .
+
+<<neoind:73 neovoc:ACTED_IN neoind:87>> neovoc:roles "Mr. White" .
+
+<<neoind:14 neovoc:ACTED_IN neoind:87>> neovoc:roles "Tina" .
+
+neoind:89 a neovoc:Movie;
+  neovoc:tagline "Pain heals, Chicks dig scars... Glory lasts forever";
+  neovoc:title "The Replacements";
+  neovoc:released "2000"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+neoind:90 a neovoc:Person;
+  neovoc:ACTED_IN neoind:89;
+  neovoc:born "1970"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Brooke Langton" .
+
+<<neoind:90 neovoc:ACTED_IN neoind:89>> neovoc:roles "Annabelle Farrell" .
+
+neoind:92 a neovoc:Person;
+  neovoc:born "1968"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Orlando Jones";
+  neovoc:ACTED_IN neoind:89 .
+
+<<neoind:92 neovoc:ACTED_IN neoind:89>> neovoc:roles "Clifford Franklin" .
+
+<<neoind:171 neovoc:REVIEWED neoind:89>> neovoc:summary "Silly, but fun";
+  neovoc:rating "65"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+neoind:91 a neovoc:Person;
+  neovoc:ACTED_IN neoind:89, neoind:97, neoind:99;
+  neovoc:name "Gene Hackman";
+  neovoc:born "1930"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:91 neovoc:ACTED_IN neoind:89>> neovoc:roles "Jimmy McGinty" .
+
+neoind:172 a neovoc:Person;
+  neovoc:name "James Thompson";
+  neovoc:REVIEWED neoind:89, neoind:113 .
+
+<<neoind:172 neovoc:REVIEWED neoind:89>> neovoc:rating "100"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:summary "The coolest football movie ever" .
+
+<<neoind:1 neovoc:ACTED_IN neoind:89>> neovoc:roles "Shane Falco" .
+
+<<neoind:170 neovoc:REVIEWED neoind:89>> neovoc:summary "Pretty funny at times";
+  neovoc:rating "62"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+neoind:170 a neovoc:Person;
+  neovoc:name "Angela Scope";
+  neovoc:REVIEWED neoind:89 .
+
+neoind:93 a neovoc:Person;
+  neovoc:DIRECTED neoind:89;
+  neovoc:born "1950"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Howard Deutch" .
+
+neoind:94 a neovoc:Movie;
+  neovoc:title "RescueDawn";
+  neovoc:tagline "Based on the extraordinary true story of one man's fight for freedom";
+  neovoc:released "2006"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:53 neovoc:ACTED_IN neoind:94>> neovoc:roles "Admiral" .
+
+neoind:95 a neovoc:Person;
+  neovoc:ACTED_IN neoind:94;
+  neovoc:born "1974"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Christian Bale" .
+
+<<neoind:95 neovoc:ACTED_IN neoind:94>> neovoc:roles "Dieter Dengler" .
+
+neoind:96 a neovoc:Person;
+  neovoc:born "1954"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:94, neoind:149;
+  neovoc:name "Zach Grenier" .
+
+<<neoind:96 neovoc:ACTED_IN neoind:94>> neovoc:roles "Squad Leader" .
+
+<<neoind:72 neovoc:ACTED_IN neoind:94>> neovoc:roles "Duane" .
+
+neoind:97 a neovoc:Movie;
+  neovoc:title "The Birdcage";
+  neovoc:tagline "Come as you are";
+  neovoc:released "1996"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:62 neovoc:ACTED_IN neoind:97>> neovoc:roles "Armand Goldman" .
+
+neoind:98 a neovoc:Person;
+  neovoc:born "1931"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Mike Nichols";
+  neovoc:DIRECTED neoind:97, neoind:161 .
+
+<<neoind:82 neovoc:ACTED_IN neoind:97>> neovoc:roles "Albert Goldman" .
+
+<<neoind:91 neovoc:ACTED_IN neoind:97>> neovoc:roles "Sen. Kevin Keeley" .
+
+<<neoind:171 neovoc:REVIEWED neoind:97>> neovoc:summary "Slapstick redeemed only by the Robin Williams and Gene Hackman's stellar performances";
+  neovoc:rating "45"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+neoind:99 a neovoc:Movie;
+  neovoc:released "1992"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:tagline "It's a hell of a thing, killing a man";
+  neovoc:title "Unforgiven" .
+
+neoind:100 a neovoc:Person;
+  neovoc:born "1930"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Richard Harris";
+  neovoc:ACTED_IN neoind:99 .
+
+<<neoind:100 neovoc:ACTED_IN neoind:99>> neovoc:roles "English Bob" .
+
+neoind:101 a neovoc:Person;
+  neovoc:born "1930"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Clint Eastwood";
+  neovoc:DIRECTED neoind:99;
+  neovoc:ACTED_IN neoind:99 .
+
+<<neoind:171 neovoc:REVIEWED neoind:99>> neovoc:rating "85"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:summary "Dark, but compelling" .
+
+<<neoind:101 neovoc:ACTED_IN neoind:99>> neovoc:roles "Bill Munny" .
+
+<<neoind:91 neovoc:ACTED_IN neoind:99>> neovoc:roles "Little Bill Daggett" .
+
+neoind:105 a neovoc:Person;
+  neovoc:born "1958"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:102;
+  neovoc:name "Ice-T" .
+
+neoind:102 a neovoc:Movie;
+  neovoc:title "Johnny Mnemonic";
+  neovoc:tagline "The hottest data on earth. In the coolest head in town";
+  neovoc:released "1995"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:105 neovoc:ACTED_IN neoind:102>> neovoc:roles "J-Bone" .
+
+<<neoind:104 neovoc:ACTED_IN neoind:102>> neovoc:roles "Jane" .
+
+neoind:104 a neovoc:Person;
+  neovoc:name "Dina Meyer";
+  neovoc:ACTED_IN neoind:102;
+  neovoc:born "1968"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+neoind:103 a neovoc:Person;
+  neovoc:name "Takeshi Kitano";
+  neovoc:ACTED_IN neoind:102;
+  neovoc:born "1947"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:103 neovoc:ACTED_IN neoind:102>> neovoc:roles "Takahashi" .
+
+<<neoind:1 neovoc:ACTED_IN neoind:102>> neovoc:roles "Johnny Mnemonic" .
+
+neoind:106 a neovoc:Person;
+  neovoc:name "Robert Longo";
+  neovoc:DIRECTED neoind:102;
+  neovoc:born "1953"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+neoind:107 a neovoc:Movie;
+  neovoc:released "2012"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:tagline "Everything is connected";
+  neovoc:title "Cloud Atlas" .
+
+<<neoind:4 neovoc:ACTED_IN neoind:107>> neovoc:roles "Bill Smoke", "Boardman Mephi",
+    "Haskell Moore", "Old Georgie", "Tadeusz Kesselring", "Nurse Noakes" .
+
+<<neoind:73 neovoc:ACTED_IN neoind:107>> neovoc:roles "Isaac Sachs", "Zachry", "Dr. Henry Goose",
+    "Dermot Hoggins" .
+
+neoind:109 a neovoc:Person;
+  neovoc:born "1949"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Jim Broadbent";
+  neovoc:ACTED_IN neoind:107 .
+
+<<neoind:109 neovoc:ACTED_IN neoind:107>> neovoc:roles "Vyvyan Ayrs", "Timothy Cavendish",
+    "Captain Molyneux" .
+
+neoind:108 a neovoc:Person;
+  neovoc:born "1966"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Halle Berry";
+  neovoc:ACTED_IN neoind:107 .
+
+<<neoind:108 neovoc:ACTED_IN neoind:107>> neovoc:roles "Ovid", "Jocasta Ayrs", "Luisa Rey",
+    "Meronym" .
+
+neoind:110 a neovoc:Person;
+  neovoc:born "1965"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:DIRECTED neoind:107;
+  neovoc:name "Tom Tykwer" .
+
+neoind:112 a neovoc:Person;
+  neovoc:born "1961"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:PRODUCED neoind:107;
+  neovoc:name "Stefan Arndt" .
+
+<<neoind:171 neovoc:REVIEWED neoind:107>> neovoc:summary "An amazing journey";
+  neovoc:rating "95"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+neoind:111 a neovoc:Person;
+  neovoc:WROTE neoind:107;
+  neovoc:born "1969"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "David Mitchell" .
+
+neoind:115 a neovoc:Person;
+  neovoc:name "Audrey Tautou";
+  neovoc:born "1976"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:113 .
+
+neoind:113 a neovoc:Movie;
+  neovoc:tagline "Break The Codes";
+  neovoc:released "2006"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:title "The Da Vinci Code" .
+
+<<neoind:115 neovoc:ACTED_IN neoind:113>> neovoc:roles "Sophie Neveu" .
+
+neoind:114 a neovoc:Person;
+  neovoc:name "Ian McKellen";
+  neovoc:ACTED_IN neoind:113;
+  neovoc:born "1939"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:114 neovoc:ACTED_IN neoind:113>> neovoc:roles "Sir Leight Teabing" .
+
+<<neoind:73 neovoc:ACTED_IN neoind:113>> neovoc:roles "Dr. Robert Langdon" .
+
+neoind:116 a neovoc:Person;
+  neovoc:name "Paul Bettany";
+  neovoc:born "1971"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:113 .
+
+<<neoind:116 neovoc:ACTED_IN neoind:113>> neovoc:roles "Silas" .
+
+<<neoind:171 neovoc:REVIEWED neoind:113>> neovoc:rating "68"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:summary "A solid romp" .
+
+neoind:117 a neovoc:Person;
+  neovoc:name "Ron Howard";
+  neovoc:DIRECTED neoind:113, neoind:139, neoind:146;
+  neovoc:born "1954"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:172 neovoc:REVIEWED neoind:113>> neovoc:rating "65"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:summary "Fun, but a little far fetched" .
+
+<<neoind:121 neovoc:ACTED_IN neoind:118>> neovoc:roles "High Chancellor Adam Sutler" .
+
+neoind:118 a neovoc:Movie;
+  neovoc:title "V for Vendetta";
+  neovoc:released "2006"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:tagline "Freedom! Forever!" .
+
+neoind:121 a neovoc:Person;
+  neovoc:born "1940"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "John Hurt";
+  neovoc:ACTED_IN neoind:118 .
+
+<<neoind:122 neovoc:ACTED_IN neoind:118>> neovoc:roles "Dascomb" .
+
+neoind:122 a neovoc:Person;
+  neovoc:ACTED_IN neoind:118, neoind:123, neoind:130;
+  neovoc:name "Ben Miles";
+  neovoc:born "1967"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:4 neovoc:ACTED_IN neoind:118>> neovoc:roles "V" .
+
+neoind:120 a neovoc:Person;
+  neovoc:born "1946"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:118;
+  neovoc:name "Stephen Rea" .
+
+<<neoind:120 neovoc:ACTED_IN neoind:118>> neovoc:roles "Eric Finch" .
+
+neoind:119 a neovoc:Person;
+  neovoc:ACTED_IN neoind:118;
+  neovoc:born "1981"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Natalie Portman" .
+
+<<neoind:119 neovoc:ACTED_IN neoind:118>> neovoc:roles "Evey Hammond" .
+
+neoind:123 a neovoc:Movie;
+  neovoc:tagline "Speed has no limits";
+  neovoc:title "Speed Racer";
+  neovoc:released "2008"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+neoind:126 a neovoc:Person;
+  neovoc:name "Susan Sarandon";
+  neovoc:ACTED_IN neoind:123;
+  neovoc:born "1946"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:126 neovoc:ACTED_IN neoind:123>> neovoc:roles "Mom" .
+
+<<neoind:122 neovoc:ACTED_IN neoind:123>> neovoc:roles "Cass Jones" .
+
+neoind:125 a neovoc:Person;
+  neovoc:born "1960"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:123;
+  neovoc:name "John Goodman" .
+
+<<neoind:125 neovoc:ACTED_IN neoind:123>> neovoc:roles "Pops" .
+
+neoind:129 a neovoc:Person;
+  neovoc:name "Rain";
+  neovoc:ACTED_IN neoind:123, neoind:130;
+  neovoc:born "1982"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:129 neovoc:ACTED_IN neoind:123>> neovoc:roles "Taejo Togokahn" .
+
+neoind:124 a neovoc:Person;
+  neovoc:ACTED_IN neoind:123;
+  neovoc:born "1985"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Emile Hirsch" .
+
+<<neoind:124 neovoc:ACTED_IN neoind:123>> neovoc:roles "Speed Racer" .
+
+neoind:127 a neovoc:Person;
+  neovoc:name "Matthew Fox";
+  neovoc:born "1966"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:123 .
+
+<<neoind:127 neovoc:ACTED_IN neoind:123>> neovoc:roles "Racer X" .
+
+neoind:128 a neovoc:Person;
+  neovoc:born "1980"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:123;
+  neovoc:name "Christina Ricci" .
+
+<<neoind:128 neovoc:ACTED_IN neoind:123>> neovoc:roles "Trixie" .
+
+neoind:130 a neovoc:Movie;
+  neovoc:title "Ninja Assassin";
+  neovoc:tagline "Prepare to enter a secret world of assassins";
+  neovoc:released "2009"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:122 neovoc:ACTED_IN neoind:130>> neovoc:roles "Ryan Maslow" .
+
+neoind:131 a neovoc:Person;
+  neovoc:ACTED_IN neoind:130;
+  neovoc:name "Naomie Harris" .
+
+<<neoind:131 neovoc:ACTED_IN neoind:130>> neovoc:roles "Mika Coretti" .
+
+<<neoind:66 neovoc:ACTED_IN neoind:130>> neovoc:roles "Takeshi" .
+
+<<neoind:129 neovoc:ACTED_IN neoind:130>> neovoc:roles "Raizo" .
+
+neoind:132 a neovoc:Movie;
+  neovoc:title "The Green Mile";
+  neovoc:tagline "Walk a mile you'll never forget.";
+  neovoc:released "1999"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+neoind:135 a neovoc:Person;
+  neovoc:ACTED_IN neoind:132, neoind:139;
+  neovoc:born "1968"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Sam Rockwell" .
+
+<<neoind:135 neovoc:ACTED_IN neoind:132>> neovoc:roles "\"Wild Bill\" Wharton" .
+
+neoind:138 a neovoc:Person;
+  neovoc:DIRECTED neoind:132;
+  neovoc:born "1959"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Frank Darabont" .
+
+<<neoind:73 neovoc:ACTED_IN neoind:132>> neovoc:roles "Paul Edgecomb" .
+
+neoind:137 a neovoc:Person;
+  neovoc:ACTED_IN neoind:132;
+  neovoc:name "Patricia Clarkson";
+  neovoc:born "1959"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:137 neovoc:ACTED_IN neoind:132>> neovoc:roles "Melinda Moores" .
+
+neoind:133 a neovoc:Person;
+  neovoc:born "1957"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Michael Clarke Duncan";
+  neovoc:ACTED_IN neoind:132 .
+
+<<neoind:133 neovoc:ACTED_IN neoind:132>> neovoc:roles "John Coffey" .
+
+<<neoind:67 neovoc:ACTED_IN neoind:132>> neovoc:roles "Warden Hal Moores" .
+
+<<neoind:44 neovoc:ACTED_IN neoind:132>> neovoc:roles "Jan Edgecomb" .
+
+<<neoind:136 neovoc:ACTED_IN neoind:132>> neovoc:roles "Burt Hammersmith" .
+
+neoind:136 a neovoc:Person;
+  neovoc:name "Gary Sinise";
+  neovoc:ACTED_IN neoind:132, neoind:146;
+  neovoc:born "1955"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+neoind:134 a neovoc:Person;
+  neovoc:ACTED_IN neoind:132;
+  neovoc:name "David Morse";
+  neovoc:born "1953"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:134 neovoc:ACTED_IN neoind:132>> neovoc:roles "Brutus \"Brutal\" Howell" .
+
+neoind:139 a neovoc:Movie;
+  neovoc:released "2008"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:tagline "400 million people were waiting for the truth.";
+  neovoc:title "Frost/Nixon" .
+
+neoind:142 a neovoc:Person;
+  neovoc:name "Oliver Platt";
+  neovoc:born "1960"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:139, neoind:159 .
+
+<<neoind:142 neovoc:ACTED_IN neoind:139>> neovoc:roles "Bob Zelnick" .
+
+neoind:141 a neovoc:Person;
+  neovoc:born "1969"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Michael Sheen";
+  neovoc:ACTED_IN neoind:139 .
+
+<<neoind:141 neovoc:ACTED_IN neoind:139>> neovoc:roles "David Frost" .
+
+<<neoind:135 neovoc:ACTED_IN neoind:139>> neovoc:roles "James Reston, Jr." .
+
+neoind:140 a neovoc:Person;
+  neovoc:born "1938"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Frank Langella";
+  neovoc:ACTED_IN neoind:139 .
+
+<<neoind:140 neovoc:ACTED_IN neoind:139>> neovoc:roles "Richard Nixon" .
+
+<<neoind:21 neovoc:ACTED_IN neoind:139>> neovoc:roles "Jack Brennan" .
+
+neoind:144 a neovoc:Person;
+  neovoc:born "1944"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Danny DeVito";
+  neovoc:DIRECTED neoind:143;
+  neovoc:ACTED_IN neoind:143, neoind:154 .
+
+neoind:143 a neovoc:Movie;
+  neovoc:title "Hoffa";
+  neovoc:released "1992"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:tagline "He didn't want law. He wanted justice." .
+
+<<neoind:144 neovoc:ACTED_IN neoind:143>> neovoc:roles "Robert \"Bobby\" Ciaro" .
+
+<<neoind:19 neovoc:ACTED_IN neoind:143>> neovoc:roles "Hoffa" .
+
+neoind:145 a neovoc:Person;
+  neovoc:born "1965"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "John C. Reilly";
+  neovoc:ACTED_IN neoind:143 .
+
+<<neoind:145 neovoc:ACTED_IN neoind:143>> neovoc:roles "Peter \"Pete\" Connelly" .
+
+<<neoind:26 neovoc:ACTED_IN neoind:143>> neovoc:roles "Frank Fitzsimmons" .
+
+neoind:146 a neovoc:Movie;
+  neovoc:tagline "Houston, we have a problem.";
+  neovoc:released "1995"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:title "Apollo 13" .
+
+<<neoind:21 neovoc:ACTED_IN neoind:146>> neovoc:roles "Jack Swigert" .
+
+<<neoind:136 neovoc:ACTED_IN neoind:146>> neovoc:roles "Ken Mattingly" .
+
+<<neoind:73 neovoc:ACTED_IN neoind:146>> neovoc:roles "Jim Lovell" .
+
+<<neoind:148 neovoc:ACTED_IN neoind:146>> neovoc:roles "Fred Haise" .
+
+neoind:148 a neovoc:Person;
+  neovoc:born "1955"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Bill Paxton";
+  neovoc:ACTED_IN neoind:146, neoind:149, neoind:164 .
+
+neoind:147 a neovoc:Person;
+  neovoc:ACTED_IN neoind:146;
+  neovoc:name "Ed Harris";
+  neovoc:born "1950"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:147 neovoc:ACTED_IN neoind:146>> neovoc:roles "Gene Kranz" .
+
+neoind:149 a neovoc:Movie;
+  neovoc:released "1996"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:tagline "Don't Breathe. Don't Look Back.";
+  neovoc:title "Twister" .
+
+<<neoind:148 neovoc:ACTED_IN neoind:149>> neovoc:roles "Bill Harding" .
+
+<<neoind:96 neovoc:ACTED_IN neoind:149>> neovoc:roles "Eddie" .
+
+<<neoind:55 neovoc:ACTED_IN neoind:149>> neovoc:roles "Dr. Jo Harding" .
+
+neoind:151 a neovoc:Person;
+  neovoc:DIRECTED neoind:149;
+  neovoc:born "1943"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:name "Jan de Bont" .
+
+<<neoind:150 neovoc:ACTED_IN neoind:149>> neovoc:roles "Dustin \"Dusty\" Davis" .
+
+neoind:150 a neovoc:Person;
+  neovoc:name "Philip Seymour Hoffman";
+  neovoc:born "1967"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:149, neoind:161 .
+
+neoind:153 a neovoc:Person;
+  neovoc:DIRECTED neoind:152, neoind:163;
+  neovoc:name "Robert Zemeckis";
+  neovoc:born "1951"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+neoind:152 a neovoc:Movie;
+  neovoc:title "Cast Away";
+  neovoc:tagline "At the edge of the world, his journey begins.";
+  neovoc:released "2000"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:73 neovoc:ACTED_IN neoind:152>> neovoc:roles "Chuck Noland" .
+
+<<neoind:55 neovoc:ACTED_IN neoind:152>> neovoc:roles "Kelly Frears" .
+
+neoind:154 a neovoc:Movie;
+  neovoc:title "One Flew Over the Cuckoo's Nest";
+  neovoc:released "1975"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:tagline "If he's crazy, what does that make you?" .
+
+<<neoind:19 neovoc:ACTED_IN neoind:154>> neovoc:roles "Randle McMurphy" .
+
+neoind:155 a neovoc:Person;
+  neovoc:name "Milos Forman";
+  neovoc:DIRECTED neoind:154;
+  neovoc:born "1932"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:144 neovoc:ACTED_IN neoind:154>> neovoc:roles "Martini" .
+
+neoind:156 a neovoc:Movie;
+  neovoc:released "2003"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:title "Something's Gotta Give" .
+
+neoind:158 a neovoc:Person;
+  neovoc:name "Nancy Meyers";
+  neovoc:born "1949"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:PRODUCED neoind:156;
+  neovoc:DIRECTED neoind:156;
+  neovoc:WROTE neoind:156 .
+
+<<neoind:1 neovoc:ACTED_IN neoind:156>> neovoc:roles "Julian Mercer" .
+
+neoind:157 a neovoc:Person;
+  neovoc:born "1946"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:156;
+  neovoc:name "Diane Keaton" .
+
+<<neoind:157 neovoc:ACTED_IN neoind:156>> neovoc:roles "Erica Barry" .
+
+<<neoind:19 neovoc:ACTED_IN neoind:156>> neovoc:roles "Harry Sanborn" .
+
+neoind:159 a neovoc:Movie;
+  neovoc:tagline "One robot's 200 year journey to become an ordinary man.";
+  neovoc:released "1999"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:title "Bicentennial Man" .
+
+<<neoind:142 neovoc:ACTED_IN neoind:159>> neovoc:roles "Rupert Burns" .
+
+<<neoind:62 neovoc:ACTED_IN neoind:159>> neovoc:roles "Andrew Marin" .
+
+neoind:160 a neovoc:Person;
+  neovoc:DIRECTED neoind:159;
+  neovoc:name "Chris Columbus";
+  neovoc:born "1958"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+neoind:161 a neovoc:Movie;
+  neovoc:tagline "A stiff drink. A little mascara. A lot of nerve. Who said they couldn't bring down the Soviet empire.";
+  neovoc:title "Charlie Wilson's War";
+  neovoc:released "2007"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:150 neovoc:ACTED_IN neoind:161>> neovoc:roles "Gust Avrakotos" .
+
+neoind:162 a neovoc:Person;
+  neovoc:name "Julia Roberts";
+  neovoc:ACTED_IN neoind:161;
+  neovoc:born "1967"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:162 neovoc:ACTED_IN neoind:161>> neovoc:roles "Joanne Herring" .
+
+<<neoind:73 neovoc:ACTED_IN neoind:161>> neovoc:roles "Rep. Charlie Wilson" .
+
+neoind:163 a neovoc:Movie;
+  neovoc:tagline "This Holiday Season... Believe";
+  neovoc:released "2004"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:title "The Polar Express" .
+
+<<neoind:73 neovoc:ACTED_IN neoind:163>> neovoc:roles "Father", "Conductor", "Santa Claus",
+    "Hero Boy", "Scrooge", "Hobo" .
+
+neoind:164 a neovoc:Movie;
+  neovoc:released "1992"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:tagline "Once in a lifetime you get a chance to do something different.";
+  neovoc:title "A League of Their Own" .
+
+<<neoind:73 neovoc:ACTED_IN neoind:164>> neovoc:roles "Jimmy Dugan" .
+
+neoind:168 a neovoc:Person;
+  neovoc:name "Penny Marshall";
+  neovoc:born "1943"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:DIRECTED neoind:164 .
+
+neoind:166 a neovoc:Person;
+  neovoc:born "1956"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:164;
+  neovoc:name "Geena Davis" .
+
+<<neoind:166 neovoc:ACTED_IN neoind:164>> neovoc:roles "Dottie Hinson" .
+
+<<neoind:148 neovoc:ACTED_IN neoind:164>> neovoc:roles "Bob Hinson" .
+
+<<neoind:79 neovoc:ACTED_IN neoind:164>> neovoc:roles "Doris Murphy" .
+
+neoind:165 a neovoc:Person;
+  neovoc:name "Madonna";
+  neovoc:ACTED_IN neoind:164;
+  neovoc:born "1954"^^<http://www.w3.org/2001/XMLSchema#long> .
+
+<<neoind:165 neovoc:ACTED_IN neoind:164>> neovoc:roles "\"All the Way\" Mae Mordabito" .
+
+neoind:167 a neovoc:Person;
+  neovoc:name "Lori Petty";
+  neovoc:born "1963"^^<http://www.w3.org/2001/XMLSchema#long>;
+  neovoc:ACTED_IN neoind:164 .
+
+<<neoind:167 neovoc:ACTED_IN neoind:164>> neovoc:roles "Kit Keller" .
+
+neoind:169 a neovoc:Person;
+  neovoc:FOLLOWS neoind:170;
+  neovoc:name "Paul Blythe" .
+
+neoind:172 neovoc:FOLLOWS neoind:171 .
+
+neoind:170 neovoc:FOLLOWS neoind:171 .

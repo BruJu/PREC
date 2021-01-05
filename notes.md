@@ -89,3 +89,73 @@ actually bring more semantic in a sense, but then we would lose the
 
 We don't have any direct edge between Ann and Dan anymore.
 
+
+## The movies example
+
+
+In Neo4J type: `:play movie-graph`
+
+In the second page, a cypher request to create the Movie Database will appear. Use this request.
+
+- [data/movies_neo4j.ttl](data/movies_neo4j.ttl) exposes NeoSemantic result
+- [data/movies.json](data/movies.json) is the input for our script (`./attempt2-hardcode.js data/movies.json`)
+
+
+### Discussion
+
+This example was mostly useful for bug fixing (multiple values for a single property).
+
+NeoSemantics and we produce a similar RDF graph.
+
+**TODO: rdf diff to confirm it**
+
+The main difference is that NeoSemantics uses the PG mode while we use the SA.
+
+This means that we don't actually affirm that actors acted in movies : This is
+a problem as we could infer that if someone acted in something with a role
+(`<<a b c>> d e.`), then he actually acted in it (`a b c.`).
+
+**TODO: find a (generic) way to add this inference in the produced graph**
+
+
+## Barack Obama
+
+`create (bobama: DAD:HUSBAND:PRESIDENT:CITIZEN { name: 'Obama', surname: 'Barack' })`
+
+
+### NeoSemantics
+`:POST http://localhost:7474/rdf/neo4j/cypher { "cypher" : "match (m) return m", "format": "Turtle*"}`
+
+```turtle
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix neovoc: <neo4j://vocabulary#> .
+@prefix neoind: <neo4j://individuals#> .
+
+neoind:173 a neovoc:DAD, neovoc:HUSBAND, neovoc:CITIZEN, neovoc:PRESIDENT;
+  neovoc:name "Obama";
+  neovoc:surname "Barack" .
+```
+
+### Our output
+
+
+`CALL apoc.export.json.all("obama.json",{useTypes:true})`
+`node attempt2-hardcode.js data/obama.json`
+
+
+```turtle
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+
+<http://node/173> a <http://types/CITIZEN>, <http://types/DAD>, <http://types/HUSBAND>, <http://types/PRESIDENT>;
+    <http://attribute/surname> "Barack";
+    <http://attribute/name> "Obama".
+```
+
+
+It is similar.
+
+### Discussion: Enriching the semantic
+
+`http://attribute/surname` and `http://attribute/name` brings no semantics (we could use foaf). Some of the types are probably also defined in vocalubaries like schema.org.
+
+If we know that his name is Barack and his surname is Obama, then maybe `http://dbpedia.org/resource/Barack_Obama` exists? But does it refers to the same person?
