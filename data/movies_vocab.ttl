@@ -1,0 +1,5 @@
+PREFIX prec: <http://bruy.at/prec#>
+
+<https://schema.org/actor> prec:relationshipIRI "ACTED_IN" ;
+    a prec:alwaysAsserted .
+
