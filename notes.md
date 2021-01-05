@@ -82,3 +82,10 @@ to reify multiple edges into RDF nodes.
 
 If would be hard to restore the Property Graph with 3 edges instead
 of creating nodes for the likes.
+
+We use `rdf:predicate` as we use standard RDF reification. rdf:type would
+actually bring more semantic in a sense, but then we would lose the
+"standard-ness" of rdf:subject and rdf:object usage.
+
+We don't have any direct edge between Ann and Dan anymore.
+

@@ -2,6 +2,16 @@
 
 Some experiments about PG to RDF conversion.
 
+## Quick start
+
+- `npm install`
+- `node attempt2-hardcode.js annlikesdan.json`
+
+### Less quick start
+
+- [The data folder](data) contains Neo4J (small) exported property graphs.
+- Check [notes.md](notes.md) for details about some of the examples approach
+
 
 ## Neo4j
 

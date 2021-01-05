@@ -1,5 +1,10 @@
 'use strict';
 
+// This file enables to convert an APOC exported Property Graph in Json format
+// into a Turtle-star RDF-star file.
+//
+// RDF-star is used in SA mode (annotated quads are not affirmed).
+
 const N3        = require('n3');
 const namespace = require('@rdfjs/namespace');
 
@@ -192,10 +197,7 @@ function jsarray_to_nodesedges(ar) {
     return [nodes, reifiedEdges, edges, relationshipProperties];
 }
 
-
 let categoriesOfQuads = jsarray_to_nodesedges(propertyGraphStructure);
-
-//const dataset = ds();
 
 const store = new N3.Store();
 
