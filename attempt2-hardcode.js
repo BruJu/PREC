@@ -15,6 +15,15 @@ if (process.argv.length < 3) {
 
 const filename = process.argv[2];
 
+let addedVocabulary = null;
+
+if (process.argv.length >= 4) {
+    addedVocabulary = require("./vocabulary-expansion.js")(process.argv[3]);
+    console.log("== VOCABULARY ==")
+    console.log(addedVocabulary);
+    console.log("----------------")
+}
+
 let propertyGraphStructure = require("./file-read.js").fromNeo4j(filename);
 
 // ============================================================================
@@ -42,9 +51,27 @@ function makeLabelIdentifier(labelName) {
     return N3.DataFactory.namedNode("http://types/" + labelName);
 }
 
-function makeNodeAttributeIdentifier(fieldName) {
+function makeNodeAttributeIdentifier(fieldName, addedVocabulary) {
+    const rules = findRulesFor("attributeIRI", fieldName, addedVocabulary);
+    if (rules.length > 0) {
+        for (const rule of rules) {
+            if (rule.when == "always") {
+                return rule.replacement;
+            } else {
+                console.error("Unexpected when clause: " + rule);
+            }
+        }
+    }
+
     return N3.DataFactory.namedNode("http://attribute/" + fieldName)
 }
+
+
+function findRulesFor(kind, target, addedVocabulary) {
+    if (addedVocabulary === null) return [];
+    return addedVocabulary[kind].filter(props => props.target == target);
+}
+
 
 // ============================================================================
 
@@ -84,7 +111,7 @@ function findReifiedRelationships(ar) {
     return reifiedList;
 }
 
-function jsarray_to_nodesedges(ar) {
+function jsarray_to_nodesedges(ar, addedVocabulary) {
     // Nodes
     const nodes = ar
         .filter(object => object.type === 'node')
@@ -110,7 +137,7 @@ function jsarray_to_nodesedges(ar) {
                     resultingQuads.push(
                         N3.DataFactory.quad(
                             subject,
-                            makeNodeAttributeIdentifier(property),
+                            makeNodeAttributeIdentifier(property, addedVocabulary),
                             N3.DataFactory.literal(object.properties[property])         // ???
                         )
                     );
@@ -208,7 +235,7 @@ function jsarray_to_nodesedges(ar) {
     return [nodes, reifiedEdges, edges, relationshipProperties];
 }
 
-let categoriesOfQuads = jsarray_to_nodesedges(propertyGraphStructure);
+let categoriesOfQuads = jsarray_to_nodesedges(propertyGraphStructure, addedVocabulary);
 
 const store = new N3.Store();
 

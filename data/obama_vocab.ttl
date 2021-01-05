@@ -1,0 +1,5 @@
+PREFIX prec: <http://bruy.at/prec#>
+
+<https://schema.org/givenName> prec:attributeIRI "surname" .
+<https://schema.org/familyName> prec:attributeIRI "name" .
+
