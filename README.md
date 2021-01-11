@@ -29,3 +29,11 @@ so the Java exception tells the complete path
 
 **TODO:** `apoc.import.file.use_neo4j_config=false` to use absolute paths?
 
+
+## Scripts
+
+- `attempt1-jsonld.js`: Some code I first wrote. I wanted to use Json-LD but didn't finish it
+- `attempt2-hardcode.js`: A "all at once" translation that does everything at the same time. Kind of works
+but not very clear
+- `attempt3-expanded.js`: Transform a PG into what I call an "Expanded RDF Graph translation of a PG". Requires
+some transformation that will be provided soon.
