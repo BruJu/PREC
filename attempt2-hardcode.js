@@ -39,8 +39,9 @@ function matchingRule(rule, extra) {
 
 class PGtoRDFMapper {
     constructor(vocabulary) {
-        this.vocabulary = vocabulary;
+        this.vocabulary = vocabulary || {};
         this.knownNodes = {};
+        this.knwonReifiedNodes = {};
         this.knownRelations = {};
         this.knownAttributes = {};
     }
@@ -51,6 +52,14 @@ class PGtoRDFMapper {
         }
 
         return this.knownNodes[nodeId];
+    }
+
+    getReifiedNodeFromId(nodeId) {
+        if (this.knwonReifiedNodes[nodeId] === undefined) {
+            this.knwonReifiedNodes[nodeId] = ex["relnode#" + nodeId];
+        }
+
+        return this.knwonReifiedNodes[nodeId];
     }
 
     getAttributeFromName(attributeName/* TODO:, listOfLabelsOfNode */) {
@@ -77,8 +86,8 @@ class PGtoRDFMapper {
     }
 
     _findRulesFor(kind, target) {
-        if (addedVocabulary[kind] === undefined) return [];
-        return addedVocabulary[kind].filter(props => props.target == target);
+        if (this.vocabulary[kind] === undefined) return [];
+        return this.vocabulary[kind].filter(props => props.target == target);
     }
 
     getRelationship(relationshipLabel /*TODO:, sourceLabels, destinationLabels */) {
@@ -193,7 +202,7 @@ function jsarray_to_nodesedges(ar, addedVocabulary_) {
             if (reifiedRelationships.has(object.label)) {
                 // RDF standard reification is required so the relationship is materialized
                 // as a new node in the RDF graphy
-                const edgeId = makeRelationshipNodeIdentifier(object.id);
+                const edgeId = mapping.getRelationship(object.id);
                 object.associatedTerm = edgeId;
 
                 resultingQuads.push(N3.DataFactory.quad(edgeId, rdf.subject  , rdfSubject  ));
