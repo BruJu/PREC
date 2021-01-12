@@ -5,6 +5,7 @@ const graphyFactory = require('@graphy/core.data.factory');
 const namespace     = require('@rdfjs/namespace');
 
 const storeAlterer  = require("./store-alterer-from-pattern.js");
+const vocabReader   = require("../vocabulary-expansion.js");
 
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#", N3.DataFactory)
@@ -122,13 +123,66 @@ function removePGO(store) {
     storeAlterer.deleteMatches(store, null, rdf.type, pgo.Property);
 }
 
+
+function applyVocabulary(store, vocabularyPath) {
+    const variable = N3.DataFactory.variable;
+    const addedVocabulary = vocabReader(vocabularyPath);
+
+    console.log(addedVocabulary);
+
+    for (const knownProperty of addedVocabulary["propertyIRI"]) {
+        if (knownProperty.when !== "always") {
+            console.error("non always propertyIRI are not yet supported");
+            continue;
+        }
+
+        const bind = storeAlterer.matchAndBind(
+            store,
+            [
+                [variable("property"), rdf.type  , pgo.Property],
+                [variable("property"), rdfs.label, N3.DataFactory.literal(knownProperty.target)],
+            ]
+        );
+
+        for (const bind1 of bind) {
+            storeAlterer.substitute(store, bind1.property, knownProperty.replacement);
+        }
+    }
+
+    for (const knownProperty of addedVocabulary["relationshipIRI"]) {
+        if (knownProperty.when !== "always") {
+            console.error("non always relationshipIRI are not yet supported");
+            continue;
+        }
+
+        const bind = storeAlterer.matchAndBind(
+            store,
+            [
+                //[N3.DataFactory.quad(variable("s"), variable("relLabel"), variable("o")), rdf.type  , pgo.Edge],
+                [variable("node"), rdf.type, pgo.Edge],
+                [variable("node"), rdf.predicate, variable("relLabel")],
+                [variable("relLabel"), rdfs.label, N3.DataFactory.literal(knownProperty.target)],
+            ]
+        );
+
+        console.log(bind);
+
+        for (const bind1 of bind) {
+            storeAlterer.substitute(store, bind1.relLabel, knownProperty.replacement);
+        }
+    }
+
+}
+
+
 const availableTransformations = {
     "RRA"    : store => transformationAttributes(store, false),
     "RRAstar": store => transformationAttributes(store, true),
     "RRR"    : store => transformationRelationship(store, false),
     "RRRstar": store => transformationRelationship(store, true),
     "NoLabel": store => storeAlterer.deleteMatches(store, null, rdfs.label, null),
-    "NoPGO"  : store => removePGO(store)
+    "NoPGO"  : store => removePGO(store),
+    "Vocab"  : (store, filename) => applyVocabulary(store, filename)
 };
 
 function listOfTransformations() {
@@ -140,9 +194,16 @@ function listOfTransformations() {
 }
 
 function applyTransformations(store, transformationNames) {
-    for (let transformation of transformationNames) {
-        const transformer = availableTransformations[transformation];
-        transformer(store);
+    for (let i = 0 ; i != transformationNames.length; ++i) {
+        const transformationName = transformationNames[i];
+        const transformer = availableTransformations[transformationName];
+        
+        if (transformationName !== "Vocab") {
+            transformer(store);
+        } else {
+            const parameter = transformationNames[++i];
+            transformer(store, parameter);
+        }
     }
 }
 

@@ -8,16 +8,16 @@ const rdf = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFact
 const rdfType = rdf.type;
 
 const prec = namespace("http://bruy.at/prec#", N3.DataFactory);
-const precAttributeIRI = prec.attributeIRI;
+const precpropertyIRI = prec.propertyIRI;
 const precRelationshipIRI = prec.relationshipIRI;
 const precAlwaysAsserted = prec.alwaysAsserted;
 
 function readQuad(quad) {
-    if (quad.predicate.equals(precAttributeIRI)) {
+    if (quad.predicate.equals(precpropertyIRI)) {
         // assert(subject is named node)
         // assert(object is raw string literal)
         return [
-            "attributeIRI",
+            "propertyIRI",
             {
                 "target": quad.object.value,
                 "replacement": quad.subject,
@@ -46,7 +46,7 @@ function readQuad(quad) {
 
 function readVocabulary(filename) {
     const vocab = {
-        "attributeIRI": [],
+        "propertyIRI": [],
         "relationshipIRI": [],
         "alwaysAsserted": []
     };

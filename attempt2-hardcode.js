@@ -64,12 +64,12 @@ class PGtoRDFMapper {
 
     getAttributeFromName(attributeName/* TODO:, listOfLabelsOfNode */) {
         if (this.knownAttributes[attributeName] === undefined) {
-            const ruleToApply = this._findRulesFor("attributeIRI", attributeName)
+            const ruleToApply = this._findRulesFor("propertyIRI", attributeName)
                 .filter(rule => matchingRule(rule, null));
             
             if (ruleToApply.length != 0) {
                 if (ruleToApply.length > 1) {
-                    console.error("More than 1 rule match attribute#" + attributeName);
+                    console.error("More than 1 rule match property#" + attributeName);
                 }
                 
                 this.knownAttributes[attributeName] = ruleToApply[0].replacement;

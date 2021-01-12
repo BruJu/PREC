@@ -62,20 +62,26 @@ function replace(store, foundBindings, newPattern) {
     let r = [];
 
     for (let binds of foundBindings) {
-        store.removeQuads(binds["@quads"]);
+        r.push(replaceOneBinding(store, binds, newPattern));
+    }
 
-        r.push({ "binds": binds, "quads": [] });
+    return r;
+}
 
-        for (const newPattern1 of newPattern) {
-            const newQuad = DataFactory.quad(
-                forMatch(newPattern1[0], binds),
-                forMatch(newPattern1[1], binds),
-                forMatch(newPattern1[2], binds),
-            );
+function replaceOneBinding(store, binds, newPattern) {
+    store.removeQuads(binds["@quads"]);
 
-            r[r.length - 1].quads.push(newQuad);
-            store.addQuad(newQuad);
-        }
+    const r = { "binds": binds, "quads": [] };
+
+    for (const newPattern1 of newPattern) {
+        const newQuad = DataFactory.quad(
+            forMatch(newPattern1[0], binds),
+            forMatch(newPattern1[1], binds),
+            forMatch(newPattern1[2], binds),
+        );
+
+        r.quads.push(newQuad);
+        store.addQuad(newQuad);
     }
 
     return r;
@@ -167,12 +173,45 @@ function matchAndBind(store, pattern) {
     return _matchAndBind(store, pattern, 0, [ { "@quads": [] } ]);
 }
 
+function directReplace(store, source, destination) {
+    const s = matchAndBind(store, source);
+    return replace(store, s, destination);
+}
+
+function substitute(store, source, destination) {
+    const variable = DataFactory.variable;
+
+    console.log(source);
+    console.log(destination);
+    
+    directReplace(
+        store,
+        [[source, variable("p"), variable("o")]],
+        [[destination, variable("p"), variable("o")]]
+    );
+
+    directReplace(
+        store,
+        [[variable("s"), source, variable("o")]],
+        [[variable("s"), destination, variable("o")]]
+    );
+
+    directReplace(
+        store,
+        [[variable("s"), variable("p"), source]],
+        [[variable("s"), variable("p"), destination]]
+    );
+}
+
 module.exports = {
     forMatch: forMatch,
     addBind: addBind,
     replace: replace,
+    replaceOneBinding: replaceOneBinding,
     deleteMatches: deleteMatches,
     matchAndBind: matchAndBind,
     toRdfStar: toRdfStar,
-    filterBinds: filterBinds
+    filterBinds: filterBinds,
+    directReplace: directReplace,
+    substitute: substitute
 };

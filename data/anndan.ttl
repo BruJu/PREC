@@ -1,0 +1,4 @@
+PREFIX prec: <http://bruy.at/prec#>
+
+<https://example.org/likes> prec:relationshipIRI "Likes" .
+
