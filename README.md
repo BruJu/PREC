@@ -6,6 +6,7 @@ Some experiments about PG to RDF conversion.
 
 - `npm install`
 - `node attempt2-hardcode.js annlikesdan.json`
+- `node attempt3-expanded.js "data\annlikesdan.json" RRAstar RRRstar NoLabel NoPGO`
 
 ### Less quick start
 
