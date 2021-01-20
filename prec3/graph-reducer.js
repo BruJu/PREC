@@ -206,6 +206,53 @@ function flatten(store) {
     return true;
 }
 
+function noList(store) {
+
+    const r = storeAlterer.matchAndBind(store,
+        [
+            [
+                variable("firstNode"),
+                rdf.type,
+                rdf.List
+            ],
+            [
+                variable("s"),
+                variable("p"),
+                variable("firstNode")
+            ]
+        ]
+    );
+
+    for (const d of r) {
+        const l = storeAlterer.extractRecursive(
+            store,
+            d["firstNode"],
+            [
+                [
+                    variable("(R) current"),
+                    rdf.type,
+                    rdf.List,
+                ],
+                [
+                    variable("(R) current"),
+                    rdf.first,
+                    variable("value")
+                ],
+                [
+                    variable("(R) current"),
+                    rdf.rest,
+                    variable("(R) next")
+                ]
+            ],
+            rdf.nil
+        );
+
+        console.error(l);
+    }
+
+
+}
+
 
 const availableTransformations = {
     "RRA"    : store => transformationAttributes(store, false),
@@ -215,7 +262,8 @@ const availableTransformations = {
     "NoLabel": store => storeAlterer.deleteMatches(store, null, rdfs.label, null),
     "NoPGO"  : store => removePGO(store),
     "Vocab"  : (store, filename) => applyVocabulary(store, filename),
-    "Flatten": store => flatten(store)
+    "Flatten": store => flatten(store),
+    "NoList" : store => noList(store)
 };
 
 function listOfTransformations() {

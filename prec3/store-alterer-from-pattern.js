@@ -5,6 +5,7 @@
 //! so I built one...
 
 const DataFactory = require('n3').DataFactory;
+const variable = DataFactory.variable;
 
 /**
  * Converts a term into :
@@ -203,6 +204,52 @@ function substitute(store, source, destination) {
     );
 }
 
+function _modify_pattern(pattern, sourceNode, destinationNode) {
+    return pattern.map(
+        list_of_terms => list_of_terms.map(
+            term => term.equals(sourceNode) ? destinationNode : term
+        )
+    );
+}
+
+/**
+ * Extract the values from a recursive pattern (for example every value
+ * from an RDF List)
+ * 
+ * Returns null if at some point, the structure was not valid (exactly one
+ * match was not found for the pattern)
+ * 
+ * @param {*} store The store
+ * @param {*} beginNode The first node of the list
+ * @param {*} recursivePattern The pattern to find the next element and the
+ * next node
+ * @param {*} endNode The final node value
+ */
+function extractRecursive(store, beginNode, recursivePattern, endNode) {
+    let listedNodes = [];
+
+    let currentNode = beginNode;
+    while (!currentNode.equals(endNode)) {
+        // We need to map the recursive pattern to a pattern (by replacing v with current node)
+        let pattern = _modify_pattern(recursivePattern, variable("(R) current"), currentNode)
+
+        let r = matchAndBind(store, pattern);
+
+        if (r.length != 1) {
+            // do something
+            console.error(r);
+            return null;
+        }
+
+        r = r[0];
+
+        listedNodes.push(r["value"]); // ?
+        currentNode = r["(R) next"];
+    }
+
+    return listedNodes;
+}
+
 module.exports = {
     forMatch: forMatch,
     addBind: addBind,
@@ -213,5 +260,6 @@ module.exports = {
     toRdfStar: toRdfStar,
     filterBinds: filterBinds,
     directReplace: directReplace,
-    substitute: substitute
+    substitute: substitute,
+    extractRecursive: extractRecursive
 };
