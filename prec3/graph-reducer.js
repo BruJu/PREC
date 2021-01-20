@@ -8,9 +8,12 @@ const storeAlterer  = require("./store-alterer-from-pattern.js");
 const vocabReader   = require("../vocabulary-expansion.js");
 
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
-const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#", N3.DataFactory)
-const pgo  = namespace("http://ii.uwb.edu.pl/pgo#", N3.DataFactory);
+const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , N3.DataFactory)
+const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , N3.DataFactory);
+const prec = namespace("http://bruy.at/prec#"                       , N3.DataFactory);
 
+
+const variable = N3.DataFactory.variable;
 
 /**
  * Converts a term to its Graphy concise representation
@@ -128,8 +131,6 @@ function applyVocabulary(store, vocabularyPath) {
     const variable = N3.DataFactory.variable;
     const addedVocabulary = vocabReader(vocabularyPath);
 
-    console.log(addedVocabulary);
-
     for (const knownProperty of addedVocabulary["propertyIRI"]) {
         if (knownProperty.when !== "always") {
             console.error("non always propertyIRI are not yet supported");
@@ -155,23 +156,54 @@ function applyVocabulary(store, vocabularyPath) {
             continue;
         }
 
+        // we can't request wildcards in "quad-stars"
+        //[N3.DataFactory.quad(variable("s"), variable("relLabel"), variable("o")), rdf.type  , pgo.Edge],
+
         const bind = storeAlterer.matchAndBind(
             store,
             [
-                //[N3.DataFactory.quad(variable("s"), variable("relLabel"), variable("o")), rdf.type  , pgo.Edge],
                 [variable("node"), rdf.type, pgo.Edge],
                 [variable("node"), rdf.predicate, variable("relLabel")],
                 [variable("relLabel"), rdfs.label, N3.DataFactory.literal(knownProperty.target)],
             ]
         );
 
-        console.log(bind);
-
         for (const bind1 of bind) {
             storeAlterer.substitute(store, bind1.relLabel, knownProperty.replacement);
         }
     }
 
+}
+
+function flatten(store) {
+    if (store.countQuads(prec.MetaData, prec.GenerationModel, prec.RelationshipAsRDFStar) != 1) {
+        console.error("Can't flatten this store");
+        return false;
+    }
+
+    let occurrences = storeAlterer.matchAndBind(
+        store,
+        [
+            [variable("rdfTriple"), prec.occurrence, variable("relation")]
+        ]
+    );
+
+    occurrences = occurrences.filter(dict => store.countQuads(dict["rdfTriple"], prec.occurrence, null) == 1);
+
+    for (const uniqueOccurrence of occurrences) {
+        storeAlterer.directReplace(
+            store,
+            [
+                [uniqueOccurrence.rdfTriple, prec.occurrence, variable("rel")],
+                [variable("rel"), variable("p"), variable("o")]
+            ],
+            [
+                [uniqueOccurrence.rdfTriple, variable("p"), variable("o")]
+            ]
+        );
+    }
+    
+    return true;
 }
 
 
@@ -182,7 +214,8 @@ const availableTransformations = {
     "RRRstar": store => transformationRelationship(store, true),
     "NoLabel": store => storeAlterer.deleteMatches(store, null, rdfs.label, null),
     "NoPGO"  : store => removePGO(store),
-    "Vocab"  : (store, filename) => applyVocabulary(store, filename)
+    "Vocab"  : (store, filename) => applyVocabulary(store, filename),
+    "Flatten": store => flatten(store)
 };
 
 function listOfTransformations() {
