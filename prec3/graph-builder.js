@@ -98,6 +98,7 @@ class RDFGraphBuilder {
             let propertyNode = propMaker[property + tag];
             this._labelize(propertyNode, property);
             this._addQuad(propertyNode, rdf.type, pgo.Property);
+            this._addQuad(propertyNode, rdf.type, prec.CreatedVocabulary)
 
             // Object
             if (!Array.isArray(properties[property])) {
@@ -131,6 +132,7 @@ class RDFGraphBuilder {
         let labelNode = labelMaker[label];
         this._addQuad(node, rdf.type, labelNode);
         this._labelize(labelNode, label);
+        this._addQuad(node, rdf.type, prec.CreatedVocabulary)
     }
 
     /**
@@ -182,6 +184,7 @@ class RDFGraphBuilder {
 
         let labelNode = this.namespaces.relationLabel[label];
         this._addQuad(relation, rdf.predicate, labelNode);
+        this._addQuad(labelNode, rdf.type, prec.CreatedVocabulary);
         this._labelize(labelNode, label);
 
         this._addProperties(relation, properties, [label], this.namespaces.relationProperty, this.namespaces.literals);
@@ -215,6 +218,7 @@ class RDFGraphBuilder {
     addRelationshipRDFStar(relId, start, end, label, properties) {
         let labelNode = this.namespaces.relationLabel[label];
         this._labelize(labelNode, label);
+        this._addQuad(labelNode, rdf.type, prec.CreatedVocabulary);
 
         // Assert the triple: the `labelNode` predicate has a weak semantic
         // It only means that there exists an occurrence of it.
@@ -240,7 +244,8 @@ class RDFGraphBuilder {
         const res = {
             rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
             rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
-            pgo: 'http://ii.uwb.edu.pl/pgo#'
+            pgo: 'http://ii.uwb.edu.pl/pgo#',
+            prec: 'http://bruy.at/prec#'
         };
 
         for (let namespace_ in this.namespaces) {

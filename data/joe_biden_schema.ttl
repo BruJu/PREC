@@ -1,0 +1,8 @@
+PREFIX prec: <http://bruy.at/prec#>
+PREFIX pgo:  <http://ii.uwb.edu.pl/pgo#>
+
+<< <https://schema.org/familyName> prec:propertyIRI "name" >>
+    prec:applyOnNodesLabeled "PERSON" .
+
+<< <https://example.org/CountryName> prec:propertyIRI "name" >>
+    prec:applyOnNodesLabeled "COUNTRY" .

@@ -132,18 +132,31 @@ function applyVocabulary(store, vocabularyPath) {
     const addedVocabulary = vocabReader(vocabularyPath);
 
     for (const knownProperty of addedVocabulary["propertyIRI"]) {
+        let pattern = [
+            [variable("property"), rdf.type  , pgo.Property],
+            [variable("property"), rdfs.label, N3.DataFactory.literal(knownProperty.target)],
+        ];
+
         if (knownProperty.when !== "always") {
-            console.error("non always propertyIRI are not yet supported");
-            continue;
+            if (knownProperty.when.On == "Nodes") {
+                pattern.push([variable("node"), variable("property"), variable("_propertyValue")]);
+                pattern.push([variable("node"), rdf.type            , pgo.Node                  ]);
+
+                if (knownProperty.when.Labelled !== undefined) {
+                    pattern.push([variable("node"), rdf.type, variable("label")]);
+                    //pattern.push([variable("label"), rdf.type, pgo.Label]); pgo.Label does not exist
+                    pattern.push([variable("label"), rdfs.label, N3.DataFactory.literal(knownProperty.when.Labelled)]);
+                }
+
+                console.log(pattern);
+            } else {
+                console.error("non always propertyIRI are not yet supported");
+                exit(0);
+                continue;
+            }
         }
 
-        const bind = storeAlterer.matchAndBind(
-            store,
-            [
-                [variable("property"), rdf.type  , pgo.Property],
-                [variable("property"), rdfs.label, N3.DataFactory.literal(knownProperty.target)],
-            ]
-        );
+        const bind = storeAlterer.matchAndBind(store, pattern);
 
         for (const bind1 of bind) {
             storeAlterer.substitute(store, bind1.property, knownProperty.replacement);
@@ -253,6 +266,30 @@ function noList(store) {
 
 }
 
+function searchUnmapped(store) {
+    const r = storeAlterer.matchAndBind(store,
+        [[variable("word"), rdf.type, prec.CreatedVocabulary]]
+    );
+
+    let unmapped = [];
+
+    for (let r1 of r) {
+        const word = r1.word;
+
+        if (store.countQuads(null, word, null) > 0
+        || store.countQuads(null, rdf.predicate, word) > 0) {
+            unmapped.push(word);
+        }
+    }
+
+    let quads = store.getQuads();
+    store.removeQuads(quads);
+
+    for (const term of unmapped) {
+        store.addQuad(term, rdf.type, prec.CreatedVocabulary);
+    }
+}
+
 
 const availableTransformations = {
     "RRA"    : store => transformationAttributes(store, false),
@@ -263,7 +300,8 @@ const availableTransformations = {
     "NoPGO"  : store => removePGO(store),
     "Vocab"  : (store, filename) => applyVocabulary(store, filename),
     "Flatten": store => flatten(store),
-    "NoList" : store => noList(store)
+    "NoList" : store => noList(store),
+    "Missing": store => searchUnmapped(store)
 };
 
 function listOfTransformations() {

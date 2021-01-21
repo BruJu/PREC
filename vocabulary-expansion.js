@@ -3,6 +3,7 @@
 const fs = require('fs');
 const N3 = require('n3');
 const namespace = require('@rdfjs/namespace');
+const { exit } = require('process');
 
 const rdf = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 const rdfType = rdf.type;
@@ -39,7 +40,28 @@ function readQuad(quad) {
             quad.subject.value,
         ];
     } else {
-        console.error("Unexpected quad: " + quad);
+        if (quad.subject.termType == "Quad") {
+            let innerQuad = readQuad(quad.subject);
+
+            if (innerQuad === undefined) return undefined;
+
+            if (quad.predicate.equals(prec.applyOnNodesLabeled)
+                && quad.object.termType == "Literal") {
+                
+                if (innerQuad[1].when != "always") {
+                    console.error("Double annotations are not yet supported");
+                    exit(0);
+                    return undefined;
+                }
+
+                innerQuad[1].when = { "On": "Nodes", "Labelled": quad.object.value };
+                return innerQuad;
+            }
+
+        }
+        console.error("Unexpected quad: ");
+        console.error(quad)
+        exit(0);
         return undefined;
     }
 }

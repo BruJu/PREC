@@ -65,3 +65,11 @@ the triple
 prec:MetaData prec:GenerationModel prec:RelationshipAsRDFStar
 ```
 
+
+# http://bruy.at/prec#CreatedVocabulary
+
+Type of IRIs that has been created by PREC and that
+should be mapped to an actual ontology.
+
+It only applies to labels and property names.
+
