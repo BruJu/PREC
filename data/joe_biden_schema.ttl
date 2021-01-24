@@ -1,8 +1,38 @@
 PREFIX prec: <http://bruy.at/prec#>
 PREFIX pgo:  <http://ii.uwb.edu.pl/pgo#>
 
-<< <https://schema.org/familyName> prec:propertyIRI "name" >>
-    prec:applyOnNodesLabeled "PERSON" .
 
-<< <https://example.org/CountryName> prec:propertyIRI "name" >>
-    prec:applyOnNodesLabeled "COUNTRY" .
+# Property Graph state
+
+prec:MetaProperty prec:flagState false .
+
+
+
+# Unconditional property IRI
+
+<https://schema.org/givenName> prec:propertyIRI "givenName" .
+
+
+# Property IRI different depending on the node label
+
+
+<https://schema.org/familyName> prec:propertyIRI [
+    prec:propertyName "name" ;
+    prec:nodeLabel    "PERSON"
+] .
+
+<http://example.org/countryName> prec:propertyIRI [
+    prec:propertyName "name" ;
+    prec:nodeLabel    "COUNTRY"
+] .
+
+
+
+
+# Old syntax
+
+# << <https://schema.org/familyName> prec:propertyIRI "name" >>
+#    prec:applyOnNodesLabeled "PERSON" .
+
+#<< <https://example.org/CountryName> prec:propertyIRI "name" >>
+#    prec:applyOnNodesLabeled "COUNTRY" .

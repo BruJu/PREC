@@ -182,8 +182,8 @@ function directReplace(store, source, destination) {
 function substitute(store, source, destination) {
     const variable = DataFactory.variable;
 
-    console.log(source);
-    console.log(destination);
+    // console.log(source);
+    // console.log(destination);
     
     directReplace(
         store,
@@ -250,6 +250,43 @@ function extractRecursive(store, beginNode, recursivePattern, endNode) {
     return listedNodes;
 }
 
+function _mapPattern(bind, patterns) {
+    return patterns.map(
+        pattern => pattern.map(
+            term => {
+                if (term.termType === "Variable") {
+                    const variableName = term.value;
+                    if (bind[variableName] === undefined) {
+                        return term;
+                    } else {
+                        return bind[variableName];
+                    }
+                } else {
+                    return term;
+                }
+            }
+        )
+    );
+}
+
+function findFilterReplace(store, source, conditions, destination) {
+    let binds = matchAndBind(store, source);
+
+    binds = binds.filter(bind => {
+        const mappedConditions = _mapPattern(bind, conditions);
+
+        for (let condition of mappedConditions) {
+            if (matchAndBind(store, condition) === 0) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+
+    replace(store, binds, destination);
+}
+
 module.exports = {
     forMatch: forMatch,
     addBind: addBind,
@@ -261,5 +298,6 @@ module.exports = {
     filterBinds: filterBinds,
     directReplace: directReplace,
     substitute: substitute,
-    extractRecursive: extractRecursive
+    extractRecursive: extractRecursive,
+    findFilterReplace: findFilterReplace
 };

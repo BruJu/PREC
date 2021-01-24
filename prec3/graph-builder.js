@@ -59,13 +59,7 @@ class RDFGraphBuilder {
     }
 
     /** Builds a store using the quads stored in this builder */
-    toStore() {
-        const store = new N3.Store();
-        for (let quad of this.quads) {
-            store.addQuad(quad);
-        }
-        return store;
-    }
+    toStore() { return new N3.Store(this.quads); }
 
     /** Adds the quad(nodeName, rdfs.label, literal) */
     _labelize(nodeName, literal) {
@@ -73,10 +67,14 @@ class RDFGraphBuilder {
         return nodeName;
     }
 
+    /** Returns a new node */
+    _getNewNode() { return this.namespaces.literals[++this.propValueCounter]; }
+
     /** Builds some new node for the literal. The end of the IRI is kind of opaque. */
-    _makeNodeForPropertyValue(literal, propValueMaker) {
-        let propertyValueNode = propValueMaker[++this.propValueCounter];
-        this._labelize(propertyValueNode, literal);
+    _makeNodeForPropertyValue(literal) {
+        const propertyValueNode = this._getNewNode();
+        this._addQuad(propertyValueNode, rdf.value, N3.DataFactory.literal(literal));
+        this._addQuad(propertyValueNode, rdf.type, prec.PropertyValue);
         return propertyValueNode
     }
 
@@ -86,7 +84,7 @@ class RDFGraphBuilder {
      * 
      * Array of properties are mapped to an RDF list.
      */
-    _addProperties(node, properties, labels, propMaker, propValueMaker) {
+    _addProperties(node, properties, labels, propMaker) {
         let tag = "/";
         for (let label of [...labels].sort()) {
             if (tag !== "/") tag += "-";
@@ -97,21 +95,23 @@ class RDFGraphBuilder {
             // Predicate
             let propertyNode = propMaker[property + tag];
             this._labelize(propertyNode, property);
-            this._addQuad(propertyNode, rdf.type, pgo.Property);
-            this._addQuad(propertyNode, rdf.type, prec.CreatedVocabulary)
+            this._addQuad(propertyNode, rdf.type, prec.Property);
+            this._addQuad(propertyNode, rdf.type, prec.CreatedProperty);
+            this._addQuad(prec.CreatedProperty, rdfs.subClassOf, prec.Vocabulary);
 
             // Object
             if (!Array.isArray(properties[property])) {
-                this._addQuad(node, propertyNode, this._makeNodeForPropertyValue(properties[property], propValueMaker));
+                let nodeValue = this._makeNodeForPropertyValue(properties[property]);
+                this._addQuad(node, propertyNode, nodeValue);
             } else {
-                let listOfNodes = properties[property].map(p => this._makeNodeForPropertyValue(p, propValueMaker));
+                let listOfNodes = properties[property].map(p => this._makeNodeForPropertyValue(p));
                 let listHead = this._addList(listOfNodes);
                 this._addQuad(node, propertyNode, listHead);
             }
         }
     }
 
-    /** Adds the the builder the nodes in the form of a proper RDF list. */
+    /** Adds to the builder the nodes in the form of a proper RDF list. */
     _addList(list) {
         let head = rdf.nil;
 
@@ -127,14 +127,6 @@ class RDFGraphBuilder {
         return head;
     }
 
-    /** Assigns the the node the type of the label. The label can be new. */
-    _addLabel(node, label, labelMaker) {
-        let labelNode = labelMaker[label];
-        this._addQuad(node, rdf.type, labelNode);
-        this._labelize(labelNode, label);
-        this._addQuad(node, rdf.type, prec.CreatedVocabulary)
-    }
-
     /**
      * Adds to the builder the given node.
      * @param {*} nodeId The node Id in the Property Graph. Have to be unique.
@@ -148,11 +140,15 @@ class RDFGraphBuilder {
 
         this._addQuad(node, rdf.type, pgo.Node);
 
-        for (let label of labels) {
-            this._addLabel(node, label, this.namespaces.nodeLabel);
+        for (let label of labels) {           
+            let labelNode = this.namespaces.nodeLabel[label];
+            this._addQuad(node, rdf.type, labelNode);
+            this._labelize(labelNode, label);
+            this._addQuad(labelNode, rdf.type, prec.CreatedNodeLabel);
+            this._addQuad(prec.CreatedNodeLabel, rdfs.subClassOf, prec.CreatedVocabulary);
         }
 
-        this._addProperties(node, properties, labels, this.namespaces.nodeProperty, this.namespaces.literals);
+        this._addProperties(node, properties, labels, this.namespaces.nodeProperty);
     }
 
     /**
@@ -184,10 +180,13 @@ class RDFGraphBuilder {
 
         let labelNode = this.namespaces.relationLabel[label];
         this._addQuad(relation, rdf.predicate, labelNode);
-        this._addQuad(labelNode, rdf.type, prec.CreatedVocabulary);
+        
+        this._addQuad(labelNode, rdf.type, prec.CreatedRelationshipLabel);
+        this._addQuad(prec.CreatedRelationshipLabel, rdfs.subClassOf, prec.CreatedVocabulary);
+
         this._labelize(labelNode, label);
 
-        this._addProperties(relation, properties, [label], this.namespaces.relationProperty, this.namespaces.literals);
+        this._addProperties(relation, properties, [label], this.namespaces.relationProperty);
     }
 
     /**
@@ -218,7 +217,8 @@ class RDFGraphBuilder {
     addRelationshipRDFStar(relId, start, end, label, properties) {
         let labelNode = this.namespaces.relationLabel[label];
         this._labelize(labelNode, label);
-        this._addQuad(labelNode, rdf.type, prec.CreatedVocabulary);
+        this._addQuad(labelNode, rdf.type, prec.CreatedRelationshipLabel);
+        this._addQuad(prec.CreatedRelationshipLabel, rdfs.subClassOf, prec.CreatedVocabulary);
 
         // Assert the triple: the `labelNode` predicate has a weak semantic
         // It only means that there exists an occurrence of it.
@@ -236,7 +236,7 @@ class RDFGraphBuilder {
 
         // Properties
         this._addQuad(relation, rdf.type, pgo.Edge);
-        this._addProperties(relation, properties, [label], this.namespaces.relationProperty, this.namespaces.literals);
+        this._addProperties(relation, properties, [label], this.namespaces.relationProperty);
     }
 
     /** Returns a dictionary with every prefixes used by this object. */

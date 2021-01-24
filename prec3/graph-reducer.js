@@ -5,7 +5,7 @@ const graphyFactory = require('@graphy/core.data.factory');
 const namespace     = require('@rdfjs/namespace');
 
 const storeAlterer  = require("./store-alterer-from-pattern.js");
-const vocabReader   = require("../vocabulary-expansion.js");
+const vocabReader   = require("./vocabulary-reader.js");
 
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , N3.DataFactory)
@@ -126,65 +126,133 @@ function removePGO(store) {
     storeAlterer.deleteMatches(store, null, rdf.type, pgo.Property);
 }
 
+function removeMetaProperties(store) {
+    storeAlterer.directReplace(store,
+        [
+            [variable("propertyNode"), rdf.value, variable("value")],
+            [variable("propertyNode"), rdf.type , prec.PropertyValue],
+            [variable("node"), variable("prop"), variable("propertyNode")]
+        ],
+        [
+            [variable("node"), variable("prop"), variable("value")]
+        ]
+    );
+}
+
+
+/**
+ * Deletes form the store every occurrences of a named node whose type is
+ * type and who appears expectedSubject times in subject position, ...
+ */
+function removeUnusedCreatedVocabulary(store, type, expectedSubject, expectedPredicate, expectedObject) {
+    let r = storeAlterer.matchAndBind(store, [[variable("voc"), rdf.type, type]]);
+
+    for (let bind1 of r) {
+        let asSubject   = store.getQuads(bind1.voc, null, null).length;
+        let asPredicate = store.getQuads(null, bind1.voc, null).length;
+        let asObject    = store.getQuads(null, null, bind1.voc).length;
+
+        console.log(`${bind1.voc.value} : ${asSubject}, ${asPredicate}, ${asObject}`);
+
+        if (asSubject == expectedSubject
+            && asPredicate == expectedPredicate
+            && asObject == expectedObject) {
+            storeAlterer.deleteMatches(store, bind1.voc, null, null);
+            storeAlterer.deleteMatches(store, null, bind1.voc, null);
+            storeAlterer.deleteMatches(store, null, null, bind1.voc);
+        }
+    }
+}
 
 function applyVocabulary(store, vocabularyPath) {
-    const variable = N3.DataFactory.variable;
     const addedVocabulary = vocabReader(vocabularyPath);
 
-    for (const knownProperty of addedVocabulary["propertyIRI"]) {
-        let pattern = [
-            [variable("property"), rdf.type  , pgo.Property],
-            [variable("property"), rdfs.label, N3.DataFactory.literal(knownProperty.target)],
-        ];
+    if (addedVocabulary.getStateOf("MetaProperty") == false) {
+        removeMetaProperties(store);
+    }
 
-        if (knownProperty.when !== "always") {
-            if (knownProperty.when.On == "Nodes") {
-                pattern.push([variable("node"), variable("property"), variable("_propertyValue")]);
-                pattern.push([variable("node"), rdf.type            , pgo.Node                  ]);
+    addedVocabulary.forEachProperty(
+        (propertyName, mappedIRI, extraConditions) => {
+            if (extraConditions.length != 0
+                && (extraConditions.length != 1 || extraConditions[0]["@category"] !== "NodeLabel")  
+            ) {
+                // TODO
+                console.error("Multiple conditions is not supported for properties:");
+                console.error(propertyName);
+                console.error(mappedIRI);
+                console.error(extraConditions);
+                return;
+            }
 
-                if (knownProperty.when.Labelled !== undefined) {
-                    pattern.push([variable("node"), rdf.type, variable("label")]);
-                    //pattern.push([variable("label"), rdf.type, pgo.Label]); pgo.Label does not exist
-                    pattern.push([variable("label"), rdfs.label, N3.DataFactory.literal(knownProperty.when.Labelled)]);
+            let conditions = [];
+
+            for (const extraCondition of extraConditions) {
+                if (extraCondition["@category"] === "NodeLabel") {
+                    conditions.push(
+                        [
+                            [variable("node")     , rdf.type  , variable("nodeLabel")                           ],
+                            [variable("node")     , rdf.type  , pgo.Node                                        ],
+                            [variable("nodeLabel"), rdfs.label, N3.DataFactory.literal(extraCondition.nodeLabel)]
+                        ]
+                    );
                 }
+            }
 
-                console.log(pattern);
-            } else {
-                console.error("non always propertyIRI are not yet supported");
-                exit(0);
-                continue;
+            let pattern = [
+                [variable("property"), rdf.type  , prec.Property],
+                [variable("property"), rdfs.label, N3.DataFactory.literal(propertyName)]
+            ];
+            
+            const bind = storeAlterer.matchAndBind(store, pattern);
+
+            for (const bind1 of bind) {
+                storeAlterer.findFilterReplace(
+                    store,
+                    [[variable("node"), bind1.property, variable("x")]],
+                    conditions,
+                    [[variable("node"), mappedIRI     , variable("x")]]
+                )
             }
         }
+    );
 
-        const bind = storeAlterer.matchAndBind(store, pattern);
+    addedVocabulary.forEachRelation(
+        (relationName, mappedIRI, extraConditions) => {
+            if (extraConditions.length != 0) {
+                // TODO
+                console.error("Conditions are not supported on relation labels:");
+                console.error(relationName);
+                console.error(mappedIRI);
+                console.error(extraConditions);
+                return;
+            }
 
-        for (const bind1 of bind) {
-            storeAlterer.substitute(store, bind1.property, knownProperty.replacement);
-        }
-    }
+            let conditions = [];
 
-    for (const knownProperty of addedVocabulary["relationshipIRI"]) {
-        if (knownProperty.when !== "always") {
-            console.error("non always relationshipIRI are not yet supported");
-            continue;
-        }
-
-        // we can't request wildcards in "quad-stars"
-        //[N3.DataFactory.quad(variable("s"), variable("relLabel"), variable("o")), rdf.type  , pgo.Edge],
-
-        const bind = storeAlterer.matchAndBind(
-            store,
-            [
+            let pattern = [
                 [variable("node"), rdf.type, pgo.Edge],
                 [variable("node"), rdf.predicate, variable("relLabel")],
-                [variable("relLabel"), rdfs.label, N3.DataFactory.literal(knownProperty.target)],
-            ]
-        );
+                [variable("relLabel"), rdfs.label, N3.DataFactory.literal(relationName)],
+            ];
+            
+            const bind = storeAlterer.matchAndBind(store, pattern);
 
-        for (const bind1 of bind) {
-            storeAlterer.substitute(store, bind1.relLabel, knownProperty.replacement);
+            for (const bind1 of bind) {
+                storeAlterer.findFilterReplace(
+                    store,
+                    [[variable("relationship"), rdf.predicate, bind1.relLabel]],
+                    conditions,
+                    [[variable("relationship"), rdf.predicate, mappedIRI]]
+                )
+            }
         }
-    }
+    );
+
+    // Property: ?p a createdProp, ?p a Property, ?p rdfs.label Thing
+    removeUnusedCreatedVocabulary(store, prec.CreatedProperty, 3, 0, 0);
+    
+    // Relationship Label: ?p a createdRelationShipLabel, ?p rdfs.label Thing
+    removeUnusedCreatedVocabulary(store, prec.CreatedRelationshipLabel, 2, 0, 0);
 
 }
 
