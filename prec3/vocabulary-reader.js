@@ -168,6 +168,20 @@ function readFlags(store) {
     return s;
 }
 
+function readRelDefault(quads) {
+    if (quads.length != 1) return prec.RDFReification;
+    
+    if (quads[0].object.equals(prec.AsOccurrences)) {
+        return prec.AsOccurrences;
+    }
+
+    if (quads[0].object.equals(prec.FlattenUnique)) {
+        return prec.FlattenUnique;
+    }
+
+    return prec.RDFReification;
+}
+
 class ReadVocabulary {
     constructor(filename) {
         const parser = new N3.Parser();
@@ -178,9 +192,10 @@ class ReadVocabulary {
         this.properties = readProperties(store);
         this.relations  = readRelations(store);
         this.nodeLabels = readThings(store, prec.nodeLabelIRI, true, false);
-        //this.nodeLabels = readNodeLabels(store);
 
         this.flags = readFlags(store);
+
+        this.relationshipsDefault = readRelDefault(store.getQuads(prec.Relationships, prec.useRdfStar, null));
     }
 
     static _forEachKnown(r, callback) {
@@ -205,6 +220,10 @@ class ReadVocabulary {
 
     getStateOf(flag) {
         return this.flags[flag];
+    }
+
+    getRelationshipDefault() {
+        return this.relationshipsDefault;
     }
 }
 

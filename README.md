@@ -6,8 +6,12 @@ Some experiments about PG to RDF conversion.
 
 - `npm install`
 
-- ~~`node prec.js "data\annlikesdan.json" RRAstar RRRstar NoLabel NoPGO`~~
-- ~~`node prec.js data/annlikesdan.json Vocab data/anndan.ttl RRAstar RRRstar`~~
+- `node prec.js data\joe_biden.json data\joe_biden_schema.ttl`
+    - `data\joe_biden.json` contains the exportation of a Neo4J Property Graph concerning Joe Biden and the USA.
+    - `data\joe_biden_schema.ttl` is a context which maps the labels of the PG into IRIs mainly from DBpedia and Schema.org
+
+- `node prec.js data\annlikesdan1.json data\anndan.ttl`
+    - (WIP)
 
 ### Less quick start
 
@@ -17,7 +21,7 @@ Some experiments about PG to RDF conversion.
 
 ![](doc/general_procesS.svg)
 
-Currently, only Neo4j graphs is supported
+Currently, only Neo4j graphs are supported
 
 ## From Neo4j (converting a Neo4j Property Graph into a Json representation of the tile)
 

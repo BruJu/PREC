@@ -1,4 +1,16 @@
 PREFIX prec: <http://bruy.at/prec#>
 
+prec:MetaProperty          prec:flagState false .
+prec:KeepProvenance        prec:flagState false .
+
+# (default)
+# prec:Relationships prec:useRdfStar prec:RDFReificaiton .
+
+prec:Relationships prec:useRdfStar prec:AsOccurrences .
+
+<http://dbpedia.org/ontology/Person> prec:nodeLabelIRI "Person" .
+
 <https://example.org/likes> prec:relationshipIRI "Likes" .
 
+
+<https://schema.org/name> prec:propertyIRI "name" .

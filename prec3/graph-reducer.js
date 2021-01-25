@@ -172,6 +172,39 @@ function removeUnusedCreatedVocabulary(store, type, expectedSubject, expectedPre
     }
 }
 
+function modifyRelationships(store, defaultBehaviour) {
+    function getBehaviour(relation) {
+        const quads = store.getQuads(relation, prec.useRdfStar, null);
+        if (quads.length == 0) return defaultBehaviour;
+        store.removeQuads(quads);
+        return quads[0].object;
+    }
+
+    const relations = storeAlterer.matchAndBind(store,
+        [
+            [variable("relation"), rdf.type, pgo.Edge],
+            [variable("relation"), rdf.subject  , variable("subject")  ],
+            [variable("relation"), rdf.predicate, variable("predicate")],
+            [variable("relation"), rdf.object   , variable("object")   ]
+        ]
+    );
+
+    for (const relation of relations) {
+        const behaviour = getBehaviour(relation.relation);
+
+        if (behaviour.equals(prec.AsOccurrences)) {
+            // Remove every quads
+            storeAlterer.replaceOneBinding(store, relation, []);
+
+            // Make a new quad
+            const rdfStarQuad = N3.DataFactory.quad(relation.subject, relation.predicate, relation.object);
+
+            store.addQuad(rdfStarQuad, prec.occurrenceOf, relation.relation);
+            store.addQuad(relation.relation, rdf.type, pgo.Edge);
+        }
+    }
+}
+
 function applyVocabulary(store, vocabularyPath) {
     const addedVocabulary = vocabReader(vocabularyPath);
 
@@ -281,7 +314,8 @@ function applyVocabulary(store, vocabularyPath) {
     
     removeUnusedCreatedVocabulary(store, prec.CreatedNodeLabel, 2, 0, 0);
 
-
+    
+    modifyRelationships(store, addedVocabulary.getRelationshipDefault());
 
     if (addedVocabulary.getStateOf("KeepProvenance") === false) {
         removePGO(store);
