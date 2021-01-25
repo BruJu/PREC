@@ -135,8 +135,8 @@ function xsdBoolToBool(term) {
 
 function readFlags(store) {
     let s = {
-        "MetaProperty": true
-
+        "MetaProperty": true,
+        "KeepProvenance": true
     };
 
     for (const quad of store.getQuads(null, prec.flagState, null)) {
@@ -148,8 +148,17 @@ function readFlags(store) {
             continue;
         }
 
-        if (quad.subject.equals(prec.MetaProperty)) {
-            s.MetaProperty = object;
+        if (quad.subject.termType == "NamedNode") {
+            if (quad.subject.value.startsWith("http://bruy.at/prec#")) {
+                const suffix = quad.subject.value.substring("http://bruy.at/prec#".length);
+
+                if (s[suffix] === undefined) {
+                    console.error("Unrecognized quad (subject is unknown)");
+                    console.error(quad);
+                } else {
+                    s[suffix] = object;
+                }
+            }
         } else {
             console.error("Unrecognized quad (subject is unknown)");
             console.error(quad);
@@ -168,6 +177,7 @@ class ReadVocabulary {
     
         this.properties = readProperties(store);
         this.relations  = readRelations(store);
+        this.nodeLabels = readThings(store, prec.nodeLabelIRI, true, false);
         //this.nodeLabels = readNodeLabels(store);
 
         this.flags = readFlags(store);
@@ -187,6 +197,10 @@ class ReadVocabulary {
     
     forEachProperty(callback) {
         return ReadVocabulary._forEachKnown(this.properties, callback);
+    }
+
+    forEachNodeLabel(callback) {
+        return ReadVocabulary._forEachKnown(this.nodeLabels, callback);
     }
 
     getStateOf(flag) {

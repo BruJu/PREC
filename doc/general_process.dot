@@ -1,0 +1,12 @@
+digraph G {
+  Neo4j -> "Json Representation of\nthe Property Graph" [label="APOC.export.json.all"] ;
+  
+  "Json Representation of\nthe Property Graph" -> "Expanded RDF Graph" [label="PREC (build)"] ;
+  
+  "Context" -> "blanknode" [dir=none];
+  "Expanded RDF Graph" -> "blanknode" [dir=none];
+  "blanknode" -> "Usable RDF Graph" [label="PREC (transform)"] ;
+  
+  
+  "blanknode" [shape=diamond,style=filled,label="",height=.0,width=.0] ;
+}

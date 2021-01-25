@@ -23,8 +23,7 @@ function outputTheStore(store, prefixes) {
 function main() {
     // Arg parsing done badly
     if (process.argv.length < 3) {
-        console.log(`Usage: ${process.argv[0]} ${process.argv[1]} filename (RDFStar)? (transformations)*`);
-        console.log("Available transformations: " + graphReducer.listOfTransformations());
+        console.log(`Usage: ${process.argv[0]} ${process.argv[1]} filename (RDFStar)? (ContextFile)?`);
         return;
     }
 
@@ -42,7 +41,7 @@ function main() {
     // Convert to an expanded RDF graph
     const [store, prefixes] = RDFGraphBuilder.neo4jJsToStore(propertyGraphStructure, mode);
     // Reduce the number of triples
-    graphReducer.applyTransformations(store, args);
+    graphReducer(store, args);
     // Done gg
     outputTheStore(store, prefixes);
 }

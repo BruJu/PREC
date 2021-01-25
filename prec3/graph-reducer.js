@@ -115,7 +115,7 @@ function transformationAttributes(store, star) {
 }
 
 /**
- * Deletes every occurrence of pgo:Edgee pgo:Node and pgo:Property.
+ * Deletes every occurrence of pgo:Edge pgo:Node, prec:Property and prec:PropertyValue.
  * 
  * While the PGO ontology is usefull to describe the PG structure, and to
  * specify the provenance of the 
@@ -123,7 +123,9 @@ function transformationAttributes(store, star) {
 function removePGO(store) {
     storeAlterer.deleteMatches(store, null, rdf.type, pgo.Edge);
     storeAlterer.deleteMatches(store, null, rdf.type, pgo.Node);
-    storeAlterer.deleteMatches(store, null, rdf.type, pgo.Property);
+    storeAlterer.deleteMatches(store, null, rdf.type, prec.Property);
+    storeAlterer.deleteMatches(store, null, rdf.type, prec.PropertyValue);
+    storeAlterer.deleteMatches(store, null, prec.GenerationModel, null);
 }
 
 function removeMetaProperties(store) {
@@ -152,7 +154,7 @@ function removeUnusedCreatedVocabulary(store, type, expectedSubject, expectedPre
         let asPredicate = store.getQuads(null, bind1.voc, null).length;
         let asObject    = store.getQuads(null, null, bind1.voc).length;
 
-        console.log(`${bind1.voc.value} : ${asSubject}, ${asPredicate}, ${asObject}`);
+        // console.log(`${bind1.voc.value} : ${asSubject}, ${asPredicate}, ${asObject}`);
 
         if (asSubject == expectedSubject
             && asPredicate == expectedPredicate
@@ -161,6 +163,12 @@ function removeUnusedCreatedVocabulary(store, type, expectedSubject, expectedPre
             storeAlterer.deleteMatches(store, null, bind1.voc, null);
             storeAlterer.deleteMatches(store, null, null, bind1.voc);
         }
+    }
+
+    if (store.countQuads(null, rdf.type, type) == 0) {
+        storeAlterer.deleteMatches(store, type, null, null);
+        storeAlterer.deleteMatches(store, null, type, null);
+        storeAlterer.deleteMatches(store, null, null, type);
     }
 }
 
@@ -173,17 +181,6 @@ function applyVocabulary(store, vocabularyPath) {
 
     addedVocabulary.forEachProperty(
         (propertyName, mappedIRI, extraConditions) => {
-            if (extraConditions.length != 0
-                && (extraConditions.length != 1 || extraConditions[0]["@category"] !== "NodeLabel")  
-            ) {
-                // TODO
-                console.error("Multiple conditions is not supported for properties:");
-                console.error(propertyName);
-                console.error(mappedIRI);
-                console.error(extraConditions);
-                return;
-            }
-
             let conditions = [];
 
             for (const extraCondition of extraConditions) {
@@ -248,14 +245,51 @@ function applyVocabulary(store, vocabularyPath) {
         }
     );
 
+    addedVocabulary.forEachNodeLabel(
+        (nodeLabelName, mappedIRI, extraConditions) => {
+            if (extraConditions.length != 0) {
+                // TODO
+                console.error("Conditions are not supported on node labels:");
+                console.error(nodeLabelName);
+                console.error(mappedIRI);
+                console.error(extraConditions);
+                return;
+            }
+
+            let pattern = [
+                [variable("nodeLabel"), rdf.type, prec.CreatedNodeLabel],
+                [variable("nodeLabel"), rdfs.label, N3.DataFactory.literal(nodeLabelName)],
+            ];
+
+            for (const bind of storeAlterer.matchAndBind(store, pattern)) {
+                storeAlterer.findFilterReplace(
+                    store,
+                    [[variable("node"), rdf.type, bind.nodeLabel]],
+                    [],
+                    [[variable("node"), rdf.type, mappedIRI]]
+                )
+            }
+
+        }
+    );
+
     // Property: ?p a createdProp, ?p a Property, ?p rdfs.label Thing
     removeUnusedCreatedVocabulary(store, prec.CreatedProperty, 3, 0, 0);
     
     // Relationship Label: ?p a createdRelationShipLabel, ?p rdfs.label Thing
     removeUnusedCreatedVocabulary(store, prec.CreatedRelationshipLabel, 2, 0, 0);
+    
+    removeUnusedCreatedVocabulary(store, prec.CreatedNodeLabel, 2, 0, 0);
 
+
+
+    if (addedVocabulary.getStateOf("KeepProvenance") === false) {
+        removePGO(store);
+    }
 }
 
+/// From an Expanded RDF-* store, remove the prec:occurrence node for relations that
+/// occured only once
 function flatten(store) {
     if (store.countQuads(prec.MetaData, prec.GenerationModel, prec.RelationshipAsRDFStar) != 1) {
         console.error("Can't flatten this store");
@@ -288,50 +322,27 @@ function flatten(store) {
 }
 
 function noList(store) {
-
-    const r = storeAlterer.matchAndBind(store,
+    const listHeads = storeAlterer.matchAndBind(store,
         [
-            [
-                variable("firstNode"),
-                rdf.type,
-                rdf.List
-            ],
-            [
-                variable("s"),
-                variable("p"),
-                variable("firstNode")
-            ]
+            [variable("firstNode")     , rdf.type     , rdf.List             ],
+            [variable("s")             , variable("p"), variable("firstNode")]
         ]
     );
 
-    for (const d of r) {
+    for (const d of listHeads) {
         const l = storeAlterer.extractRecursive(
             store,
             d["firstNode"],
             [
-                [
-                    variable("(R) current"),
-                    rdf.type,
-                    rdf.List,
-                ],
-                [
-                    variable("(R) current"),
-                    rdf.first,
-                    variable("value")
-                ],
-                [
-                    variable("(R) current"),
-                    rdf.rest,
-                    variable("(R) next")
-                ]
+                [variable("(R) current"), rdf.type , rdf.List            ],
+                [variable("(R) current"), rdf.first, variable("value")   ],
+                [variable("(R) current"), rdf.rest , variable("(R) next")]
             ],
             rdf.nil
         );
 
         console.error(l);
     }
-
-
 }
 
 function searchUnmapped(store) {
@@ -359,42 +370,27 @@ function searchUnmapped(store) {
 }
 
 
-const availableTransformations = {
-    "RRA"    : store => transformationAttributes(store, false),
-    "RRAstar": store => transformationAttributes(store, true),
-    "RRR"    : store => transformationRelationship(store, false),
-    "RRRstar": store => transformationRelationship(store, true),
-    "NoLabel": store => storeAlterer.deleteMatches(store, null, rdfs.label, null),
-    "NoPGO"  : store => removePGO(store),
-    "Vocab"  : (store, filename) => applyVocabulary(store, filename),
-    "Flatten": store => flatten(store),
-    "NoList" : store => noList(store),
-    "Missing": store => searchUnmapped(store)
-};
-
-function listOfTransformations() {
-    const r = [];
-    for (const name in availableTransformations) {
-        r.push(name);
-    }
-    return r;
-}
+//const availableTransformations = {
+//    "RRA"    : store => transformationAttributes(store, false),
+//    "RRAstar": store => transformationAttributes(store, true),
+//    "RRR"    : store => transformationRelationship(store, false),
+//    "RRRstar": store => transformationRelationship(store, true),
+//    "NoLabel": store => storeAlterer.deleteMatches(store, null, rdfs.label, null),
+//    "NoPGO"  : store => removePGO(store),
+//    "Vocab"  : (store, filename) => applyVocabulary(store, filename),
+//    "Flatten": store => flatten(store),
+//    "NoList" : store => noList(store),
+//    "Missing": store => searchUnmapped(store)
+//};
 
 function applyTransformations(store, transformationNames) {
-    for (let i = 0 ; i != transformationNames.length; ++i) {
-        const transformationName = transformationNames[i];
-        const transformer = availableTransformations[transformationName];
-        
-        if (transformationName !== "Vocab") {
-            transformer(store);
-        } else {
-            const parameter = transformationNames[++i];
-            transformer(store, parameter);
-        }
+    if (transformationNames.length == 0) {
+        return;
+    } else if (transformationNames.length == 1) {
+        applyVocabulary(store, transformationNames[0]);
+    } else {
+        console.error("Too much arguments");
     }
 }
 
-module.exports = {
-    listOfTransformations: listOfTransformations,
-    applyTransformations: applyTransformations
-};
+module.exports = applyTransformations;

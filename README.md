@@ -5,19 +5,21 @@ Some experiments about PG to RDF conversion.
 ## Quick start
 
 - `npm install`
-- `node attempt2-hardcode.js annlikesdan.json`
 
-
-- `node attempt3-expanded.js "data\annlikesdan.json" RRAstar RRRstar NoLabel NoPGO`
-- `node attempt3-expanded.js data/annlikesdan.json Vocab data/anndan.ttl RRAstar RRRstar`
+- ~~`node prec.js "data\annlikesdan.json" RRAstar RRRstar NoLabel NoPGO`~~
+- ~~`node prec.js data/annlikesdan.json Vocab data/anndan.ttl RRAstar RRRstar`~~
 
 ### Less quick start
 
 - [The data folder](data) contains Neo4J (small) exported property graphs.
-- Check [notes.md](notes.md) for details about some of the examples approach
 
+## Converting your own Property Graph to RDF
 
-## Neo4j
+![](doc/general_procesS.svg)
+
+Currently, only Neo4j graphs is supported
+
+## From Neo4j (converting a Neo4j Property Graph into a Json representation of the tile)
 
 To export a Neo4J property graph from your database, you need to activate APOC file export:
 - Go in your database configuration (click the ... right to the database name -> Manage)
@@ -33,11 +35,16 @@ so the Java exception tells the complete path
 
 **TODO:** `apoc.import.file.use_neo4j_config=false` to use absolute paths?
 
+## Running the script itself
 
-## Scripts
+- `node prec.js /path/to/your/propertygraph.json` will output the *Expanded RDF Graph*
+from the *Json Representation of the Property Graph*.
 
-- `attempt1-jsonld.js`: Some code I first wrote. I wanted to use Json-LD but didn't finish it
-- `attempt2-hardcode.js`: A "all at once" translation that does everything at the same time. Kind of works
-but not very clear
-- `attempt3-expanded.js`: Transform a PG into what I call an "Expanded RDF Graph translation of a PG". Requires
-some transformation that will be provided soon.
+## Using a context
+
+You can write a context in Turtle format and use it to output an *Usable RDF Graph*
+from the *Json Representation of the Property Graph*.
+
+- `node prec.js /path/to/your/propertygraph.json /path/to/your/context.ttl`
+
+

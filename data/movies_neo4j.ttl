@@ -1,3 +1,6 @@
+# This file is the exported RDF Graph built by NeoSemantics for the movie database
+# corresponding to the PG structure movies.json
+
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix neovoc: <neo4j://vocabulary#> .
 @prefix neoind: <neo4j://individuals#> .

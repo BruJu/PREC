@@ -1,5 +1,0 @@
-PREFIX prec: <http://bruy.at/prec#>
-PREFIX pgo:  <http://ii.uwb.edu.pl/pgo#>
-
-<https://example.org/name> prec:propertyIRI "name".
-

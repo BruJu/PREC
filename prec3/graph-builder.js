@@ -97,7 +97,7 @@ class RDFGraphBuilder {
             this._labelize(propertyNode, property);
             this._addQuad(propertyNode, rdf.type, prec.Property);
             this._addQuad(propertyNode, rdf.type, prec.CreatedProperty);
-            this._addQuad(prec.CreatedProperty, rdfs.subClassOf, prec.Vocabulary);
+            this._addQuad(prec.CreatedProperty, rdfs.subClassOf, prec.CreatedVocabulary);
 
             // Object
             if (!Array.isArray(properties[property])) {

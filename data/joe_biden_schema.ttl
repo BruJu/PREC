@@ -1,11 +1,10 @@
 PREFIX prec: <http://bruy.at/prec#>
 PREFIX pgo:  <http://ii.uwb.edu.pl/pgo#>
 
-
 # Property Graph state
 
-prec:MetaProperty prec:flagState false .
-
+prec:MetaProperty   prec:flagState false .
+prec:KeepProvenance prec:flagState false .
 
 
 # Unconditional property IRI
@@ -14,8 +13,6 @@ prec:MetaProperty prec:flagState false .
 
 
 # Property IRI different depending on the node label
-
-
 <https://schema.org/familyName> prec:propertyIRI [
     prec:propertyName "name" ;
     prec:nodeLabel    "PERSON"
@@ -27,12 +24,7 @@ prec:MetaProperty prec:flagState false .
 ] .
 
 
+# Node labels
 
-
-# Old syntax
-
-# << <https://schema.org/familyName> prec:propertyIRI "name" >>
-#    prec:applyOnNodesLabeled "PERSON" .
-
-#<< <https://example.org/CountryName> prec:propertyIRI "name" >>
-#    prec:applyOnNodesLabeled "COUNTRY" .
+<http://dbpedia.org/ontology/Person>  prec:nodeLabelIRI "PERSON"  .
+<http://dbpedia.org/ontology/Country> prec:nodeLabelIRI "COUNTRY" .

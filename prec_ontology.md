@@ -46,19 +46,39 @@ Property graph input: `create ({ name: 'Joe Biden' })` (Cypher format)
 +   indiv:literal/1 a prec:PropertyValue .
 ```
 
+## http://bruy.at/prec#KeepProvenance
 
+By default, a triple is created for each node / relationship / property /
+property value between its.
 
+If this flag is set to false, the triples in the form `<http://www.example.org/indiv/node/id/1> a pgo:Node`
+are deleted from the output graph.
+
+```ttl
+PREFIX prec: <http://bruy.at/prec#>
+
+# Alternative 1
+prec:KeepProvenance prec:flagState true .
+
+# Alternative 2
+prec:KeepProvenance prec:flagState false .
+```
 
 
 # Unclassified
 
 ## http://bruy.at/prec#propertyIRI
 
-Specifies the IRI of the property of a node in a Property Graph.
+Specifies that an IRI must be uses for the associated properties.
+
+
+### Example
 
 - Vocab: `<https://schema.org/familyName> prec:propertyIRI "name" .`
 - \+ Cypher: `create (obama { name: 'Obama' })`
 - = `_:obama <https://schema.org/familyName> "Obama".`
+
+
 
 
 

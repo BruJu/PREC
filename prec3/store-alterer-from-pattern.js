@@ -250,8 +250,8 @@ function extractRecursive(store, beginNode, recursivePattern, endNode) {
     return listedNodes;
 }
 
-function _mapPattern(bind, patterns) {
-    return patterns.map(
+function mapPattern(bind, patterns) {
+    let x = patterns.map(
         pattern => pattern.map(
             term => {
                 if (term.termType === "Variable") {
@@ -267,16 +267,18 @@ function _mapPattern(bind, patterns) {
             }
         )
     );
+
+    return x;
 }
 
 function findFilterReplace(store, source, conditions, destination) {
     let binds = matchAndBind(store, source);
 
     binds = binds.filter(bind => {
-        const mappedConditions = _mapPattern(bind, conditions);
+        const mappedConditions = conditions.map(pattern => mapPattern(bind, pattern));
 
         for (let condition of mappedConditions) {
-            if (matchAndBind(store, condition) === 0) {
+            if (matchAndBind(store, condition).length === 0) {
                 return false;
             }
         }
@@ -299,5 +301,6 @@ module.exports = {
     directReplace: directReplace,
     substitute: substitute,
     extractRecursive: extractRecursive,
-    findFilterReplace: findFilterReplace
+    findFilterReplace: findFilterReplace,
+    mapPattern: mapPattern
 };
