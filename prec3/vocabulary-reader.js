@@ -115,8 +115,33 @@ function readProperties(store) {
     );
 }
 
+function readInfo(store, term) {
+    if (term.termType == "BlankNode") {
+        const quads = store.getQuads(term, null, null);
+
+        return quads.map(quad => [quad.predicate, readInfo(store, quad.object)]);
+    } else {
+        return term;
+    }
+}
+
 function readRelations(store) {
-    return readThings(store, prec.relationshipIRI, true, false);
+    return readThings(store, prec.relationshipIRI, true, 
+        quads => {
+            let source = undefined;
+            let rules = [];
+
+            for (let quad of quads) {
+                if (quad.predicate.equals(prec.labelName)) {
+                    source = quad.object.value;
+                } else {
+                    rules.push([quad.predicate, readInfo(store, quad.object)]);
+                }
+            }
+
+            return source === undefined ? null : [source, rules];
+        }
+    );
 }
 
 function xsdBoolToBool(term) {

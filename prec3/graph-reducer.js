@@ -205,13 +205,7 @@ function modifyRelationships(store, defaultBehaviour) {
     }
 }
 
-function applyVocabulary(store, vocabularyPath) {
-    const addedVocabulary = vocabReader(vocabularyPath);
-
-    if (addedVocabulary.getStateOf("MetaProperty") == false) {
-        removeMetaProperties(store);
-    }
-
+function transformProperties(store, addedVocabulary) {
     addedVocabulary.forEachProperty(
         (propertyName, mappedIRI, extraConditions) => {
             let conditions = [];
@@ -245,39 +239,104 @@ function applyVocabulary(store, vocabularyPath) {
             }
         }
     );
+}
+
+function transformRelationships(store, addedVocabulary) {
+
 
     addedVocabulary.forEachRelation(
         (relationName, mappedIRI, extraConditions) => {
-            if (extraConditions.length != 0) {
-                // TODO
+            
+            function invalidCondition(extraCondition) {
                 console.error("Conditions are not supported on relation labels:");
                 console.error(relationName);
                 console.error(mappedIRI);
-                console.error(extraConditions);
-                return;
+                console.error(extraCondition);
             }
 
             let conditions = [];
+            let rdfStarState = undefined;
+
+            let extraSource = [];
+
+            let dest = [
+                [variable("relationship"), rdf.predicate, mappedIRI]
+            ];
+
+extraConditionLoop:
+            for (const extraCondition of extraConditions) {
+                if (extraCondition[0].equals(prec.useRdfStar)) {
+                    rdfStarState = extraCondition[1];
+                } else if (extraCondition[0].equals(prec.subject)) {
+                    if (Array.isArray(extraCondition[1])) {
+                        for (const sub of extraCondition[1]) {
+                            if (prec.nodeLabel.equals(sub[0])) {
+                                conditions.push(
+                                    [
+                                        [variable("node")   , rdf.subject, variable("subject")],
+                                        [variable("subject"), rdf.type   , variable("label")],
+                                        [variable("label")  , rdfs.label , sub[1]]
+                                    ]
+                                );
+                            } else if (prec.rename.equals(sub[0])) {
+                                extraSource.push(
+                                    [variable("relationship"), rdf.subject, variable("subject")]
+                                );
+
+                                dest.push(
+                                    [variable("relationship"), sub[1]     , variable("subject")]
+                                )
+
+                            } else {
+                                invalidCondition(extraCondition);
+                                continue extraConditionLoop;
+                            }
+                        }
+                    } else if (extraCondition[1].termType === "Literal") {
+                        invalidCondition(extraCondition);
+                        continue;
+                    }
+
+                    invalidCondition(extraCondition);
+                    continue;
+                } else {
+                    invalidCondition(extraCondition);
+                    continue;
+                }
+            }
 
             let pattern = [
                 [variable("node"), rdf.type, pgo.Edge],
                 [variable("node"), rdf.predicate, variable("relLabel")],
                 [variable("relLabel"), rdfs.label, N3.DataFactory.literal(relationName)],
             ];
-            
-            const bind = storeAlterer.matchAndBind(store, pattern);
 
-            for (const bind1 of bind) {
+            
+
+            if (rdfStarState !== undefined) {
+                dest.push(
+                    [variable("relationship"), prec.useRdfStar, rdfStarState]
+                )
+            }
+
+            for (const bind1 of storeAlterer.matchAndBind(store, pattern)) {                
+                let source = [
+                    [variable("relationship"), rdf.predicate, bind1.relLabel],
+                    ...extraSource
+                ];
+
                 storeAlterer.findFilterReplace(
                     store,
-                    [[variable("relationship"), rdf.predicate, bind1.relLabel]],
+                    source,
                     conditions,
-                    [[variable("relationship"), rdf.predicate, mappedIRI]]
+                    dest
                 )
             }
         }
     );
+}
 
+function transformNodeLabels(store, addedVocabulary) {
     addedVocabulary.forEachNodeLabel(
         (nodeLabelName, mappedIRI, extraConditions) => {
             if (extraConditions.length != 0) {
@@ -305,18 +364,37 @@ function applyVocabulary(store, vocabularyPath) {
 
         }
     );
+}
+
+function applyVocabulary(store, vocabularyPath) {
+    const addedVocabulary = vocabReader(vocabularyPath);
+
+    if (addedVocabulary.getStateOf("MetaProperty") == false) {
+        removeMetaProperties(store);
+    }
+
+    // -- Map generated IRI to existing IRIs
+    transformProperties   (store, addedVocabulary);
+    transformRelationships(store, addedVocabulary);
+    transformNodeLabels   (store, addedVocabulary);
+
+    // -- Remove the info that generated IRI were generated if there don't
+    // appear anymore
 
     // Property: ?p a createdProp, ?p a Property, ?p rdfs.label Thing
-    removeUnusedCreatedVocabulary(store, prec.CreatedProperty, 3, 0, 0);
-    
     // Relationship Label: ?p a createdRelationShipLabel, ?p rdfs.label Thing
+    // Node label : same
+    removeUnusedCreatedVocabulary(store, prec.CreatedProperty, 3, 0, 0);
     removeUnusedCreatedVocabulary(store, prec.CreatedRelationshipLabel, 2, 0, 0);
-    
     removeUnusedCreatedVocabulary(store, prec.CreatedNodeLabel, 2, 0, 0);
 
-    
+    // -- Transform relationship format
     modifyRelationships(store, addedVocabulary.getRelationshipDefault());
 
+    // Remove prec.useRdfStar from renamed reification
+    storeAlterer.deleteMatches(store, null, prec.useRdfStar, null);
+
+    // -- Remove provenance information if they are not required by the user
     if (addedVocabulary.getStateOf("KeepProvenance") === false) {
         removePGO(store);
     }
