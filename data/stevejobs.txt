@@ -1,0 +1,10 @@
+
+Cypher query:
+
+create
+  (stevejobs:PERSON { name: "Jobs", surname: "Steve" } ),
+  (apple:COMPANY { name: "Apple"}),
+  (stevejobs)-[:WORKS { since: date("1976"), to: date("1985") }]->(apple),
+  (stevejobs)-[:WORKS { since: date("1997"), to: date("2011") }]->(apple),
+  (stevejobs)-[:KNOWS]->(apple),
+  (stevejobs)-[:KNOWS]->(:PERSON { name: "Gates", surname: "Bill" })

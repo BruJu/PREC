@@ -1,0 +1,7 @@
+{"type":"node","id":"0","labels":["PERSON"],"properties":{"surname":"Steve","name":"Jobs"}}
+{"type":"node","id":"1","labels":["COMPANY"],"properties":{"name":"Apple"}}
+{"type":"node","id":"2","labels":["PERSON"],"properties":{"surname":"Bill","name":"Gates"}}
+{"id":"0","type":"relationship","label":"WORKS","properties":{"to":"1985-01-01","since":"1976-01-01"},"start":{"id":"0","labels":["PERSON"]},"end":{"id":"1","labels":["COMPANY"]}}
+{"id":"1","type":"relationship","label":"WORKS","properties":{"to":"2011-01-01","since":"1997-01-01"},"start":{"id":"0","labels":["PERSON"]},"end":{"id":"1","labels":["COMPANY"]}}
+{"id":"2","type":"relationship","label":"KNOWS","start":{"id":"0","labels":["PERSON"]},"end":{"id":"1","labels":["COMPANY"]}}
+{"id":"3","type":"relationship","label":"KNOWS","start":{"id":"0","labels":["PERSON"]},"end":{"id":"2","labels":["PERSON"]}}
