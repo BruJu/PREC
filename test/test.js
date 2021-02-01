@@ -5,6 +5,7 @@ const storeAlterer = require('../prec3/store-alterer-from-pattern');
 
 const namespace = require('@rdfjs/namespace');
 const ex = namespace("http://example.org/", N3.DataFactory);
+const rdf = namespace("http://rdf.org/", N3.DataFactory);
 
 const variable = N3.DataFactory.variable;
 
@@ -55,7 +56,50 @@ describe('StoreAlterer', function() {
                 [[ex.Value, variable("b")]]
             ));
         })
-    })
+    });
+
+
+    describe("findFilterReplace", function() {
+
+
+
+        it("should work", function() {
+            const store = new N3.Store();
+            store.addQuad(ex.a, ex.b    , ex.c);
+            store.addQuad(ex.a, rdf.type, ex.typeA);
+
+            storeAlterer.findFilterReplace(
+                store,
+                [[variable("a"), ex.b, ex.c]],
+                [[[variable("a"), rdf.type, ex.typeA]]],
+                [[variable("a"), ex.b, ex.d]]
+            );
+
+            assert.equal(store.size, 2);
+            assert.equal(store.getQuads(ex.a, ex.b    , ex.d    ).length, 1);
+            assert.equal(store.getQuads(ex.a, rdf.type, ex.typeA).length, 1);
+        });
+
+        it("should work", function() {
+            const store = new N3.Store();
+            store.addQuad(ex.a, ex.b    , ex.c);
+            store.addQuad(ex.a, rdf.type, ex.typeA);
+            store.addQuad(ex.b, rdf.type, ex.typeA);
+
+            storeAlterer.findFilterReplace(
+                store,
+                [[variable("a"), ex.b, ex.c]],
+                [[[variable("a"), rdf.type, ex.typeB]]],
+            );
+
+            assert.equal(store.size, 3);
+            assert.equal(store.getQuads(ex.a, ex.b    , ex.c    ).length, 1);
+            assert.equal(store.getQuads(ex.a, rdf.type, ex.typeA).length, 1);
+        });
+
+
+
+    });
 });
 
 

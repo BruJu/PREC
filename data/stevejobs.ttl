@@ -1,10 +1,56 @@
 PREFIX prec: <http://bruy.at/prec#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX schema: <http:/schema.org/>
+PREFIX ex:     <http://example.org/>
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 
 prec:MetaProperty          prec:flagState false .
 prec:KeepProvenance        prec:flagState false .
 
 prec:Relationships prec:useRdfStar prec:AsOccurrences .
 
+<http://schema.org/Person> prec:nodeLabelIRI "PERSON" .
+<http://schema.org/Corporation> prec:nodeLabelIRI "COMPANY" .
 
+# TODO: how do we chech that our bindings are correct?
 
+# TODO: priority
+# schema:knowsAbout prec:relationshipIRI "KNOWS" .
 
+schema:knows prec:relationshipIRI [
+    prec:labelName "KNOWS" ;
+    prec:useRdfStar prec:AsUnique ;
+    prec:subject "PERSON" ;
+    prec:object  "PERSON"
+] .
+
+schema:knowsAbout prec:relationshipIRI [
+    prec:labelName "KNOWS" ;
+    prec:useRdfStar prec:AsUnique ;
+    prec:subject "PERSON" ;
+    prec:object  "COMPANY"
+] .
+
+<http://schema.org/givenName> prec:propertyIRI "surname" .
+
+<http://schema.org/familyName> prec:propertyIRI [
+    prec:propertyName "name" ;
+    prec:nodeLabel    "PERSON"
+] .
+
+<http://schema.org/name> prec:propertyIRI [
+    prec:propertyName "name" ;
+    prec:nodeLabel    "COMPANY"
+] .
+
+# TODO: target: transform to date
+schema:startDate prec:propertyIRI "since" .
+schema:endDate   prec:propertyIRI "to" .
+
+<http://example.org/workingFor> prec:relationshipIRI [
+    prec:labelName "WORKS" ;
+    prec:useRdfStar false ;
+    prec:subject   ex:employee ;
+    prec:object    ex:employer ;
+    prec:predicate rdf:type
+] .
