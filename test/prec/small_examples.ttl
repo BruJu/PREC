@@ -1,0 +1,50 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix prec: <http://bruy.at/prec#> .
+@prefix : <http://test/> .
+
+
+prec:testMetaData prec:kind "SmallExamples" .
+
+
+[] a prec:unitTest ;
+   prec:context :relationContext ;
+   prec:output :relationOutput ;
+   prec:propertyGraph 
+   '''
+{"type":"node","id":"3","labels":["Person"]}
+{"type":"node","id":"4","labels":["Person"]}
+{"type":"node","id":"5"}
+{"id":"4","type":"relationship","label":"Knows","start":{"id":"3","labels":["Person"]},"end":{"id":"4","labels":["Person"]}}
+{"id":"5","type":"relationship","label":"Knows","start":{"id":"3","labels":["Person"]},"end":{"id":"5"}}
+   ''' ;
+   :usedCypherQuery
+   '''
+   create
+       (alice:Person),
+       (charlie:Person),
+       (apple),
+       (alice)-[:Knows]->(charlie),
+       (alice)-[:Knows]->(apple)
+   '''
+   .
+
+:relationContext {
+    prec:Relationships prec:useRdfStar prec:AsUnique .
+    prec:KeepProvenance prec:flagState false .
+
+    :Person prec:nodeLabelIRI "Person" .
+
+    :knows prec:relationshipIRI [
+        prec:relationshipLabel "Knows" ;
+        prec:object "Person" 
+    ] .
+
+    :knowsAbout prec:relationShipIRI "Knows" .
+}
+
+:relationOutput {
+    _:alice :knows _:charlie .
+    _:alice a :Person . 
+    _:charlie a :Person .
+    _:alice :knowsAbout _:apple .
+}
