@@ -228,6 +228,15 @@ function transformProperties(store, addedVocabulary) {
                             [variable("nodeLabel"), rdfs.label, N3.DataFactory.literal(extraCondition.nodeLabel)]
                         ]
                     );
+                } else if (extraCondition["@category"] === "RelationshipLabel") {
+                    conditions.push(
+                        [
+                            [variable("rel")  , rdf.type  , variable("label")                               ],
+                            [variable("rel")  , rdf.type  , pgo.Edge                                        ],
+                            [variable("label"), rdfs.label, N3.DataFactory.literal(extraCondition.nodeLabel)]
+                        ]
+                    );
+
                 }
             }
 

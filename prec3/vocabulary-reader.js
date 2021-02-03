@@ -103,6 +103,12 @@ function readProperties(store) {
                         "@category": "NodeLabel",
                         "nodeLabel": quad.object.value
                     });
+                } else if (quad.predicate.equals(prec.relationshipLabel)
+                    && quad.object.termType == "Literal") {
+                    rules.push({
+                        "@category": "RelationshipLabel",
+                        "relationshipLabel": quad.object.value
+                    });
                 } else {
                     console.error("Unknown rule description:");
                     console.error(quad);
