@@ -200,25 +200,22 @@ function readFlags(store) {
 }
 
 function readRelDefault(quads) {
-    if (quads.length != 1) return prec.RDFReification;
+    if (quads.length != 1) return N3.DataFactory.literal("false", xsd.boolean);
     
     if (quads[0].object.equals(prec.AsOccurrences)) {
         return prec.AsOccurrences;
     }
 
-    if (quads[0].object.equals(prec.FlattenUnique)) {
-        return prec.FlattenUnique;
-    }
+    //if (quads[0].object.equals(prec.FlattenUnique)) {
+    //    return prec.FlattenUnique;
+    //}
 
-    return prec.RDFReification;
+    return quads[0].object;
 }
 
-class ReadVocabulary {
-    constructor(filename) {
-        const parser = new N3.Parser();
-        const fileContent = fs.readFileSync(filename, 'utf-8');
-        const quads = parser.parse(fileContent);
-        const store = new N3.Store(quads);
+class Context {
+    constructor(contextQuads) {
+        const store = new N3.Store(contextQuads);
     
         this.properties = readProperties(store);
         this.relations  = readRelations(store);
@@ -238,15 +235,15 @@ class ReadVocabulary {
     }
 
     forEachRelation(callback) {
-        return ReadVocabulary._forEachKnown(this.relations , callback);
+        return Context._forEachKnown(this.relations , callback);
     }
     
     forEachProperty(callback) {
-        return ReadVocabulary._forEachKnown(this.properties, callback);
+        return Context._forEachKnown(this.properties, callback);
     }
 
     forEachNodeLabel(callback) {
-        return ReadVocabulary._forEachKnown(this.nodeLabels, callback);
+        return Context._forEachKnown(this.nodeLabels, callback);
     }
 
     getStateOf(flag) {
@@ -258,4 +255,4 @@ class ReadVocabulary {
     }
 }
 
-module.exports = filename => new ReadVocabulary(filename);
+module.exports = Context;

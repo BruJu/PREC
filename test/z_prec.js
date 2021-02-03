@@ -59,6 +59,14 @@ function get(store, subject, predicate) {
     else return quads[0].object;
 }
 
+
+function extractGraph(store, graph) {
+    return new N3.Store(
+        store.getQuads(null, null, null, graph)
+            .map(quad => N3.DataFactory.quad(quad.subject, quad.predicate, quad.object))
+    );
+}
+
 function smallExample(store) {
     for (const unitTest of store.getQuads(null, rdf.type, precNS.unitTest)) {
         const node = unitTest.subject;
@@ -71,8 +79,10 @@ function smallExample(store) {
         assert.notStrictEqual(output, null);
         assert.notStrictEqual(propertyGraph, null);
 
-        // TODO
+        const contextGraph = extractGraph(store, context);
+        const expectedGraph = extractGraph(store, output);
+        const aaa = prec.precOnNeo4JString(propertyGraph.value, contextGraph.getQuads());
 
-
+        assert.ok(isSubstituableGraph(aaa.getQuads(), expectedGraph.getQuads()), context.value);
     }
 }

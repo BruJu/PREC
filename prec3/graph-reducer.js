@@ -5,7 +5,7 @@ const graphyFactory = require('@graphy/core.data.factory');
 const namespace     = require('@rdfjs/namespace');
 
 const storeAlterer  = require("./store-alterer-from-pattern.js");
-const vocabReader   = require("./vocabulary-reader.js");
+const Context       = require("./vocabulary-reader.js");
 
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , N3.DataFactory)
@@ -176,7 +176,6 @@ function modifyRelationships(store, defaultBehaviour) {
     function getBehaviour(relation) {
         const quads = store.getQuads(relation, prec.useRdfStar, null);
         if (quads.length == 0) return defaultBehaviour;
-        store.removeQuads(quads);
         return quads[0].object;
     }
 
@@ -408,8 +407,8 @@ function transformNodeLabels(store, addedVocabulary) {
     );
 }
 
-function applyVocabulary(store, vocabularyPath) {
-    const addedVocabulary = vocabReader(vocabularyPath);
+function applyVocabulary(store, contextQuads) {
+    const addedVocabulary = new Context(contextQuads);
 
     if (addedVocabulary.getStateOf("MetaProperty") == false) {
         removeMetaProperties(store);
@@ -537,14 +536,6 @@ function searchUnmapped(store) {
 //    "Missing": store => searchUnmapped(store)
 //};
 
-function applyTransformations(store, transformationNames) {
-    if (transformationNames.length == 0) {
-        return;
-    } else if (transformationNames.length == 1) {
-        applyVocabulary(store, transformationNames[0]);
-    } else {
-        console.error("Too much arguments");
-    }
-}
 
-module.exports = applyTransformations;
+
+module.exports = applyVocabulary;

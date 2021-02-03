@@ -35,11 +35,11 @@ prec:testMetaData prec:kind "SmallExamples" .
     :Person prec:nodeLabelIRI "Person" .
 
     :knows prec:relationshipIRI [
-        prec:relationshipLabel "Knows" ;
+        prec:labelName "Knows" ;
         prec:object "Person" 
     ] .
 
-    :knowsAbout prec:relationShipIRI "Knows" .
+    :knowsAbout prec:relationshipIRI "Knows" .
 }
 
 :relationOutput {

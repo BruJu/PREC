@@ -12,6 +12,19 @@ const RDFGraphBuilder = require("./prec3/graph-builder.js");
 const graphReducer    = require("./prec3/graph-reducer.js");
 const fileReader      = require("./file-read.js");
 
+
+function filenameToArrayOfQuads(filename) {
+    const trig = fs.readFileSync(filename, 'utf-8');
+    return trigToArrayOfQuads(trig);
+}
+
+function trigToArrayOfQuads(trig) {
+    const parser = new N3.Parser();
+    return parser.parse(trig);
+}
+
+
+
 function outputTheStore(store, prefixes) {
     const writer = new N3.Writer({ prefixes: prefixes });
     store.forEach(quad => writer.addQuad(quad.subject, quad.predicate, quad.object, quad.graph));
@@ -22,8 +35,15 @@ function outputTheStore(store, prefixes) {
 
 function precOnNeo4J(filename, context) {
     const propertyGraphStructure = fileReader.fromNeo4j(filename);
-    const [store, _prefixes] = RDFGraphBuilder.neo4jJsToStore(propertyGraphStructure, "RDFReification");
-    graphReducer(store, [context]);
+    const store = RDFGraphBuilder.neo4jJsToStore(propertyGraphStructure, "RDFReification")[0];
+    graphReducer(store, filenameToArrayOfQuads(context));
+    return store;
+}
+
+function precOnNeo4JString(json, contextAsQuads) {
+    const pgStructure = fileReader.fromNeo4jString(json);
+    const store = RDFGraphBuilder.neo4jJsToStore(pgStructure, "RDFReification")[0];
+    graphReducer(store, contextAsQuads);
     return store;
 }
 
@@ -48,7 +68,11 @@ function main() {
     // Convert to an expanded RDF graph
     const [store, prefixes] = RDFGraphBuilder.neo4jJsToStore(propertyGraphStructure, mode);
     // Reduce the number of triples
-    graphReducer(store, args);
+    if (args.length === 1) {
+        graphReducer(store, filenameToArrayOfQuads(arg[0]));
+    } else if (args.length >= 1) {
+        console.error("Too much arguments");
+    }
     // Done gg
     outputTheStore(store, prefixes);
 }
@@ -59,5 +83,6 @@ if (require.main === module) {
 
 module.exports = {
     precOnNeo4J: precOnNeo4J,
+    precOnNeo4JString: precOnNeo4JString,
     outputTheStore: outputTheStore
 };
