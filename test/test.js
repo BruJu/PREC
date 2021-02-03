@@ -1,5 +1,5 @@
 const assert = require('assert');
-const N3 = require('N3');
+const N3 = require('n3');
 
 const storeAlterer = require('../prec3/store-alterer-from-pattern');
 

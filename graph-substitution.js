@@ -1,4 +1,4 @@
-const N3 = require('N3');
+const N3 = require('n3');
 
 /** Returns true if the quad has a blank node */
 function hasBlankNode(quad) {

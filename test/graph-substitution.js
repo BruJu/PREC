@@ -1,6 +1,6 @@
 const assert = require('assert');
 
-const N3 = require('N3');
+const N3 = require('n3');
 const namespace = require('@rdfjs/namespace');
 const ex = namespace("http://ex.org/", N3.DataFactory);
 
