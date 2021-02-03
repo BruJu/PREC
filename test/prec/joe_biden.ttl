@@ -1,0 +1,11 @@
+@prefix prec: <http://bruy.at/prec#> .
+
+prec:testMetaData prec:pgPath "../../data/joe_biden.json" ;
+                  prec:contextPath "../../data/joe_biden.ttl" ;
+                  prec:pgSource <https://neo4j.com/developer/neo4j-apoc/> .
+
+_:joe a <http://dbpedia.org/ontology/Person>;
+    <https://schema.org/givenName> "Joseph";
+    <https://schema.org/familyName> "Biden".
+_:usa a <http://dbpedia.org/ontology/Country>;
+    <http://example.org/countryName> "United States of America".

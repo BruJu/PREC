@@ -1,0 +1,22 @@
+PREFIX prec: <http://bruy.at/prec#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX schema: <http:/schema.org/>
+PREFIX ex:     <http://example.org/>
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+prec:MetaProperty          prec:flagState false .
+prec:KeepProvenance        prec:flagState false .
+
+
+
+schema:Person prec:nodeLabelIRI "Person" .
+schema:Organization prec:nodeLabelIRI "Organization" .
+
+schema:name prec:propertyIRI "name" .
+
+schema:EducationalOccupationalCredential prec:nodeLabelIRI "Diploma" .
+
+schema:Book prec:nodeLabelIRI "Book" .
+
+
+ex:requiredQuantity prec:propertyIRI "quantity" .
