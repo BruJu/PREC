@@ -20,6 +20,13 @@ function outputTheStore(store, prefixes) {
     console.error(store.size + " triples");
 }
 
+function precOnNeo4J(filename, context) {
+    const propertyGraphStructure = fileReader.fromNeo4j(filename);
+    const [store, _prefixes] = RDFGraphBuilder.neo4jJsToStore(propertyGraphStructure, "RDFReification");
+    graphReducer(store, [context]);
+    return store;
+}
+
 function main() {
     // Arg parsing done badly
     if (process.argv.length < 3) {
@@ -46,4 +53,11 @@ function main() {
     outputTheStore(store, prefixes);
 }
 
-main();
+if (require.main === module) {
+    main();
+}
+
+module.exports = {
+    precOnNeo4J: precOnNeo4J,
+    outputTheStore: outputTheStore
+};
