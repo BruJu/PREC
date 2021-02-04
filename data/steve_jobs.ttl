@@ -9,46 +9,46 @@ prec:KeepProvenance        prec:flagState false .
 
 prec:Relationships prec:useRdfStar prec:AsOccurrences .
 
-<http://schema.org/Person> prec:nodeLabelIRI "PERSON" .
-<http://schema.org/Corporation> prec:nodeLabelIRI "COMPANY" .
+<http://schema.org/Person> prec:nodeLabelIRIOf "PERSON" .
+<http://schema.org/Corporation> prec:nodeLabelIRIOf "COMPANY" .
 
 # TODO: how do we chech that our bindings are correct?
 
 # TODO: priority
-# schema:knowsAbout prec:relationshipIRI "KNOWS" .
+# schema:knowsAbout prec:relationshipIRIOf "KNOWS" .
 
-schema:knows prec:relationshipIRI [
-    prec:labelName "KNOWS" ;
+schema:knows prec:relationshipIRIOf [
+    prec:relationshipLabel "KNOWS"  ;
+    prec:sourceLabel       "PERSON" ;
+    prec:destinationLabel  "PERSON" ;
     prec:useRdfStar prec:AsUnique ;
-    prec:subject "PERSON" ;
-    prec:object  "PERSON"
 ] .
 
-schema:knowsAbout prec:relationshipIRI [
-    prec:labelName "KNOWS" ;
-    prec:useRdfStar prec:AsUnique ;
-    prec:subject "PERSON" ;
-    prec:object  "COMPANY"
+schema:knowsAbout prec:relationshipIRIOf [
+    prec:relationshipLabel "KNOWS"   ;
+    prec:sourceLabel       "PERSON"  ;
+    prec:destinationLabel  "COMPANY" ;
+    prec:useRdfStar prec:AsUnique
 ] .
 
-<http://schema.org/givenName> prec:propertyIRI "surname" .
+<http://schema.org/givenName> prec:propertyIRIOf "surname" .
 
-<http://schema.org/familyName> prec:propertyIRI [
+<http://schema.org/familyName> prec:propertyIRIOf [
     prec:propertyName "name" ;
     prec:nodeLabel    "PERSON"
 ] .
 
-<http://schema.org/name> prec:propertyIRI [
+<http://schema.org/name> prec:propertyIRIOf [
     prec:propertyName "name" ;
     prec:nodeLabel    "COMPANY"
 ] .
 
 # TODO: target: transform to date
-schema:startDate prec:propertyIRI "since" .
-schema:endDate   prec:propertyIRI "to" .
+schema:startDate prec:propertyIRIOf "since" .
+schema:endDate   prec:propertyIRIOf "to" .
 
-<http://example.org/workingFor> prec:relationshipIRI [
-    prec:labelName "WORKS" ;
+<http://example.org/workingFor> prec:relationshipIRIOf [
+    prec:relationshipLabel "WORKS" ;
     prec:useRdfStar false ;
     prec:subject   ex:employee ;
     prec:object    ex:employer ;

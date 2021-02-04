@@ -6,17 +6,10 @@
 prec:testMetaData prec:kind "SmallExamples" .
 
 
+###############################################################################
+# Relationship test
+
 [] a prec:unitTest ;
-   prec:context :relationContext ;
-   prec:output :relationOutput ;
-   prec:propertyGraph 
-   '''
-{"type":"node","id":"3","labels":["Person"]}
-{"type":"node","id":"4","labels":["Person"]}
-{"type":"node","id":"5"}
-{"id":"4","type":"relationship","label":"Knows","start":{"id":"3","labels":["Person"]},"end":{"id":"4","labels":["Person"]}}
-{"id":"5","type":"relationship","label":"Knows","start":{"id":"3","labels":["Person"]},"end":{"id":"5"}}
-   ''' ;
    :usedCypherQuery
    '''
    create
@@ -25,6 +18,16 @@ prec:testMetaData prec:kind "SmallExamples" .
        (apple),
        (alice)-[:Knows]->(charlie),
        (alice)-[:Knows]->(apple)
+   ''' ;
+   prec:context :relationContext ;
+   prec:output  :relationOutput ;
+   prec:propertyGraph
+   '''
+        {"type":"node","id":"3","labels":["Person"]}
+        {"type":"node","id":"4","labels":["Person"]}
+        {"type":"node","id":"5"}
+        {"id":"4","type":"relationship","label":"Knows","start":{"id":"3","labels":["Person"]},"end":{"id":"4","labels":["Person"]}}
+        {"id":"5","type":"relationship","label":"Knows","start":{"id":"3","labels":["Person"]},"end":{"id":"5"}}
    '''
    .
 
@@ -32,14 +35,14 @@ prec:testMetaData prec:kind "SmallExamples" .
     prec:Relationships prec:useRdfStar prec:AsUnique .
     prec:KeepProvenance prec:flagState false .
 
-    :Person prec:nodeLabelIRI "Person" .
+    :Person prec:nodeLabelIRIOf "Person" .
 
-    :knows prec:relationshipIRI [
-        prec:labelName "Knows" ;
-        prec:object "Person" 
+    :knows prec:relationshipIRIOf [
+        prec:relationshipLabel "Knows" ;
+        prec:destinationLabel  "Person" 
     ] .
 
-    :knowsAbout prec:relationshipIRI "Knows" .
+    :knowsAbout prec:relationshipIRIOf "Knows" .
 }
 
 :relationOutput {
@@ -48,3 +51,7 @@ prec:testMetaData prec:kind "SmallExamples" .
     _:charlie a :Person .
     _:alice :knowsAbout _:apple .
 }
+
+
+###############################################################################
+

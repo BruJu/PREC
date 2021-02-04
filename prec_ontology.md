@@ -100,7 +100,7 @@ Relative path from the expected output file to the used context.
 
 ## Relationships / Edge mapping
 
-### http://bruy.at/prec#relationshipIRI
+### http://bruy.at/prec#relationshipIRIOf
 
 Predicate for relationship IRI mapping.
 
@@ -125,7 +125,7 @@ Predicate used to describe how a relationship is materialized.
 Possible subjects are :
 
 - http://bruy.at/prec#Relationships : Matches every relationship (default behaviour)
-- A Blank node that describes the prec:relationshipIRI.
+- A Blank node that describes the prec:relationshipIRIOf.
 
 Possible objects are :
 - false : Do not use RDF-star. RDF standard reification will be used
@@ -146,46 +146,17 @@ See http://bruy.at/prec#useRdfStar
 See http://bruy.at/prec#useRdfStar
 
 
+### From RDF Reification to hidden reification
 
-### http://bruy.at/prec#subject
+#### http://bruy.at/prec#subject
 
-Describes the relation with the source node of a relation
+If the relation is materialized with a standard RDF Reification, indicates the
+IRI used in placed of the standard rdf:subject (/ rdf:predicate / rdf:object) IRI.
 
-Expected object is either:
-- An IRI (rename)
-- A literal (node label)
-- A Blank node described with :
-    - http://bruy.at/prec#rename *IRI*
-    - http://bruy.at/prec#nodeLabel *Literal*
-
-### http://bruy.at/prec#object
-
-Describes the relation with the destination node of a relation.
-
-Accepted items are the same as http://bruy.at/prec#subject
-
-
-### http://bruy.at/prec#predicate
-
-Describes the relation with the relation label.
-
-Only renaming is allowed if the relation is materialized as a standard RDF
-reification.
-
-Expected usage is to replace `rdf:predicate` with `rdf:type` to materialize
-a Property Graph Relationship as a node.
+Renaming rdf:subject, rdf:predicate or rdf:object implies `prec:useRdfStar false`.
 
 `prec:subject`, `prec:object` and `prec:predicate` renaming are inspired by
 http://www.bobdc.com/blog/reification-is-a-red-herring/.
-
-
-
-### http://bruy.at/prec#rename
-
-If the relation is materialized with a standard RDF Reification, indicates the
-IRI used in placed of the standard rdf:subject / rdf:predicate / rdf:object IRI.
-
-*Renaming rdf:subject, rdf:predicate or rdf:object implies `prec:useRdfStar false`.*
 
 #### Example
 
@@ -196,11 +167,9 @@ IRI used in placed of the standard rdf:subject / rdf:predicate / rdf:object IRI.
 
 *Context*
 ```turtle
-<https://example.org/aRelation> prec:relationshipIRI [
-    # Explicit rename
-    prec:subject [ prec:rename <https://example.org/subject> ] .
-    # Implicit rename
-    prec:object <https://example.org/object> .
+<https://example.org/aRelation> prec:relationshipIRIOf [
+    prec:subject <https://example.org/subject> .
+    prec:object  <https://example.org/object>  .
 ] .
 
 # Always use RDF reification
@@ -217,12 +186,37 @@ prec:KeepProvenance prec:flagState false .
 
 
 
-### http://bruy.at/prec#nodeLabel
+#### http://bruy.at/prec#predicate
 
-Only applies the current rule if the described node has the label.
+Describes the relation with the relation label.
+
+See prec#subject
+
+The most common expected usage is to replace `rdf:predicate` with `rdf:type`
+to materialize a Property Graph Relationship as a node.
 
 
-#### Example
+
+#### http://bruy.at/prec#object
+
+See prec#subject
+
+
+### Constaints
+
+#### http://bruy.at/prec#relationshipLabel
+
+Only apply the transformation if the relation has the specified label.
+
+See example of sourceLabel
+
+
+#### http://bruy.at/prec#sourceLabel
+
+
+Only apply the transformation if the source node has the specified label.
+
+##### Example
 
 *Property Graph:*
 ```
@@ -231,23 +225,23 @@ Only applies the current rule if the described node has the label.
 
 *Context:*
 ```turtle
-<https://example.org/hates> prec:relationshipIRI [
-    prec:labelName "Like" ;
-    prec:subject [ prec:nodeLabel "Person" ]
+<https://example.org/hates> prec:relationshipIRIOf [
+    prec:relationshipLabel "Like" ;
+    prec:sourceLabel       "Person"
 ] .
 
 # Always use affirmed standard triples
 prec:Relationships prec:useRdfStar prec:AsUnique ;
 prec:KeepProvenance prec:flagState false .
-ex:Person prec:nodeLabelIRI "Person" .
-ex:Cat    prec:nodeLabelIRI "Cat"    .
-ex:Food   prec:nodeLabelIRI "Food"   .
+ex:Person prec:nodeLabelIRIOf "Person" .
+ex:Cat    prec:nodeLabelIRIOf "Cat"    .
+ex:Food   prec:nodeLabelIRIOf "Food"   .
 ```
 
 *Possible Output:*
 ```turtle
 _:p <https://example.org/hates> _:c .
-_:c _:Like _:f .
+_:c :Like _:f .
 
 _:p a ex:Person .
 _:c a ex:Cat .
@@ -263,6 +257,16 @@ The second relation (between Animal and Food) does not because the
 source node does not have the label Person (only the label Cat).
 
 
+#### http://bruy.at/prec#destinationLabel
+
+Only apply the transformation if the destination node has the specified label.
+
+See prec#sourceLabel
+
+
+
+
+
 ### http://bruy.at/prec#occurrenceOf
 
 *This IRI is used in the generated graphs and should not be used in contexts as a "keyword".*
@@ -274,7 +278,6 @@ Example:
 > Steve Jobs worked for apple from 1976 to 1985 and from 1997 to 2011
 
 ```turtle
-
 
 << <stevejobs> <workingFor> <apple> >> prec::occurrenceOf _:first, _second.
 
@@ -288,21 +291,22 @@ _:second <to> 2011
 
 # Unclassified
 
-## http://bruy.at/prec#propertyIRI
+## http://bruy.at/prec#propertyIRIOf
 
 Specifies that an IRI must be uses for the associated properties.
 
 
 ### Example
 
-- Vocab: `<https://schema.org/familyName> prec:propertyIRI "name" .`
+- Vocab: `<https://schema.org/familyName> prec:propertyIRIOf "name" .`
 - \+ Cypher: `create (obama { name: 'Obama' })`
 - = `_:obama <https://schema.org/familyName> "Obama".`
 
 
 
 ## http://bruy.at/prec#alwaysAsserted
-OBSOLETE
+
+***OBSOLETE***
 
 Type of labels of relationships that are always asserted.
 
@@ -347,6 +351,7 @@ should be mapped to an actual ontology.
 It only applies to labels and property names.
 
 
+# Extensions of PGO
 
 ## prec:Property
 

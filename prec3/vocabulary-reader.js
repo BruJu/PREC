@@ -56,7 +56,7 @@ function readThings(store, predicateIRI, acceptsLiteral, moreComplex) {
                 store.getQuads(baseRule.object, null, null)
             );
 
-            if (mapped === undefined) {
+            if (mapped === undefined || mapped == null) {
                 console.error("Invalid vocab triple (more complex error):");
                 console.error(baseRule);
                 continue;
@@ -87,7 +87,7 @@ function readThings(store, predicateIRI, acceptsLiteral, moreComplex) {
 function readProperties(store) {
     return readThings(
         store,
-        prec.propertyIRI,
+        prec.propertyIRIOf,
         true,
         quads => {
             let source = undefined;
@@ -132,13 +132,13 @@ function readInfo(store, term) {
 }
 
 function readRelations(store) {
-    return readThings(store, prec.relationshipIRI, true, 
+    return readThings(store, prec.relationshipIRIOf, true, 
         quads => {
             let source = undefined;
             let rules = [];
 
             for (let quad of quads) {
-                if (quad.predicate.equals(prec.labelName)) {
+                if (quad.predicate.equals(prec.relationshipLabel)) {
                     source = quad.object.value;
                 } else {
                     rules.push([quad.predicate, readInfo(store, quad.object)]);
@@ -219,7 +219,7 @@ class Context {
     
         this.properties = readProperties(store);
         this.relations  = readRelations(store);
-        this.nodeLabels = readThings(store, prec.nodeLabelIRI, true, false);
+        this.nodeLabels = readThings(store, prec.nodeLabelIRIOf, true, false);
 
         this.flags = readFlags(store);
 

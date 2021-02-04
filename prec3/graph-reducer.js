@@ -259,51 +259,38 @@ function transformProperties(store, addedVocabulary) {
 }
 
 
-function onSubjectOrPredicate(extraCondition, patternMatching, subjectOrObject) {
+function onSubjectOrPredicate_nodeType(labelTarget, patternMatching, subjectOrObject) {
+    if (labelTarget.termType !== "Literal") return false;
+
     const predicate = rdf[subjectOrObject];
     const object = variable(subjectOrObject);
 
-    function nodeType(labelTarget) {
-        patternMatching.conditions.push(
-            [
-                [variable("relationship")           , predicate , object                             ],
-                [object                             , rdf.type  , variable("label" + subjectOrObject)],
-                [variable("label" + subjectOrObject), rdfs.label, labelTarget                        ]
-            ]
-        );
-    }
+    patternMatching.conditions.push(
+        [
+            [variable("relationship")           , predicate , object                             ],
+            [object                             , rdf.type  , variable("label" + subjectOrObject)],
+            [variable("label" + subjectOrObject), rdfs.label, labelTarget                        ]
+        ]
+    );
 
-    function rename(target) {
-        patternMatching.extraSource.push([variable("relationship"), predicate, object]);
-        patternMatching.dest.push([variable("relationship"), target, object]);
-    }
+    return true;
+}
 
-    if (Array.isArray(extraCondition)) {
-        for (const sub of extraCondition) {
-            if (prec.nodeLabel.equals(sub[0])) {
-                nodeType(sub[1]);
-            } else if (prec.rename.equals(sub[0])) {
-                rename(sub[1]);
-            } else {
-                return false;
-            }
-        }
+function onSubjectOrPredicate_rename(target, patternMatching, subjectOrObject) {
+    if (target.termType !== "NamedNode") return false;
 
-        return true;
-    } else if (extraCondition.termType === "Literal") {
-        nodeType(extraCondition);
-        return true;
-    } else if (extraCondition.termType === "NamedNode") {
-        rename(extraCondition);
-        return true;
-    } else {
-        return false;
-    }
+    const predicate = rdf[subjectOrObject];
+    const object = variable(subjectOrObject);
+
+    patternMatching.extraSource.push([variable("relationship"), predicate, object]);
+    patternMatching.dest       .push([variable("relationship"), target   , object]);
+
+    return true;
 }
 
 
-function transformRelationships(store, addedVocabulary) {
 
+function transformRelationships(store, addedVocabulary) {
 
     addedVocabulary.forEachRelation(
         (relationName, mappedIRI, extraConditions) => {
@@ -324,26 +311,31 @@ function transformRelationships(store, addedVocabulary) {
             };
 
             for (const extraCondition of extraConditions) {
+                let ok = false;
+
                 if (extraCondition[0].equals(prec.useRdfStar)) {
                     patternMatching.dest.push(
                         [variable("relationship"), prec.useRdfStar, extraCondition[1]]
                     );
+                    ok = true;
                 } else if (prec.subject.equals(extraCondition[0])) {
-                    const ok = onSubjectOrPredicate(extraCondition[1], patternMatching, "subject");
-                    if (!ok) invalidCondition(extraCondition);
-
+                    ok = onSubjectOrPredicate_rename(extraCondition[1], patternMatching, "subject");
                 } else if (prec.object.equals(extraCondition[0])) {
-                    const ok = onSubjectOrPredicate(extraCondition[1], patternMatching, "object");
-                    if (!ok) invalidCondition(extraCondition);
-
+                    ok = onSubjectOrPredicate_rename(extraCondition[1], patternMatching, "object");
                 } else if (prec.predicate.equals(extraCondition[0])) {
-                    if (extraCondition[1].termType !== "NamedNode") {
-                        invalidCondition(extraCondition);
-                    } else {
+                    if (extraCondition[1].termType === "NamedNode") {
+                        ok = true;
                         patternMatching.renamePredicate = extraCondition[1];
                     }
-
+                } else if (prec.sourceLabel.equals(extraCondition[0])) {
+                    ok = onSubjectOrPredicate_nodeType(extraCondition[1], patternMatching, "subject");
+                } else if (prec.destinationLabel.equals(extraCondition[0])) {
+                    ok = onSubjectOrPredicate_nodeType(extraCondition[1], patternMatching, "object");
                 } else {
+                    invalidCondition(extraCondition);
+                }
+
+                if (!ok) {
                     invalidCondition(extraCondition);
                 }
             }

@@ -10,14 +10,15 @@ prec:KeepProvenance        prec:flagState false .
 
 prec:Relationships prec:useRdfStar prec:AsOccurrences .
 
-<http://dbpedia.org/ontology/Person> prec:nodeLabelIRI "Person" .
+<http://dbpedia.org/ontology/Person> prec:nodeLabelIRIOf "Person" .
 
-# <https://example.org/likes> prec:relationshipIRI "Likes" .
+# <https://example.org/likes> prec:relationshipIRIOf "Likes" .
 
-<https://example.org/likes> prec:relationshipIRI [
-    prec:labelName "Likes" ;
+<https://example.org/likes> prec:relationshipIRIOf [
+    prec:sourceLabel       "Person" ;
+    prec:relationshipLabel "Likes"  ;
     prec:useRdfStar false ;
-    prec:subject [ prec:nodeLabel "Person" ; prec:rename ex:likedBy ]
+    prec:subject ex:likedBy
 ] .
 
-<https://schema.org/name> prec:propertyIRI "name" .
+<https://schema.org/name> prec:propertyIRIOf "name" .
