@@ -19,7 +19,7 @@ Some experiments about PG to RDF conversion.
 
 ## Converting your own Property Graph to RDF
 
-![](doc/general_procesS.svg)
+![](doc/general_process.svg)
 
 Currently, only Neo4j graphs are supported
 
