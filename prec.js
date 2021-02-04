@@ -15,10 +15,6 @@ const fs = require('fs');
 
 /// Returns the content of filename, line by line
 function fileToString(filename) {
-    if (format === "JSON") {
-        return filename;
-    }
-    
     return fs.readFileSync(filename, 'utf-8').split(/\r?\n/);
 }
 
@@ -104,7 +100,7 @@ function main() {
     const [store, prefixes] = RDFGraphBuilder.neo4jJsToStore(propertyGraphStructure, mode);
     // Reduce the number of triples
     if (args.length === 1) {
-        graphReducer(store, filenameToArrayOfQuads(arg[0]));
+        graphReducer(store, filenameToArrayOfQuads(args[0]));
     } else if (args.length >= 1) {
         console.error("Too much arguments");
     }

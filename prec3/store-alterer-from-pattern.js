@@ -224,8 +224,10 @@ function _modify_pattern(pattern, sourceNode, destinationNode) {
  * @param {*} recursivePattern The pattern to find the next element and the
  * next node
  * @param {*} endNode The final node value
+ * @param {*} replacePattern If specified, a replace operation will be performed
+ * from the matchAndBind result of each sublist.
  */
-function extractRecursive(store, beginNode, recursivePattern, endNode) {
+function extractRecursive(store, beginNode, recursivePattern, endNode, replacePattern) {
     let listedNodes = [];
 
     let currentNode = beginNode;
@@ -241,9 +243,13 @@ function extractRecursive(store, beginNode, recursivePattern, endNode) {
             return null;
         }
 
+        if (replacePattern !== undefined) {
+            replace(store, r, replacePattern);
+        }
+
         r = r[0];
 
-        listedNodes.push(r["value"]); // ?
+        listedNodes.push(r["value"]);
         currentNode = r["(R) next"];
     }
 
@@ -287,6 +293,8 @@ function findFilterReplace(store, source, conditions, destination) {
     });
 
     replace(store, binds, destination);
+
+    return binds;
 }
 
 module.exports = {

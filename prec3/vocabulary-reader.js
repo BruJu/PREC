@@ -109,6 +109,8 @@ function readProperties(store) {
                         "@category": "RelationshipLabel",
                         "relationshipLabel": quad.object.value
                     });
+                } else if (quad.predicate.equals(prec.multiValue) && quad.object.equals(prec.asSet)) {
+                    rules.push( { "@category": "AsSet" })
                 } else {
                     console.error("Unknown rule description:");
                     console.error(quad);

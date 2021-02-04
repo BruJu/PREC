@@ -216,6 +216,7 @@ function modifyRelationships(store, defaultBehaviour) {
 function transformProperties(store, addedVocabulary) {
     addedVocabulary.forEachProperty(
         (propertyName, mappedIRI, extraConditions) => {
+            let asSet = false;
             let conditions = [];
 
             for (const extraCondition of extraConditions) {
@@ -235,7 +236,8 @@ function transformProperties(store, addedVocabulary) {
                             [variable("label"), rdfs.label, N3.DataFactory.literal(extraCondition.nodeLabel)]
                         ]
                     );
-
+                } else if (extraCondition["@category"] === "AsSet") {
+                    asSet = true;
                 }
             }
 
@@ -247,12 +249,18 @@ function transformProperties(store, addedVocabulary) {
             const bind = storeAlterer.matchAndBind(store, pattern);
 
             for (const bind1 of bind) {
-                storeAlterer.findFilterReplace(
+                let newB = storeAlterer.findFilterReplace(
                     store,
                     [[variable("node"), bind1.property, variable("x")]],
                     conditions,
                     [[variable("node"), mappedIRI     , variable("x")]]
                 )
+
+                if (asSet) {
+                    for (const bind of newB) {
+                        noList(store, bind.x);
+                    }
+                }
             }
         }
     );
@@ -466,27 +474,37 @@ function flatten(store) {
     return true;
 }
 
-function noList(store) {
+function noList(store, firstNode) {
     const listHeads = storeAlterer.matchAndBind(store,
         [
-            [variable("firstNode")     , rdf.type     , rdf.List             ],
-            [variable("s")             , variable("p"), variable("firstNode")]
+            [firstNode    , rdf.type     , rdf.List ],
+            [variable("s"), variable("p"), firstNode]
         ]
     );
 
-    for (const d of listHeads) {
-        const l = storeAlterer.extractRecursive(
-            store,
-            d["firstNode"],
-            [
-                [variable("(R) current"), rdf.type , rdf.List            ],
-                [variable("(R) current"), rdf.first, variable("value")   ],
-                [variable("(R) current"), rdf.rest , variable("(R) next")]
-            ],
-            rdf.nil
-        );
+    if (listHeads.length !== 1) {
+        console.error("noList: Not exactly one match");
+        return;
+    }
 
-        console.error(l);
+    const listHead = listHeads[0];;
+
+    const l = storeAlterer.extractRecursive(
+        store,
+        firstNode,
+        [
+            [variable("(R) current"), rdf.type , rdf.List            ],
+            [variable("(R) current"), rdf.first, variable("value")   ],
+            [variable("(R) current"), rdf.rest , variable("(R) next")]
+        ],
+        rdf.nil,
+        []
+    );
+
+    storeAlterer.replace(store, listHeads, []);
+
+    for (const element of l) {
+        store.addQuad(listHead.s, listHead.p, element);
     }
 }
 

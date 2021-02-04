@@ -1,0 +1,8 @@
+@prefix prec: <http://bruy.at/prec#> .
+
+prec:testMetaData prec:pgPath "../../data/speedracer.json" ;
+                  prec:contextPath "../../data/movies_vocab.ttl" ;
+                  prec:pgSource <https://neo4j.com/developer/neo4j-apoc/> .
+
+_:speedraceractor <http://example.org/role> "Speed Racer".
+_:speedracemovie <http://schema.org/actor> _:speedraceractor .

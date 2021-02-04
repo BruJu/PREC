@@ -1,4 +1,13 @@
 PREFIX prec: <http://bruy.at/prec#>
 
-<https://schema.org/actor> prec:relationshipIRIOf "ACTED_IN".
+prec:MetaProperty          prec:flagState false .
+prec:KeepProvenance        prec:flagState false .
 
+prec:Relationships prec:useRdfStar prec:AsUnique .
+
+<http://schema.org/actor> prec:relationshipIRIOf "ACTED_IN".
+
+<http://example.org/role> prec:propertyIRIOf [
+    prec:propertyName "roles" ;
+    prec:multiValue prec:asSet
+] .
