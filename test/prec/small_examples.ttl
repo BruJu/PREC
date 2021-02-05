@@ -55,75 +55,68 @@ prec:testMetaData prec:kind "SmallExamples" .
 
 ###############################################################################
 
+:eggPropertyGraph prec:testContent '{"type":"node","id":"5","labels":["Food", "Animal"],"properties":{"name":"Oeufs"}}' .
+
 
 [] a prec:unitTest ;
    prec:context :allPriority ;
    prec:output  :allPriorityResult ;
-   prec:propertyGraph '{"type":"node","id":"5","labels":["Food", "Animal"],"properties":{"name":"Oeufs"}}' .
+   prec:propertyGraph :eggPropertyGraph .
 
 
 [] a prec:unitTest ;
    prec:context :animalPriority ;
    prec:output  :animalPriorityResult ;
-   prec:propertyGraph '{"type":"node","id":"5","labels":["Food", "Animal"],"properties":{"name":"Oeufs"}}' .
+   prec:propertyGraph :eggPropertyGraph .
    
 [] a prec:unitTest ;
    prec:context :foodPriority ;
    prec:output  :foodPriorityResult ;
-   prec:propertyGraph '{"type":"node","id":"5","labels":["Food", "Animal"],"properties":{"name":"Oeufs"}}' .
+   prec:propertyGraph :eggPropertyGraph .
    
 [] a prec:unitTest ;
-   prec:context :defaultPriority ;
+   prec:context :priorityGraphBase ;
    prec:output  :animalPriorityResult ;
-   prec:propertyGraph '{"type":"node","id":"5","labels":["Food", "Animal"],"properties":{"name":"Oeufs"}}' .
+   prec:propertyGraph :eggPropertyGraph .
 
 
-:allPriority {
+:priorityGraphBase {
     prec:MetaProperty   prec:flagState false .
     prec:KeepProvenance prec:flagState false .
-
-    :Food prec:nodeLabelIRIOf "Food" .
-    :Animal prec:nodeLabelIRIOf "Animal" .
     
-    :food_name   prec:propertyIRIOf [ prec:propertyName "name" ; prec:nodeLabel "Food"   ; prec:priority 1 ] .
-    :animal_name prec:propertyIRIOf [ prec:propertyName "name" ; prec:nodeLabel "Animal" ; prec:priority 2 ] .
-    :all_name    prec:propertyIRIOf [ prec:propertyName "name" ;                           prec:priority 3 ] .
+    :Food   prec:nodeLabelIRIOf "Food" .
+    :Animal prec:nodeLabelIRIOf "Animal" .
+
+    :food_name      prec:propertyIRIOf :prop_food_name .
+    :prop_food_name prec:propertyName "name" ;
+                    prec:nodeLabel "Food" .
+
+    :animal_name      prec:propertyIRIOf :prop_animal_name .
+    :prop_animal_name prec:propertyName "name" ;
+                      prec:nodeLabel "Animal" .
+
+    :all_name      prec:propertyIRIOf :prop_all_name .
+    :prop_all_name prec:propertyName "name" .
+}
+
+:priorityGraphBase prec:testIsBaseOf :allPriority, :animalPriority, :foodPriority, :defaultPriority .
+
+:allPriority {
+    :prop_food_name   prec:priority 1 .
+    :prop_animal_name prec:priority 2 .
+    :prop_all_name    prec:priority 3 .
 }
 
 :animalPriority {
-    prec:MetaProperty   prec:flagState false .
-    prec:KeepProvenance prec:flagState false .
-
-    :Food prec:nodeLabelIRIOf "Food" .
-    :Animal prec:nodeLabelIRIOf "Animal" .
-    
-    :food_name   prec:propertyIRIOf [ prec:propertyName "name" ; prec:nodeLabel "Food"   ; prec:priority 2 ] .
-    :animal_name prec:propertyIRIOf [ prec:propertyName "name" ; prec:nodeLabel "Animal" ; prec:priority 3 ] .
-    :all_name    prec:propertyIRIOf [ prec:propertyName "name" ;                           prec:priority 1 ] .
+    :prop_food_name   prec:priority 2 .
+    :prop_animal_name prec:priority 3 .
+    :prop_all_name    prec:priority 1 .
 }
 
 :foodPriority {
-    prec:MetaProperty   prec:flagState false .
-    prec:KeepProvenance prec:flagState false .
-
-    :Food prec:nodeLabelIRIOf "Food" .
-    :Animal prec:nodeLabelIRIOf "Animal" .
-    
-    :food_name   prec:propertyIRIOf [ prec:propertyName "name" ; prec:nodeLabel "Food"   ; prec:priority 3 ] .
-    :animal_name prec:propertyIRIOf [ prec:propertyName "name" ; prec:nodeLabel "Animal" ; prec:priority 2 ] .
-    :all_name    prec:propertyIRIOf [ prec:propertyName "name" ;                           prec:priority 1 ] .
-}
-
-:defaultPriority {
-    prec:MetaProperty   prec:flagState false .
-    prec:KeepProvenance prec:flagState false .
-
-    :Food prec:nodeLabelIRIOf "Food" .
-    :Animal prec:nodeLabelIRIOf "Animal" .
-    
-    :food_name   prec:propertyIRIOf [ prec:propertyName "name" ; prec:nodeLabel "Food"   ] .
-    :animal_name prec:propertyIRIOf [ prec:propertyName "name" ; prec:nodeLabel "Animal" ] .
-    :all_name    prec:propertyIRIOf [ prec:propertyName "name" ;                         ] .
+    :prop_food_name   prec:priority 3 .
+    :prop_animal_name prec:priority 2 .
+    :prop_all_name    prec:priority 1 .
 }
 
 :allPriorityResult    { _:egg a :Food, :Animal ; :all_name    "Oeufs" . }

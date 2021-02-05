@@ -6,6 +6,7 @@ const namespace = require('@rdfjs/namespace');
 const prec = require('../prec.js')
 const { isSubstituableGraph } = require('../graph-substitution.js');
 const assert = require('assert');
+const { defaultGraph } = require('@graphy/core.data.factory');
 
 const rdf = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 
@@ -61,10 +62,33 @@ function get(store, subject, predicate) {
 
 
 function extractGraph(store, graph) {
-    return new N3.Store(
+    const result = new N3.Store(
         store.getQuads(null, null, null, graph)
             .map(quad => N3.DataFactory.quad(quad.subject, quad.predicate, quad.object))
     );
+
+    const parentGraphs = store.getQuads(null, prec.testIsBaseOf, graph, N3.DataFactory.defaultGraph());
+
+    for (const parentGraph of parentGraphs) {
+        result.addQuads(extractGraph(store, parentGraph.subject).getQuads());
+    }
+
+    return result;
+}
+
+function getContent(store, term) {
+    while (term.termType !== "Literal") {
+        const query = store.getQuads(term, prec.testContent, null, N3.DataFactory.defaultGraph());
+
+        if (query.length === 0) {
+            assert.ok(false, "Malformed test");
+            return null;
+        }
+
+        term = query[0].object;
+    }
+
+    return term.value;
 }
 
 function smallExample(store) {
@@ -81,7 +105,7 @@ function smallExample(store) {
 
         const contextGraph = extractGraph(store, context);
         const expectedGraph = extractGraph(store, output);
-        const aaa = prec.precOnNeo4JString(propertyGraph.value, contextGraph.getQuads());
+        const aaa = prec.precOnNeo4JString(getContent(store, propertyGraph), contextGraph.getQuads());
 
         assert.ok(isSubstituableGraph(aaa.getQuads(), expectedGraph.getQuads()), context.value);
     }
