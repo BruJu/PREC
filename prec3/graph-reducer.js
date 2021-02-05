@@ -12,8 +12,51 @@ const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , N3.DataFac
 const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , N3.DataFactory);
 const prec = namespace("http://bruy.at/prec#"                       , N3.DataFactory);
 
-
 const variable = N3.DataFactory.variable;
+
+// =============================================================================
+
+/**
+ * 
+ * @param {N3.Store} store 
+ * @param {*} contextQuads 
+ */
+function applyVocabulary(store, contextQuads) {
+    const addedVocabulary = new Context(contextQuads);
+
+    if (addedVocabulary.getStateOf("MetaProperty") == false) {
+        removeMetaProperties(store);
+    }
+
+    // -- Map generated IRI to existing IRIs
+    transformProperties   (store, addedVocabulary);
+    transformRelationships(store, addedVocabulary);
+    transformNodeLabels   (store, addedVocabulary);
+
+    // -- Remove the info that generated IRI were generated if there don't
+    // appear anymore
+
+    // Property: ?p a createdProp, ?p a Property, ?p rdfs.label Thing
+    // Relationship Label: ?p a createdRelationShipLabel, ?p rdfs.label Thing
+    // Node label : same
+    removeUnusedCreatedVocabulary(store, prec.CreatedProperty, 3, 0, 0);
+    removeUnusedCreatedVocabulary(store, prec.CreatedRelationshipLabel, 2, 0, 0);
+    removeUnusedCreatedVocabulary(store, prec.CreatedNodeLabel, 2, 0, 0);
+
+    // -- Transform relationship format
+    modifyRelationships(store, addedVocabulary.getRelationshipDefault());
+
+    // Remove prec.useRdfStar from renamed reification
+    storeAlterer.deleteMatches(store, null, prec.useRdfStar, null);
+
+    // -- Remove provenance information if they are not required by the user
+    if (addedVocabulary.getStateOf("KeepProvenance") === false) {
+        removePGO(store);
+    }
+}
+
+// =============================================================================
+// =============================================================================
 
 /**
  * Converts a term to its Graphy concise representation
@@ -53,66 +96,6 @@ function _findTripleAbleRelations(requestResult) {
     return result;
 }
 
-function transformationRelationship(store, star) {
-    const variable = N3.DataFactory.variable;
-
-    let request = storeAlterer.matchAndBind(store,
-        [
-            [variable("rel"), rdf.subject  , variable("s")],
-            [variable("rel"), rdf.predicate, variable("p")],
-            [variable("rel"), rdf.object   , variable("o")],
-            [variable("rel"), rdf.type     , pgo.Edge]
-        ]
-    );
-
-    const tripleAbleRelations = _findTripleAbleRelations(request);
-
-    request = request.filter(dict => tripleAbleRelations.has(concise(dict.p)));
-
-    if (!star) {
-        request = request.filter(dict => store.countQuads(dict["rel"], null, null) === 4);
-    }
-
-    let r = storeAlterer.replace(store, request,
-        [
-            [variable("s"), variable("p"), variable("o")],
-            [N3.DataFactory.quad(variable("s"), variable("p"), variable("o")), rdf.type, pgo.Edge],
-        ]
-    );
-
-    if (star) {
-        storeAlterer.toRdfStar(store, r, r1 => r1.binds.rel, r1 => r1.quads[0]);
-    }
-}
-
-function transformationAttributes(store, star) {
-    const variable = N3.DataFactory.variable;
-
-    let request = storeAlterer.matchAndBind(store,
-        [
-            [variable("property")     , rdf.type            , pgo.Property],
-            [variable("node")         , variable("property"), variable("propertyValue")],
-            [variable("propertyValue"), rdfs.label          , variable("value")]
-        ]
-    );
-
-    request = storeAlterer.filterBinds(request, "value", node => node.termType === "Literal");
-
-    if (!star) {
-        request = request.filter(dict => store.countQuads(dict["propertyValue"], null, null) === 1);
-    }
-
-    let r = storeAlterer.replace(store, request,
-        [
-            [variable("property")     , rdf.type            , pgo.Property],
-            [variable("node")         , variable("property"), variable("value")],
-        ]
-    );
-
-    if (star) {
-        storeAlterer.toRdfStar(store, r, r1 => r1.binds.propertyValue, r1 => r1.quads[1]);
-    }
-}
 
 /**
  * Deletes every occurrence of pgo:Edge pgo:Node, prec:Property and prec:PropertyValue.
@@ -407,39 +390,6 @@ function transformNodeLabels(store, addedVocabulary) {
     );
 }
 
-function applyVocabulary(store, contextQuads) {
-    const addedVocabulary = new Context(contextQuads);
-
-    if (addedVocabulary.getStateOf("MetaProperty") == false) {
-        removeMetaProperties(store);
-    }
-
-    // -- Map generated IRI to existing IRIs
-    transformProperties   (store, addedVocabulary);
-    transformRelationships(store, addedVocabulary);
-    transformNodeLabels   (store, addedVocabulary);
-
-    // -- Remove the info that generated IRI were generated if there don't
-    // appear anymore
-
-    // Property: ?p a createdProp, ?p a Property, ?p rdfs.label Thing
-    // Relationship Label: ?p a createdRelationShipLabel, ?p rdfs.label Thing
-    // Node label : same
-    removeUnusedCreatedVocabulary(store, prec.CreatedProperty, 3, 0, 0);
-    removeUnusedCreatedVocabulary(store, prec.CreatedRelationshipLabel, 2, 0, 0);
-    removeUnusedCreatedVocabulary(store, prec.CreatedNodeLabel, 2, 0, 0);
-
-    // -- Transform relationship format
-    modifyRelationships(store, addedVocabulary.getRelationshipDefault());
-
-    // Remove prec.useRdfStar from renamed reification
-    storeAlterer.deleteMatches(store, null, prec.useRdfStar, null);
-
-    // -- Remove provenance information if they are not required by the user
-    if (addedVocabulary.getStateOf("KeepProvenance") === false) {
-        removePGO(store);
-    }
-}
 
 /// From an Expanded RDF-* store, remove the prec:occurrence node for relations that
 /// occured only once
@@ -531,21 +481,5 @@ function searchUnmapped(store) {
         store.addQuad(term, rdf.type, prec.CreatedVocabulary);
     }
 }
-
-
-//const availableTransformations = {
-//    "RRA"    : store => transformationAttributes(store, false),
-//    "RRAstar": store => transformationAttributes(store, true),
-//    "RRR"    : store => transformationRelationship(store, false),
-//    "RRRstar": store => transformationRelationship(store, true),
-//    "NoLabel": store => storeAlterer.deleteMatches(store, null, rdfs.label, null),
-//    "NoPGO"  : store => removePGO(store),
-//    "Vocab"  : (store, filename) => applyVocabulary(store, filename),
-//    "Flatten": store => flatten(store),
-//    "NoList" : store => noList(store),
-//    "Missing": store => searchUnmapped(store)
-//};
-
-
 
 module.exports = applyVocabulary;
