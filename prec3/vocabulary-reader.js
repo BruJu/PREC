@@ -41,7 +41,8 @@ function readThings(store, predicateIRI, acceptsLiteral, moreComplex) {
 
             founds[sourceLabel].push({
                 "destination": baseRule.subject,
-                "extraRules" : []
+                "extraRules" : [],
+                "priority": 0
             });
         } else {
             // Named node or Blank node are both ok
@@ -62,7 +63,7 @@ function readThings(store, predicateIRI, acceptsLiteral, moreComplex) {
                 continue;
             }
 
-            const [source, extra] = mapped;
+            const [source, extra, priority] = mapped;
 
             if (source == undefined || extra == undefined) {
                 console.error("Invalid vocab triple (???):");
@@ -75,10 +76,27 @@ function readThings(store, predicateIRI, acceptsLiteral, moreComplex) {
             }
 
             founds[source].push({
-                "destination": baseRule.subject,
-                "extraRules" : extra
+                destination: baseRule.subject,
+                extraRules : extra,
+                priority   : priority
             });
         }
+    }
+
+    for (const key in founds) {
+        founds[key] = founds[key].sort((lhs, rhs) => {
+            let prioDiff = rhs.priority - lhs.priority;
+
+            if (prioDiff !== 0) return prioDiff;
+
+            if (lhs.destination.value < rhs.destination.value) {
+                return -1;
+            } else if (lhs.destination.value > rhs.destination.value) {
+                return 1;
+            } else {
+                return 0;
+            }
+        });
     }
 
     return founds;
@@ -92,6 +110,8 @@ function readProperties(store) {
         quads => {
             let source = undefined;
             let rules = [];
+            let priority = 0;
+            let forcedPriority = null;
 
             for (let quad of quads) {
                 if (quad.predicate.equals(prec.propertyName)
@@ -103,14 +123,21 @@ function readProperties(store) {
                         "@category": "NodeLabel",
                         "nodeLabel": quad.object.value
                     });
+
+                    priority += 1;
                 } else if (quad.predicate.equals(prec.relationshipLabel)
                     && quad.object.termType == "Literal") {
                     rules.push({
                         "@category": "RelationshipLabel",
                         "relationshipLabel": quad.object.value
                     });
+
+                    priority += 1;
                 } else if (quad.predicate.equals(prec.multiValue) && quad.object.equals(prec.asSet)) {
                     rules.push( { "@category": "AsSet" })
+                } else if (quad.predicate.equals(prec.priority)) {
+                    // TODO : check if type is integer
+                    forcedPriority = parseInt(quad.object.value);
                 } else {
                     console.error("Unknown rule description:");
                     console.error(quad);
@@ -118,7 +145,11 @@ function readProperties(store) {
                 }
             }
 
-            return [source, rules];
+            if (forcedPriority !== null) {
+                priority = forcedPriority;
+            }
+
+            return [source, rules, priority];
         }
     );
 }
@@ -138,16 +169,31 @@ function readRelations(store) {
         quads => {
             let source = undefined;
             let rules = [];
+            let priority = 0;
+            let forcedPriority = null;
 
             for (let quad of quads) {
                 if (quad.predicate.equals(prec.relationshipLabel)) {
                     source = quad.object.value;
+                } else if (quad.predicate.equals(prec.priority)) {
+                    // TODO : check if type is integer
+                    forcedPriority = parseInt(quad.object.value);
                 } else {
+                    if (quad.predicate.equals(prec.sourceLabel)) {
+                        ++priority;
+                    } else if (quad.predicate.equals(prec.destinationLabel)) {
+                        ++priority;
+                    }
+
                     rules.push([quad.predicate, readInfo(store, quad.object)]);
                 }
             }
 
-            return source === undefined ? null : [source, rules];
+            if (forcedPriority !== null) {
+                priority = forcedPriority;
+            }
+
+            return source === undefined ? null : [source, rules, priority];
         }
     );
 }

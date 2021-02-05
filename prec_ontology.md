@@ -304,11 +304,17 @@ Specifies that an IRI must be uses for the associated properties.
 
 
 
+## http://bruy.at/prec#priority
+
+
+
 ## http://bruy.at/prec#alwaysAsserted
 
 ***OBSOLETE***
 
-Type of labels of relationships that are always asserted.
+No effect
+
+~~Type of labels of relationships that are always asserted.~~
 
 - Vocab : `<https://cat> a prec:alwaysAsserted`
 

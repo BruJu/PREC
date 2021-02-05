@@ -55,3 +55,78 @@ prec:testMetaData prec:kind "SmallExamples" .
 
 ###############################################################################
 
+
+[] a prec:unitTest ;
+   prec:context :allPriority ;
+   prec:output  :allPriorityResult ;
+   prec:propertyGraph '{"type":"node","id":"5","labels":["Food", "Animal"],"properties":{"name":"Oeufs"}}' .
+
+
+[] a prec:unitTest ;
+   prec:context :animalPriority ;
+   prec:output  :animalPriorityResult ;
+   prec:propertyGraph '{"type":"node","id":"5","labels":["Food", "Animal"],"properties":{"name":"Oeufs"}}' .
+   
+[] a prec:unitTest ;
+   prec:context :foodPriority ;
+   prec:output  :foodPriorityResult ;
+   prec:propertyGraph '{"type":"node","id":"5","labels":["Food", "Animal"],"properties":{"name":"Oeufs"}}' .
+   
+[] a prec:unitTest ;
+   prec:context :defaultPriority ;
+   prec:output  :animalPriorityResult ;
+   prec:propertyGraph '{"type":"node","id":"5","labels":["Food", "Animal"],"properties":{"name":"Oeufs"}}' .
+
+
+:allPriority {
+    prec:MetaProperty   prec:flagState false .
+    prec:KeepProvenance prec:flagState false .
+
+    :Food prec:nodeLabelIRIOf "Food" .
+    :Animal prec:nodeLabelIRIOf "Animal" .
+    
+    :food_name   prec:propertyIRIOf [ prec:propertyName "name" ; prec:nodeLabel "Food"   ; prec:priority 1 ] .
+    :animal_name prec:propertyIRIOf [ prec:propertyName "name" ; prec:nodeLabel "Animal" ; prec:priority 2 ] .
+    :all_name    prec:propertyIRIOf [ prec:propertyName "name" ;                           prec:priority 3 ] .
+}
+
+:animalPriority {
+    prec:MetaProperty   prec:flagState false .
+    prec:KeepProvenance prec:flagState false .
+
+    :Food prec:nodeLabelIRIOf "Food" .
+    :Animal prec:nodeLabelIRIOf "Animal" .
+    
+    :food_name   prec:propertyIRIOf [ prec:propertyName "name" ; prec:nodeLabel "Food"   ; prec:priority 2 ] .
+    :animal_name prec:propertyIRIOf [ prec:propertyName "name" ; prec:nodeLabel "Animal" ; prec:priority 3 ] .
+    :all_name    prec:propertyIRIOf [ prec:propertyName "name" ;                           prec:priority 1 ] .
+}
+
+:foodPriority {
+    prec:MetaProperty   prec:flagState false .
+    prec:KeepProvenance prec:flagState false .
+
+    :Food prec:nodeLabelIRIOf "Food" .
+    :Animal prec:nodeLabelIRIOf "Animal" .
+    
+    :food_name   prec:propertyIRIOf [ prec:propertyName "name" ; prec:nodeLabel "Food"   ; prec:priority 3 ] .
+    :animal_name prec:propertyIRIOf [ prec:propertyName "name" ; prec:nodeLabel "Animal" ; prec:priority 2 ] .
+    :all_name    prec:propertyIRIOf [ prec:propertyName "name" ;                           prec:priority 1 ] .
+}
+
+:defaultPriority {
+    prec:MetaProperty   prec:flagState false .
+    prec:KeepProvenance prec:flagState false .
+
+    :Food prec:nodeLabelIRIOf "Food" .
+    :Animal prec:nodeLabelIRIOf "Animal" .
+    
+    :food_name   prec:propertyIRIOf [ prec:propertyName "name" ; prec:nodeLabel "Food"   ] .
+    :animal_name prec:propertyIRIOf [ prec:propertyName "name" ; prec:nodeLabel "Animal" ] .
+    :all_name    prec:propertyIRIOf [ prec:propertyName "name" ;                         ] .
+}
+
+:allPriorityResult    { _:egg a :Food, :Animal ; :all_name    "Oeufs" . }
+:animalPriorityResult { _:egg a :Food, :Animal ; :animal_name "Oeufs" . }
+:foodPriorityResult   { _:egg a :Food, :Animal ; :food_name   "Oeufs" . }
+
