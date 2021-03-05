@@ -38,7 +38,21 @@ so the Java exception tells the complete path
 
 **TODO:** `apoc.import.file.use_neo4j_config=false` to use absolute paths?
 
-## From Neo4J : using the result of a Cypher query
+### Running the script itself
+
+- `node prec.js /path/to/your/propertygraph.json` will output the *Expanded RDF Graph*
+from the *Json Representation of the Property Graph*.
+
+
+### Using a context
+
+You can write a context in Turtle format and use it to output an *Usable RDF Graph*
+from the *Json Representation of the Property Graph*.
+
+- `node prec.js /path/to/your/propertygraph.json /path/to/your/context.ttl`
+
+
+## From Neo4J: using the result of a Cypher query
 
 Run a Cypher query like this one:
 - `match (src)-[edge]->(dest) return src,edge,dest LIMIT 5`
@@ -48,16 +62,9 @@ Run a Cypher query like this one:
 - Pass the `-f=Neo4JCypher` option when running the command line, for example
     - `node prec.js data\movies_cypher_all.json -f=Neo4JCypher (context path if you have one)`
 
-## Running the script itself
+## From Neo4J: using the neo4j protocole
 
-- `node prec.js /path/to/your/propertygraph.json` will output the *Expanded RDF Graph*
-from the *Json Representation of the Property Graph*.
+You can also extract directly the graph from your Neo4J database.
 
-## Using a context
-
-You can write a context in Turtle format and use it to output an *Usable RDF Graph*
-from the *Json Representation of the Property Graph*.
-
-- `node prec.js /path/to/your/propertygraph.json /path/to/your/context.ttl`
-
+- `node neo4j-to-rdf.js username password (uri-to-your-neo4j-instance) (-c=contextfile.ttl)`
 

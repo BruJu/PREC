@@ -148,5 +148,6 @@ if (require.main === module) {
 module.exports = {
     precOnNeo4J: precOnNeo4J,
     precOnNeo4JString: precOnNeo4JString,
-    outputTheStore: outputTheStore
+    outputTheStore: outputTheStore,
+    filenameToArrayOfQuads: filenameToArrayOfQuads
 };

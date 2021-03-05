@@ -4,20 +4,20 @@
     "description": "A Property Graph to RDF converter",
     "main": "prec.js",
     "scripts": {
-      "test": "mocha"
+        "test": "mocha"
     },
     "repository": {
-      "type": "git",
-      "url": "git+https://github.com/BruJu/PREC.git"
+        "type": "git",
+        "url": "git+https://github.com/BruJu/PREC.git"
     },
     "keywords": [
-      "property graph",
-      "rdf"
+        "property graph",
+        "rdf"
     ],
     "author": "Julian Bruyat <bruyat.ju@live.fr>",
     "license": "MIT",
     "bugs": {
-      "url": "https://github.com/BruJu/PREC/issues"
+        "url": "https://github.com/BruJu/PREC/issues"
     },
     "homepage": "https://github.com/BruJu/PREC#readme",
     "dependencies": {
@@ -26,7 +26,7 @@
         "@graphy/memory.dataset.fast": "^4.3.3",
         "@rdfjs/namespace": "^1.1.0",
         "argparse": "^2.0.1",
-        "n3": "^1.6.4"
+        "n3": "^1.6.4",
+        "neo4j-driver": "^4.2.3"
     }
 }
-  
