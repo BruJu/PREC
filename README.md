@@ -11,7 +11,6 @@ Some experiments about PG to RDF conversion.
     - `data\joe_biden_schema.ttl` is a context which maps the labels of the PG into IRIs mainly from DBpedia and Schema.org
 
 - `node prec.js data\annlikesdan1.json data\anndan.ttl`
-    - (WIP)
 
 ### Less quick start
 
@@ -23,7 +22,7 @@ Some experiments about PG to RDF conversion.
 
 Currently, only Neo4j graphs are supported
 
-## From Neo4j (converting a Neo4j Property Graph into a Json representation of the tile)
+### From Neo4j: converting a Neo4j Property Graph into a Json representation of the tile using APOC
 
 To export a Neo4J property graph from your database, you need to activate APOC file export:
 - Go in your database configuration (click the ... right to the database name -> Manage)
@@ -38,6 +37,16 @@ An easy (and hack-y) way to find where the file is is to use an invalid path lik
 so the Java exception tells the complete path
 
 **TODO:** `apoc.import.file.use_neo4j_config=false` to use absolute paths?
+
+## From Neo4J : using the result of a Cypher query
+
+Run a Cypher query like this one:
+- `match (src)-[edge]->(dest) return src,edge,dest LIMIT 5`
+- The return instruction must return nodes and edges.
+    - you can't write src.myProperty
+- Get the result in JSON format (in Neo4J Browser : choose Export JSON after running the query)
+- Pass the `-f=Neo4JCypher` option when running the command line, for example
+    - `node prec.js data\movies_cypher_all.json -f=Neo4JCypher (context path if you have one)`
 
 ## Running the script itself
 

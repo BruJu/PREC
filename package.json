@@ -1,9 +1,32 @@
 {
+    "name": "prec",
+    "version": "0.0.1",
+    "description": "A Property Graph to RDF converter",
+    "main": "prec.js",
+    "scripts": {
+      "test": "mocha"
+    },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/BruJu/PREC.git"
+    },
+    "keywords": [
+      "property graph",
+      "rdf"
+    ],
+    "author": "Julian Bruyat <bruyat.ju@live.fr>",
+    "license": "MIT",
+    "bugs": {
+      "url": "https://github.com/BruJu/PREC/issues"
+    },
+    "homepage": "https://github.com/BruJu/PREC#readme",
     "dependencies": {
         "@graphy/content.ttl.write": "^4.3.3",
         "@graphy/core.data.factory": "^4.3.3",
         "@graphy/memory.dataset.fast": "^4.3.3",
         "@rdfjs/namespace": "^1.1.0",
+        "argparse": "^2.0.1",
         "n3": "^1.6.4"
     }
 }
+  

@@ -306,7 +306,15 @@ Specifies that an IRI must be uses for the associated properties.
 
 ## http://bruy.at/prec#priority
 
+Predicate of quads that indicates the priority of a rule. The higher, the more
+the rule will take priority.
 
+If unspecified the rules priority is:
+- http://bruy.at/prec#propertyIRIOf : 0 + 1 per restriction on the node label
+- http://bruy.at/prec#relationshipIRIOf : 0 + 1 per restriction on source or destination node
+
+In case of priority ties, the smaller IRI in lexicographical order will be
+applied at first.
 
 ## http://bruy.at/prec#alwaysAsserted
 

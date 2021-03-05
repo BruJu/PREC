@@ -11,6 +11,8 @@ const N3            = require('n3');
 const RDFGraphBuilder = require("./prec3/graph-builder.js");
 const graphReducer    = require("./prec3/graph-reducer.js");
 
+const { ArgumentParser } = require('argparse');
+
 const fs = require('fs');
 
 /// Returns the content of filename, line by line
@@ -38,10 +40,6 @@ const fileReader = {
     "fromNeo4j": filename => stringsToJsObjects(fileToString(filename)),
     "fromNeo4jString": content => stringsToJsObjects(content.split(/\r?\n/))
 };
-
-
-
-
 
 
 function filenameToArrayOfQuads(filename) {
@@ -78,32 +76,67 @@ function precOnNeo4JString(json, contextAsQuads) {
     return store;
 }
 
+const contentFileToRDFGraph = {
+    "Neo4JAPOC": (path, generationModel) => {
+        // Read the PG structure
+        const propertyGraphStructure = fileReader.fromNeo4j(path);
+        // Convert to an expanded RDF graph
+        return RDFGraphBuilder.neo4jJsToStore(propertyGraphStructure, generationModel);
+    },
+    "Neo4JCypher": (path, _) => {
+        let fileContent = fs.readFileSync(path, 'utf-8');
+        let content = JSON.parse(fileContent);
+        return RDFGraphBuilder.neo4JCypherToStore(content);
+    }
+}
+
 function main() {
-    // Arg parsing done badly
-    if (process.argv.length < 3) {
-        console.log(`Usage: ${process.argv[0]} ${process.argv[1]} filename (RDFStar)? (ContextFile)?`);
-        return;
-    }
+    const parser = new ArgumentParser({
+        description: 'Property Graph -> RDF Experimental Parser'
+    });
 
-    const filename = process.argv[2];
+    parser.add_argument(
+        "PGContentPath",
+        { help: "Property Graph content source file" }
+    );
 
-    let args = process.argv.splice(3);
-    let mode = "RDFReification";
-    if (args.length > 0 && args[0] === "RDFStar") {
-        mode = args[0];
-        args = args.splice(1);
-    }
+    parser.add_argument(
+        "Context",
+        { help: "Path to a turtle file with the context", default:"", nargs:"?" }
+    );
 
-    // Read the PG structure
-    const propertyGraphStructure = fileReader.fromNeo4j(filename);
-    // Convert to an expanded RDF graph
-    const [store, prefixes] = RDFGraphBuilder.neo4jJsToStore(propertyGraphStructure, mode);
+    parser.add_argument(
+        "-m",
+        "--GenerationModel",
+        {
+            help: "Generation model. Should be left to RDFReification",
+            default: "RDFReification",
+            choices: [ "RDFReification", "RDFStar" ],
+            nargs: "?",
+        }
+    )
+
+    parser.add_argument(
+        "-f",
+        "--PGContentFormat",
+        {
+            help: "Method used to generation the PG Content file",
+            default: "Neo4JAPOC",
+            choices: [ "Neo4JAPOC", "Neo4JCypher" ],
+            nargs: "?",
+        }
+    )
+
+    let realArgs = parser.parse_args();
+
+    // Convert the Property Graph content to RDF
+    const [store, prefixes] = contentFileToRDFGraph[realArgs.PGContentFormat](realArgs.PGContentPath, realArgs.GenerationModel);
+
     // Reduce the number of triples
-    if (args.length === 1) {
-        graphReducer(store, filenameToArrayOfQuads(args[0]));
-    } else if (args.length >= 1) {
-        console.error("Too much arguments");
+    if (realArgs.Context !== "") {
+        graphReducer(store, filenameToArrayOfQuads(realArgs.Context));
     }
+
     // Done gg
     outputTheStore(store, prefixes);
 }

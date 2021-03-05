@@ -298,10 +298,56 @@ class RDFGraphBuilder {
             neo4jJavascriptArray.filter(object => object.type == 'relationship')
             .forEach(object => builder.addRelationship(
                     object.id, object.start.id, object.end.id, object.label,
-                    object.properties || []
+                    object.properties || {}
                 )
             );
         
+        return [builder.toStore(), builder.getPrefixes()];
+    }
+
+    static neo4JCypherToStore(neo4JCypherResult) {
+        let builder = new RDFGraphBuilder(
+            "http://www.example.org/indiv/", "http://www.example.org/vocab/"
+        );
+        builder._addQuad(prec.MetaData, prec.GenerationModel, prec.RelationshipAsRDFReification);
+
+        let seenNodes = {};
+
+        // match (m)-[n]->(o) return (m, n, o)
+        for (let oneResult of neo4JCypherResult) {  // One (m, n, o)
+            for (let oneOneResultKey in oneResult) {
+                let oneOneResult = oneResult[oneOneResultKey];
+
+                if (oneOneResult.labels !== undefined) {
+                    // Node
+
+                    if (seenNodes[oneOneResult.identity] !== undefined) {
+                        continue;
+                    }
+
+                    seenNodes[oneOneResult.identity] = true;
+
+                    builder.addNode(
+                        oneOneResult.identity,
+                        oneOneResult.labels || {},
+                        oneOneResult.properties || {}
+                    );
+                } else if (oneOneResult.start !== undefined) {
+                    // Edge
+                    builder.addRelationshipRDFReification(
+                        oneOneResult.identity,
+                        oneOneResult.start, oneOneResult.end,
+                        oneOneResult.type,
+                        oneOneResult.properties || {}
+                    )
+                } else {
+                    console.error("Unknown type of result");
+                    console.error(oneOneResult);
+                    return null;
+                }
+            }
+        }
+
         return [builder.toStore(), builder.getPrefixes()];
     }
 }
