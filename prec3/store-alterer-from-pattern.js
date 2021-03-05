@@ -45,10 +45,6 @@ function addBind(bindings, searched, result) {
     }
 }
 
-function filterBinds(result, bindedName, predicate) {
-    return result.filter(dict => predicate(dict[bindedName]));
-}
-
 /**
  * Replace all quads found using a pattern from the store by a new pattern.
  * The new pattern is a list of triple pattern, that can use either fixed terms
@@ -86,21 +82,6 @@ function replaceOneBinding(store, binds, newPattern) {
     }
 
     return r;
-}
-
-function toRdfStar(store, replacementResults, nodeGetter, quadGetter) {
-    for (const replacementResult of replacementResults) {
-        const oldNode = nodeGetter(replacementResult);
-        const newQuad = quadGetter(replacementResult);
-
-        const oldAnnotations = matchAndBind(store,
-            [[oldNode, DataFactory.variable("RDFSTAR__p"), DataFactory.variable("RDFSTAR__o")]]
-        );
-
-        replace(store, oldAnnotations,
-            [[newQuad, DataFactory.variable("RDFSTAR__p"), DataFactory.variable("RDFSTAR__o")]]
-        );
-    }
 }
 
 function deleteMatches(store, s, p, o) {
@@ -177,31 +158,6 @@ function matchAndBind(store, pattern) {
 function directReplace(store, source, destination) {
     const s = matchAndBind(store, source);
     return replace(store, s, destination);
-}
-
-function substitute(store, source, destination) {
-    const variable = DataFactory.variable;
-
-    // console.log(source);
-    // console.log(destination);
-    
-    directReplace(
-        store,
-        [[source, variable("p"), variable("o")]],
-        [[destination, variable("p"), variable("o")]]
-    );
-
-    directReplace(
-        store,
-        [[variable("s"), source, variable("o")]],
-        [[variable("s"), destination, variable("o")]]
-    );
-
-    directReplace(
-        store,
-        [[variable("s"), variable("p"), source]],
-        [[variable("s"), variable("p"), destination]]
-    );
 }
 
 function _modify_pattern(pattern, sourceNode, destinationNode) {
@@ -298,16 +254,11 @@ function findFilterReplace(store, source, conditions, destination) {
 }
 
 module.exports = {
-    forMatch: forMatch,
-    addBind: addBind,
     replace: replace,
     replaceOneBinding: replaceOneBinding,
     deleteMatches: deleteMatches,
     matchAndBind: matchAndBind,
-    toRdfStar: toRdfStar,
-    filterBinds: filterBinds,
     directReplace: directReplace,
-    substitute: substitute,
     extractRecursive: extractRecursive,
     findFilterReplace: findFilterReplace,
     mapPattern: mapPattern
