@@ -255,7 +255,13 @@ describe("Graph Substitution", function() {
             false
         );
 
-
+        // Graph entailment from 1st to 2nd would say true here, but we want
+        // false
+        eq(
+            "ex:s1 ex:p ex:o . ",
+            "_:s1  ex:p ex:o . _:s2  ex:p  ex:o .",
+            false
+        );
     });
     
 

@@ -15,3 +15,7 @@ Based on the "Movies" example of Neo4J.
 - [movies_vocab.ttl](movies_vocab.ttl) - A small context which maps the relationships labelled "acted_in" to the
 proper IRI in schema.org
 - [movies_neo4j.ttl](movies_neo4j.ttl) - Contains the exportation of the Property Graph using NeoSemantics
+
+Movies files content (movies_*.json files) is extracted from Neo4J:
+https://neo4j.com/developer/example-data/ 
+
