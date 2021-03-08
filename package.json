@@ -21,6 +21,7 @@
     },
     "homepage": "https://github.com/BruJu/PREC#readme",
     "dependencies": {
+        "@bruju/wasm-tree": "^0.2.0",
         "@graphy/content.ttl.write": "^4.3.3",
         "@graphy/core.data.factory": "^4.3.3",
         "@graphy/memory.dataset.fast": "^4.3.3",
