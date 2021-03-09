@@ -16,6 +16,8 @@ const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , N3.DataFac
 const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , N3.DataFactory);
 const prec = namespace("http://bruy.at/prec#"                       , N3.DataFactory);
 
+const QUAD = N3.DataFactory.quad;
+
 /** Read the turtle (not star) file in filepath and builds a WT Dataset from it */
 function readDataset(filepath) {
     const parser = new N3.Parser();
@@ -26,152 +28,222 @@ function readDataset(filepath) {
     return dataset;
 }
 
+
 // TODO: forbid named graphs somewhere as PREC never generates them.
 
-// TODO: an expansion of "this" instance of WT.Dataset? As many methods takes
-// a dataset as the first parameter...
-
-/** Return the list of terms that are of type type in the given dataset */
-function getNodesOfType(dataset, type) {
-    return [...dataset.match(null, rdf.type, type)]
-        .map(quad => quad.subject);
-}
 
 /** Return true if searchedTerm is in the term list. */
 function containsTerm(termList, searchedTerm) {
     return termList.some(listedTerm => listedTerm.equals(searchedTerm));
 }
 
-function followThrough(dataset, subject, predicate, otherAuthorizedQuads, strict) {
-    if (otherAuthorizedQuads === undefined) {
-        let match = dataset.match(subject, predicate);
+/** Adds new methods to datasetInstance that relies on RDF.JS Dataset methods */
+function extendMethods(datasetInstance) {
+    // =========================================================================
+    // === PATH TRAVEL
+
+    /**
+     * Return the list of terms that are of type type in the given dataset 
+     * @param {*} type The type of the wanted nodes
+     * @returns The list of nodes that have the given type
+     */
+    datasetInstance.getNodesOfType = function(type) {
+        return [...this.match(null, rdf.type, type)]
+            .map(quad => quad.subject);
+    };
+
+    /**
+     * Return the list of quads that has the given subject and the predicate is
+     * not in ignoreList
+     * @param {*} subject The term that is in position subject
+     * @param {*} ignoreList List of predicates that should not be as predicate
+     * @returns The list of quads that has the given subject and for which the
+     * predicate is not in ignoreList
+     */
+    datasetInstance.getPathsFrom = function(subject, ignoreList) {
+        return this.match(subject)
+            .filter(quad => !containsTerm(ignoreList || [], quad.predicate));
+    };
+
+    /**
+     * Find the quad (subject, predicate, ?object), and return the value of
+     * ?object. If there is not exactly one match, this function returns null
+     * instead.
+     * @param {*} subject The subject
+     * @param {*} predicate The predicate
+     * @returns The corresponding object if it exists and is unique
+     */
+    datasetInstance.followThrough = function(subject, predicate) {
+        let match = this.match(subject, predicate);
         if (match.size !== 1) return null;
 
-        for (let q of match) {
-            return q.object;
-        }
-    } else {
-        let match = dataset.match(subject);
+        return [...match][0].object;
+    };
 
-        if (strict && match.size != 1 + otherAuthorizedQuads.length) return null;
+    /**
+     * Look for every triples that has subject as a triple. Check if the
+     * triples are valid, ie if every requiredQuads is in the list, and if
+     * every other triples in the list is either in optionalQuads or has
+     * predicate as a predicate.
+     * 
+     * followThrough(subject, predicate) if the quads were valid.
+     * 
+     * @param {*} subject The subject
+     * @param {*} predicate The predicate to follow
+     * @param {*} requiredQuads The list of required quads
+     * @param {*} optionalQuads The list of quads that are allowed to be found
+     * @returns The object of the (subject, predicate, null) match, or null 
+     * either if not unique or if not all the requiredQuads where found or some
+     * extra unspecified quads were found.
+     */
+    datasetInstance.checkAndFollow = function(subject, predicate, requiredQuads, optionalQuads) {
+        let match = this.match(subject);
+
+        if (match.size < 1 + requiredQuads.length + optionalQuads.length) return null;
+
+        function findInListOfQuads(quad, quads) {
+            for (let i = 0 ; i != quads.length ; ++i) {
+                if (quad.equals(quads[i])) {
+                    quads.splice(i);
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         let result = null;
 
         for (let quad of match) {
-            let noMatch = true;
+            if (findInListOfQuads(quad, requiredQuads)) continue;
+            if (findInListOfQuads(quad, optionalQuads)) continue;
 
-            // Is the quad in the list?
-            for (let i = 0 ; i != otherAuthorizedQuads.length; ++i) {
-                if (quad.equals(otherAuthorizedQuads[i])) {
-                    otherAuthorizedQuads.splice(i);
-                    noMatch = false;
-                    break;
-                }
-            }
-
-            if (noMatch) {
-                // Not in the list of authorized
-                if (result) {
-                    return null; // Result won't be unique
-                } else if (quad.predicate.equals(predicate)) {
-                    result = quad.object;   // Found the result
-                } else {
-                    return null;    // Wrong predicate
-                }
+            if (result) {
+                return null;            // Result is not unique
+            } else if (quad.predicate.equals(predicate)) {
+                result = quad.object;   // Found the result
+            } else {
+                return null;            // Wrong predicate
             }
         }
 
+        if (requiredQuads.length != 0) return null;
+
         return result;
-    }
-}
+    };
 
 
+    // =========================================================================
 
-function getPathsFrom(dataset, source, ignoreList) {
-    return dataset.match(source)
-        .filter(quad => !containsTerm(ignoreList, quad.predicate));
-}
+    /**
+     * Returns the rdfs:label value of proxyLabel. requiredQuads and
+     * optionalQuads are conditions for other quads that has proxyLabel as the
+     * subject, like in the checkAndFollow method.
+     * 
+     * Note that this function returns a string.
+     */
+    datasetInstance.readLabelOf = function(proxyLabel, requiredQuads, optionalQuads) {
+        let realLabel = this.checkAndFollow(proxyLabel, rdfs.label, requiredQuads, optionalQuads);
 
+        if (realLabel === null || realLabel.termType !== "Literal") {
+            return null;
+        }
 
-function extractPropertyName(dataset, property) {
-    if (!dataset.has(N3.DataFactory.quad(property, rdf.type, prec.Property))) {
-        throw "Invalid RDF Graph - Property Name is not a property " + property.value;
-    }
-
-    let realLabel = followThrough(dataset, property, rdfs.label,
-        [
-            N3.DataFactory.quad(property, rdf.type, prec.CreatedProperty),
-            N3.DataFactory.quad(property, rdf.type, prec.Property)
-        ],
-        false
-    );
-
-    // TODO : this code is duplicated
-
-    if (realLabel === null) {
-        throw "Invalid RDF Graph - Bad Property Label for " + property.value;
-    } else if (realLabel.termType !== "Literal") {
-        throw "Invalid RDF Graph - Property Label is not literal";
-    } else {
-        // TODO: check if xsd:string
+        // TODO : check if the type of the literal is xsd:string
         return realLabel.value;
+    };
+
+    /** Return the name of the given property, if its a property. */
+    datasetInstance.readPropertyName = function(property) {
+        return this.readLabelOf(
+            property,
+            [QUAD(property, rdf.type, prec.Property       )],
+            [QUAD(property, rdf.type, prec.CreatedProperty)]
+        );
+    };
+
+    /**
+     * Return the name of the label, if its a label.
+     * @param {*} term The node label
+     * @param {*} labelType The type of label in prec:CreatedLabel
+     * @returns The label as a string
+     */
+    datasetInstance.getRealLabel = function(term, labelType) {
+        return this.readLabelOf(term, [], [QUAD(term, rdf.type, labelType)]);
     }
+}
+
+/**
+ * Remove from the dataset the list that starts from currentNode, and return an
+ * array with every node of this list.
+ * 
+ * Throws an error if the list is not a valid RDF list or one of its node is
+ * connected to another part of the graph.
+ */
+function _extractAndDeleteRdfList(dataset, currentNode) {
+    let result = [];
+
+    while (!rdf.nil.equals(currentNode)) {
+        if (dataset.match(null, null, currentNode).size != 0) throw "Invalid list (1)";
+        if (dataset.match(null, currentNode, null).size != 0) throw "Invalid list (2)";
+        if (dataset.match(currentNode, null, null).size != 3) throw "Invalid list (3)";
+
+        if (!dataset.has(QUAD(currentNode, rdf.type, rdf.List))) throw "Prop value invalid";
+
+        let value = dataset.followThrough(currentNode, rdf.first);
+        if (value === null) throw "Invalid list - No first element";
+
+        // TODO: check if value is not used anywhere else
+
+        result.push(value);
+
+        let next = dataset.followThrough(currentNode, rdf.rest);
+        if (next == null) throw "Invalid list - No rest";
+
+        dataset.delete(QUAD(currentNode, rdf.type , rdf.List));
+        dataset.delete(QUAD(currentNode, rdf.first, value   ));
+        dataset.delete(QUAD(currentNode, rdf.rest , next    ));
+
+        currentNode = next;
+    }
+
+    return result;
 }
 
 function extractAndDeletePropertyValue(dataset, value) {
-    let trueValue = followThrough(dataset, value, rdf.value,
-        [
-            N3.DataFactory.quad(value, rdf.type, prec.PropertyValue)
-        ],
-        true
-    );
+    if (dataset.has(QUAD(value, rdf.type, rdf.List))) {
+        let r = _extractAndDeleteRdfList(dataset, value);
+        return r.map(quad => extractAndDeletePropertyValue(dataset, quad));
+    } else if (dataset.has(QUAD(value, rdf.type, prec.PropertyValue))) {
+        dataset.delete(QUAD(value, rdf.type, prec.PropertyValue));
 
-    if (trueValue === null) {
-        throw "Invalid RDF Graph - Bad value for property value " + value.value;
-    } else if (trueValue.termType !== "Literal") {
-        // TODO : rdf:list
-        throw "Invalid RDF Graph - Property is not a literal"
-    }
-    // TODO : xsd:integer
-    
-    dataset.delete(N3.DataFactory.quad(value, rdf.value, trueValue));
-    return trueValue.value;
-}
+        let v = dataset.checkAndFollow(value, rdf.value, [], []);
+        if (v == null) throw "Invalid RDF Graph - " + value.value + " has meta properties (not yet supported)";
 
-function getRealLabel(term, dataset, labelType) {
-    let realLabel = followThrough(dataset, term, rdfs.label,
-        [
-            N3.DataFactory.quad(term, rdf.type, labelType)
-        ],
-        false
-    );
-
-    if (realLabel === null) {
-        throw "Invalid RDF Graph - Bad Label";
-    } else if (realLabel.termType !== "Literal") {
-        throw "Invalid RDF Graph - Label is not literal";
+        dataset.delete(QUAD(value, rdf.value, v));
+        // TODO: check type and treat xsd:integer case
+        return v.value;
     } else {
-        // TODO: check if xsd:string
-        return realLabel.value;
+        throw "Invalid RDF Graph - " + value.value + " is not a valid property value";
     }
 }
+
 
 function extractEdgeSPO(dataset, rdfEdge) {
     function extractConnectedNodeToEdge(dataset, rdfEdge, predicate) {
-        let result = followThrough(dataset, rdfEdge, predicate);
+        let result = dataset.followThrough(rdfEdge, predicate);
         if (!result) throw "Edge has no " + predicate.value + " " + rdfEdge.value;
-        if (!dataset.has(N3.DataFactory.quad(result, rdf.type, pgo.Node))) {
+        if (!dataset.has(QUAD(result, rdf.type, pgo.Node))) {
             throw "Edge connected to something that is not a node";
         }
         return result;
     }
 
     function extractLabel(dataset, rdfEdge, predicate) {
-        let result = followThrough(dataset, rdfEdge, predicate);
+        let result = dataset.followThrough(rdfEdge, predicate);
         if (!result) throw "Edge has no " + predicate.value;
-        return [result, getRealLabel(result, dataset, prec.CreatedRelationshipLabel)];
+        return [result, dataset.getRealLabel(result, prec.CreatedRelationshipLabel)];
     }
-
 
     return [
         extractConnectedNodeToEdge(dataset, rdfEdge, rdf.subject),
@@ -214,7 +286,7 @@ class PseudoPGBuilder {
     }
 
     static from(dataset) {
-        //try {
+        try {
             let builder = new PseudoPGBuilder();
 
             // TODO : pgo:Node, pgo:Edge etc are disjoint types
@@ -230,19 +302,21 @@ class PseudoPGBuilder {
                 if (type == "Node") {
                     ignoreList = [ rdf.type ];
                 } else if (type == "Edge") {
-                    ignoreList = [
-                        rdf.subject, rdf.predicate, rdf.object, rdf.type
-                    ];
+                    ignoreList = [ rdf.subject, rdf.predicate, rdf.object, rdf.type];
                 } else {
                     throw "extractProperties invalid type" + type;
                 }
 
-                const pathsFrom = getPathsFrom(dataset, rdfNode, ignoreList);
+                const pathsFrom = dataset.getPathsFrom(rdfNode, ignoreList);
 
                 let properties = {};
 
                 for (const path of pathsFrom) {
-                    const propertyName = extractPropertyName(dataset, path.predicate);
+                    const propertyName = dataset.readPropertyName(path.predicate);
+                    if (propertyName === null) throw "Invalid RDF Graph - readPropertyName";
+
+                    dataset.delete(path);
+
                     const propertyValue = extractAndDeletePropertyValue(dataset, path.object);
 
                     if (properties[propertyName] !== undefined) {
@@ -254,8 +328,6 @@ class PseudoPGBuilder {
                     }
 
                     properties[propertyName] = propertyValue;
-
-                    dataset.delete(path);
                 }
 
                 return properties;
@@ -269,7 +341,7 @@ class PseudoPGBuilder {
                     dataset.delete(N3.DataFactory.quad(node, rdf.type, r));
                 }
 
-                return result.map(term => getRealLabel(term, dataset, prec.CreatedNodeLabel));
+                return result.map(term => dataset.getRealLabel(term, prec.CreatedNodeLabel));
             }
 
             // Edges should be:
@@ -277,7 +349,7 @@ class PseudoPGBuilder {
             // - this rdf:predicate y, y is a (relationship) label
             // - this rdf:object o, o is a pgo.Node
             // Edges may have some other things that are properties
-            for (let rdfEdge of getNodesOfType(dataset, pgo.Edge)) {
+            for (let rdfEdge of dataset.getNodesOfType(pgo.Edge)) {
                 // rdf:subject/predicate/object
                 let [source, destination, label] = extractEdgeSPO(dataset, rdfEdge);
                 let pgEdge = builder.addEdge(source.value, destination.value)
@@ -291,11 +363,13 @@ class PseudoPGBuilder {
 
                 // Some other things that are properties
                 pgEdge.properties = extractProperties(dataset, rdfEdge, "Edge");
+
+                dataset.delete(QUAD(rdfEdge, rdf.type, pgo.Edge));
             }
 
             // Nodes
             // - A node is something of type pgo.Node. It may have properties
-            for (let rdfNode of getNodesOfType(dataset, pgo.Node)) {
+            for (let rdfNode of dataset.getNodesOfType(pgo.Node)) {
                 // The node itself
                 let pgNode = builder.addNode(rdfNode.value);
                 dataset.delete(N3.DataFactory.quad(rdfNode, rdf.type, pgo.Node));
@@ -314,11 +388,13 @@ class PseudoPGBuilder {
 
             //dataset.forEach(console.error);
 
+            precMain.outputTheStore(new N3.Store([...dataset]));
+
             return builder.toPropertyGraph();
-        //} catch (e) {
-        //    console.error(e);
-        //    return null;
-        //}
+        } catch (e) {
+            console.error(e);
+            return null;
+        }
     }
 }
 
@@ -336,6 +412,7 @@ function main() {
     const args = parser.parse_args();
 
     const dataset = readDataset(args.RDFPath);
+    extendMethods(dataset);
     
     let pg = PseudoPGBuilder.from(dataset)
 
@@ -345,5 +422,3 @@ function main() {
 if (require.main === module) {
     main();
 }
-
-
