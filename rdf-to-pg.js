@@ -38,17 +38,19 @@ function containsTerm(termList, searchedTerm) {
 }
 
 /** Adds new methods to datasetInstance that relies on RDF.JS Dataset methods */
-function extendMethods(datasetInstance) {
-    // =========================================================================
-    // === PATH TRAVEL
+function _extendMethods(datasetInstance) {
+    extendDataset_PathTravelling(datasetInstance);
+    extendDataset_RWPRECGenerated(datasetInstance);
+}
 
+function extendDataset_PathTravelling(datasetInstance) {
     /**
      * Return the list of terms that are of type type in the given dataset 
      * @param {*} type The type of the wanted nodes
      * @returns The list of nodes that have the given type
      */
-    datasetInstance.getNodesOfType = function(type) {
-        return [...this.match(null, rdf.type, type)]
+    datasetInstance.getNodesOfType = function(type, graph) {
+        return [...this.match(null, rdf.type, type, graph)]
             .map(quad => quad.subject);
     };
 
@@ -66,15 +68,17 @@ function extendMethods(datasetInstance) {
     };
 
     /**
-     * Find the quad (subject, predicate, ?object), and return the value of
+     * Find the triple (subject, predicate, ?object), and return the value of
      * ?object. If there is not exactly one match, this function returns null
      * instead.
+     * 
+     * The considered graph is the default graph
      * @param {*} subject The subject
      * @param {*} predicate The predicate
      * @returns The corresponding object if it exists and is unique
      */
-    datasetInstance.followThrough = function(subject, predicate) {
-        let match = this.match(subject, predicate);
+    datasetInstance.followThrough = function(subject, predicate, graph) {
+        let match = this.match(subject, predicate, null, N3.DataFactory.defaultGraph());
         if (match.size !== 1) return null;
 
         return [...match][0].object;
@@ -85,6 +89,8 @@ function extendMethods(datasetInstance) {
      * triples are valid, ie if every requiredQuads is in the list, and if
      * every other triples in the list is either in optionalQuads or has
      * predicate as a predicate.
+     * 
+     * The considered graph is the default graph.
      * 
      * followThrough(subject, predicate) if the quads were valid.
      * 
@@ -97,14 +103,14 @@ function extendMethods(datasetInstance) {
      * extra unspecified quads were found.
      */
     datasetInstance.checkAndFollow = function(subject, predicate, requiredQuads, optionalQuads) {
-        let match = this.match(subject);
+        let match = this.match(subject, null, null, N3.DataFactory.defaultGraph());
 
         if (match.size < 1 + requiredQuads.length + optionalQuads.length) return null;
 
         function findInListOfQuads(quad, quads) {
             for (let i = 0 ; i != quads.length ; ++i) {
                 if (quad.equals(quads[i])) {
-                    quads.splice(i);
+                    quads.splice(i, 1);
                     return true;
                 }
             }
@@ -131,10 +137,9 @@ function extendMethods(datasetInstance) {
 
         return result;
     };
+}
 
-
-    // =========================================================================
-
+function extendDataset_RWPRECGenerated(datasetInstance) {
     /**
      * Returns the rdfs:label value of proxyLabel. requiredQuads and
      * optionalQuads are conditions for other quads that has proxyLabel as the
@@ -412,7 +417,7 @@ function main() {
     const args = parser.parse_args();
 
     const dataset = readDataset(args.RDFPath);
-    extendMethods(dataset);
+    _extendMethods(dataset);
     
     let pg = PseudoPGBuilder.from(dataset)
 
@@ -422,3 +427,11 @@ function main() {
 if (require.main === module) {
     main();
 }
+
+
+module.exports = {
+    extendDataset_PathTravelling,
+    extendDataset_RWPRECGenerated,
+    PseudoPGBuilder
+};
+
