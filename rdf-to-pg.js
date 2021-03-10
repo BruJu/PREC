@@ -7,6 +7,8 @@ const N3 = require("n3");
 const WasmTree = require("@bruju/wasm-tree");
 
 const precMain = require('./prec.js');
+const storeAlterer = require("./prec3/store-alterer-from-pattern.js");
+
 const { ArgumentParser } = require('argparse');
 const fs = require('fs');
 
@@ -77,12 +79,45 @@ function extendDataset_PathTravelling(datasetInstance) {
      * @param {*} predicate The predicate
      * @returns The corresponding object if it exists and is unique
      */
-    datasetInstance.followThrough = function(subject, predicate, graph) {
+    datasetInstance.followThrough = function(subject, predicate) {
         let match = this.match(subject, predicate, null, N3.DataFactory.defaultGraph());
         if (match.size !== 1) return null;
 
         return [...match][0].object;
     };
+
+
+    datasetInstance.hasExpectedPaths = function(subject, requiredPaths, optionalPaths) {
+        // Get actual paths
+        const match = this.match(subject, null, null, N3.DataFactory.defaultGraph());
+        if (match.size < requiredPaths.length) return null;
+
+        // Copy the expected path to modify them
+        let reqPaths = [...requiredPaths];
+        let optPaths = [...optionalPaths];
+
+        // Helper function to check and remove from the list of accepted paths
+        function findInListOfPaths(quad, paths) {
+            let iPath = paths.findIndex(path =>
+                quad.predicate.equals(path[0])
+                && quad.object.equals(path[1])
+                && quad.graph.equals(N3.DataFactory.defaultGraph())
+            );
+
+            if (iPath === -1) return false;
+
+            paths.splice(iPath, 1);
+            return true;
+        }
+        
+        // Compare the actual paths with the expected ones
+        const hasAllValidQuads = match.every(quad =>
+               findInListOfPaths(quad, reqPaths)
+            || findInListOfPaths(quad, optPaths)
+        );
+
+        return hasAllValidQuads && reqPaths.length === 0;
+    }
 
     /**
      * Look for every triples that has subject as a triple. Check if the
@@ -103,43 +138,25 @@ function extendDataset_PathTravelling(datasetInstance) {
      * extra unspecified quads were found.
      */
     datasetInstance.checkAndFollow = function(subject, predicate, requiredQuads, optionalQuads) {
-        let match = this.match(subject, null, null, N3.DataFactory.defaultGraph());
+        let followUp = this.followThrough(subject, predicate);
+        if (followUp === null) return null;
 
-        if (match.size < 1 + requiredQuads.length + optionalQuads.length) return null;
+        let requiredPaths = requiredQuads.map(q => [q.predicate, q.object]);
+        let optionalPaths = optionalQuads.map(q => [q.predicate, q.object]);
 
-        function findInListOfQuads(quad, quads) {
-            for (let i = 0 ; i != quads.length ; ++i) {
-                if (quad.equals(quads[i])) {
-                    quads.splice(i, 1);
-                    return true;
-                }
-            }
+        requiredPaths.push([predicate, followUp]);
 
-            return false;
+        if (this.hasExpectedPaths(subject, requiredPaths, optionalPaths)) {
+            return followUp;
+        } else {
+            return null;
         }
-
-        let result = null;
-
-        for (let quad of match) {
-            if (findInListOfQuads(quad, requiredQuads)) continue;
-            if (findInListOfQuads(quad, optionalQuads)) continue;
-
-            if (result) {
-                return null;            // Result is not unique
-            } else if (quad.predicate.equals(predicate)) {
-                result = quad.object;   // Found the result
-            } else {
-                return null;            // Wrong predicate
-            }
-        }
-
-        if (requiredQuads.length != 0) return null;
-
-        return result;
     };
 }
 
 function extendDataset_RWPRECGenerated(datasetInstance) {
+    extendDataset_PathTravelling(datasetInstance);
+
     /**
      * Returns the rdfs:label value of proxyLabel. requiredQuads and
      * optionalQuads are conditions for other quads that has proxyLabel as the

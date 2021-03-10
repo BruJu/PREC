@@ -67,6 +67,18 @@ function toStringArrayOfQuads(arraysOfQuads) {
     return s + "\n]";
 }
 
+function expectQuad(computed, expected) {
+    function toString(quad) {
+        if (quad == null) return "null";
+        return quad.value;
+    }
+
+    assert.ok(
+        expected == null ? computed == null : expected.equals(computed),
+        "Computed " + toString(computed) + " ; Expected " + toString(expected)
+    );
+}
+
 describe("Path Travelling Expansion", function() {
     function toDataset(turtleContent) {
         let dataset = toWTDataset(
@@ -109,7 +121,6 @@ describe("Path Travelling Expansion", function() {
         });
     });
 
-    
     describe("getPathsFrom", function() {
         function testPaths(subject, ignoreList, turtleContent, expectedResult) {
             let result = toDataset(turtleContent).getPathsFrom(subject, ignoreList);
@@ -139,9 +150,160 @@ describe("Path Travelling Expansion", function() {
         });
     });
 
-    // TODO:
-    // followThrough
-    // checkAndFollow
+    describe("following", function() {
+        it("followThrough should work", function() {
+            expectQuad(toDataset(
+                ""
+            ).followThrough(ex.subject, ex.predicate), null);
+
+            expectQuad(toDataset(
+                "<subject> <notpredicate> <object> . "
+            ).followThrough(ex.subject, ex.predicate), null);
+            
+            expectQuad(toDataset(
+                "<subject> <predicate>    <object> . "
+            ).followThrough(ex.subject, ex.predicate), ex.object);
+            
+            expectQuad(toDataset(
+                "<subject> <predicate>    <object> . \n" +
+                "<subject> <notpredicate> <object> . "
+            ).followThrough(ex.subject, ex.predicate), ex.object);
+
+            expectQuad(toDataset(
+                "<subject> <predicate>    <object> . \n" +
+                "<subject> <notpredicate> <object> . "
+            ).followThrough(ex.subject, ex.notpredicate), ex.object);
+
+            expectQuad(toDataset(
+                "<subject> <predicate>    <object> . \n" +
+                "<subject> <notpredicate> <object> . "
+            ).followThrough(ex.subject, ex.predicate), ex.object);
+
+            expectQuad(toDataset(
+                "<subject> <predicate>    <object1> . \n" +
+                "<subject> <predicate>    <object2> . "
+            ).followThrough(ex.subject, ex.predicate), null);
+
+            expectQuad(toDataset(
+                "<subjectx> <predicate1>   <object1> . \n" +
+                "<subjectx> <predicate1>   <object2> . \n" +
+                "<subjectx> <predicate2>   <object2> . \n"
+            ).followThrough(ex.subjectx, ex.predicate1), null);
+
+            expectQuad(toDataset(
+                "<subjectx> <predicate1>   <object1> . \n" +
+                "<subjectx> <predicate1>   <object2> . \n" +
+                "<subjectx> <predicate2>   <object2> . \n"
+            ).followThrough(ex.subjectx, ex.predicate2), ex.object2);
+        });
+
+
+        it("checkAndFollow", function () {
+            // Empty dataset
+            expectQuad(toDataset(
+                ""
+            ).checkAndFollow(
+                ex.subject, ex.predicate,
+                [],
+                []
+            ), null);
+
+            // One triple that matches
+            expectQuad(toDataset(
+                "<subject> <predicate> <object> . "
+            ).checkAndFollow(
+                ex.subject, ex.predicate,
+                [],
+                []
+            ), ex.object);
+
+            // One triple that doesn't matches
+            expectQuad(toDataset(
+                "<subject> <predicate> <object> . "
+            ).checkAndFollow(
+                ex.subject, ex.wrongpredicate,
+                [],
+                []
+            ), null);
+
+            // Duplicated path
+            expectQuad(toDataset(
+                "<subject> <predicate> <object1> . \n" +
+                "<subject> <predicate> <object2> ."
+            ).checkAndFollow(
+                ex.subject, ex.predicate,
+                [],
+                []
+            ), null);
+
+            // Bad extra path
+            expectQuad(toDataset(
+                "<subject> <predicate> <objectMain> . \n" +
+                "<subject> <otherpath> <objectSecond> ."
+            ).checkAndFollow(
+                ex.subject, ex.predicate,
+                [],
+                []
+            ), null);
+
+            // Required extra path
+            expectQuad(toDataset(
+                "<subject> <predicate> <objectMain> . \n" +
+                "<subject> <otherpath> <objectSecond> ."
+            ).checkAndFollow(
+                ex.subject, ex.predicate,
+                [quad(ex.subject, ex.otherpath, ex.objectSecond)],
+                []
+            ), ex.objectMain);
+
+            // Possible extra path
+            expectQuad(toDataset(
+                "<subject> <predicate> <objectMain> . \n" +
+                "<subject> <otherpath> <objectSecond> ."
+            ).checkAndFollow(
+                ex.subject, ex.predicate,
+                [],
+                [quad(ex.subject, ex.otherpath, ex.objectSecond)]
+            ), ex.objectMain);
+
+            // Missing path
+            expectQuad(toDataset(
+                "<subject> <predicate> <objectMain> ."
+            ).checkAndFollow(
+                ex.subject, ex.predicate,
+                [quad(ex.subject, ex.otherpath, ex.objectSecond)],
+                []
+            ), null);
+
+            expectQuad(toDataset(
+                "<subject> <predicate> <objectMain> ."
+            ).checkAndFollow(
+                ex.subject, ex.predicate,
+                [],
+                [quad(ex.subject, ex.otherpath, ex.objectSecond)]
+            ), ex.objectMain);
+
+            // 
+            expectQuad(toDataset(
+                "<subject> <predicate> <objectMain> . \n" +
+                "<subject> <otherpath> <objectSecond> . \n" +
+                "<subject> <alternate> <objectTer> ."
+            ).checkAndFollow(
+                ex.subject, ex.predicate,
+                [quad(ex.subject, ex.alternate, ex.objectTer)],
+                [quad(ex.subject, ex.otherpath, ex.objectSecond)]
+            ), ex.objectMain);
+
+            expectQuad(toDataset(
+                "<subject> <predicate> <objectMain> . \n" +
+                "<subject> <otherpath> <objectSecond> ."
+            ).checkAndFollow(
+                ex.subject, ex.predicate,
+                [quad(ex.subject, ex.alternate, ex.objectTer)],
+                [quad(ex.subject, ex.otherpath, ex.objectSecond)]
+            ), null);
+        });
+    });
 });
 
 
