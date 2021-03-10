@@ -1,3 +1,5 @@
+"use strict";
+
 // RDF -> Property Graph Experimental Converter
 // Or more like PREC-1
 
@@ -94,7 +96,9 @@ function extendDataset_PathTravelling(datasetInstance) {
     };
 
 
-    datasetInstance.hasExpectedPaths = function(subject, requiredPaths, optionalPaths) {
+    datasetInstance.hasExpectedPaths = function(subject, requiredPaths, optionalPaths, outFoundPaths) {
+        if (outFoundPaths !== undefined) outFoundPaths.length = 0;
+
         // Get actual paths
         const match = this.match(subject, null, null, N3.DataFactory.defaultGraph());
         if (match.size < requiredPaths.length) return null;
@@ -107,12 +111,13 @@ function extendDataset_PathTravelling(datasetInstance) {
         function findInListOfPaths(quad, paths) {
             let iPath = paths.findIndex(path =>
                 quad.predicate.equals(path[0])
-                && quad.object.equals(path[1])
+                && (path[1] === null || quad.object.equals(path[1]))
                 && quad.graph.equals(N3.DataFactory.defaultGraph())
             );
 
             if (iPath === -1) return false;
 
+            if (outFoundPaths !== undefined) outFoundPaths.push([quad.predicate, quad.object]);
             paths.splice(iPath, 1);
             return true;
         }
@@ -138,11 +143,11 @@ function extendDataset_PathTravelling(datasetInstance) {
      * 
      * @param {*} subject The subject
      * @param {*} predicate The predicate to follow
-     * @param {*} requiredQuads The list of required quads
-     * @param {*} optionalQuads The list of quads that are allowed to be found
+     * @param {*} requiredPaths The list of required paths
+     * @param {*} optionalPaths The list of paths that are allowed to be found
      * @returns The object of the (subject, predicate, null) match, or null 
-     * either if not unique or if not all the requiredQuads where found or some
-     * extra unspecified quads were found.
+     * either if not unique or if not all the requiredPaths where found or some
+     * extra unspecified paths were found.
      */
     datasetInstance.checkAndFollow = function(subject, predicate, requiredPaths, optionalPaths) {
         const followUp = this.followThrough(subject, predicate);
@@ -278,6 +283,40 @@ function extractEdgeSPO(dataset, rdfEdge) {
     ];
 }
 
+function remvoeSubjectIfMatchPaths(dataset, requiredPaths, optionalPaths, extraPredicate) {
+    if (requiredPaths.length == 0) {
+        throw "Empty required path is not yet implemented";
+    }
+
+    function removePaths(dataset, subject, paths) {
+        paths.map(path => N3.DataFactory.quad(subject, path[0], path[1]))
+            .forEach(q => dataset.delete(q));
+    }
+
+    // Default parameters
+    if (optionalPaths === undefined) optionalPaths = [];
+    if (extraPredicate === undefined) extraPredicate = (_a, _b) => true;
+
+    // Find subjects that match the first pattern
+    let match = dataset.match(null, requiredPaths[0][0], requiredPaths[0][1], N3.DataFactory.defaultGraph());
+
+    let old01 = requiredPaths[0][1];
+
+    for (let quad of match) {
+        const subject = quad.subject;
+        if (old01 == null) requiredPaths[0][1] = quad.object;
+
+        let foundMappings = [];
+
+        if (dataset.hasExpectedPaths(subject, requiredPaths, optionalPaths, foundMappings) && extraPredicate(dataset, subject)) {
+            removePaths(dataset, subject, foundMappings);
+        }
+    }
+
+    requiredPaths[0][1] = old01;
+}
+
+
 class PseudoPGBuilder {
     constructor() {
         this.propertyGraphStructure = {
@@ -311,7 +350,10 @@ class PseudoPGBuilder {
         return edge;
     }
 
-    static from(dataset) {
+    static from(sourceDataset) {
+        let dataset = sourceDataset.match();
+        _extendMethods(dataset);
+
         try {
             let builder = new PseudoPGBuilder();
 
@@ -408,18 +450,56 @@ class PseudoPGBuilder {
             // Delete from the RDF graph the triples that are "prec related".
             // TODO: ^
 
+            const noMoreInContext = (dataset, subject) =>  dataset.match(null, subject, null).size == 0
+                                                        && dataset.match(null, null, subject).size == 0;
+            
+            remvoeSubjectIfMatchPaths(dataset,
+                [
+                    [rdf.type, prec.CreatedRelationshipLabel],
+                    [rdfs.label, null]
+                ],
+                [],
+                noMoreInContext
+            );
+
+            remvoeSubjectIfMatchPaths(dataset,
+                [
+                    [rdf.type, prec.CreatedNodeLabel],
+                    [rdfs.label, null]
+                ],
+                [],
+                noMoreInContext
+            );
+
+            remvoeSubjectIfMatchPaths(dataset,
+                [
+                    [rdf.type, prec.Property],
+                    [rdfs.label, null]
+                ],
+                [
+                    [rdf.type, prec.CreatedProperty]
+                ],
+                noMoreInContext
+            );
+
+            // Remove axioms and meta data
+            dataset.deleteMatches(prec.MetaData, prec.GenerationModel);
+            dataset.deleteMatches(prec.CreatedNodeLabel, rdfs.subClassOf, prec.CreatedVocabulary);
+            dataset.deleteMatches(prec.CreatedRelationshipLabel, rdfs.subClassOf, prec.CreatedVocabulary);
+            dataset.deleteMatches(prec.CreatedProperty, rdfs.subClassOf, prec.CreatedVocabulary);
+
             // End
-            console.error(dataset.size + " remaining quads");
-            // TODO: fail if dataset is not empty at this point
+            if (dataset.size === 0 && dataset.free !== undefined) {
+                dataset.free();
+            }
 
-            //dataset.forEach(console.error);
-
-            precMain.outputTheStore(new N3.Store([...dataset]));
-
-            return builder.toPropertyGraph();
+            return {
+                "PropertyGraph": builder.toPropertyGraph(),
+                "Remaining Quads": dataset
+            };
         } catch (e) {
-            console.error(e);
-            return null;
+            if (dataset.free !== undefined) dataset.free();
+            return { "error": e };
         }
     }
 }
@@ -440,9 +520,16 @@ function main() {
     const dataset = readDataset(args.RDFPath);
     _extendMethods(dataset);
     
-    let pg = PseudoPGBuilder.from(dataset)
-
-    console.log(JSON.stringify(pg, null, 2));
+    let result = PseudoPGBuilder.from(dataset)
+    
+    if (result.error !== undefined) {
+        console.error("Error: " + result.error);
+    } else if (result["Remaining Quads"].size !== 0) {
+        console.error(dataset.size + " remaining quads");
+        precMain.outputTheStore(new N3.Store([...dataset]));
+    } else {
+        console.log(JSON.stringify(result.PropertyGraph, null, 2));
+    }
 }
 
 if (require.main === module) {
