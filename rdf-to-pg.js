@@ -10,24 +10,29 @@
 // - We don't know the predicate, we want to retrieve every path that starts
 // with subject ie every triple that has subject as the subject.
 
-// We use Graphy instead of WasmTree because currently WT 
-const graphy_dataset = require("@graphy/memory.dataset.fast")
+////////////////////////////////////////////////////////////////////////////////
+// ==== Imports
+
+const graphyFactory = require('@graphy/core.data.factory');
 const N3 = require("n3");
 const WasmTree = require("@bruju/wasm-tree");
-
 const precMain = require('./prec.js');
-const storeAlterer = require("./prec3/store-alterer-from-pattern.js");
-
 const { ArgumentParser } = require('argparse');
 const fs = require('fs');
-
 const namespace     = require('@rdfjs/namespace');
+
+
+// ==== Namespaces
+
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , N3.DataFactory);
 const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , N3.DataFactory);
 const prec = namespace("http://bruy.at/prec#"                       , N3.DataFactory);
 
 const QUAD = N3.DataFactory.quad;
+
+////////////////////////////////////////////////////////////////////////////////
+// ==== Helper functions and extension of dataset
 
 /** Read the turtle (not star) file in filepath and builds a WT Dataset from it */
 function readDataset(filepath) {
@@ -38,10 +43,6 @@ function readDataset(filepath) {
     dataset.addAll(quads);
     return dataset;
 }
-
-
-// TODO: forbid named graphs somewhere as PREC never generates them.
-
 
 /** Return true if searchedTerm is in the term list. */
 function containsTerm(termList, searchedTerm) {
@@ -54,7 +55,56 @@ function _extendMethods(datasetInstance) {
     extendDataset_RWPRECGenerated(datasetInstance);
 }
 
+/**
+ * Adds news method to datasetInstance that relies on RDF.JS dataset methods
+ * 
+ * These methods are related to path travelling and basic checking of the
+ * content of the dataset.
+ */
 function extendDataset_PathTravelling(datasetInstance) {
+    /** Returns true if one of the quad is not in the default graph */
+    datasetInstance.hasNamedGraph = function() {
+        return this.some(quad => !N3.DataFactory.defaultGraph().equals(quad.graph));
+    }
+
+    /** Returns true if one of the quad has a embedded quad */
+    datasetInstance.isRdfStar = function() {
+        if (datasetInstance.free !== undefined) {
+            // Probably WasmTree. WT doesn't supported embedded quads
+            return false;
+        }
+
+        return this.some(quad =>
+            quad.subject.termType !== "Quad"
+            && quad.predicate.termType !== "Quad"
+            && quad.object.termType !== "Quad"
+            && quad.graph.termType !== "Quad");
+    }
+
+    /**
+     * Returns true if the given types are disjoints, ie if all nodes that have
+     * one of them as a type doesn't have the others as type.
+     */
+    datasetInstance.areDisjointTypes = function(types) {
+        let set = new Set();
+
+        for (let type of types) {
+            let dataset = this.match(null, rdf.type, type);
+
+            for (let quad of dataset) {
+                let s = graphyFactory.fromTerm(quad.subject).concise();
+                
+                if (set.has(s)) {
+                    return false;
+                }
+
+                set.add(s);
+            }
+        }
+
+        return true;
+    }
+
     /**
      * Return the list of terms that are of type type in the given dataset 
      * @param {*} type The type of the wanted nodes
@@ -95,7 +145,27 @@ function extendDataset_PathTravelling(datasetInstance) {
         return [...match][0].object;
     };
 
-
+    /**
+     * Check every paths from the subject node are the expected one, ie every
+     * requiredPath exists and there are no unlisted paths.
+     * 
+     * Paths can use null as an object as an unique wildcard.
+     * 
+     * @param {*} subject The subject of every studied quad
+     * @param {*} requiredPaths The list of required path, ie for each path in
+     * requiredPaths, a quad in the form
+     * (subject, path[0], path[1], defaultGraph)
+     * must be in the dataset. If path[1] is null, the function will bind it
+     * to the first ?object it find in a triple (subject, path[0], ?object) of
+     * the graph
+     * @param {*} optionalPaths The list of optional paths. See requiredPaths
+     * for format. The only difference is that not finding optional paths won't
+     * result in a false
+     * @param {*} outFoundPaths If an array is provided as this parameter, the
+     * actually found paths will be written here
+     * @returns True if every requiredPaths is found and there exists no path
+     * that is not either in requiredPaths or optionalPaths.
+     */
     datasetInstance.hasExpectedPaths = function(subject, requiredPaths, optionalPaths, outFoundPaths) {
         if (outFoundPaths !== undefined) outFoundPaths.length = 0;
 
@@ -163,6 +233,10 @@ function extendDataset_PathTravelling(datasetInstance) {
     };
 }
 
+/**
+ * Adds new method to the dataseInstance related to consuming a RDF graph
+ * generated by PREC
+ */
 function extendDataset_RWPRECGenerated(datasetInstance) {
     extendDataset_PathTravelling(datasetInstance);
 
@@ -241,6 +315,10 @@ function _extractAndDeleteRdfList(dataset, currentNode) {
     return result;
 }
 
+/**
+ * Consumes a propertyValue = reads it from the dataset, removes it from it and
+ * return its content as a pure Javascript object.
+ */
 function extractAndDeletePropertyValue(dataset, value) {
     if (dataset.has(QUAD(value, rdf.type, rdf.List))) {
         let r = _extractAndDeleteRdfList(dataset, value);
@@ -259,7 +337,19 @@ function extractAndDeletePropertyValue(dataset, value) {
     }
 }
 
-
+/**
+ * For a given node in the RDF graph that was an export from PREC, return the
+ * subject node, the object node and the label.
+ * 
+ * The rdf:subject, rdf:predicate and rdf:object must be unique.
+ *
+ * The type of the subject and the object are checked to be as type pgo:Node.
+ * For the predicate, both the node and its label are retrieved. Some checks
+ * are applied if is a relationship label.
+ * 
+ * Returns null on error.
+ * @returns [subject node, object node, [ predicate node, predicate label ]]
+ */
 function extractEdgeSPO(dataset, rdfEdge) {
     function extractConnectedNodeToEdge(dataset, rdfEdge, predicate) {
         let result = dataset.followThrough(rdfEdge, predicate);
@@ -283,6 +373,9 @@ function extractEdgeSPO(dataset, rdfEdge) {
     ];
 }
 
+/**
+ * Remove all subject that have the given paths and match the given predicate.
+ */
 function remvoeSubjectIfMatchPaths(dataset, requiredPaths, optionalPaths, extraPredicate) {
     if (requiredPaths.length == 0) {
         throw "Empty required path is not yet implemented";
@@ -317,7 +410,14 @@ function remvoeSubjectIfMatchPaths(dataset, requiredPaths, optionalPaths, extraP
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+// ==== Pseudo PG builder
+
+/**
+ * Builder for a property graph structure.
+ */
 class PseudoPGBuilder {
+    /** Build the builder */
     constructor() {
         this.propertyGraphStructure = {
             nodes: [],
@@ -327,10 +427,18 @@ class PseudoPGBuilder {
         this.iriToNodes = {};
     }
 
+    /**
+     * Returns a dictionnary with the nodes and the edges in the form of
+     * { nodes: [node...], edges: [edge...] }
+     */
     toPropertyGraph() {
         return this.propertyGraphStructure;
     }
 
+    /**
+     * Ensures a node corresponding to the given identifier exists and returns
+     * it. The identifier format is a string.
+     */
     addNode(identifier) {
         if (this.iriToNodes[identifier] === undefined) {
             this.iriToNodes[identifier] = {};
@@ -342,6 +450,12 @@ class PseudoPGBuilder {
         return this.iriToNodes[identifier];
     }
 
+    /**
+     * Creates a new edge that starts at the node identified by sourceIdentifier
+     * and at the node identifier by destinationIdentifier.
+     * 
+     * If the edge was already present, the behaviour is undefined.
+     */
     addEdge(sourceIdentifier, destinationIdentifier) {
         let edge = {};
         this.propertyGraphStructure.edges.push(edge);
@@ -350,14 +464,40 @@ class PseudoPGBuilder {
         return edge;
     }
 
+    /**
+     * Converts the RDF graph described by sourceDataset into a a Property Graph
+     * structure. The given RDF graph is expected to have been generated by
+     * a former call to PREC, ie to have its format ; but other RDF graphs
+     * that have the same structure are also accepted.
+     * 
+     * This function is unable to translate a graph that has been transformed
+     * by a context.
+     * 
+     * This function will return either a dictionnary with a
+     * { "PropertyGraph": toPropertyGraph(), "Remaining Quads": remaningQuads }
+     * if there was no error in the structure of the consumed quads
+     * or
+     * { "error": a message }
+     * if there was a problem with the structure.
+     */
     static from(sourceDataset) {
         let dataset = sourceDataset.match();
         _extendMethods(dataset);
 
         try {
-            let builder = new PseudoPGBuilder();
+            if (dataset.hasNamedGraph()) {
+                throw "Found named graphs but PREC only generates in default graph";
+            }
 
-            // TODO : pgo:Node, pgo:Edge etc are disjoint types
+            if (dataset.isRdfStar()) {
+                throw "Found embedded quad but PREC only generates RDF non star";
+            }
+
+            if (!dataset.areDisjointTypes([pgo.Node, pgo.Edge, prec.Property, prec.PropertyValue])) {
+                throw "pgo:Node, pgo:Edge, prec:Property and prec:PropertyValue should be disjoint types.";
+            }
+
+            let builder = new PseudoPGBuilder();
 
             // A property is:
             // - _e prop propBN - propBN rdf:value a_literal
@@ -448,8 +588,6 @@ class PseudoPGBuilder {
             }
 
             // Delete from the RDF graph the triples that are "prec related".
-            // TODO: ^
-
             const noMoreInContext = (dataset, subject) =>  dataset.match(null, subject, null).size == 0
                                                         && dataset.match(null, null, subject).size == 0;
             
