@@ -20,7 +20,7 @@ const precMain = require('./prec.js');
 const { ArgumentParser } = require('argparse');
 const fs = require('fs');
 const namespace     = require('@rdfjs/namespace');
-
+const neo4j = require('neo4j-driver');
 
 // ==== Namespaces
 
@@ -703,8 +703,24 @@ function makeCypherQuery(propertyGraphStructure) {
     return builder.getQuery();
 }
 
+async function makeNeo4Jrequest(username, password, uri, query) {
+    const driver = neo4j.driver(uri, neo4j.auth.basic(username, password));
+    const session = driver.session();
 
-function main() {
+    try {
+        await session.run(query);
+    } catch (error) {
+        console.error("-- Make Neo4J Request");
+        console.error(error);
+    } finally {
+        await session.close();
+    }
+
+    await driver.close();
+}
+
+
+async function main() {
     const parser = new ArgumentParser({
         description: 'PREC-1 (Property Graph <- RDF Experimental Converter)'
     });
@@ -720,8 +736,24 @@ function main() {
         {
             help: "Output format",
             default: "Cypher",
-            choices: ["Cypher", "PGStructure"],
+            choices: ["Cypher", "Neo4J", "PGStructure"],
             nargs: "?"
+        }
+    );
+
+    parser.add_argument(
+        "--Neo4JLogs",
+        {
+            help: "Neo4J credentials in the format username:password. Only used if output is Neo4J",
+            default: "", nargs: "?"
+        }
+    );
+
+    parser.add_argument(
+        "--Neo4JURI",
+        {
+            help: "Neo4J database URI. Only usef if output if Neo4J.",
+            default: "neo4j://localhost/neo4j", nargs: "?"
         }
     );
 
@@ -742,6 +774,18 @@ function main() {
             console.log(makeCypherQuery(result.PropertyGraph));
         } else if (args.OutputFormat === "PGStructure") {
             console.log(JSON.stringify(result.PropertyGraph, null, 2));
+        } else if (args.OutputFormat === "Neo4J") {
+            const credentials = args.Neo4JLogs.split(":");
+            const query = makeCypherQuery(result.PropertyGraph);
+
+            await makeNeo4Jrequest(
+                credentials[0],
+                credentials[1],
+                args.Neo4JURI,
+                query
+            );
+
+            result["Remaining Quads"].free();
         } else {
             console.error("Unknown output format " + args.OutputFormat);
         }
@@ -750,8 +794,8 @@ function main() {
 
 if (require.main === module) {
     main();
-}
 
+}
 
 module.exports = {
     extendDataset_PathTravelling,
