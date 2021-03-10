@@ -526,6 +526,8 @@ class PseudoPGBuilder {
                     dataset.delete(path);
 
                     const propertyValue = extractAndDeletePropertyValue(dataset, path.object);
+                    if (propertyValue === null || propertyValue === undefined)
+                        throw "Invalid RDF Graph - Invalid Property Value - " + path.object.value;
 
                     if (properties[propertyName] !== undefined) {
                         // Note : we could relax this so several times the same
@@ -561,7 +563,7 @@ class PseudoPGBuilder {
                 // rdf:subject/predicate/object
                 let [source, destination, label] = extractEdgeSPO(dataset, rdfEdge);
                 let pgEdge = builder.addEdge(source.value, destination.value)
-                pgEdge.label = label[1].value;
+                pgEdge.label = label[1];
 
                 // Remove from the RDF graph to be able to check if we consumed
                 // the whole graph.
@@ -642,6 +644,65 @@ class PseudoPGBuilder {
     }
 }
 
+/**
+ * 
+ * This function assigns a new member to the identifier property of nodes
+ */
+function makeCypherQuery(propertyGraphStructure) {
+    class QueryBuilder {
+        constructor() {
+            this.instructions = [];
+        }
+
+        getQuery() {
+            if (this.instructions.length == 0) {
+                return "";
+            }
+
+            return "CREATE " + this.instructions.join(",\n       ") + ";";
+        }
+
+        addInstruction(instruction) { this.instructions.push(instruction); }
+    }
+
+    function translateProperties(properties) {
+        if (properties === undefined) return "";
+        if (properties.length == 0) return "";
+
+        // We rely on the fact that:
+        // Cypher doesn't support different types on properties in a iist
+        // Only string and numbers can appear in a list of properties
+
+        return "{"
+            + Object.keys(properties)
+                .map(pName => pName + ": " + JSON.stringify(properties[pName]))
+                .join(", ")
+            + "}";
+    }
+
+    let builder = new QueryBuilder();
+
+    let nodeCount = 1;
+    for (let node of propertyGraphStructure.nodes) {
+        node.identifier = "node" + nodeCount;
+        ++nodeCount;
+
+        const labels = node.labels.map(label => ":" + label).join(" ");
+        const properties = translateProperties(node.properties);
+        builder.addInstruction(`(${node.identifier} ${labels} ${properties})`)
+    }
+
+    for (let edge of propertyGraphStructure.edges) {
+        const properties = translateProperties(edge.properties);
+        const edgeString = `:${edge.label} ${properties}`;
+        builder.addInstruction(
+            `(${edge.source.identifier})-[${edgeString}]->(${edge.destination.identifier})`
+        );
+    }
+
+    return builder.getQuery();
+}
+
 
 function main() {
     const parser = new ArgumentParser({
@@ -651,6 +712,17 @@ function main() {
     parser.add_argument(
         "RDFPath",
         { help: "Path to the RDF graph to convert back" }
+    );
+
+    parser.add_argument(
+        "-f",
+        "--OutputFormat",
+        {
+            help: "Output format",
+            default: "Cypher",
+            choices: ["Cypher", "PGStructure"],
+            nargs: "?"
+        }
     );
 
     const args = parser.parse_args();
@@ -666,7 +738,13 @@ function main() {
         console.error(dataset.size + " remaining quads");
         precMain.outputTheStore(new N3.Store([...dataset]));
     } else {
-        console.log(JSON.stringify(result.PropertyGraph, null, 2));
+        if (args.OutputFormat === "Cypher") {
+            console.log(makeCypherQuery(result.PropertyGraph));
+        } else if (args.OutputFormat === "PGStructure") {
+            console.log(JSON.stringify(result.PropertyGraph, null, 2));
+        } else {
+            console.error("Unknown output format " + args.OutputFormat);
+        }
     }
 }
 
