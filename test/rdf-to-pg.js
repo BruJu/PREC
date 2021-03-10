@@ -252,7 +252,7 @@ describe("Path Travelling Expansion", function() {
                 "<subject> <otherpath> <objectSecond> ."
             ).checkAndFollow(
                 ex.subject, ex.predicate,
-                [quad(ex.subject, ex.otherpath, ex.objectSecond)],
+                [[ex.otherpath, ex.objectSecond]],
                 []
             ), ex.objectMain);
 
@@ -263,7 +263,7 @@ describe("Path Travelling Expansion", function() {
             ).checkAndFollow(
                 ex.subject, ex.predicate,
                 [],
-                [quad(ex.subject, ex.otherpath, ex.objectSecond)]
+                [[ex.otherpath, ex.objectSecond]]
             ), ex.objectMain);
 
             // Missing path
@@ -271,7 +271,7 @@ describe("Path Travelling Expansion", function() {
                 "<subject> <predicate> <objectMain> ."
             ).checkAndFollow(
                 ex.subject, ex.predicate,
-                [quad(ex.subject, ex.otherpath, ex.objectSecond)],
+                [[ex.otherpath, ex.objectSecond]],
                 []
             ), null);
 
@@ -280,7 +280,7 @@ describe("Path Travelling Expansion", function() {
             ).checkAndFollow(
                 ex.subject, ex.predicate,
                 [],
-                [quad(ex.subject, ex.otherpath, ex.objectSecond)]
+                [[ex.otherpath, ex.objectSecond]]
             ), ex.objectMain);
 
             // 
@@ -290,8 +290,8 @@ describe("Path Travelling Expansion", function() {
                 "<subject> <alternate> <objectTer> ."
             ).checkAndFollow(
                 ex.subject, ex.predicate,
-                [quad(ex.subject, ex.alternate, ex.objectTer)],
-                [quad(ex.subject, ex.otherpath, ex.objectSecond)]
+                [[ex.alternate, ex.objectTer   ]],
+                [[ex.otherpath, ex.objectSecond]]
             ), ex.objectMain);
 
             expectQuad(toDataset(
@@ -299,8 +299,8 @@ describe("Path Travelling Expansion", function() {
                 "<subject> <otherpath> <objectSecond> ."
             ).checkAndFollow(
                 ex.subject, ex.predicate,
-                [quad(ex.subject, ex.alternate, ex.objectTer)],
-                [quad(ex.subject, ex.otherpath, ex.objectSecond)]
+                [[ex.alternate, ex.objectTer   ]],
+                [[ex.otherpath, ex.objectSecond]]
             ), null);
         });
     });

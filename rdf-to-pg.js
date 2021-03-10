@@ -1,6 +1,13 @@
 // RDF -> Property Graph Experimental Converter
 // Or more like PREC-1
 
+// This file extensively uses the concept of "(simple) path following".
+// Following a path is a cute way of saying that we know the subject, and:
+// - We know the predicate, we want to know the unique object that coresponds
+// to (subject, predicate, ?object).
+// - We don't know the predicate, we want to retrieve every path that starts
+// with subject ie every triple that has subject as the subject.
+
 // We use Graphy instead of WasmTree because currently WT 
 const graphy_dataset = require("@graphy/memory.dataset.fast")
 const N3 = require("n3");
@@ -14,7 +21,7 @@ const fs = require('fs');
 
 const namespace     = require('@rdfjs/namespace');
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
-const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , N3.DataFactory)
+const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , N3.DataFactory);
 const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , N3.DataFactory);
 const prec = namespace("http://bruy.at/prec#"                       , N3.DataFactory);
 
@@ -120,10 +127,10 @@ function extendDataset_PathTravelling(datasetInstance) {
     }
 
     /**
-     * Look for every triples that has subject as a triple. Check if the
-     * triples are valid, ie if every requiredQuads is in the list, and if
-     * every other triples in the list is either in optionalQuads or has
-     * predicate as a predicate.
+     * If subject, predicate is an unique path (named the followed path), and
+     * if the paths of predicates are all either the followed path or included
+     * in requiredPaths or optionals paths, returns the object of the followed
+     * path.
      * 
      * The considered graph is the default graph.
      * 
@@ -137,16 +144,13 @@ function extendDataset_PathTravelling(datasetInstance) {
      * either if not unique or if not all the requiredQuads where found or some
      * extra unspecified quads were found.
      */
-    datasetInstance.checkAndFollow = function(subject, predicate, requiredQuads, optionalQuads) {
-        let followUp = this.followThrough(subject, predicate);
+    datasetInstance.checkAndFollow = function(subject, predicate, requiredPaths, optionalPaths) {
+        const followUp = this.followThrough(subject, predicate);
         if (followUp === null) return null;
 
-        let requiredPaths = requiredQuads.map(q => [q.predicate, q.object]);
-        let optionalPaths = optionalQuads.map(q => [q.predicate, q.object]);
+        const realRequiredPaths = [[predicate, followUp], ...requiredPaths];
 
-        requiredPaths.push([predicate, followUp]);
-
-        if (this.hasExpectedPaths(subject, requiredPaths, optionalPaths)) {
+        if (this.hasExpectedPaths(subject, realRequiredPaths, optionalPaths)) {
             return followUp;
         } else {
             return null;
@@ -158,14 +162,14 @@ function extendDataset_RWPRECGenerated(datasetInstance) {
     extendDataset_PathTravelling(datasetInstance);
 
     /**
-     * Returns the rdfs:label value of proxyLabel. requiredQuads and
-     * optionalQuads are conditions for other quads that has proxyLabel as the
+     * Returns the rdfs:label value of proxyLabel. requiredPaths and
+     * optionalPaths are conditions for other quads that has proxyLabel as the
      * subject, like in the checkAndFollow method.
      * 
      * Note that this function returns a string.
      */
-    datasetInstance.readLabelOf = function(proxyLabel, requiredQuads, optionalQuads) {
-        let realLabel = this.checkAndFollow(proxyLabel, rdfs.label, requiredQuads, optionalQuads);
+    datasetInstance.readLabelOf = function(proxyLabel, requiredPaths, optionalPaths) {
+        let realLabel = this.checkAndFollow(proxyLabel, rdfs.label, requiredPaths, optionalPaths);
 
         if (realLabel === null || realLabel.termType !== "Literal") {
             return null;
@@ -179,8 +183,8 @@ function extendDataset_RWPRECGenerated(datasetInstance) {
     datasetInstance.readPropertyName = function(property) {
         return this.readLabelOf(
             property,
-            [QUAD(property, rdf.type, prec.Property       )],
-            [QUAD(property, rdf.type, prec.CreatedProperty)]
+            [[rdf.type, prec.Property       ]],
+            [[rdf.type, prec.CreatedProperty]]
         );
     };
 
@@ -191,7 +195,7 @@ function extendDataset_RWPRECGenerated(datasetInstance) {
      * @returns The label as a string
      */
     datasetInstance.getRealLabel = function(term, labelType) {
-        return this.readLabelOf(term, [], [QUAD(term, rdf.type, labelType)]);
+        return this.readLabelOf(term, [], [[rdf.type, labelType]]);
     }
 }
 
