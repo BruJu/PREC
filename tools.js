@@ -11,14 +11,15 @@
 // ==== Namespaces
 
 // External libraries
-const WT        = require('@bruju/wasm-tree');
-const namespace = require('@rdfjs/namespace');
-const argparse  = require('argparse');
-const fs        = require('fs');
-const N3        = require('n3');
+const WT             = require('@bruju/wasm-tree');
+const namespace      = require('@rdfjs/namespace');
+const argparse       = require('argparse');
+const fs             = require('fs');
+const N3             = require('n3');
+const { isomorphic } = require("rdf-isomorphic");
+
 
 // PREC
-const graphSubstitution = require('./graph-substitution.js');
 const precm1            = require('./rdf-to-pg.js');
 const graphReducer      = require("./prec3/graph-reducer.js");
 const precMain          = require("./prec.js");
@@ -102,12 +103,8 @@ const TOOL_PrecGeneratedIsomorphism = {
         const graph2 = load(args.Graph2);
 
         // Test isomorphism
-        const isomorphics = graphSubstitution.isSubstituableGraph(graph1, graph2)
-            && graphSubstitution.isSubstituableGraph(graph2, graph1);
-
+        const isomorphics = isomorphic(graph1, [... graph2]);
         console.log(isomorphics ? "The graphs are isomorphics" : "The graphs are not isomorphics");
-
-        console.log(graphSubstitution.isSubstituableGraph(graph1, graph1));
     }
 };
 

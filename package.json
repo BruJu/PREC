@@ -21,13 +21,14 @@
     },
     "homepage": "https://github.com/BruJu/PREC#readme",
     "dependencies": {
-        "@bruju/wasm-tree": "^0.2.0",
+        "@bruju/wasm-tree": "^0.2.1",
         "@graphy/content.ttl.write": "^4.3.3",
         "@graphy/core.data.factory": "^4.3.3",
         "@graphy/memory.dataset.fast": "^4.3.3",
         "@rdfjs/namespace": "^1.1.0",
         "argparse": "^2.0.1",
         "n3": "^1.6.4",
-        "neo4j-driver": "^4.2.3"
+        "neo4j-driver": "^4.2.3",
+        "rdf-isomorphic": "^1.2.0"
     }
 }
