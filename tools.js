@@ -26,7 +26,7 @@ const precMain          = require("./prec.js");
 
 // Namespace
 const pgo  = namespace("http://ii.uwb.edu.pl/pgo#", N3.DataFactory);
-
+const prec = namespace("http://bruy.at/prec#", N3.DataFactory);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -83,8 +83,9 @@ const TOOL_PrecGeneratedIsomorphism = {
                 precm1.extendDataset_PathTravelling(wtdataset);
                 let nodes = wtdataset.getNodesOfType(pgo.Node, N3.DataFactory.defaultGraph());
                 let edges = wtdataset.getNodesOfType(pgo.Edge, N3.DataFactory.defaultGraph());
+                let propertyValue = wtdataset.getNodesOfType(prec.PropertyValue, N3.DataFactory.defaultGraph());
                 wtdataset.free();
-                return [...nodes, ...edges];
+                return [...nodes, ...edges, ...propertyValue];
             }(quads);
 
             for (let term of toReplace) {
@@ -94,6 +95,8 @@ const TOOL_PrecGeneratedIsomorphism = {
                     quads = quads.map(quad => remapQuad(quad, newBlankNode, term));
                 }
             }
+
+            precMain.outputTheStore(new N3.Store(quads));
 
             return quads;
         }
