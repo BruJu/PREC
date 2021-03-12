@@ -41,9 +41,6 @@ function remapQuad(quad, destination, source) {
                 _remapTerm(term.object),
                 _remapTerm(term.graph)
             );
-        } else if (term.termType === "Literal") {
-            // TODO: properly code numbers and remove this line
-            return N3.DataFactory.literal(term.value);
         } else {
             return term;
         }
@@ -95,8 +92,6 @@ const TOOL_PrecGeneratedIsomorphism = {
                     quads = quads.map(quad => remapQuad(quad, newBlankNode, term));
                 }
             }
-
-            precMain.outputTheStore(new N3.Store(quads));
 
             return quads;
         }

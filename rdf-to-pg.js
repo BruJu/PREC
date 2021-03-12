@@ -21,6 +21,7 @@ const { ArgumentParser } = require('argparse');
 const fs = require('fs');
 const namespace     = require('@rdfjs/namespace');
 const neo4j = require('neo4j-driver');
+const precUtils = require('./prec3/utils.js');
 
 // ==== Namespaces
 
@@ -330,8 +331,8 @@ function extractAndDeletePropertyValue(dataset, value) {
         if (v == null) throw "Invalid RDF Graph - " + value.value + " has meta properties (not yet supported)";
 
         dataset.delete(QUAD(value, rdf.value, v));
-        // TODO: check type and treat xsd:integer case
-        return v.value;
+
+        return precUtils.rdfLiteralToValue(v);
     } else {
         throw "Invalid RDF Graph - " + value.value + " is not a valid property value";
     }
@@ -752,7 +753,7 @@ async function main() {
     parser.add_argument(
         "--Neo4JURI",
         {
-            help: "Neo4J database URI. Only usef if output if Neo4J.",
+            help: "Neo4J database URI. Only used if output if Neo4J.",
             default: "neo4j://localhost/neo4j", nargs: "?"
         }
     );
