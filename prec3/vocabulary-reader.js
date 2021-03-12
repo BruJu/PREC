@@ -5,7 +5,7 @@ const namespace = require('@rdfjs/namespace');
 
 const prec = namespace("http://bruy.at/prec#", N3.DataFactory);
 const xsd  = namespace("http://www.w3.org/2001/XMLSchema#", N3.DataFactory);
-
+const pgo = namespace("http://ii.uwb.edu.pl/pgo#", N3.DataFactory);
 
 function readThings(store, predicateIRI, acceptsLiteral, moreComplex) {
     let founds = {};
@@ -258,6 +258,29 @@ function readRelDefault(quads) {
     return quads[0].object;
 }
 
+function readBlankNodeMapping(quads) {
+    let s = {};
+    for (const quad of quads.getQuads(null, prec.mapBlankNodesToPrefix)) {
+        let target = quad.subject;
+
+        if (!target.equals(pgo.Node)
+            && !target.equals(pgo.Edge)
+            && !target.equals(prec.Property)) {
+            console.error("Unknown subject of mapTo " + target.value);
+            continue;
+        }
+
+        if (quad.object.termType !== "NamedNode") {
+            console.error("Object of mapTo must be of type named node");
+            continue;
+        }
+
+        s[target.value] = quad.object.value;
+    }
+
+    return s;
+}
+
 class Context {
     constructor(contextQuads) {
         const store = new N3.Store(contextQuads);
@@ -267,6 +290,8 @@ class Context {
         this.nodeLabels = readThings(store, prec.nodeLabelIRIOf, true, false);
 
         this.flags = readFlags(store);
+
+        this.blankNodeMapping = readBlankNodeMapping(store);
 
         this.relationshipsDefault = readRelDefault(store.getQuads(prec.Relationships, prec.useRdfStar, null));
     }

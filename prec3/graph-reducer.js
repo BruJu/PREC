@@ -28,6 +28,15 @@ function applyVocabulary(store, contextQuads) {
         removeMetaProperties(store);
     }
 
+    // -- Blank nodes transformation
+    for (let typeOfNode in addedVocabulary.blankNodeMapping) {
+        blankNodeMapping(
+            store,
+            N3.DataFactory.namedNode(typeOfNode),
+            addedVocabulary.blankNodeMapping[typeOfNode]
+        );
+    }
+
     // -- Map generated IRI to existing IRIs
     transformProperties   (store, addedVocabulary);
     transformRelationships(store, addedVocabulary);
@@ -481,5 +490,54 @@ function searchUnmapped(store) {
         store.addQuad(term, rdf.type, prec.CreatedVocabulary);
     }
 }
+
+/**
+ * Transform the blank nodes of the given type to named nodes, by appending to
+ * the given prefix the current name of the blank node.
+ * @param {N3.Store} store The store that contains the quads
+ * @param {*} typeOfMappedNodes The type of the IRIs to map
+ * @param {*} prefixIRI The prefix used
+ */
+function blankNodeMapping(store, typeOfMappedNodes, prefixIRI) {
+    let remapping = {};
+
+    store.getQuads(null, rdf.type, typeOfMappedNodes)
+        .map(quad => quad.subject)
+        .filter(node => node.termType === "BlankNode")
+        .map(node => node.value)
+        .forEach(blankNodeValue => remapping[blankNodeValue] = N3.DataFactory.namedNode(prefixIRI + blankNodeValue))
+    
+    
+    let newContent = store.getQuads().map(quad => _quadBNMap(remapping, quad));
+    
+    store.removeQuads(store.getQuads());
+    store.addQuads(newContent);
+}
+
+/**
+ * Provided a mapping blank node value => named node, maps the quad to another
+ * quad, in which every blank node in the mapping is mapped to the named node
+ */
+function _quadBNMap(map, quad) {
+    function _termBNMap(term) {
+        if (term.termType === "Quad") {
+            return N3.DataFactory.quad(
+                _termBNMap(term.subject),
+                _termBNMap(term.predicate),
+                _termBNMap(term.object),
+                _termBNMap(term.graph)
+            )
+        } else if (term.termType === "BlankNode") {
+            let mappedTo = map[term.value];
+            if (mappedTo === undefined) return term;
+            return mappedTo;
+        } else {
+            return term;
+        }
+    }
+    
+    return _termBNMap(quad);
+}
+
 
 module.exports = applyVocabulary;

@@ -31,26 +31,23 @@ const prec = namespace("http://bruy.at/prec#"                       , N3.DataFac
 class RDFGraphBuilder {
     /**
      * Builds a builder (Who would have believed?)
-     * @param {*} indiv Namespace for IRIs that doesn't have any proper semantic
      * @param {*} vocab Namespace for IRIs that should be mapped to existing
      * ontology IRIs.
      */
-    constructor(indiv, vocab) {
+    constructor(vocab) {
         this.quads = [];
-        this.propValueCounter = 0;
 
-        this.namespaces = {};
-        this.namespaces.nodeId           = namespace(indiv + "node/id/");
-        this.namespaces.nodeLabel        = namespace(vocab + "node/label/");
-        this.namespaces.nodeProperty     = namespace(vocab + "node/property/");
+        this.namespaces = {
+            nodeLabel        : namespace(vocab + "node/label/"),
+            nodeProperty     : namespace(vocab + "node/property/"),
+            relationLabel    : namespace(vocab + "relation/label/"),
+            relationProperty : namespace(vocab + "relation/property/")
+        };
         
-        this.namespaces.relationId       = namespace(indiv + "relation/");
-        this.namespaces.relationLabel    = namespace(vocab + "relation/label/");
-        this.namespaces.relationProperty = namespace(vocab + "relation/property/");
-        
-        this.namespaces.literals         = namespace(indiv + "literal/");
-
-        this.numberOfBlankNodes = 0;
+        this.counters = {
+            properties: 0,
+            lists: 0
+        };
     }
 
     /** Builds and adds the quad described by S P O G */
@@ -72,10 +69,10 @@ class RDFGraphBuilder {
 
     /** Builds some new node for the literal. The end of the IRI is kind of opaque. */
     _makeNodeForPropertyValue(literal) {
-        const propertyValueNode = this._getNewNode();
+        const propertyValueNode = N3.DataFactory.blankNode("propertyValue" + (++this.counters.properties));
         this._addQuad(propertyValueNode, rdf.value, N3.DataFactory.literal(literal));
         this._addQuad(propertyValueNode, rdf.type, prec.PropertyValue);
-        return propertyValueNode
+        return propertyValueNode;
     }
 
     /**
@@ -115,9 +112,11 @@ class RDFGraphBuilder {
     _addList(list) {
         let head = rdf.nil;
 
+        const prefix = "list" + (++this.counters.lists) + "_";
+
         for (let i = list.length - 1 ; i >= 0 ; --i) {
-            let node = N3.DataFactory.blankNode("" + (++this.numberOfBlankNodes));
-            this._addQuad(node, rdf.type, rdf.List);
+            let node = N3.DataFactory.blankNode(prefix + (i + 1));
+            //this._addQuad(node, rdf.type, rdf.List);
             this._addQuad(node, rdf.first, list[i]);
             this._addQuad(node, rdf.rest, head);
 
@@ -136,7 +135,7 @@ class RDFGraphBuilder {
      * the Property Graph.
      */
     addNode(nodeId, labels, properties) {
-        let node = this.namespaces.nodeId[nodeId];
+        let node = N3.DataFactory.blankNode("node" + nodeId);
 
         this._addQuad(node, rdf.type, pgo.Node);
 
@@ -173,10 +172,10 @@ class RDFGraphBuilder {
      * @param {*} properties The list of properties on the relationship.
      */
     addRelationshipRDFReification(relId, start, end, label, properties) {
-        let relation = this.namespaces.relationId[relId];
+        let relation = N3.DataFactory.blankNode("edge" + relId);
         this._addQuad(relation, rdf.type, pgo.Edge);
-        this._addQuad(relation, rdf.subject, this.namespaces.nodeId[start]);
-        this._addQuad(relation, rdf.object, this.namespaces.nodeId[end]);
+        this._addQuad(relation, rdf.subject, N3.DataFactory.blankNode("node" + start));
+        this._addQuad(relation, rdf.object, N3.DataFactory.blankNode("node" + end));
 
         let labelNode = this.namespaces.relationLabel[label];
         this._addQuad(relation, rdf.predicate, labelNode);
@@ -223,15 +222,15 @@ class RDFGraphBuilder {
         // Assert the triple: the `labelNode` predicate has a weak semantic
         // It only means that there exists an occurrence of it.
         let directEdge = N3.DataFactory.quad(
-            this.namespaces.nodeId[start],
+            N3.DataFactory.blankNode("node" + start),
             labelNode,
-            this.namespaces.nodeId[end]
+            N3.DataFactory.blankNode("ndoe" + end)
         );
 
         this.quads.push(directEdge);
 
         // Annotate the created triple in passive form
-        let relation = this.namespaces.relationId[relId];
+        let relation = N3.DataFactory.blankNode("edge" + relId);
         this._addQuad(directEdge, prec.occurrence, relation);
 
         // Properties
@@ -277,9 +276,7 @@ class RDFGraphBuilder {
             return undefined;
         }
 
-        let builder = new RDFGraphBuilder(
-            "http://www.example.org/indiv/", "http://www.example.org/vocab/"
-        );
+        let builder = new RDFGraphBuilder("http://www.example.org/vocab/");
 
         switch (mode) {
             case "RDFReification":
@@ -334,9 +331,7 @@ class RDFGraphBuilder {
     }
 
     static neo4JProtocoleToStore(nodes, edges) {
-        let builder = new RDFGraphBuilder(
-            "http://www.example.org/indiv/", "http://www.example.org/vocab/"
-        );
+        let builder = new RDFGraphBuilder("http://www.example.org/vocab/");
 
         builder._addQuad(prec.MetaData, prec.GenerationModel, prec.RelationshipAsRDFReification);
 

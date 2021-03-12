@@ -5,7 +5,6 @@
 
 prec:testMetaData prec:kind "SmallExamples" .
 
-
 ###############################################################################
 # Relationship test
 
@@ -123,3 +122,28 @@ prec:testMetaData prec:kind "SmallExamples" .
 :animalPriorityResult { _:egg a :Food, :Animal ; :animal_name "Oeufs" . }
 :foodPriorityResult   { _:egg a :Food, :Animal ; :food_name   "Oeufs" . }
 
+################################################################################
+
+
+
+[] a prec:unitTest ;
+   prec:context :listTestContext ;
+   prec:output  :listTestInput ;
+   prec:propertyGraph
+   '''
+        {"type":"node","id":"1","labels":[], "properties":{ "elements": ["a", "b"] }}
+   '''
+   .
+
+
+:listTestContext {
+    prec:KeepProvenance prec:flagState false .
+    :elements prec:propertyIRIOf "elements" .
+}
+
+
+:listTestInput {
+    _:node :elements (
+        [ rdf:value "a" ] [ rdf:value "b" ]
+    ) .
+ }

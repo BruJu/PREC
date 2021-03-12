@@ -25,6 +25,7 @@
         "@graphy/content.ttl.write": "^4.3.3",
         "@graphy/core.data.factory": "^4.3.3",
         "@graphy/memory.dataset.fast": "^4.3.3",
+        "@ontologies/core": "^2.0.2",
         "@rdfjs/namespace": "^1.1.0",
         "argparse": "^2.0.1",
         "n3": "^1.6.4",

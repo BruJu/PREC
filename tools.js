@@ -93,6 +93,8 @@ const TOOL_PrecGeneratedIsomorphism = {
                 }
             }
 
+            precMain.outputTheStore(new N3.Store(quads));
+
             return quads;
         }
 
