@@ -28,6 +28,7 @@
         "@ontologies/core": "^2.0.2",
         "@rdfjs/namespace": "^1.1.0",
         "argparse": "^2.0.1",
+        "gremlin": "^3.4.10",
         "n3": "^1.6.4",
         "neo4j-driver": "^4.2.3",
         "rdf-isomorphic": "^1.2.0"

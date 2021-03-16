@@ -4,8 +4,9 @@
 
 const neo4j = require('neo4j-driver')
 
-const precMain = require('./prec.js');
+const prec = require('./prec.js');
 const RDFGraphBuilder = require("./prec3/graph-builder.js");
+const graphReducer    = require("./prec3/graph-reducer.js");
 
 const { ArgumentParser } = require('argparse');
 
@@ -88,7 +89,7 @@ module.exports = extract_from_neo4j_protocol;
 async function main() {
 
     const parser = new ArgumentParser({
-        description: 'Property Graph -> RDF Experimental Parser: From a neo4j interface'
+        description: 'Property Graph -> RDF Experimental Parser: From a Neo4J interface'
     });
 
 
@@ -116,7 +117,11 @@ async function main() {
 
     let [store, prefixes] = RDFGraphBuilder.neo4JProtocoleToStore(result.nodes, result.edges);
 
-    precMain.outputTheStore(store, prefixes);
+    if (args.context !== "") {
+        graphReducer(store, prec.filenameToArrayOfQuads(args.context));
+    }
+
+    prec.outputTheStore(store, prefixes);
 }
 
 if (require.main === module) {
