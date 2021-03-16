@@ -23,138 +23,161 @@ function _isString(object) {
     return typeof object === "string" || object instanceof String;
 }
 
-
-async function extract_from_gremlin(uri) {
-    // const authenticator = new gremlin.driver.auth.PlainTextSaslAuthenticator('myuser', 'mypassword');
-    // const g = traversal().withRemote(new DriverRemoteConnection('ws://localhost:8182/gremlin', { authenticator });
-
-  let connection = new DriverRemoteConnection("ws://localhost:8182/gremlin");
-  const g = traversal().withRemote(connection);
-
-  let list = await g.V().elementMap().toList();
-
-  let propertyGraphStructure = {
-    nodes: [],
-    edges: [],
-  };
-
-  for (let node of list) {
-    let altNode = {
-      identity: undefined,
-      labels: [],
-      properties: {},
-    };
-
-    for (let prop of node) {
-      let [propKey, propValue] = prop;
-
-      if (propKey instanceof EnumValue) {
-        // Special Field
-        if (propKey.typeName !== "T")
-          throw "Unknown typename for propKey " + propKey;
-        if (propKey.elementName === "id") {
-          altNode.identity = propValue;
-        } else if (propKey.elementName === "label") {
-          if (_isString(propValue)) {
-            altNode.labels = [propValue];
-          } else {
-            throw "Unknown type for label " + propValue;
-          }
-        } else {
-          throw "Unknown element name for propKey " + propKey;
-        }
-      } else if (_isString(propKey)) {
-        // Regular property
-        if (_isString(propValue) || typeof propValue === "number") {
-          altNode.properties[propKey] = propValue;
-        } else {
-          throw "Unknown element value for property " + prop;
-        }
-      } else {
-        throw "Unknown property key type " + propKey;
-      }
-    }
-
-    if (altNode.identity === undefined) {
-      throw "A node has no identity " + node;
-    }
-
-    propertyGraphStructure.nodes.push(altNode);
-  }
-
-  function getId(node) {
+/**
+ * Returns the id of the node. Throws if there are no id.
+ * @param {*} node The Gremlin node
+ * @returns The id
+ */
+function _getGremlinNodeId(node) {
     for (let p of node) {
-      if (p[0].typeName === "T" && p[0].elementName === "id") {
-        return p[1];
-      }
+        if (p[0].typeName === "T" && p[0].elementName === "id") {
+            return p[1];
+        }
     }
 
     throw "No id in node " + node;
-  }
+}
 
-  let edges = await g.E().elementMap().toList();
+/**
+ * Converts a node extracted from a traversal to a node with a format similar
+ * to Neo4J cypher query.
+ * @param {*} node The traversal node
+ * @returns A Neo4j Cypher answer like node
+ */
+function convertNodeToNeo4jJsonFormat(node) {
+    let neoNode = {
+        identity: undefined,
+        labels: [],
+        properties: {},
+    };
 
-  for (let edge of edges) {
-    let edgeInfo = {
-      identity: undefined,
-      start: undefined,
-      end: undefined,
-      type: undefined,
-      properties: {},
+    for (let prop of node) {
+        let [propKey, propValue] = prop;
+
+        if (propKey instanceof EnumValue) {
+            // Special Field
+            if (propKey.typeName !== "T")
+                throw "Unknown typename for propKey " + propKey;
+            if (propKey.elementName === "id") {
+                neoNode.identity = propValue;
+            } else if (propKey.elementName === "label") {
+                if (_isString(propValue)) {
+                    neoNode.labels = [propValue];
+                } else {
+                    throw "Unknown type for label " + propValue;
+                }
+            } else {
+                throw "Unknown element name for propKey " + propKey;
+            }
+        } else if (_isString(propKey)) {
+            // Regular property
+            if (_isString(propValue) || typeof propValue === "number") {
+                neoNode.properties[propKey] = propValue;
+            } else {
+                throw "Unknown element value for property " + prop;
+            }
+        } else {
+            throw "Unknown property key type " + propKey;
+        }
+    }
+
+    return neoNode;
+}
+
+/**
+ * Converts an edge extracted from a traversal to an edge with a format similar
+ * to the Neo4J Cypher Query format.
+ * @param {*} edge The traversal edge
+ * @returns A Neo4J Cypher answer like edge
+ */
+function convertEdgeToNeo4JJsonFormat(edge) {
+    let neoEdge = {
+        identity: undefined,
+        start: undefined,
+        end: undefined,
+        type: undefined,
+        properties: {},
     };
 
     for (let prop of edge) {
-      let [propKey, propValue] = prop;
+        let [propKey, propValue] = prop;
 
-      if (propKey instanceof EnumValue) {
-        // Special Field
-        if (propKey.typeName === "T") {
-          if (propKey.elementName === "id") {
-            edgeInfo.identity = propValue;
-          } else if (propKey.elementName === "label") {
-            if (_isString(propValue)) {
-              edgeInfo.type = propValue;
+        if (propKey instanceof EnumValue) {
+            // Special Field
+            if (propKey.typeName === "T") {
+                if (propKey.elementName === "id") {
+                    neoEdge.identity = propValue;
+                } else if (propKey.elementName === "label") {
+                    if (_isString(propValue)) {
+                        neoEdge.type = propValue;
+                    } else {
+                        throw "Unknown type for label " + propValue;
+                    }
+                } else {
+                    throw "Unknown propKey " + propKey;
+                }
+            } else if (propKey.typeName === "Direction") {
+                if (propKey.elementName === "IN") {
+                    neoEdge.start = _getGremlinNodeId(propValue);
+                } else if (propKey.elementName === "OUT") {
+                    neoEdge.end = _getGremlinNodeId(propValue);
+                } else {
+                    throw "Unknown propKey " + propKey;
+                }
             } else {
-              throw "Unknown type for label " + propValue;
+                throw "Unknown propKey " + propKey;
             }
-          } else {
-            throw "Unknown propKey " + propKey;
-          }
-        } else if (propKey.typeName === "Direction") {
-          if (propKey.elementName === "IN") {
-            edgeInfo.start = getId(propValue);
-          } else if (propKey.elementName === "OUT") {
-            edgeInfo.end = getId(propValue);
-          } else {
-            throw "Unknown propKey " + propKey;
-          }
+        } else if (_isString(propKey)) {
+            // Regular property
+            if (_isString(propValue) || typeof propValue === "number") {
+                neoEdge.properties[propKey] = propValue;
+            } else {
+                throw "Unknown element value for property " + prop;
+            }
         } else {
-          throw "Unknown propKey " + propKey;
+            throw "Unknown property key type " + propKey;
         }
-      } else if (_isString(propKey)) {
-        // Regular property
-        if (_isString(propValue) || typeof propValue === "number") {
-          edgeInfo.properties[propKey] = propValue;
-        } else {
-          throw "Unknown element value for property " + prop;
-        }
-      } else {
-        throw "Unknown property key type " + propKey;
-      }
     }
 
-    for (const k of ["identity", "type", "start", "end"]) {
-      if (edgeInfo[k] === undefined) {
-        throw "An edge has no " + k;
-      }
+    return neoEdge;
+}
+
+
+async function extract_from_gremlin(uri) {
+    // const authenticator = new gremlin.driver.auth.PlainTextSaslAuthenticator('myuser', 'mypassword');
+    // const g = traversal().withRemote(new DriverRemoteConnection('uri', { authenticator });
+
+    let connection = new DriverRemoteConnection(uri);
+    const g = traversal().withRemote(connection);
+
+    let nodes = [];
+    let edges = [];
+
+    for (let node of await g.V().elementMap().toList()) {
+        const neoNode = convertNodeToNeo4jJsonFormat(node);
+
+        if (neoNode[identity] === undefined) {
+            throw "A node has no identity";
+        }
+
+        nodes.push(neoNode);
     }
 
-    propertyGraphStructure.edges.push(edgeInfo);
-  }
+    for (let edge of await g.E().elementMap().toList()) {
+        let neoEdge = convertEdgeToNeo4JJsonFormat(edge);
 
-  await connection.close();
+        for (const k of ["identity", "type", "start", "end"]) {
+            if (neoEdge[k] === undefined) {
+                throw "An edge has no " + k;
+            }
+        }
 
-    return propertyGraphStructure
+        edges.push(neoEdge);
+    }
+
+    await connection.close();
+
+    return { nodes, edges };
 }
 
 
