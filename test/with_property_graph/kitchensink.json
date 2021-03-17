@@ -1,0 +1,48 @@
+{
+  "nodes": [
+    {
+      "identity": 2000,
+      "labels": ["message"],
+      "properties": {
+        "name": "a"
+      }
+    },
+    {
+      "identity": 2001,
+      "labels": ["message"],
+      "properties": {
+        "name": "b"
+      }
+    },
+    {
+      "identity": 1000,
+      "labels": ["loops"],
+      "properties": {
+        "name": "loop"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "identity": 2002,
+      "start": 2001,
+      "end": 2000,
+      "type": "link",
+      "properties": {}
+    },
+    {
+      "identity": 2003,
+      "start": 2000,
+      "end": 2000,
+      "type": "link",
+      "properties": {}
+    },
+    {
+      "identity": 1001,
+      "start": 1000,
+      "end": 1000,
+      "type": "self",
+      "properties": {}
+    }
+  ]
+}

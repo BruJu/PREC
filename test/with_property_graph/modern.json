@@ -1,0 +1,108 @@
+{
+  "nodes": [
+    {
+      "identity": 1,
+      "labels": ["person"],
+      "properties": {
+        "name": "marko",
+        "age": 29
+      }
+    },
+    {
+      "identity": 2,
+      "labels": ["person"],
+      "properties": {
+        "name": "vadas",
+        "age": 27
+      }
+    },
+    {
+      "identity": 3,
+      "labels": ["software"],
+      "properties": {
+        "name": "lop",
+        "lang": "java"
+      }
+    },
+    {
+      "identity": 4,
+      "labels": ["person"],
+      "properties": {
+        "name": "josh",
+        "age": 32
+      }
+    },
+    {
+      "identity": 5,
+      "labels": ["software"],
+      "properties": {
+        "name": "ripple",
+        "lang": "java"
+      }
+    },
+    {
+      "identity": 6,
+      "labels": ["person"],
+      "properties": {
+        "name": "peter",
+        "age": 35
+      }
+    }
+  ],
+  "edges": [
+    {
+      "identity": 7,
+      "start": 2,
+      "end": 1,
+      "type": "knows",
+      "properties": {
+        "weight": 0.5
+      }
+    },
+    {
+      "identity": 8,
+      "start": 4,
+      "end": 1,
+      "type": "knows",
+      "properties": {
+        "weight": 1
+      }
+    },
+    {
+      "identity": 9,
+      "start": 3,
+      "end": 1,
+      "type": "created",
+      "properties": {
+        "weight": 0.4
+      }
+    },
+    {
+      "identity": 10,
+      "start": 5,
+      "end": 4,
+      "type": "created",
+      "properties": {
+        "weight": 1
+      }
+    },
+    {
+      "identity": 11,
+      "start": 3,
+      "end": 4,
+      "type": "created",
+      "properties": {
+        "weight": 0.4
+      }
+    },
+    {
+      "identity": 12,
+      "start": 3,
+      "end": 6,
+      "type": "created",
+      "properties": {
+        "weight": 0.2
+      }
+    }
+  ]
+}
