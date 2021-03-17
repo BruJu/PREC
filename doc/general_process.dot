@@ -1,7 +1,20 @@
 digraph G {
-  Neo4j -> "Json Representation of\nthe Property Graph" [label="APOC.export.json.all"] ;
+    
+    {
+        rank=same;
+        rank=min;
+        Neo4j, TinkerPop
+    }
   
-  "Json Representation of\nthe Property Graph" -> "Expanded RDF Graph" [label="PREC (build)"] ;
+  TinkerPop ->"Json Representation of\nthe Property Graph" [ label="Gremlin", arrowhead="curve" ] 
+  
+  Neo4j -> "Json Representation of\nthe Property Graph" [label="APOC.export.\njson.all"] ;
+  Neo4j -> "Json Representation of\nthe Property Graph" [label="Cypher", arrowhead="curve"] ;
+  
+  
+  "Json Representation of\nthe Property Graph" [fontsize = 10]
+  
+  "Json Representation of\nthe Property Graph" -> "Expanded RDF Graph" [label="PREC (build)", arrowhead="curve"] ;
   
   "Context" -> "blanknode" [dir=none];
   "Expanded RDF Graph" -> "blanknode" [dir=none];
