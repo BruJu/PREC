@@ -23,6 +23,10 @@ function _isString(object) {
     return typeof object === "string" || object instanceof String;
 }
 
+function _isEnumValue(key, typeName, elementName) {
+    return key instanceof EnumValue && key.typeName == typeName && key.elementName == elementName;
+}
+
 /**
  * Returns the id of the node. Throws if there are no id.
  * @param {*} node The Gremlin node
@@ -38,9 +42,115 @@ function _getGremlinNodeId(node) {
     throw "No id in node " + node;
 }
 
+
+function readNodeBasicValues(node) {
+    let neoNode = {
+        identity: undefined,
+        labels: [],
+        properties: null,
+    };
+
+    for (let prop of node) {
+        let [propKey, propValue] = prop;
+
+        if (propKey instanceof EnumValue) {
+            // Special Field
+            if (propKey.typeName !== "T")
+                throw "Unknown typename for propKey " + propKey;
+            if (propKey.elementName === "id") {
+                neoNode.identity = propValue;
+            } else if (propKey.elementName === "label") {
+                if (neoNode.labels.length !== 0) throw "More than one label field " + propValue;
+
+                if (_isString(propValue)) {
+                    neoNode.labels = [propValue];
+                } else {
+                    throw "Unknown type for label " + propValue;
+                }
+            } else {
+                throw "Unknown element name for propKey " + propKey;
+            }
+        }
+    }
+
+    return neoNode;
+}
+
+function mapMapToStruct(values, builder) {
+    let object = {};
+
+    for (let value of values) {
+        const [key, val] = value;
+
+        let found = false;
+        for (const buildable of builder) {
+            if (buildable[0](key)) {
+                found = true;
+                buildable[1](key, val, object);
+            }
+        }
+
+        if (!found) {
+            return null;
+        }
+    }
+
+    return object;
+}
+
+
+function readPropertyValue(value) {
+    if (_isString(value) || typeof(value) == 'number') {
+        return value;
+    } else {
+        throw "Meta property: only values are supported " + value;
+    }
+}
+
+function writeNodeProperties(node, nodeProperties) {
+
+    node.properties = [];
+
+    for (let nodeProperty of nodeProperties) {      
+        let propKey = undefined;
+        let propValue = undefined;
+        let propMeta = {};
+
+        for (let value of nodeProperty) {
+            const [key, val] = value;
+    
+            if (_isEnumValue(key, 'T', 'id')) {
+                // noop
+            } else if (_isEnumValue(key, 'T', 'key')) {
+                propKey = val;
+            } else if (_isEnumValue(key, 'T', 'value')) {
+                propValue = readPropertyValue(val);
+            } else if (_isString(key)) {
+                propMeta[key] = readPropertyValue(val);
+            } else {
+                throw "Bad key " + key;
+            }
+        }
+
+        if (propKey === undefined || propValue === undefined) {
+            throw "Invalid node property " + nodeProperty;
+        }
+
+        node.properties.push(
+            {
+                key: propKey,
+                value: propValue,
+                meta: propMeta
+            }
+        )
+    }
+}
+
 /**
  * Converts a node extracted from a traversal to a node with a format similar
  * to Neo4J cypher query.
+ * 
+ * Vanilla function to build the node from just a node. Nodes are considered 
  * @param {*} node The traversal node
  * @returns A Neo4j Cypher answer like node
  */
@@ -90,13 +200,13 @@ function convertNodeToNeo4jJsonFormat(node) {
  * @param {*} edge The traversal edge
  * @returns A Neo4J Cypher answer like edge
  */
-function convertEdgeToNeo4JJsonFormat(edge) {
+function readEdge(edge) {
     let neoEdge = {
         identity: undefined,
         start: undefined,
         end: undefined,
         type: undefined,
-        properties: {},
+        properties: []
     };
 
     for (let prop of edge) {
@@ -130,6 +240,12 @@ function convertEdgeToNeo4JJsonFormat(edge) {
         } else if (_isString(propKey)) {
             // Regular property
             if (_isString(propValue) || typeof propValue === "number") {
+                neoEdge.properties.push(
+                    {
+                        key: propKey,
+                        value: propValue
+                    }
+                );
                 neoEdge.properties[propKey] = propValue;
             } else {
                 throw "Unknown element value for property " + prop;
@@ -154,17 +270,18 @@ async function extract_from_gremlin(uri) {
     let edges = [];
 
     for (let node of await g.V().elementMap().toList()) {
-        const neoNode = convertNodeToNeo4jJsonFormat(node);
+        const neoNode = readNodeBasicValues(node);
 
-        if (neoNode[identity] === undefined) {
+        if (neoNode['identity'] === undefined) {
             throw "A node has no identity";
         }
 
+        writeNodeProperties(neoNode, await g.V(neoNode.identity).properties().elementMap().toList());
         nodes.push(neoNode);
     }
 
     for (let edge of await g.E().elementMap().toList()) {
-        let neoEdge = convertEdgeToNeo4JJsonFormat(edge);
+        let neoEdge = readEdge(edge);
 
         for (const k of ["identity", "type", "start", "end"]) {
             if (neoEdge[k] === undefined) {
@@ -180,6 +297,10 @@ async function extract_from_gremlin(uri) {
     return { nodes, edges };
 }
 
+
+async function gremlinToJson(uri) {
+    return extract_from_gremlin(uri);
+}
 
 async function main() {
     const parser = new ArgumentParser({
@@ -202,10 +323,12 @@ async function main() {
 
     let args = parser.parse_args();
 
-    let result = await extract_from_gremlin(args.uri);
+    let result = await gremlinToJson(args.uri);
     if (result === null) return;
 
-    let [store, prefixes] = RDFGraphBuilder.neo4JProtocoleToStore(result.nodes, result.edges);
+    //console.log(JSON.stringify(result, null, 2));
+
+    let [store, prefixes] = RDFGraphBuilder.fromTinkerPop(result.nodes, result.edges);
 
     if (args.context !== "") {
         graphReducer(store, precMain.filenameToArrayOfQuads(args.context));
@@ -218,3 +341,8 @@ async function main() {
 if (require.main === module) {
     main();
 }
+
+
+module.exports = {
+    gremlinToJson: gremlinToJson
+};

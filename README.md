@@ -65,7 +65,6 @@ Expanded RDF Graph).
 
 ### From Neo4j
 
-
 #### With the result of a Cypher query
 
 Run a Cypher query like this one:
@@ -122,3 +121,7 @@ Default URI is the URI of a local TinkerPop Server.
 
 - [The data folder](data) contains Neo4J (small) exported property graphs.
 
+
+## License
+
+TBD

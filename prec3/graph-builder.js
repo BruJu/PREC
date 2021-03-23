@@ -108,6 +108,62 @@ class RDFGraphBuilder {
         }
     }
 
+    _addMetaProperties(node, properties, labels, propMaker) {
+        let tag = "/";
+        for (let label of [...labels].sort()) {
+            if (tag !== "/") tag += "-";
+            tag += label;
+        }
+
+        for (let propertyObject of properties) {
+            let propertyName = propertyObject.key;
+            let propertyValue = propertyObject.value;
+
+            // Predicate
+            let propertyNode = propMaker[propertyName + tag];
+            this._labelize(propertyNode, propertyName);
+            this._addQuad(propertyNode, rdf.type, prec.Property);
+            this._addQuad(propertyNode, rdf.type, prec.CreatedProperty);
+            this._addQuad(prec.CreatedProperty, rdfs.subClassOf, prec.CreatedVocabulary);
+
+            // Object
+            let self = this;
+            function buildPropertyValue(propertyValue) {
+                if (!Array.isArray(propertyValue)) {
+                    let nodeValue = self._makeNodeForPropertyValue(propertyValue);
+                    self._addQuad(node, propertyNode, nodeValue);
+                    return nodeValue;
+                } else {
+                    let listOfNodes = propertyValue.map(p => self._makeNodeForPropertyValue(p));
+                    let listHead = self._addList(listOfNodes);
+                    self._addQuad(node, propertyNode, listHead);
+                    return listHead;
+                }
+            }
+
+            let o = buildPropertyValue(propertyValue);
+
+
+            // META
+            if (propertyObject.meta !== undefined) {
+                for (let metaKey in propertyObject.meta) {
+                    let metaValue = propertyObject.meta[metaKey];
+
+                    let propertyNode = propMaker[metaKey + tag];
+                    this._labelize(propertyNode, metaKey);
+                    this._addQuad(propertyNode, rdf.type, prec.Property);
+                    this._addQuad(propertyNode, rdf.type, prec.CreatedProperty);
+                    this._addQuad(prec.CreatedProperty, rdfs.subClassOf, prec.CreatedVocabulary);
+
+                    let target = buildPropertyValue(metaValue);
+
+                    this._addQuad(o, propertyNode, target);
+                }
+            }
+
+        }
+    }
+
     /** Adds to the builder the nodes in the form of a proper RDF list. */
     _addList(list) {
         let head = rdf.nil;
@@ -356,6 +412,37 @@ class RDFGraphBuilder {
             )
         }
         
+        return [builder.toStore(), builder.getPrefixes()];
+    }
+
+    static fromTinkerPop(nodes, edges) {
+        let builder = new RDFGraphBuilder("http://www.example.org/vocab/");
+
+        builder._addQuad(prec.MetaData, prec.GenerationModel, prec.RelationshipAsRDFReification);
+
+        builder._addProperties = builder._addMetaProperties;
+
+        for (let nodeId in nodes) {
+            let node = nodes[nodeId];
+
+            builder.addNode(
+                node.identity,
+                node.labels || {},
+                node.properties || {}
+            );
+        }
+
+        for (let edgeId in edges) {
+            let edge = edges[edgeId];
+
+            builder.addRelationshipRDFReification(
+                edge.identity,
+                edge.start, edge.end,
+                edge.type,
+                edge.properties || {}
+            )
+        }
+
         return [builder.toStore(), builder.getPrefixes()];
     }
 }
