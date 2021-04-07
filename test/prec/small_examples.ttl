@@ -51,6 +51,32 @@ prec:testMetaData prec:kind "SmallExamples" .
     _:alice :knowsAbout _:apple .
 }
 
+:relationContextWithApply {
+    prec:Relationships prec:apply prec:RdfStarUnique .
+    prec:KeepProvenance prec:flagState false .
+
+    :Person prec:nodeLabelIRIOf "Person" .
+
+    :knows prec:relationshipIRIOf [
+        prec:relationshipLabel "Knows" ;
+        prec:destinationLabel  "Person" 
+    ] .
+
+    :knowsAbout prec:relationshipIRIOf "Knows" .
+}
+
+[] a prec:unitTest ;
+   prec:context :relationContextWithApply ;
+   prec:output  :relationOutput ;
+   prec:propertyGraph
+   '''
+        {"type":"node","id":"3","labels":["Person"]}
+        {"type":"node","id":"4","labels":["Person"]}
+        {"type":"node","id":"5"}
+        {"id":"4","type":"relationship","label":"Knows","start":{"id":"3","labels":["Person"]},"end":{"id":"4","labels":["Person"]}}
+        {"id":"5","type":"relationship","label":"Knows","start":{"id":"3","labels":["Person"]},"end":{"id":"5"}}
+   '''
+   .
 
 ###############################################################################
 

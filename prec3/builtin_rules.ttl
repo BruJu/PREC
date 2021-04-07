@@ -1,0 +1,37 @@
+PREFIX prec: <http://bruy.at/prec#>
+PREFIX pgo:  <http://ii.uwb.edu.pl/pgo#>
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+# Sources
+
+#prec:relationship prec:is (
+#    "<< prec:self rdf:type      pgo:Edge  >>  "^^prec:term
+#    "<< prec:self rdf:subject   prec:subject >>  "^^prec:term
+#    "<< prec:self rdf:predicate prec:predicate >>"^^prec:term
+#    "<< prec:self rdf:object    prec:object >>   "^^prec:term
+#    "[ prec:optionals << prec:self prec:metaPropertyKey prec:metaPropertyValue >> ]"^^prec:term
+#) .
+
+# Targets
+
+
+
+
+
+prec:RdfStarUnique prec:composedOf
+    << prec:subject                                             prec:predicate       prec:object            >> ,
+    << [ prec:_ << prec:subject prec:predicate prec:object >> ] rdf:type             pgo:Edge               >> #,
+    # << [ prec:_ << prec:subject prec:predicate prec:object >> ] prec:metaPropertyKey prec:metaPropertyValue >>
+    .
+
+prec:RdfStarOccurrence prec:composedOf
+    << prec:self prec:occurenceOf [ prec:_ << prec:self prec:occurenceOf  prec:predicate >> ] >> ,
+    << [ prec:_ << prec:self prec:occurenceOf  prec:predicate >> ] rdf:type pgo:Edge >> #,
+    # << prec:self prec:metaPropertyKey prec:metaPropertyValue                 >>
+    .
+
+prec:SingletonProperty prec:composedOf
+    << prec:subject prec:self               prec:object            >> ,
+    << prec:self    rdf:singletonPropertyOf prec:predicate         >> #,
+    #<< prec:self    prec:metaPropertyKey    prec:metaPropertyValue >>
+    .

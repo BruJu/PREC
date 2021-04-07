@@ -2,6 +2,7 @@
 
 const N3 = require('n3');
 const namespace = require('@rdfjs/namespace');
+const fs = require('fs');
 
 const prec = namespace("http://bruy.at/prec#", N3.DataFactory);
 const xsd  = namespace("http://www.w3.org/2001/XMLSchema#", N3.DataFactory);
@@ -244,18 +245,50 @@ function readFlags(store) {
     return s;
 }
 
-function readRelDefault(quads) {
-    if (quads.length != 1) return N3.DataFactory.literal("false", xsd.boolean);
-    
-    if (quads[0].object.equals(prec.AsOccurrences)) {
-        return prec.AsOccurrences;
+function rollPrec_(store, term) {
+    if (term.termType === 'Quad') {
+        function rollPrec_Util(store, term) {
+            let r = rollPrec_(store, term);
+            return [r, r === term];
+        }
+
+        let [s, bs] = rollPrec_Util(store, term.subject);
+        let [p, bp] = rollPrec_Util(store, term.predicate);
+        let [o, bo] = rollPrec_Util(store, term.object);
+        let [g, bg] = rollPrec_Util(store, term.graph);
+
+        if (bs && bp && bo && bg) return term;
+        
+        return N3.DataFactory.quad(s, p, o, g);
     }
 
-    //if (quads[0].object.equals(prec.FlattenUnique)) {
-    //    return prec.FlattenUnique;
-    //}
-
+    let quads = store.getQuads(term, prec._, null, N3.DataFactory.defaultGraph());
+    if (quads.length == 0) return term;
     return quads[0].object;
+}
+
+function readRelDefault(store) {
+    let quads = store.getQuads(prec.Relationships, prec.useRdfStar, null);
+
+    if (quads.length == 1) {
+        if (quads[0].object.equals(prec.AsOccurrences)) {
+            return prec.AsOccurrences;
+        }
+    
+        return quads[0].object;
+    } else {
+        let quads = store.getQuads(prec.Relationships, prec.apply, null);
+        if (quads.length !== 1) {
+            return N3.DataFactory.literal("false", xsd.boolean);
+        }
+
+        let composedOf = store.getQuads(quads[0].object, prec.composedOf)
+            .map(q => q.object)
+            .map(term => rollPrec_(store, term));
+
+        return composedOf;
+    } 
+    
 }
 
 function readBlankNodeMapping(quads) {
@@ -281,9 +314,85 @@ function readBlankNodeMapping(quads) {
     return s;
 }
 
+/**
+ * 
+ * @param {N3.Store} store 
+ * @param {String} file 
+ */
+function addBuiltIn(store, file) {
+    const trig = fs.readFileSync(file, 'utf-8');
+    store.addQuads((new N3.Parser()).parse(trig));
+}
+
+/**
+ * Converts every `prec:_` into its proper content.
+ * 
+ * This function is necessary because currently N3.js can't process
+ * specification conforment quads.
+ * @param {N3.Store} store 
+ */
+function unpackTerms(store) {
+    function rewriteMaybe(store, quad) {
+        function rewriteMaybeTerm(store, term) {
+            if (term.termType === "Quad") {
+                let s = rewriteMaybeTerm(store, term.subject  );
+                let p = rewriteMaybeTerm(store, term.predicate);
+                let o = rewriteMaybeTerm(store, term.object   );
+                let g = rewriteMaybeTerm(store, term.graph    );
+
+                if (s === null && p === null && o === null && g === null)
+                    return null;
+                
+                return N3.DataFactory.quad(
+                    s || term.subject,
+                    p || term.predicate,
+                    o || term.object,
+                    g || term.graph
+                );
+            } else if (term.termType === "BlankNode") {
+                let r = store.getQuads(term, prec._);
+                if (r.length === 1) {
+                    return r[0].object;
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        }
+
+        return rewriteMaybeTerm(store, quad);
+    }
+
+    {
+        let quads = store.getQuads();
+
+        for (let quad of quads) {
+            if (quad.predicate.equals(prec._)) continue;
+
+            let rewritten = rewriteMaybe(store, quad);
+
+            if (rewritten !== null) {
+                store.removeQuad(quad);
+                store.addQuad(rewritten);
+            }
+        }
+    }
+
+    store.removeQuads(store.getQuads(null, prec._, null));
+}
+
 class Context {
     constructor(contextQuads) {
         const store = new N3.Store(contextQuads);
+        addBuiltIn(store, __dirname + "/builtin_rules.ttl");
+        // unpackTerms(store);
+
+        //{
+        //    const writer = new N3.Writer();
+        //    store.forEach(quad => writer.addQuad(quad.subject, quad.predicate, quad.object, quad.graph));
+        //    writer.end((_error, result) => console.log(result));
+        //}
     
         this.properties = readProperties(store);
         this.relations  = readRelations(store);
@@ -293,7 +402,7 @@ class Context {
 
         this.blankNodeMapping = readBlankNodeMapping(store);
 
-        this.relationshipsDefault = readRelDefault(store.getQuads(prec.Relationships, prec.useRdfStar, null));
+        this.relationshipsDefault = readRelDefault(store);
     }
 
     static _forEachKnown(r, callback) {

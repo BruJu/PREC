@@ -164,6 +164,27 @@ function removeUnusedCreatedVocabulary(store, type, expectedSubject, expectedPre
     }
 }
 
+function remapPatternWithVariables(term, mapping) {
+    function remapTerm(t) {
+        let dest = mapping.find(e => e[1].equals(t));
+
+        if (dest !== undefined) {
+            return dest[0];
+        } else if (t.termType !== 'Quad') {
+            return t;
+        } else {
+            return N3.DataFactory.quad(
+                remapTerm(t.subject),
+                remapTerm(t.predicate),
+                remapTerm(t.object),
+                remapTerm(t.graph)
+            );
+        }
+    }
+
+    return remapTerm(term);
+}
+
 function modifyRelationships(store, defaultBehaviour) {
     function getBehaviour(relation) {
         const quads = store.getQuads(relation, prec.useRdfStar, null);
@@ -183,7 +204,23 @@ function modifyRelationships(store, defaultBehaviour) {
     for (const relation of relations) {
         const behaviour = getBehaviour(relation.relation);
 
-        if (prec.AsOccurrences.equals(behaviour)) {
+        if (Array.isArray(behaviour)) {
+            // TODO: we also have to map properties:
+            // prec:metaPropertyKey    prec:metaPropertyValue
+
+            let remappingOfDest = behaviour.map(term => remapPatternWithVariables(
+                term,
+                [
+                    [variable('relation') , prec.self     ],
+                    [variable('subject')  , prec.subject  ],
+                    [variable('predicate'), prec.predicate],
+                    [variable('object')   , prec.object   ]
+                ]
+            ))
+                .map(q => [q.subject, q.predicate, q.object]);
+
+            storeAlterer.replaceOneBinding(store, relation, remappingOfDest);
+        } else if (prec.AsOccurrences.equals(behaviour)) {
             // Remove every quads
             storeAlterer.replaceOneBinding(store, relation, []);
 

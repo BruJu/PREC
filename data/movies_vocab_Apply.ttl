@@ -1,0 +1,17 @@
+PREFIX prec: <http://bruy.at/prec#>
+PREFIX pgo:  <http://ii.uwb.edu.pl/pgo#>
+
+prec:MetaProperty          prec:flagState false .
+prec:KeepProvenance        prec:flagState false .
+
+prec:Relationships prec:apply prec:RdfStarUnique .
+
+<http://schema.org/actor> prec:relationshipIRIOf "ACTED_IN" .
+
+<http://example.org/role> prec:propertyIRIOf [
+    prec:propertyName "roles"
+    # ; prec:multiValue prec:asSet
+] .
+
+
+
