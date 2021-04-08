@@ -3,18 +3,17 @@ PREFIX pvar: <http://bruy.at/prec-trans#>
 PREFIX pgo:  <http://ii.uwb.edu.pl/pgo#>
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 
-# Sources
+####################
+# ==== Relationships
 
-#prec:relationship prec:is (
-#    "<< prec:self rdf:type      pgo:Edge  >>  "^^prec:term
-#    "<< prec:self rdf:subject   prec:subject >>  "^^prec:term
-#    "<< prec:self rdf:predicate prec:predicate >>"^^prec:term
-#    "<< prec:self rdf:object    prec:object >>   "^^prec:term
-#    "[ prec:optionals << prec:self prec:metaPropertyKey prec:metaPropertyValue >> ]"^^prec:term
-#) .
+# - These rules are for the following pattern:
+# pvar:self a pgo:Edge
+# pvar:self rdf:subject      pvar:source
+# pvar:self rdf:predicate    pvar:relationLabel
+# pvar:self rdf:object       pvar:destination
+# pvar:self pvar:propertyKey pvar:propertyValue
 
-# == Relationships
-
+# Encoding as RDF star using regular RDF triples that can be annotated
 prec:RdfStarUnique a prec:EdgeTransformation ;
   prec:composedOf
     <<    pvar:source pvar:relationLabel pvar:destination               >> ,
@@ -22,6 +21,7 @@ prec:RdfStarUnique a prec:EdgeTransformation ;
  #, << << pvar:source pvar:edgeLabel     pvar:destination >> pvar:propertyKey pvar:propertyValue >>
     .
 
+# Encoding as RDF star using occurrences
 prec:RdfStarOccurrence a prec:EdgeTransformation ;
   prec:composedOf
     <<    pvar:self prec:occurenceOf << pvar:source pvar:relationLabel pvar:destination >>               >> ,
@@ -29,6 +29,7 @@ prec:RdfStarOccurrence a prec:EdgeTransformation ;
  #, << pvar:self                                                   pvar:propertyKey pvar:propertyValue     >>
     .
 
+# Encoding as singleton property
 prec:SingletonProperty a prec:EdgeTransformation ;
   prec:composedOf
     << pvar:source pvar:self               pvar:destination   >> ,

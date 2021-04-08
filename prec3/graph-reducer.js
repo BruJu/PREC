@@ -25,10 +25,6 @@ const variable = N3.DataFactory.variable;
 function applyVocabulary(store, contextQuads) {
     const addedVocabulary = new Context(contextQuads);
 
-    if (addedVocabulary.getStateOf("MetaProperty") == false) {
-        removeMetaProperties(store);
-    }
-
     // -- Blank nodes transformation
     for (let typeOfNode in addedVocabulary.blankNodeMapping) {
         blankNodeMapping(
@@ -39,7 +35,12 @@ function applyVocabulary(store, contextQuads) {
     }
 
     // -- Map generated IRI to existing IRIs
+
+    if (addedVocabulary.getStateOf("MetaProperty") == false) {
+        removeMetaProperties(store);
+    }
     transformProperties   (store, addedVocabulary);
+    
     transformRelationships(store, addedVocabulary);
     transformNodeLabels   (store, addedVocabulary);
 
