@@ -8,9 +8,10 @@ const storeAlterer  = require("./store-alterer-from-pattern.js");
 const Context       = require("./vocabulary-reader.js");
 
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
-const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , N3.DataFactory)
+const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , N3.DataFactory);
 const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , N3.DataFactory);
 const prec = namespace("http://bruy.at/prec#"                       , N3.DataFactory);
+const pvar = namespace("http://bruy.at/prec-trans#"                 , N3.DataFactory);
 
 const variable = N3.DataFactory.variable;
 
@@ -211,10 +212,10 @@ function modifyRelationships(store, defaultBehaviour) {
             let remappingOfDest = behaviour.map(term => remapPatternWithVariables(
                 term,
                 [
-                    [variable('relation') , prec.self     ],
-                    [variable('subject')  , prec.subject  ],
-                    [variable('predicate'), prec.predicate],
-                    [variable('object')   , prec.object   ]
+                    [variable('relation') , pvar.self       ],
+                    [variable('subject')  , pvar.source     ],
+                    [variable('predicate'), pvar.relationLabel  ],
+                    [variable('object')   , pvar.destination]
                 ]
             ))
                 .map(q => [q.subject, q.predicate, q.object]);

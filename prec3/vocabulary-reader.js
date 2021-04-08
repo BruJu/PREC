@@ -4,7 +4,7 @@ const N3 = require('n3');
 const namespace = require('@rdfjs/namespace');
 const fs = require('fs');
 
-const prec = namespace("http://bruy.at/prec#", N3.DataFactory);
+const prec = namespace("http://bruy.at/prec#"      , N3.DataFactory);
 const xsd  = namespace("http://www.w3.org/2001/XMLSchema#", N3.DataFactory);
 const pgo = namespace("http://ii.uwb.edu.pl/pgo#", N3.DataFactory);
 
@@ -321,79 +321,78 @@ function readBlankNodeMapping(quads) {
  */
 function addBuiltIn(store, file) {
     const trig = fs.readFileSync(file, 'utf-8');
-    store.addQuads((new N3.Parser()).parse(trig));
+    addQuadsWithoutMultiNesting(store, (new N3.Parser()).parse(trig));
+}
+
+function __checkConformSubterm(term, todoList) {
+    if (term.termType !== 'Quad') return [true, term];
+
+    // 2 level nested quad, we have to replace with a blank node
+    const bn = N3.DataFactory.blankNode();
+
+    // We have to add the request to add the blank node semantic
+    todoList.push(N3.DataFactory.quad(bn, prec._, term));
+
+    return [false, bn];
+}
+
+
+function __ensureConformTerm(term, todoList) {
+    if (term.termType !== 'Quad') return [true, term];
+
+    // 1 level nested quad
+
+    let [cs, s] = __checkConformSubterm(term.subject  , todoList);
+    let [cp, p] = __checkConformSubterm(term.predicate, todoList);
+    let [co, o] = __checkConformSubterm(term.object   , todoList);
+    let [cg, g] = __checkConformSubterm(term.graph    , todoList);
+
+    if (cs && cp && co && cg) return [true, term];
+    return [false, N3.DataFactory.quad(s, p, o, g)];
 }
 
 /**
- * Converts every `prec:_` into its proper content.
- * 
- * This function is necessary because currently N3.js can't process
- * specification conforment quads.
- * @param {N3.Store} store 
+ * A conform quad is a quad that doesn't contain 2 level nested quad or more
+ * @param {*} quad 
+ * @param {*} todoList 
  */
-function unpackTerms(store) {
-    function rewriteMaybe(store, quad) {
-        function rewriteMaybeTerm(store, term) {
-            if (term.termType === "Quad") {
-                let s = rewriteMaybeTerm(store, term.subject  );
-                let p = rewriteMaybeTerm(store, term.predicate);
-                let o = rewriteMaybeTerm(store, term.object   );
-                let g = rewriteMaybeTerm(store, term.graph    );
+function _ensureConform(quad, todoList) {
+    let [cs, s] = __ensureConformTerm(quad.subject  , todoList);
+    let [cp, p] = __ensureConformTerm(quad.predicate, todoList);
+    let [co, o] = __ensureConformTerm(quad.object   , todoList);
+    let [cg, g] = __ensureConformTerm(quad.graph    , todoList);
 
-                if (s === null && p === null && o === null && g === null)
-                    return null;
-                
-                return N3.DataFactory.quad(
-                    s || term.subject,
-                    p || term.predicate,
-                    o || term.object,
-                    g || term.graph
-                );
-            } else if (term.termType === "BlankNode") {
-                let r = store.getQuads(term, prec._);
-                if (r.length === 1) {
-                    return r[0].object;
-                } else {
-                    return null;
-                }
-            } else {
-                return null;
-            }
-        }
+    if (cs && cp && co && cg) return quad;
 
-        return rewriteMaybeTerm(store, quad);
+    return N3.DataFactory.quad(s, p, o, g);
+}
+
+
+/**
+ * Currently, N3.Store does not support storing quads which contains nested
+ * quads with several labels.
+ * 
+ * This function bypass this limitation with the blank nodes using a
+ * [ owl:sameAs << s p o >> ] pattern (but prec:_ takes the place of owl:sameAs)
+ * @param {N3.Store} store 
+ * @param {String} quads 
+ */
+function addQuadsWithoutMultiNesting(store, quads) {
+    if (quads === undefined) return;
+    
+    let todo = [...quads];
+
+    for (let i = 0 ; i != todo.length ; ++i) {
+        store.addQuad(_ensureConform(todo[i], todo));
     }
-
-    {
-        let quads = store.getQuads();
-
-        for (let quad of quads) {
-            if (quad.predicate.equals(prec._)) continue;
-
-            let rewritten = rewriteMaybe(store, quad);
-
-            if (rewritten !== null) {
-                store.removeQuad(quad);
-                store.addQuad(rewritten);
-            }
-        }
-    }
-
-    store.removeQuads(store.getQuads(null, prec._, null));
 }
 
 class Context {
     constructor(contextQuads) {
-        const store = new N3.Store(contextQuads);
+        const store = new N3.Store();
+        addQuadsWithoutMultiNesting(store, contextQuads);
         addBuiltIn(store, __dirname + "/builtin_rules.ttl");
-        // unpackTerms(store);
 
-        //{
-        //    const writer = new N3.Writer();
-        //    store.forEach(quad => writer.addQuad(quad.subject, quad.predicate, quad.object, quad.graph));
-        //    writer.end((_error, result) => console.log(result));
-        //}
-    
         this.properties = readProperties(store);
         this.relations  = readRelations(store);
         this.nodeLabels = readThings(store, prec.nodeLabelIRIOf, true, false);
