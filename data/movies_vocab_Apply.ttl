@@ -4,7 +4,7 @@ PREFIX pgo:  <http://ii.uwb.edu.pl/pgo#>
 prec:MetaProperty          prec:flagState false .
 prec:KeepProvenance        prec:flagState false .
 
-prec:Relationships prec:apply prec:RdfStarUnique .
+prec:Relationships prec:modelAs prec:RdfStarUnique .
 
 <http://schema.org/actor> prec:relationshipIRIOf "ACTED_IN" .
 

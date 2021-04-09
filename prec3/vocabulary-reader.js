@@ -344,30 +344,6 @@ function readFlags(store) {
     return s;
 }
 
-function readRelDefault(store) {
-    let quads = store.getQuads(prec.Relationships, prec.useRdfStar, null);
-
-    if (quads.length == 1) {
-        if (quads[0].object.equals(prec.AsOccurrences)) {
-            return prec.AsOccurrences;
-        }
-    
-        return quads[0].object;
-    } else {
-        let quads = store.getQuads(prec.Relationships, prec.apply, null);
-        if (quads.length !== 1) {
-            return N3.DataFactory.literal("false", xsd.boolean);
-        }
-
-        let composedOf = store.getQuads(quads[0].object, prec.composedOf)
-            .map(q => q.object)
-            .map(term => remakeMultiNesting(store, term));
-
-        return composedOf;
-    } 
-    
-}
-
 function readBlankNodeMapping(quads) {
     let s = {};
     for (const quad of quads.getQuads(null, prec.mapBlankNodesToPrefix)) {
@@ -415,7 +391,9 @@ class Context {
 
         this.blankNodeMapping = readBlankNodeMapping(store);
 
-        this.relationshipsDefault = readRelDefault(store);
+        this.store = store;
+
+        this.cachedModels = {};
     }
 
     static _forEachKnown(r, callback) {
@@ -442,8 +420,42 @@ class Context {
         return this.flags[flag];
     }
 
-    getRelationshipDefault() {
-        return this.relationshipsDefault;
+    _getRelBehaviour(node) {
+        let quads = this.store.getQuads(node, prec.useRdfStar, null);
+
+        if (quads.length == 1) {
+            const expected = [
+                prec.AsOccurrences, prec.AsUnique, N3.DataFactory.literal("false", xsd.boolean)
+            ];
+
+            return expected.find(t => t.equals(quads[0].object));
+        } else {
+            let quads = this.store.getQuads(node, prec.modelAs, null);
+            if (quads.length !== 1) {
+                return null;
+            }
+
+            const key = JSON.stringify(quads[0].object);
+
+            if (this.cachedModels[key] !== undefined) return this.cachedModels[key];
+
+            let composedOf = this.store.getQuads(quads[0].object, prec.composedOf)
+                .map(q => q.object)
+                .map(term => remakeMultiNesting(this.store, term));
+
+            this.cachedModels[key] = composedOf;
+
+            return composedOf;
+        }
+    }
+
+    getModelForRelationship(relationshipNode) {
+        let n = this._getRelBehaviour(relationshipNode);
+        if (n !== null) return n;
+
+        n = this._getRelBehaviour(prec.Relationships);
+        if (n !== null) return n;
+        return N3.DataFactory.literal("false", xsd.boolean);
     }
 }
 

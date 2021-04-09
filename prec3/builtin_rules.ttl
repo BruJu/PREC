@@ -13,6 +13,17 @@ PREFIX pgo:  <http://ii.uwb.edu.pl/pgo#>
 # pvar:self rdf:object       pvar:destination
 # pvar:self pvar:propertyKey pvar:propertyValue
 
+# Encoding as standard RDF Reificaiton. It is the default pattern, so this
+# target is not useful in this form.
+prec:RDFReification a prec:EdgeTransformation ;
+  prec:composedOf
+    << pvar:self a pgo:Edge >> ,
+    << pvar:self rdf:subject      pvar:source        >> ,
+    << pvar:self rdf:predicate    pvar:relationLabel >> ,
+    << pvar:self rdf:object       pvar:destination   >>
+# , << pvar:self pvar:propertyKey pvar:propertyValue >>
+  .
+
 # Encoding as RDF star using regular RDF triples that can be annotated
 prec:RdfStarUnique a prec:EdgeTransformation ;
   prec:composedOf

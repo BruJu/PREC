@@ -55,7 +55,7 @@ function applyVocabulary(store, contextQuads) {
     removeUnusedCreatedVocabulary(store, prec.CreatedNodeLabel, 2, 0, 0);
 
     // -- Transform relationship format
-    modifyRelationships(store, addedVocabulary.getRelationshipDefault());
+    modifyRelationships(store, addedVocabulary);
 
     // Remove prec.useRdfStar from renamed reification
     storeAlterer.deleteMatches(store, null, prec.useRdfStar, null);
@@ -187,13 +187,7 @@ function remapPatternWithVariables(term, mapping) {
     return remapTerm(term);
 }
 
-function modifyRelationships(store, defaultBehaviour) {
-    function getBehaviour(relation) {
-        const quads = store.getQuads(relation, prec.useRdfStar, null);
-        if (quads.length == 0) return defaultBehaviour;
-        return quads[0].object;
-    }
-
+function modifyRelationships(store, context) {
     const relations = storeAlterer.matchAndBind(store,
         [
             [variable("relation"), rdf.type, pgo.Edge],
@@ -204,7 +198,7 @@ function modifyRelationships(store, defaultBehaviour) {
     );
 
     for (const relation of relations) {
-        const behaviour = getBehaviour(relation.relation);
+        const behaviour = context.getModelForRelationship(relation.relation);
 
         if (Array.isArray(behaviour)) {
             // TODO: we also have to map properties:

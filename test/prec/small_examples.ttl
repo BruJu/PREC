@@ -52,7 +52,7 @@ prec:testMetaData prec:kind "SmallExamples" .
 }
 
 :relationContextWithApply {
-    prec:Relationships prec:apply prec:RdfStarUnique .
+    prec:Relationships prec:modelAs prec:RdfStarUnique .
     prec:KeepProvenance prec:flagState false .
 
     :Person prec:nodeLabelIRIOf "Person" .

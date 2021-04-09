@@ -1,0 +1,56 @@
+PREFIX prec: <http://bruy.at/prec#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX schema: <http:/schema.org/>
+PREFIX ex:     <http://example.org/>
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+prec:MetaProperty          prec:flagState false .
+prec:KeepProvenance        prec:flagState false .
+
+prec:Relationships prec:modelAs prec:RdfStarOccurrence .
+
+<http://schema.org/Person>      prec:nodeLabelIRIOf "PERSON" .
+<http://schema.org/Corporation> prec:nodeLabelIRIOf "COMPANY" .
+
+# TODO: how do we chech that our bindings are correct?
+
+# TODO: priority
+# schema:knowsAbout prec:relationshipIRIOf "KNOWS" .
+
+schema:knows prec:relationshipIRIOf [
+    prec:relationshipLabel "KNOWS"  ;
+    prec:sourceLabel       "PERSON" ;
+    prec:destinationLabel  "PERSON" ;
+    prec:modelAs prec:RdfStarUnique ;
+] .
+
+schema:knowsAbout prec:relationshipIRIOf [
+    prec:relationshipLabel "KNOWS"   ;
+    prec:sourceLabel       "PERSON"  ;
+    prec:destinationLabel  "COMPANY" ;
+    prec:useRdfStar prec:RdfStarUnique
+] .
+
+<http://schema.org/givenName> prec:propertyIRIOf "surname" .
+
+<http://schema.org/familyName> prec:propertyIRIOf [
+    prec:propertyName "name" ;
+    prec:nodeLabel    "PERSON"
+] .
+
+<http://schema.org/name> prec:propertyIRIOf [
+    prec:propertyName "name" ;
+    prec:nodeLabel    "COMPANY"
+] .
+
+# TODO: target: transform to date
+schema:startDate prec:propertyIRIOf "since" .
+schema:endDate   prec:propertyIRIOf "to" .
+
+<http://example.org/workingFor> prec:relationshipIRIOf [
+    prec:relationshipLabel "WORKS" ;
+    prec:useRdfStar false ;
+    prec:subject   ex:employee ;
+    prec:object    ex:employer ;
+    prec:predicate rdf:type
+] .
