@@ -6,7 +6,6 @@ const namespace = require('@rdfjs/namespace');
 const prec = require('../prec.js')
 const { isSubstituableGraph } = require('../graph-substitution.js');
 const assert = require('assert');
-const { defaultGraph } = require('@graphy/core.data.factory');
 
 const rdf = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 
@@ -16,8 +15,7 @@ const precNS = namespace("http://bruy.at/prec#", N3.DataFactory);
 describe("prec", function() {
     for (const file of fs.readdirSync(testFolder)) {
         if (file.endsWith(".ttl")) {
-            it(file, function() {
-
+            describe(file, function() {
                 const expected = new N3.Store(
                     new N3.Parser().parse(fs.readFileSync(testFolder + file, "utf-8"))
                 );
@@ -27,26 +25,27 @@ describe("prec", function() {
                     return;
                 }
 
-                const meta = expected.getQuads(precNS.testMetaData);
-                assert(meta.length === 3);
+                it("should work", function() {
 
-                const pgPath      = expected.getQuads(precNS.testMetaData, precNS.pgPath)[0].object;
-                const pgSource    = expected.getQuads(precNS.testMetaData, precNS.pgSource)[0].object;
-                const contextPath = expected.getQuads(precNS.testMetaData, precNS.contextPath)[0].object;
+                    const meta = expected.getQuads(precNS.testMetaData);
+                    assert(meta.length === 3);
 
-                expected.removeQuads(meta);
+                    const pgPath      = expected.getQuads(precNS.testMetaData, precNS.pgPath)[0].object;
+                    const pgSource    = expected.getQuads(precNS.testMetaData, precNS.pgSource)[0].object;
+                    const contextPath = expected.getQuads(precNS.testMetaData, precNS.contextPath)[0].object;
 
-                assert.ok(
-                    pgSource.equals(N3.DataFactory.namedNode("https://neo4j.com/developer/neo4j-apoc/")),
-                    "The only PG supported model is currently NEO4J APOC Json export"
-                );
+                    expected.removeQuads(meta);
 
-                const result = prec.precOnNeo4J(testFolder + pgPath.value, testFolder + contextPath.value);
+                    assert.ok(
+                        pgSource.equals(N3.DataFactory.namedNode("https://neo4j.com/developer/neo4j-apoc/")),
+                        "The only PG supported model is currently NEO4J APOC Json export"
+                    );
 
-                // prec.outputTheStore(result);
-                // prec.outputTheStore(expected);
+                    const result = prec.precOnNeo4J(testFolder + pgPath.value, testFolder + contextPath.value);
 
-                assert.ok(isSubstituableGraph(result.getQuads(), expected.getQuads()));
+                    const r = isSubstituableGraph(result.getQuads(), expected.getQuads());
+                    assert.ok(r);
+                })
             });
         }
     }
@@ -94,19 +93,32 @@ function getContent(store, term) {
 function smallExample(store) {
     for (const unitTest of store.getQuads(null, rdf.type, precNS.unitTest)) {
         const node = unitTest.subject;
-
         const context       = get(store, node, precNS.context);
-        const output        = get(store, node, precNS.output);
-        const propertyGraph = get(store, node, precNS.propertyGraph);
 
-        assert.notStrictEqual(context, null);
-        assert.notStrictEqual(output, null);
-        assert.notStrictEqual(propertyGraph, null);
+        it(context.value, function() {
+            const output        = get(store, node, precNS.output);
+            const propertyGraph = get(store, node, precNS.propertyGraph);
 
-        const contextGraph = extractGraph(store, context);
-        const expectedGraph = extractGraph(store, output);
-        const aaa = prec.precOnNeo4JString(getContent(store, propertyGraph), contextGraph.getQuads());
+            assert.notStrictEqual(context, null);
+            assert.notStrictEqual(output, null);
+            assert.notStrictEqual(propertyGraph, null);
 
-        assert.ok(isSubstituableGraph(aaa.getQuads(), expectedGraph.getQuads()), context.value);
+            const contextGraph = extractGraph(store, context);
+            const expectedGraph = extractGraph(store, output);
+            const aaa = prec.precOnNeo4JString(getContent(store, propertyGraph), contextGraph.getQuads());
+
+            const r = isSubstituableGraph(aaa.getQuads(), expectedGraph.getQuads());
+
+            if (!r) {
+                const precUtils = require('../prec3/utils.js')
+
+                console.error("• Result:");
+                console.error(precUtils.badToString(aaa.getQuads(), 7));
+                console.error("• Expected:");
+                console.error(precUtils.badToString(expectedGraph.getQuads(), 8));
+            }
+
+            assert.ok(r, context.value);
+        });
     }
 }

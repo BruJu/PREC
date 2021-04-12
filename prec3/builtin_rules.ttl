@@ -35,9 +35,9 @@ prec:RdfStarUnique a prec:EdgeTransformation ;
 # Encoding as RDF star using occurrences
 prec:RdfStarOccurrence a prec:EdgeTransformation ;
   prec:composedOf
-    <<    pvar:self prec:occurenceOf << pvar:source pvar:relationLabel pvar:destination >>               >> ,
-    << << pvar:self prec:occurenceOf << pvar:source pvar:relationLabel pvar:destination >> >> a pgo:Edge >>
- #, << pvar:self                                                   pvar:propertyKey pvar:propertyValue     >>
+    << pvar:self prec:occurrenceOf << pvar:source pvar:relationLabel pvar:destination >> >> ,
+    << pvar:self a pgo:Edge >>
+ #, << pvar:self pvar:propertyKey pvar:propertyValue >>
     .
 
 # Encoding as singleton property

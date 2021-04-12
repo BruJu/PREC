@@ -130,13 +130,13 @@ Possible subjects are :
 Possible objects are :
 - false : Do not use RDF-star. RDF standard reification will be used
 instead
-- http://bruy.at/prec#AsOccurrence : Materialize the relation with 
+- http://bruy.at/prec#AsOccurrences : Materialize the relation with 
 http://bruy.at/prec#occurrenceOf
 - http://bruy.at/prec#AsUnique : Materialize the relation with an RDF triple
 that is added to the dataset
 
 
-#### http://bruy.at/prec#AsOccurrence
+#### http://bruy.at/prec#AsOccurrences
 
 See http://bruy.at/prec#useRdfStar
 

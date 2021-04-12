@@ -15,6 +15,13 @@ const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"        , N3.DataFactory);
 // Solution: A multi nested quad Q are replaced with `[ prec:_ Q ]`
 // `prec:_` is similar to `owl:sameAs`
 
+/** A function that generates blank nodes prefixes with PREC_ */
+function blankNodeGenerator() {
+    ++blankNodeGenerator.id;
+    return N3.DataFactory.blankNode("PREC_" + blankNodeGenerator.id);
+}
+blankNodeGenerator.id = 1;
+
 /** Helper namespace for addQuadsWithoutMultiNesting */
 let addQuadsWithoutMultiNesting_ = {
     /**
@@ -49,7 +56,7 @@ let addQuadsWithoutMultiNesting_ = {
         if (term.termType !== 'Quad') return [true, term];
     
         // 2 level nested quad, we have to replace with a blank node
-        const bn = N3.DataFactory.blankNode();
+        const bn = blankNodeGenerator();
     
         // We have to add the request to add the blank node semantic
         todoList.push(N3.DataFactory.quad(bn, prec._, term));
@@ -93,9 +100,9 @@ function remakeMultiNesting(store, quad) {
         quad,
         term => {
             if (term.termType === 'BlankNode') {
-                let quads = store.getQuads(quad, prec._, null, N3.DataFactory.defaultGraph());
-                if (quads.length === 0) return quad;
-                return getRealQuadFromPrec_(store, quads[0].object);
+                let quads = store.getQuads(term, prec._, null, N3.DataFactory.defaultGraph());
+                if (quads.length === 0) return term;
+                return remakeMultiNesting(store, quads[0].object);
             } else {
                 return term;
             }
@@ -136,9 +143,12 @@ function readThings(store, predicateIRI, acceptsLiteral, moreComplex) {
                 founds[sourceLabel] = [];
             }
 
+            let r = [];
+            r.id = baseRule.object;
+
             founds[sourceLabel].push({
                 "destination": baseRule.subject,
-                "extraRules" : [],
+                "extraRules" : r,
                 "priority": 0
             });
         } else {
@@ -171,6 +181,8 @@ function readThings(store, predicateIRI, acceptsLiteral, moreComplex) {
             if (founds[source] == undefined) {
                 founds[source] = [];
             }
+
+            extra.id = baseRule.object;
 
             founds[source].push({
                 destination: baseRule.subject,
@@ -275,6 +287,10 @@ function readRelations(store) {
                 } else if (quad.predicate.equals(prec.priority)) {
                     // TODO : check if type is integer
                     forcedPriority = parseInt(quad.object.value);
+                } else if (prec.modelAs.equals(quad.predicate)) {
+                    // noop
+                } else if (prec.useRdfStar.equals(quad.predicate)) {
+                    // noop
                 } else {
                     if (quad.predicate.equals(prec.sourceLabel)) {
                         ++priority;
@@ -420,42 +436,47 @@ class Context {
         return this.flags[flag];
     }
 
-    _getRelBehaviour(node) {
-        let quads = this.store.getQuads(node, prec.useRdfStar, null);
+    useRelationshipRule(rule) {        
+        const key = JSON.stringify(rule);
 
-        if (quads.length == 1) {
-            const expected = [
-                prec.AsOccurrences, prec.AsUnique, N3.DataFactory.literal("false", xsd.boolean)
-            ];
+        if (this.cachedModels[key] !== undefined) return this.cachedModels[key];
+        
+        let composedOf = this.store.getQuads(rule, prec.composedOf)
+            .map(q => q.object)
+            .map(term => remakeMultiNesting(this.store, term))
 
-            return expected.find(t => t.equals(quads[0].object));
-        } else {
-            let quads = this.store.getQuads(node, prec.modelAs, null);
-            if (quads.length !== 1) {
-                return null;
-            }
+        this.cachedModels[key] = composedOf;
 
-            const key = JSON.stringify(quads[0].object);
-
-            if (this.cachedModels[key] !== undefined) return this.cachedModels[key];
-
-            let composedOf = this.store.getQuads(quads[0].object, prec.composedOf)
-                .map(q => q.object)
-                .map(term => remakeMultiNesting(this.store, term));
-
-            this.cachedModels[key] = composedOf;
-
-            return composedOf;
-        }
+        return composedOf;
     }
 
-    getModelForRelationship(relationshipNode) {
-        let n = this._getRelBehaviour(relationshipNode);
-        if (n !== null) return n;
+    getRelationshipTransformationRelatedTo(task) {
+        if (task.termType === 'Literal') return undefined;
 
-        n = this._getRelBehaviour(prec.Relationships);
-        if (n !== null) return n;
-        return N3.DataFactory.literal("false", xsd.boolean);
+        let useRdfStar = this.store.getQuads(task, prec.useRdfStar, null, N3.DataFactory.defaultGraph());
+
+        if (useRdfStar.length !== 0) {
+            const o = useRdfStar[0].object;
+
+            if (N3.DataFactory.literal("false", xsd.boolean).equals(o)) {
+                return this.useRelationshipRule(prec.RDFReification);
+            } else if (prec.AsOccurrences.equals(o)) {
+                return this.useRelationshipRule(prec.RdfStarOccurrence);
+            } else if (prec.AsUnique.equals(o)) {
+                return this.useRelationshipRule(prec.RdfStarUnique);
+            } else {
+                console.error("task " + task.value + " has invalid prec:useRdfStar -> " + o.value);
+                throw "Context::getRelTrans::useRdfStar";
+            }
+        }
+
+        let modelAs = this.store.getQuads(task, prec.modelAs, null, N3.DataFactory.defaultGraph());
+
+        if (modelAs.length !== 0) {
+            return this.useRelationshipRule(modelAs[0].object);
+        }
+
+        return undefined;
     }
 }
 

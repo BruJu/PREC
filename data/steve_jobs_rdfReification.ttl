@@ -31,6 +31,14 @@ schema:knowsAbout prec:relationshipIRIOf [
     prec:useRdfStar prec:RdfStarUnique
 ] .
 
+schema:knowsAbout prec:relationshipIRIOf [
+    prec:relationshipLabel "KNOWS"   ;
+    prec:sourceLabel       "PERSON"  ;
+    prec:destinationLabel  "COMPANY" ;
+    prec:modelAs prec:RDFReification
+] .
+
+
 <http://schema.org/givenName> prec:propertyIRIOf "surname" .
 
 <http://schema.org/familyName> prec:propertyIRIOf [
@@ -50,7 +58,7 @@ schema:endDate   prec:propertyIRIOf "to" .
 <http://example.org/workingFor> prec:relationshipIRIOf [
     prec:relationshipLabel "WORKS" ;
     prec:useRdfStar false ;
-    prec:subject   ex:employee ;
-    prec:object    ex:employer ;
-    prec:predicate rdf:type
+    # prec:subject   ex:employee ;
+    # prec:object    ex:employer ;
+    # prec:predicate rdf:type
 ] .

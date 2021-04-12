@@ -2,10 +2,13 @@ const N3 = require("n3");
 
 function readQuads(turtleContent) {
     const prefixes =
-          "@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.\n"
-        + "@prefix prec: <http://bruy.at/prec#>                       .\n"
-        + "@prefix     : <http://test/>                               .\n"
-        + "@prefix pgo:  <http://ii.uwb.edu.pl/pgo#>                  .\n";
+    `
+        @prefix     : <http://test/>                                .
+        @prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>       .
+        @prefix prec: <http://bruy.at/prec#>                        .
+        @prefix pgo:  <http://ii.uwb.edu.pl/pgo#>                   .
+    `;
 
     const parser = new N3.Parser();
 

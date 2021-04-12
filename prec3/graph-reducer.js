@@ -40,8 +40,11 @@ function applyVocabulary(store, contextQuads) {
         removeMetaProperties(store);
     }
     transformProperties   (store, addedVocabulary);
-    
+
+    //applyRelationshipRules(store, addedVocabulary);
+
     transformRelationships(store, addedVocabulary);
+    modifyRelationships(store, addedVocabulary);
     transformNodeLabels   (store, addedVocabulary);
 
     // -- Remove the info that generated IRI were generated if there don't
@@ -53,9 +56,6 @@ function applyVocabulary(store, contextQuads) {
     removeUnusedCreatedVocabulary(store, prec.CreatedProperty, 3, 0, 0);
     removeUnusedCreatedVocabulary(store, prec.CreatedRelationshipLabel, 2, 0, 0);
     removeUnusedCreatedVocabulary(store, prec.CreatedNodeLabel, 2, 0, 0);
-
-    // -- Transform relationship format
-    modifyRelationships(store, addedVocabulary);
 
     // Remove prec.useRdfStar from renamed reification
     storeAlterer.deleteMatches(store, null, prec.useRdfStar, null);
@@ -187,10 +187,91 @@ function remapPatternWithVariables(term, mapping) {
     return remapTerm(term);
 }
 
+function _findBehaviour(context, task) {
+    // The task represents the node to execute, or prec.todo.
+
+    if (!prec.todo.equals(task)) {
+        let r = context.getRelationshipTransformationRelatedTo(task);
+        if (r !== undefined) return r;
+    }
+
+    return context.getRelationshipTransformationRelatedTo(prec.Relationships);
+
+
+    if (prec.todo.equals(task)) {
+        task = prec.Relationships;
+    }
+
+
+    if (behaviour === null) return null;
+
+
+    if (N3.DataFactory.literal("false", xsd.boolean).equals(task)) {
+        return null;
+    }
+
+
+    // Find the right definition
+    let definition = null;
+
+    for (let t of [prec.modelAs, prec.modelAsVanilla, prec.todo]) {
+        let quads = store.getQuads(thisEdge, t, null, N3.DataFactory.defaultGraph());
+
+        if (quads.length !== 0) {
+            definition = [t, quads[0].object];
+            break;
+        }
+    }
+
+    if (definition === null) {
+        definition = basic;
+    }
+
+    if (N3.DataFactory.literal("false", xsd.boolean).equals(definition)) {
+        return null;
+    }
+
+    // Replace the replacement model with the transformation
+
+    if (prec.modelAs.equals(definition.kind)) {
+
+
+    } else if (prec.modelAsVanilla.equals(definition.kind)) {
+
+    } else if (prec.todo.equals(definition.kind)) {
+
+    } else {
+        throw "???";
+    }
+
+
+
+    // ok = onSubjectOrPredicate_rename(extraCondition[1], patternMatching, "subject");
+    // ok = onSubjectOrPredicate_rename(extraCondition[1], patternMatching, "object");
+    //if (extraCondition[1].termType === "NamedNode") {
+    //    patternMatching.renamePredicate = extraCondition[1];
+    //}
+}
+
+
+function onSubjectOrPredicate_rename(target, patternMatching, subjectOrObject) {
+    return true;
+    if (target.termType !== "NamedNode") return false;
+
+    const predicate = rdf[subjectOrObject];
+    const object = variable(subjectOrObject);
+
+    patternMatching.extraSource.push([variable("relationship"), predicate, object]);
+    patternMatching.dest       .push([variable("relationship"), target   , object]);
+
+    return true;
+}
+
 function modifyRelationships(store, context) {
     const relations = storeAlterer.matchAndBind(store,
         [
             [variable("relation"), rdf.type, pgo.Edge],
+            [variable("relation"), prec.todo    , variable("task")     ],
             [variable("relation"), rdf.subject  , variable("subject")  ],
             [variable("relation"), rdf.predicate, variable("predicate")],
             [variable("relation"), rdf.object   , variable("object")   ]
@@ -198,7 +279,11 @@ function modifyRelationships(store, context) {
     );
 
     for (const relation of relations) {
-        const behaviour = context.getModelForRelationship(relation.relation);
+        const behaviour = _findBehaviour(context, relation.task);
+
+        // console.error("-- REL");
+        // console.error(relation.relation);
+        // console.error(relation.task);
 
         if (Array.isArray(behaviour)) {
             // TODO: we also have to map properties:
@@ -207,36 +292,129 @@ function modifyRelationships(store, context) {
             let remappingOfDest = behaviour.map(term => remapPatternWithVariables(
                 term,
                 [
-                    [variable('relation') , pvar.self       ],
-                    [variable('subject')  , pvar.source     ],
-                    [variable('predicate'), pvar.relationLabel  ],
-                    [variable('object')   , pvar.destination]
+                    [variable('relation') , pvar.self         ],
+                    [variable('subject')  , pvar.source       ],
+                    [variable('predicate'), pvar.relationLabel],
+                    [variable('object')   , pvar.destination  ]
                 ]
             ))
                 .map(q => [q.subject, q.predicate, q.object]);
 
             storeAlterer.replaceOneBinding(store, relation, remappingOfDest);
-        } else if (prec.AsOccurrences.equals(behaviour)) {
-            // Remove every quads
-            storeAlterer.replaceOneBinding(store, relation, []);
-
-            // Make a new quad
-            const rdfStarQuad = N3.DataFactory.quad(relation.subject, relation.predicate, relation.object);
-
-            store.addQuad(rdfStarQuad, prec.occurrenceOf, relation.relation);
-            store.addQuad(relation.relation, rdf.type, pgo.Edge);
-        } else if (prec.AsUnique.equals(behaviour)) {
-            // Remove every quads
-            storeAlterer.replaceOneBinding(store, relation, []);
-
-            // Make a new quad
-            const rdfStarQuad = N3.DataFactory.quad(relation.subject, relation.predicate, relation.object);
-
-            store.addQuad(relation.subject, relation.predicate, relation.object);
-            store.addQuad(rdfStarQuad, rdf.type, pgo.Edge);
         }
     }
+
+    store.removeQuads(store.getQuads(null, prec.todo, prec.todo))
 }
+
+function onSubjectOrPredicate_nodeType(labelTarget, conditions, subjectOrObject) {
+    if (labelTarget.termType !== "Literal") return false;
+
+    const predicate = rdf[subjectOrObject];
+    const object = variable(subjectOrObject);
+
+    conditions.push(
+        [
+            [variable("edge")                   , predicate , object                             ],
+            [object                             , rdf.type  , variable("label" + subjectOrObject)],
+            [variable("label" + subjectOrObject), rdfs.label, labelTarget                        ]
+        ]
+    );
+
+    return true;
+}
+
+function transformRelationships(store, addedVocabulary) {
+    // Add an annotation to every quad
+    {
+        const q = store.getQuads(null, rdf.type, pgo.Edge)
+            .map(quad => quad.subject)
+            .map(term => N3.DataFactory.quad(term, prec.todo, prec.todo));
+
+        store.addQuads(q);
+    }
+
+    addedVocabulary.forEachRelation(
+        (relationName, mappedIRI, extraConditions) => {
+            function invalidCondition(extraCondition) {
+                console.error("Conditions are not supported on relation labels:");
+                console.error(relationName);
+                console.error(extraConditions);
+                console.error(mappedIRI);
+                console.error(extraCondition);
+            }
+
+            // Extra conditions for match patterns (not deleted)
+            let conditions = [
+                // [variable("edge"), rdf.type, pgo.Edge] --> Implicit thanks to prec.todo²
+            ];
+            // Added patterns to the transformation source pattern (they will be deleted)
+            let source = [
+                [variable("edge")     , prec.todo    , prec.todo                           ],
+                [variable("edge")     , rdf.predicate, variable("edgeLabel")               ],
+                [variable("edgeLabel"), rdfs.label   , N3.DataFactory.literal(relationName)]
+            ];
+            // Transformation destination match pattern
+            let dest = [
+                [variable("edge"), rdf.predicate, mappedIRI],
+                [variable("edge"), prec.todo, extraConditions.id]
+            ];
+
+            for (const extraCondition of extraConditions) {
+                let ok = false;
+
+                if (prec.sourceLabel.equals(extraCondition[0])) {
+                    ok = onSubjectOrPredicate_nodeType(extraCondition[1], conditions, "subject");
+                } else if (prec.destinationLabel.equals(extraCondition[0])) {
+                    ok = onSubjectOrPredicate_nodeType(extraCondition[1], conditions, "object");
+                } else {
+                    const whitelist = [
+                        prec.modelAs, prec.useRdfStar,
+                        prec.subject, prec.object, prec.predicate
+                    ];
+                    ok = (whitelist.find(t => t.equals(extraCondition[0])) === undefined);
+                }
+
+                if (!ok) {
+                    invalidCondition(extraCondition);
+                }
+            }
+
+            storeAlterer.findFilterReplace(store, source, conditions, dest);
+        }
+    );
+}
+
+function transformNodeLabels(store, addedVocabulary) {
+    addedVocabulary.forEachNodeLabel(
+        (nodeLabelName, mappedIRI, extraConditions) => {
+            if (extraConditions.length != 0) {
+                // TODO
+                console.error("Conditions are not supported on node labels:");
+                console.error(nodeLabelName);
+                console.error(mappedIRI);
+                console.error(extraConditions);
+                return;
+            }
+
+            let pattern = [
+                [variable("nodeLabel"), rdf.type, prec.CreatedNodeLabel],
+                [variable("nodeLabel"), rdfs.label, N3.DataFactory.literal(nodeLabelName)],
+            ];
+
+            for (const bind of storeAlterer.matchAndBind(store, pattern)) {
+                storeAlterer.findFilterReplace(
+                    store,
+                    [[variable("node"), rdf.type, bind.nodeLabel]],
+                    [],
+                    [[variable("node"), rdf.type, mappedIRI]]
+                )
+            }
+
+        }
+    );
+}
+
 
 function transformProperties(store, addedVocabulary) {
     addedVocabulary.forEachProperty(
@@ -287,147 +465,6 @@ function transformProperties(store, addedVocabulary) {
                     }
                 }
             }
-        }
-    );
-}
-
-
-function onSubjectOrPredicate_nodeType(labelTarget, patternMatching, subjectOrObject) {
-    if (labelTarget.termType !== "Literal") return false;
-
-    const predicate = rdf[subjectOrObject];
-    const object = variable(subjectOrObject);
-
-    patternMatching.conditions.push(
-        [
-            [variable("relationship")           , predicate , object                             ],
-            [object                             , rdf.type  , variable("label" + subjectOrObject)],
-            [variable("label" + subjectOrObject), rdfs.label, labelTarget                        ]
-        ]
-    );
-
-    return true;
-}
-
-function onSubjectOrPredicate_rename(target, patternMatching, subjectOrObject) {
-    if (target.termType !== "NamedNode") return false;
-
-    const predicate = rdf[subjectOrObject];
-    const object = variable(subjectOrObject);
-
-    patternMatching.extraSource.push([variable("relationship"), predicate, object]);
-    patternMatching.dest       .push([variable("relationship"), target   , object]);
-
-    return true;
-}
-
-
-
-function transformRelationships(store, addedVocabulary) {
-
-    addedVocabulary.forEachRelation(
-        (relationName, mappedIRI, extraConditions) => {
-            function invalidCondition(extraCondition) {
-                console.error("Conditions are not supported on relation labels:");
-                console.error(relationName);
-                console.error(mappedIRI);
-                console.error(extraCondition);
-            }
-
-            let patternMatching = {
-                // Extra conditions for match patterns (not deleted)
-                conditions: [],
-                // Added patterns to the transformation source pattern (they will be deleted)
-                extraSource: [],
-                // Transformation destination match pattern
-                dest: []
-            };
-
-            for (const extraCondition of extraConditions) {
-                let ok = false;
-
-                if (extraCondition[0].equals(prec.useRdfStar)) {
-                    patternMatching.dest.push(
-                        [variable("relationship"), prec.useRdfStar, extraCondition[1]]
-                    );
-                    ok = true;
-                } else if (prec.subject.equals(extraCondition[0])) {
-                    ok = onSubjectOrPredicate_rename(extraCondition[1], patternMatching, "subject");
-                } else if (prec.object.equals(extraCondition[0])) {
-                    ok = onSubjectOrPredicate_rename(extraCondition[1], patternMatching, "object");
-                } else if (prec.predicate.equals(extraCondition[0])) {
-                    if (extraCondition[1].termType === "NamedNode") {
-                        ok = true;
-                        patternMatching.renamePredicate = extraCondition[1];
-                    }
-                } else if (prec.sourceLabel.equals(extraCondition[0])) {
-                    ok = onSubjectOrPredicate_nodeType(extraCondition[1], patternMatching, "subject");
-                } else if (prec.destinationLabel.equals(extraCondition[0])) {
-                    ok = onSubjectOrPredicate_nodeType(extraCondition[1], patternMatching, "object");
-                } else {
-                    invalidCondition(extraCondition);
-                }
-
-                if (!ok) {
-                    invalidCondition(extraCondition);
-                }
-            }
-
-            if (patternMatching.renamePredicate !== undefined) {
-                patternMatching.dest.push([variable("relationship"), patternMatching.renamePredicate, mappedIRI]);
-            } else {
-                patternMatching.dest.push([variable("relationship"), rdf.predicate                  , mappedIRI]);
-            }
-
-            let pattern = [
-                [variable("node"), rdf.type, pgo.Edge],
-                [variable("node"), rdf.predicate, variable("relLabel")],
-                [variable("relLabel"), rdfs.label, N3.DataFactory.literal(relationName)],
-            ];
-
-            for (const bind1 of storeAlterer.matchAndBind(store, pattern)) {
-                let source = [
-                    [variable("relationship"), rdf.predicate, bind1.relLabel],
-                    ...patternMatching.extraSource
-                ];
-
-                storeAlterer.findFilterReplace(
-                    store,
-                    source,
-                    patternMatching.conditions,
-                    patternMatching.dest
-                );
-            }
-        }
-    );
-}
-
-function transformNodeLabels(store, addedVocabulary) {
-    addedVocabulary.forEachNodeLabel(
-        (nodeLabelName, mappedIRI, extraConditions) => {
-            if (extraConditions.length != 0) {
-                // TODO
-                console.error("Conditions are not supported on node labels:");
-                console.error(nodeLabelName);
-                console.error(mappedIRI);
-                console.error(extraConditions);
-                return;
-            }
-
-            let pattern = [
-                [variable("nodeLabel"), rdf.type, prec.CreatedNodeLabel],
-                [variable("nodeLabel"), rdfs.label, N3.DataFactory.literal(nodeLabelName)],
-            ];
-
-            for (const bind of storeAlterer.matchAndBind(store, pattern)) {
-                storeAlterer.findFilterReplace(
-                    store,
-                    [[variable("node"), rdf.type, bind.nodeLabel]],
-                    [],
-                    [[variable("node"), rdf.type, mappedIRI]]
-                )
-            }
-
         }
     );
 }

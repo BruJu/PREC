@@ -36,7 +36,6 @@ function rdfLiteralToValue(literal) {
  * @param {*} quad Quad to rebuild. Must be of type quad
  * @param {*} unaryFunction Function to call to convert an inner term
  */
-let level = 0;
 function eventuallyRebuildQuad(quad, unaryFunction) {
     let elements = [quad.subject, quad.predicate, quad.object, quad.graph];
 
@@ -49,7 +48,6 @@ function eventuallyRebuildQuad(quad, unaryFunction) {
 
     for (let i = 0 ; i != 4 ; ++i) {
         if (elements[i] !== conversion[i]) {
-            --level;
             return N3.DataFactory.quad(
                 conversion[0], conversion[1], conversion[2], conversion[3]
             );
@@ -60,8 +58,64 @@ function eventuallyRebuildQuad(quad, unaryFunction) {
 }
 
 
+/**
+ * (Badly) convert a list of quads into a string
+ * @param {*} quads 
+ */
+function badToString(quads, indent) {
+    let s = "";
+
+    function pushTerm(term) {
+        if (term.termType === "Quad") {
+            s += "<< ";
+            push(term, s);
+            s += " >>";
+        } else if (term.termType == "Literal") {
+            s += "\"" + term.value + "\"";
+        } else if (term.termType == "NamedNode") {
+            s += "<" + term.value + ">";
+        } else if (term.termType == "Variable") {
+            s += "?" + term.value;
+        } else if (term.termType == 'BlankNode') {
+            s += "_:" + term.value
+        } else {
+            s += "UnknownTermType" + term.termType;
+        }
+    }
+
+    function push(quad) {
+        if (Array.isArray(quad)) {
+            pushTerm(quad[0]);
+            s += " ";
+            pushTerm(quad[1]);
+            s += " ";
+            pushTerm(quad[2]);
+        } else {
+            pushTerm(quad.subject);
+            s += " ";
+            pushTerm(quad.predicate);
+            s += " ";
+            pushTerm(quad.object);
+        }
+    }
+
+    if (indent === undefined) indent = 0;
+
+    for (let quad of quads) {
+        if (s !== "") s += "\n";
+
+        for (let i = 0 ; i != indent ; ++i) s += " ";
+
+        push(quad, s);
+    }
+
+    return s;
+}
+
+
 module.exports = {
     rdfLiteralToValue,
-    eventuallyRebuildQuad
+    eventuallyRebuildQuad,
+    badToString
 };
 
