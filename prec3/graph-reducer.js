@@ -20,7 +20,7 @@ const variable = N3.DataFactory.variable;
 /**
  * 
  * @param {N3.Store} store 
- * @param {*} contextQuads 
+ * @param {*} contextQuads The list of quads that are part of the context
  */
 function applyVocabulary(store, contextQuads) {
     const addedVocabulary = new Context(contextQuads);
@@ -334,6 +334,8 @@ function transformRelationships(store, addedVocabulary) {
         store.addQuads(q);
     }
 
+    let candidateEdgeLabelsForDeletion = {};
+
     addedVocabulary.forEachRelation(
         (relationName, mappedIRI, extraConditions) => {
             function invalidCondition(extraCondition) {
@@ -346,13 +348,13 @@ function transformRelationships(store, addedVocabulary) {
 
             // Extra conditions for match patterns (not deleted)
             let conditions = [
-                // [variable("edge"), rdf.type, pgo.Edge] --> Implicit thanks to prec.todo²
+                [ [variable("edgeLabel"), rdfs.label   , N3.DataFactory.literal(relationName)] ]
+                // [[variable("edge"), rdf.type, pgo.Edge]] --> Implicit thanks to prec.todo²
             ];
             // Added patterns to the transformation source pattern (they will be deleted)
             let source = [
                 [variable("edge")     , prec.todo    , prec.todo                           ],
-                [variable("edge")     , rdf.predicate, variable("edgeLabel")               ],
-                [variable("edgeLabel"), rdfs.label   , N3.DataFactory.literal(relationName)]
+                [variable("edge")     , rdf.predicate, variable("edgeLabel")               ]
             ];
             // Transformation destination match pattern
             let dest = [
@@ -380,9 +382,80 @@ function transformRelationships(store, addedVocabulary) {
                 }
             }
 
-            storeAlterer.findFilterReplace(store, source, conditions, dest);
+            let binds = storeAlterer.findFilterReplace(store, source, conditions, dest);
+
+            for (let bind of binds) {
+                const seenEdgeLabel = bind.edgeLabel;
+                const key = JSON.stringify(seenEdgeLabel);
+                candidateEdgeLabelsForDeletion[key] = bind.edgeLabel;
+            }
         }
     );
+
+    filterOutDeletedEdgeLabel(store, Object.values(candidateEdgeLabelsForDeletion));
+}
+
+
+/**
+ * 
+ * @param {N3.Store} store 
+ * @param {*} nodesToDelete 
+ */
+function filterOutDeletedEdgeLabel(store, nodesToDelete) {
+    let components = [];
+    function addIfComposed(term) {
+        if (term.termType === 'Quad') {
+            components.push(term);
+        }
+    }
+
+    function recursiveFindInQuad(term, searched) {
+        if (term.termType === 'Quad') {
+            return recursiveFindInQuad(term.subject, searched)
+                || recursiveFindInQuad(term.predicate, searched)
+                || recursiveFindInQuad(term.object, searched)
+                || recursiveFindInQuad(term.graph, searched);
+        } else {
+            return term.equals(searched);
+        }
+    }
+
+    function isDeletable(term) {
+        // Find as P O G
+        let inOtherPositions = store.getQuads(null, term).length !== 0
+            || store.getQuads(null, null, term).length !== 0
+            || store.getQuads(null, null, null, term).length !== 0;
+
+        if (inOtherPositions) return null;
+        
+        // Find as S
+        let asSubject = store.getQuads(term);
+        if (asSubject.length !== 1) return null;
+
+        // Is label quad?
+        let labelQuad = asSubject[0];
+        if (!rdfs.label.equals(labelQuad.predicate) || !N3.DataFactory.defaultGraph().equals(labelQuad.graph)) return null;
+
+        // Is part of a component?
+        const inComponent = components.find(q => recursiveFindInQuad(q, term));
+        if (inComponent !== undefined) return null;
+
+        return labelQuad;
+    }
+
+    for (let quad of store.getQuads()) {
+        addIfComposed(quad.subject);
+        addIfComposed(quad.predicate);
+        addIfComposed(quad.object);
+        addIfComposed(quad.graph);
+    }
+
+    for (let nodeToDelete of nodesToDelete) {
+        let deletable = isDeletable(nodeToDelete);
+        if (deletable !== null) {
+            store.removeQuad(deletable);
+        }
+    }
 }
 
 function transformNodeLabels(store, addedVocabulary) {
