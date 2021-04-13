@@ -5,7 +5,7 @@ const storeAlterer = require('../prec3/store-alterer-from-pattern');
 
 const namespace = require('@rdfjs/namespace');
 const ex = namespace("http://example.org/", N3.DataFactory);
-const rdf = namespace("http://rdf.org/", N3.DataFactory);
+const rdf = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 
 const variable = N3.DataFactory.variable;
 

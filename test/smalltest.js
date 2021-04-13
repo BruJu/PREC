@@ -36,6 +36,7 @@ const basicGraphs = {
 };
 
 const contexts = {
+    emptyContext  : ``,
     allUnique     : `prec:Relationships prec:modelAs prec:RdfStarUnique . `,
     allOccurences : `prec:Relationships prec:modelAs prec:RdfStarOccurrence . `,
     type1specialization: `
@@ -76,6 +77,17 @@ const contexts = {
             prec:useRdfStar prec:AsUnique ;
             prec:relationshipLabel "type1" 
         ] .
+    `,
+    useRdfStarrenameTermsImplicit: `
+        prec:Relationships prec:subject :source ;
+            prec:predicate :label ;
+            prec:object :target .
+    `,
+    useRdfStarrenameTermsExplicit: `
+        prec:Relationships prec:useRdfStar false ;
+            prec:subject :source ;
+            prec:predicate :label ;
+            prec:object :target .
     `
 }
 
@@ -134,6 +146,12 @@ function runATest(graphName, contextName, expected) {
 }
 
 describe("Relationship convertion", function () {
+    runATest("oneEdge", "emptyContext", basicGraphs['oneEdge']);
+    runATest("twoEdges", "emptyContext", basicGraphs['twoEdges']);
+    runATest("oneEdgeType", "emptyContext", basicGraphs['oneEdgeType']);
+    runATest("edgeDiff", "emptyContext", basicGraphs['edgeDiff']);
+    runATest("differentSourceLabel", "emptyContext", basicGraphs['differentSourceLabel']);
+
     runATest("oneEdge", "allUnique",
         `
             << :s :p :o  >> a pgo:Edge .
@@ -276,6 +294,24 @@ describe("Relationship convertion", function () {
             :edge2 a pgo:Edge .
             :edge2 prec:occurrenceOf << :s2 :p2 :o2  >> .
             :p2 rdfs:label "type2" .
+        `
+    );
+
+    runATest("oneEdge", "useRdfStarrenameTermsImplicit",
+        `
+            :edge a pgo:Edge ;
+              :source :s ;
+              :label  :p ;
+              :target :o .
+        `
+    );
+
+    runATest("oneEdge", "useRdfStarrenameTermsExplicit",
+        `
+            :edge a pgo:Edge ;
+              :source :s ;
+              :label  :p ;
+              :target :o .
         `
     );
 });

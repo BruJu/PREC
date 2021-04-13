@@ -6,6 +6,7 @@ const fs = require('fs');
 const precUtils = require('./utils.js')
 
 const prec = namespace("http://bruy.at/prec#"             , N3.DataFactory);
+const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 const xsd  = namespace("http://www.w3.org/2001/XMLSchema#", N3.DataFactory);
 const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"        , N3.DataFactory);
 
@@ -436,10 +437,11 @@ class Context {
         return this.flags[flag];
     }
 
-    useRelationshipRule(rule) {        
+    useRelationshipRule(rule, rewritePart) {        
         const key = JSON.stringify(rule);
 
-        if (this.cachedModels[key] !== undefined) return this.cachedModels[key];
+        if (this.cachedModels[key] !== undefined) 
+            return this.rewrite(this.cachedModels[key], rewritePart);
         
         let composedOf = this.store.getQuads(rule, prec.composedOf)
             .map(q => q.object)
@@ -447,7 +449,44 @@ class Context {
 
         this.cachedModels[key] = composedOf;
 
-        return composedOf;
+        return this.rewrite(composedOf, rewritePart);
+    }
+
+    /**
+     * 
+     * @param {Array} composedOf 
+     * @param {Array} rewrite 
+     * @returns 
+     */
+    rewrite(composedOf, rewrite) {
+        if (rewrite === undefined) return composedOf;
+
+        return composedOf.map(term => precUtils.eventuallyRebuildQuad(
+            term,
+            t => {
+                let r = rewrite.find(x => x[0].equals(t));
+                if (r === undefined) return t;
+                return r[1];
+            }
+        ));
+    }
+
+    readOldRelationshipRewrite(task) {
+        const that = this;
+        let d = undefined;
+        function find(precTerm, rdfTerm) {
+            let quads = that.store.getQuads(task, precTerm, null, N3.DataFactory.defaultGraph());
+            if (quads.length !== 1) return;
+
+            d = d || [];
+            d.push([rdfTerm, quads[0].object]);
+        }
+
+        find(prec.subject  , rdf.subject);
+        find(prec.predicate, rdf.predicate);
+        find(prec.object   , rdf.object);
+
+        return d;
     }
 
     getRelationshipTransformationRelatedTo(task) {
@@ -459,7 +498,8 @@ class Context {
             const o = useRdfStar[0].object;
 
             if (N3.DataFactory.literal("false", xsd.boolean).equals(o)) {
-                return this.useRelationshipRule(prec.RDFReification);
+                const useRdfStarRewritePart = this.readOldRelationshipRewrite(task);
+                return this.useRelationshipRule(prec.RDFReification, useRdfStarRewritePart);
             } else if (prec.AsOccurrences.equals(o)) {
                 return this.useRelationshipRule(prec.RdfStarOccurrence);
             } else if (prec.AsUnique.equals(o)) {
@@ -476,7 +516,10 @@ class Context {
             return this.useRelationshipRule(modelAs[0].object);
         }
 
-        return undefined;
+        // Implicit false
+        let rewrite = this.readOldRelationshipRewrite(task);
+        if (rewrite === undefined) return undefined;
+        return this.useRelationshipRule(prec.RDFReification, rewrite);
     }
 }
 

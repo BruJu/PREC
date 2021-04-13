@@ -6,6 +6,7 @@ const namespace     = require('@rdfjs/namespace');
 
 const storeAlterer  = require("./store-alterer-from-pattern.js");
 const Context       = require("./vocabulary-reader.js");
+const precUtils     = require("./utils.js")
 
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , N3.DataFactory);
@@ -189,82 +190,12 @@ function remapPatternWithVariables(term, mapping) {
 
 function _findBehaviour(context, task) {
     // The task represents the node to execute, or prec.todo.
-
     if (!prec.todo.equals(task)) {
         let r = context.getRelationshipTransformationRelatedTo(task);
         if (r !== undefined) return r;
     }
 
     return context.getRelationshipTransformationRelatedTo(prec.Relationships);
-
-
-    if (prec.todo.equals(task)) {
-        task = prec.Relationships;
-    }
-
-
-    if (behaviour === null) return null;
-
-
-    if (N3.DataFactory.literal("false", xsd.boolean).equals(task)) {
-        return null;
-    }
-
-
-    // Find the right definition
-    let definition = null;
-
-    for (let t of [prec.modelAs, prec.modelAsVanilla, prec.todo]) {
-        let quads = store.getQuads(thisEdge, t, null, N3.DataFactory.defaultGraph());
-
-        if (quads.length !== 0) {
-            definition = [t, quads[0].object];
-            break;
-        }
-    }
-
-    if (definition === null) {
-        definition = basic;
-    }
-
-    if (N3.DataFactory.literal("false", xsd.boolean).equals(definition)) {
-        return null;
-    }
-
-    // Replace the replacement model with the transformation
-
-    if (prec.modelAs.equals(definition.kind)) {
-
-
-    } else if (prec.modelAsVanilla.equals(definition.kind)) {
-
-    } else if (prec.todo.equals(definition.kind)) {
-
-    } else {
-        throw "???";
-    }
-
-
-
-    // ok = onSubjectOrPredicate_rename(extraCondition[1], patternMatching, "subject");
-    // ok = onSubjectOrPredicate_rename(extraCondition[1], patternMatching, "object");
-    //if (extraCondition[1].termType === "NamedNode") {
-    //    patternMatching.renamePredicate = extraCondition[1];
-    //}
-}
-
-
-function onSubjectOrPredicate_rename(target, patternMatching, subjectOrObject) {
-    return true;
-    if (target.termType !== "NamedNode") return false;
-
-    const predicate = rdf[subjectOrObject];
-    const object = variable(subjectOrObject);
-
-    patternMatching.extraSource.push([variable("relationship"), predicate, object]);
-    patternMatching.dest       .push([variable("relationship"), target   , object]);
-
-    return true;
 }
 
 function modifyRelationships(store, context) {
@@ -281,10 +212,6 @@ function modifyRelationships(store, context) {
     for (const relation of relations) {
         const behaviour = _findBehaviour(context, relation.task);
 
-        // console.error("-- REL");
-        // console.error(relation.relation);
-        // console.error(relation.task);
-
         if (Array.isArray(behaviour)) {
             // TODO: we also have to map properties:
             // prec:metaPropertyKey    prec:metaPropertyValue
@@ -297,8 +224,7 @@ function modifyRelationships(store, context) {
                     [variable('predicate'), pvar.relationLabel],
                     [variable('object')   , pvar.destination  ]
                 ]
-            ))
-                .map(q => [q.subject, q.predicate, q.object]);
+            )).map(q => [q.subject, q.predicate, q.object]);
 
             storeAlterer.replaceOneBinding(store, relation, remappingOfDest);
         }
@@ -645,9 +571,8 @@ function blankNodeMapping(store, typeOfMappedNodes, prefixIRI) {
     let remapping = {};
 
     store.getQuads(null, rdf.type, typeOfMappedNodes)
-        .map(quad => quad.subject)
-        .filter(node => node.termType === "BlankNode")
-        .map(node => node.value)
+        .filter(quad => quad.subject.termType === "BlankNode")
+        .map(quad => quad.subject.value)
         .forEach(blankNodeValue => remapping[blankNodeValue] = N3.DataFactory.namedNode(prefixIRI + blankNodeValue))
     
     
@@ -662,24 +587,15 @@ function blankNodeMapping(store, typeOfMappedNodes, prefixIRI) {
  * quad, in which every blank node in the mapping is mapped to the named node
  */
 function _quadBNMap(map, quad) {
-    function _termBNMap(term) {
-        if (term.termType === "Quad") {
-            return N3.DataFactory.quad(
-                _termBNMap(term.subject),
-                _termBNMap(term.predicate),
-                _termBNMap(term.object),
-                _termBNMap(term.graph)
-            )
-        } else if (term.termType === "BlankNode") {
+    return precUtils.eventuallyRebuildQuad(quad, term => {
+        if (term.termType === "BlankNode") {
             let mappedTo = map[term.value];
             if (mappedTo === undefined) return term;
             return mappedTo;
         } else {
             return term;
         }
-    }
-    
-    return _termBNMap(quad);
+    });
 }
 
 
