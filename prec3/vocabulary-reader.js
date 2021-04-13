@@ -459,17 +459,27 @@ class Context {
         return this.flags[flag];
     }
 
-    useRelationshipRule(rule, rewritePart) {        
+    useRelationshipRule(task, rule) {
         const key = JSON.stringify(rule);
 
-        if (this.cachedModels[key] !== undefined) 
-            return this.rewrite(this.cachedModels[key], rewritePart);
-        
-        let composedOf = this.store.getQuads(rule, prec.composedOf)
-            .map(q => q.object)
-            .map(term => remakeMultiNesting(this.store, term))
+        let composedOf;
 
-        this.cachedModels[key] = composedOf;
+        if (this.cachedModels[key] !== undefined) {
+            composedOf = this.cachedModels[key];
+        } else {
+            composedOf = this.store.getQuads(rule, prec.composedOf)
+                .map(q => q.object)
+                .map(term => remakeMultiNesting(this.store, term))
+
+            this.cachedModels[key] = composedOf;
+        }
+
+        let rewritePart;
+        if (task.rewrite === undefined) {
+            rewritePart = this.readOldRelationshipRewrite(task.task);
+        } else {
+            rewritePart = task.rewrite;
+        }      
 
         return this.rewrite(composedOf, rewritePart);
     }
@@ -520,12 +530,11 @@ class Context {
             const o = useRdfStar[0].object;
 
             if (N3.DataFactory.literal("false", xsd.boolean).equals(o)) {
-                const useRdfStarRewritePart = this.readOldRelationshipRewrite(task);
-                return this.useRelationshipRule(prec.RDFReification, useRdfStarRewritePart);
+                return this.useRelationshipRule({ task: task }, prec.RDFReification);
             } else if (prec.AsOccurrences.equals(o)) {
-                return this.useRelationshipRule(prec.RdfStarOccurrence);
+                return this.useRelationshipRule({ task: task }, prec.RdfStarOccurrence);
             } else if (prec.AsUnique.equals(o)) {
-                return this.useRelationshipRule(prec.RdfStarUnique);
+                return this.useRelationshipRule({ task: task }, prec.RdfStarUnique);
             } else {
                 console.error("task " + task.value + " has invalid prec:useRdfStar -> " + o.value);
                 throw "Context::getRelTrans::useRdfStar";
@@ -535,13 +544,13 @@ class Context {
         let modelAs = this.store.getQuads(task, prec.modelAs, null, N3.DataFactory.defaultGraph());
 
         if (modelAs.length !== 0) {
-            return this.useRelationshipRule(modelAs[0].object);
+            return this.useRelationshipRule({ task: task }, modelAs[0].object);
         }
 
         // Implicit false
         let rewrite = this.readOldRelationshipRewrite(task);
         if (rewrite === undefined) return undefined;
-        return this.useRelationshipRule(prec.RDFReification, rewrite);
+        return this.useRelationshipRule({ rewrite: rewrite }, prec.RDFReification);
     }
 }
 

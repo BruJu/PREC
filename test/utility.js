@@ -8,6 +8,7 @@ function readQuads(turtleContent) {
         @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>       .
         @prefix prec: <http://bruy.at/prec#>                        .
         @prefix pgo:  <http://ii.uwb.edu.pl/pgo#>                   .
+        @prefix pvar: <http://bruy.at/prec-trans#>                  .
     `;
 
     const parser = new N3.Parser();

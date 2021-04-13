@@ -99,6 +99,27 @@ const contexts = {
             prec:subject :source ;
             prec:predicate :label ;
             prec:object :target .
+    `,
+    modelAsPG: `
+        prec:Relationships prec:modelAs prec:RDFReification ;
+            prec:subject :source ;
+            prec:predicate :label ;
+            prec:object :target .
+    `,
+    modelAsCustom: `
+        prec:Relationships prec:modelAs [
+            prec:composedOf << rdf:subject rdf:predicate rdf:object >> ,
+                << pvar:destination pvar:relationLabel pvar:source >>
+        ] .
+    `,
+    modelAsCustomWithRenaming: `
+        prec:Relationships prec:modelAs [
+            prec:composedOf << rdf:subject rdf:predicate rdf:object >> ,
+                << pvar:destination pvar:relationLabel pvar:source >>
+        ] ;
+            prec:subject :source ;
+            prec:predicate :label ;
+            prec:object :target .
     `
 }
 
@@ -254,6 +275,29 @@ describe("Relationship convertion", function () {
     
             << :s2 :type2 :o2  >> a pgo:Edge .
             :s2 :type2 :o2 .
+        `
+    );
+    
+    runATest("oneEdge", "modelAsPG",
+        `
+        :edge a pgo:Edge ;
+          :source :s ;
+          :label  :p ;
+          :target :o .
+        `
+    );
+    
+    runATest("oneEdge", "modelAsCustom",
+        `
+            rdf:subject rdf:predicate rdf:object .
+            :o :p :s .
+        `
+    );
+    
+    runATest("oneEdge", "modelAsCustomWithRenaming",
+        `
+            :source :label :target .
+            :o :p :s .
         `
     );
 
