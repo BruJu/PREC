@@ -1,7 +1,8 @@
-PREFIX prec: <http://bruy.at/prec#>
-PREFIX pvar: <http://bruy.at/prec-trans#>
-PREFIX pgo:  <http://ii.uwb.edu.pl/pgo#>
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+PREFIX prec:  <http://bruy.at/prec#>
+PREFIX pvar:  <http://bruy.at/prec-trans#>
+PREFIX pgo:   <http://ii.uwb.edu.pl/pgo#>
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>       .
 
 ####################
 # ==== Relationships
@@ -48,3 +49,13 @@ prec:SingletonProperty a prec:EdgeTransformation ;
     << pvar:self a pgo:Edge >> 
  #, << pvar:self   pvar:propertyKey        pvar:propertyValue >>
     .
+
+
+#######################
+# ==== Pattern renaming
+
+prec:substitutionTarget rdfs:domain prec:SubstitutionTerm .
+
+prec:subject   a prec:SubstitutionTerm ; prec:substitutionTarget rdf:subject   .
+prec:predicate a prec:SubstitutionTerm ; prec:substitutionTarget rdf:predicate .
+prec:object    a prec:SubstitutionTerm ; prec:substitutionTarget rdf:object    .

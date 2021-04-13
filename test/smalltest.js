@@ -62,6 +62,17 @@ const contexts = {
             prec:sourceLabel "Person"
         ] .
     `,
+    bothSpecialization: `
+        :type1 prec:relationshipIRIOf [
+            prec:relationshipLabel "type1" ;
+            prec:modelAs prec:RdfStarUnique
+        ] .
+        
+        :type2 prec:relationshipIRIOf [
+            prec:relationshipLabel "type2" ;
+            prec:modelAs prec:RdfStarUnique
+        ] .
+    `,
 
 
     
@@ -233,6 +244,16 @@ describe("Relationship convertion", function () {
 
             :person a [ rdfs:label "Person" ] .
             :animal a [ rdfs:label "Animal" ] .
+        `
+    );
+
+    runATest("edgeDiff", "bothSpecialization",
+        `
+            << :s1 :type1 :o1  >> a pgo:Edge .
+            :s1 :type1 :o1 .
+    
+            << :s2 :type2 :o2  >> a pgo:Edge .
+            :s2 :type2 :o2 .
         `
     );
 

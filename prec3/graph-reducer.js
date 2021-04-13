@@ -295,12 +295,6 @@ function transformRelationships(store, addedVocabulary) {
                     ok = onSubjectOrPredicate_nodeType(extraCondition[1], conditions, "subject");
                 } else if (prec.destinationLabel.equals(extraCondition[0])) {
                     ok = onSubjectOrPredicate_nodeType(extraCondition[1], conditions, "object");
-                } else {
-                    const whitelist = [
-                        prec.modelAs, prec.useRdfStar,
-                        prec.subject, prec.object, prec.predicate
-                    ];
-                    ok = (whitelist.find(t => t.equals(extraCondition[0])) === undefined);
                 }
 
                 if (!ok) {

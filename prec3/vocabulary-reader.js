@@ -274,7 +274,13 @@ function readInfo(store, term) {
     }
 }
 
-function readRelations(store) {
+function findTermIn(term, list) {
+    return list.find(t => t.equals(term));
+}
+
+function readRelations(store, subTerms) {
+    let subTermsKey = subTerms.map(t => t[0]);
+
     return readThings(store, prec.relationshipIRIOf, true, 
         quads => {
             let source = undefined;
@@ -283,23 +289,29 @@ function readRelations(store) {
             let forcedPriority = null;
 
             for (let quad of quads) {
-                if (quad.predicate.equals(prec.relationshipLabel)) {
+                const p = quad.predicate;
+                
+                if (prec.relationshipLabel.equals(p)) {
                     source = quad.object.value;
-                } else if (quad.predicate.equals(prec.priority)) {
+                } else if (prec.priority.equals(p)) {
                     // TODO : check if type is integer
                     forcedPriority = parseInt(quad.object.value);
-                } else if (prec.modelAs.equals(quad.predicate)) {
-                    // noop
-                } else if (prec.useRdfStar.equals(quad.predicate)) {
-                    // noop
                 } else {
-                    if (quad.predicate.equals(prec.sourceLabel)) {
+                    let ignored = findTermIn(p, [prec.modelAs, prec.useRdfStar]);
+                    if (ignored !== undefined) continue;
+
+                    let sourceOrDest = findTermIn(p, [prec.sourceLabel, prec.destinationLabel]);
+                    if (sourceOrDest !== undefined) {
                         ++priority;
-                    } else if (quad.predicate.equals(prec.destinationLabel)) {
-                        ++priority;
+                        rules.push([p, readInfo(store, quad.object)]);
+                        continue;
                     }
 
-                    rules.push([quad.predicate, readInfo(store, quad.object)]);
+                    let isRenaming = findTermIn(p, subTermsKey);
+                    if (!isRenaming) {
+                        console.error("- Relationship rule error");
+                        console.error("Unrecognized " + p.value + " for " + quad.subject.value);
+                    }
                 }
             }
 
@@ -394,14 +406,24 @@ function addBuiltIn(store, file) {
     addQuadsWithoutMultiNesting(store, (new N3.Parser()).parse(trig));
 }
 
+/**
+ * 
+ * @param {N3.Store} store 
+ */
+function readSubstitutionTerms(store) {
+    return store.getQuads(null, prec.substitutionTarget, null, N3.DataFactory.defaultGraph())
+        .map(quad => [quad.subject, quad.object]);
+}
+
 class Context {
     constructor(contextQuads) {
         const store = new N3.Store();
         addQuadsWithoutMultiNesting(store, contextQuads);
         addBuiltIn(store, __dirname + "/builtin_rules.ttl");
 
+        this.substitutionTerms = readSubstitutionTerms(store);
         this.properties = readProperties(store);
-        this.relations  = readRelations(store);
+        this.relations  = readRelations(store, this.substitutionTerms);
         this.nodeLabels = readThings(store, prec.nodeLabelIRIOf, true, false);
 
         this.flags = readFlags(store);
@@ -482,9 +504,9 @@ class Context {
             d.push([rdfTerm, quads[0].object]);
         }
 
-        find(prec.subject  , rdf.subject);
-        find(prec.predicate, rdf.predicate);
-        find(prec.object   , rdf.object);
+        for (const substitutable of this.substitutionTerms) {
+            find(substitutable[0], substitutable[1]);
+        }
 
         return d;
     }
