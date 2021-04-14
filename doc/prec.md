@@ -107,8 +107,8 @@ Predicate for relationship IRI mapping.
 Subject must be the required IRI for a given relationship label.
 
 Object is either :
-- A literal, which correspond to the label of the relationship.
-- A Blank node, which describes constaints and further mappings for
+- A literal, which corresponds to the label of the relationship.
+- A Blank node, which describes constraints and further mappings for
 the relation. The mapped blank nodes can then be described with the
 following predicates :
     - http://bruy.at/prec#subject : Constraint on source and mapping of rdf:subject
@@ -118,37 +118,76 @@ following predicates :
     - http://bruy.at/prec#useRdfStar : Model used to convert the relationship to RDF.
 
 
-### http://bruy.at/prec#useRdfStar
+### http://bruy.at/prec#modelAs
 
-Predicate used to describe how a relationship is materialized.
+Specifies the model of representation of the relationship in RDF.
 
-Possible subjects are :
+Common models may be :
+- [prec:RDFReification](http://bruy.at/prec#RDFReification): model as a standard RDF Reification. It is the default.
+- [prec:RDFStarUnique](http://bruy.at/prec#RdfStarUnique): model as a regular triple, using RDF-star for properties. This assumes that the edge label is used only one between two nodes.
+- [prec:RDFStarOccurrence](http://bruy.at/prec#RDFStarOccurrence): model as an RDF-star occurence: a blank node represents the occurrence and [prec:occurenceOf](http://bruy.at/prec#occurrenceOf) is used to link the node to the triple it concerns.
+- [prec:SingletonProperty](http://bruy.at/prec#SingletonProperty): model as a Singleton Property.
 
-- http://bruy.at/prec#Relationships : Matches every relationship (default behaviour)
-- A Blank node that describes the prec:IRIOfRelationship.
+The source pattern is the following, where pvar is a prefix for variables:
 
-Possible objects are :
-- false : Do not use RDF-star. RDF standard reification will be used
-instead
-- http://bruy.at/prec#AsOccurrences : Materialize the relation with 
-http://bruy.at/prec#occurrenceOf
-- http://bruy.at/prec#AsUnique : Materialize the relation with an RDF triple
-that is added to the dataset
+```
+pvar:self a pgo:Edge
+pvar:self rdf:subject      pvar:source
+pvar:self rdf:predicate    pvar:relationLabel
+pvar:self rdf:object       pvar:destination
+pvar:self pvar:propertyKey pvar:propertyValue
+```
+
+#### Built-in models
+
+##### http://bruy.at/prec#RDFReification
+
+Modelize the relationship as a standard RDF Reification.
+
+```
+pvar:self a pgo:Edge
+pvar:self rdf:subject      pvar:source       
+pvar:self rdf:predicate    pvar:relationLabel
+pvar:self rdf:object       pvar:destination  
+pvar:self pvar:propertyKey pvar:propertyValue
+```
+
+Note that this is the default behaviour.
 
 
-#### http://bruy.at/prec#AsOccurrences
+##### http://bruy.at/prec#RdfStarUnique
 
-See http://bruy.at/prec#useRdfStar
+Modelize the relationship as a triple that is added to the store.
+
+```
+pvar:source pvar:relationLabel pvar:destination
+pvar:source pvar:relationLabel pvar:destination >> a pgo:Edge
+pvar:source pvar:relationLabel pvar:destination >> pvar:propertyKey pvar:propertyValue
+```
+
+This modelization is valid only if two edges between the same nodes don't share
+the same label.
 
 
-#### http://bruy.at/prec#AsUnique
+##### http://bruy.at/RdfStarOccurrence
 
-See http://bruy.at/prec#useRdfStar
+Modelize the relationship as occurrences.
 
 
-### From RDF Reification to hidden reification
+##### http://bruy.at/SingletonProperty
 
-#### http://bruy.at/prec#subject
+
+
+#### From RDF Reification to hidden reification
+
+
+##### http://bruy.at/prec#SubstitutionTerm
+
+
+##### http://bruy.at/prec#substitutionTarget
+
+
+##### http://bruy.at/prec#subject
 
 If the relation is materialized with a standard RDF Reification, indicates the
 IRI used in placed of the standard rdf:subject (/ rdf:predicate / rdf:object) IRI.
@@ -158,7 +197,7 @@ Renaming rdf:subject, rdf:predicate or rdf:object implies `prec:useRdfStar false
 `prec:subject`, `prec:object` and `prec:predicate` renaming are inspired by
 http://www.bobdc.com/blog/reification-is-a-red-herring/.
 
-#### Example
+###### Example
 
 *Property Graph*
 ```
@@ -186,7 +225,7 @@ prec:KeepProvenance prec:flagState false .
 
 
 
-#### http://bruy.at/prec#predicate
+##### http://bruy.at/prec#predicate
 
 Describes the relation with the relation label.
 
@@ -197,7 +236,7 @@ to materialize a Property Graph Relationship as a node.
 
 
 
-#### http://bruy.at/prec#object
+##### http://bruy.at/prec#object
 
 See prec#subject
 
