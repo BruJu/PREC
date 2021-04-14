@@ -6,6 +6,7 @@ const fs = require('fs');
 
 const quadStar         = require('./quad-star.js');
 const multiNestedStore = require('./quad-star-multinested-store.js');
+const precUtils        = require('./utils.js');
 
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , N3.DataFactory);
@@ -196,7 +197,65 @@ function onSubjectOrPredicate_nodeType(labelTarget, conditions, subjectOrObject)
     return true;
 }
 
+function readModel(store, descriptionNode, subTerms) {
+    if (descriptionNode.termType === 'Literal') return undefined;
+
+    if (descriptionNode.equals(prec.Relationships)) {
+        let qs = store.getQuads(descriptionNode, null, null, N3.DataFactory.defaultGraph())
+            .map(q => q.predicate);
+
+        let bad = qs.find(t => !t.equals(prec.modelAs) && !precUtils.termIsIn(t, subTerms.map(t => t[0])));
+        if (bad !== undefined) return { error: "Malformed prec:Relationships" + bad.value };
+    }
+
+    let modelAs = store.getQuads(descriptionNode, prec.modelAs, null, N3.DataFactory.defaultGraph());
+    if (modelAs.length > 1) return { error: 'More than one model for ' + descriptionNode.value };
+
+    let targetModel = undefined;
+    if (modelAs.length === 1) {
+        targetModel = modelAs[0].object;
+    }
+
+    let termRedefinitions = undefined;
+
+    function findRedefinition(substituable) {
+        const [precTerm, rdfTerm] = substituable;
+        let quads = store.getQuads(descriptionNode, precTerm, null, N3.DataFactory.defaultGraph());
+        if (quads.length !== 1) return;
+
+        termRedefinitions = termRedefinitions || [];
+        termRedefinitions.push([rdfTerm, quads[0].object]);
+    }
+
+    subTerms.forEach(findRedefinition);
+
+    if (targetModel === undefined) {
+        if (termRedefinitions === undefined) {
+            return undefined;
+        } else {
+            targetModel = prec.RDFReification;
+        }
+    }
+
+    let composedOf = store.getQuads(targetModel, prec.composedOf, null, N3.DataFactory.defaultGraph())
+        .map(q => q.object)
+        .map(term => multiNestedStore.remakeMultiNesting(store, term))
+
+    if (termRedefinitions === undefined) return composedOf;
+
+    return composedOf.map(term => quadStar.eventuallyRebuildQuad(
+        term,
+        t => {
+            let r = termRedefinitions.find(x => x[0].equals(t));
+            if (r === undefined) return t;
+            return r[1];
+        }
+    ));
+}
+
 class RelationshipsManager {
+
+
     /**
      * 
      * @param {*} store 
@@ -210,14 +269,32 @@ class RelationshipsManager {
         let subTermsKey = subTerms.map(t => t[0]);
 
         this.r = [];
+        this.models = [];
 
         for (let quad of store.getQuads(null, prec.IRIOfRelationship, null, N3.DataFactory.defaultGraph())) {
             let relationshipManager = RelationshipManager.make(quad.subject, quad.object, store, subTermsKey);
             if (relationshipManager.error === undefined) {
                 this.r.push(relationshipManager);
+
+                let model = readModel(store, quad.object, subTerms);
+                if (model !== undefined) {
+                    if (model.error !== undefined) console.error(model.error);
+                    else this.models.push([quad.object, model]);
+                }
             } else {
                 console.error(relationshipManager.error);
             }
+        }
+
+        const precRelationshipsModel = readModel(store, prec.Relationships, subTerms);
+        if (precRelationshipsModel !== undefined) {
+            if (precRelationshipsModel.error !== undefined) throw precRelationshipsModel.error;
+            this.models.push(
+                [
+                    prec.Relationships,
+                    precRelationshipsModel
+                ]
+            );
         }
 
         this.r.sort((lhs, rhs) => {
@@ -234,84 +311,11 @@ class RelationshipsManager {
             }
         });
     }
-
-
-    useRelationshipRule(task, rule) {
-        const key = JSON.stringify(rule);
-
-        let composedOf;
-
-        if (this.cachedModels[key] !== undefined) {
-            composedOf = this.cachedModels[key];
-        } else {
-            composedOf = this.store.getQuads(rule, prec.composedOf)
-                .map(q => q.object)
-                .map(term => multiNestedStore.remakeMultiNesting(this.store, term))
-
-            this.cachedModels[key] = composedOf;
-        }
-
-        let rewritePart;
-        if (task.rewrite === undefined) {
-            rewritePart = this.readOldRelationshipRewrite(task.task);
-        } else {
-            rewritePart = task.rewrite;
-        }      
-
-        return this.rewrite(composedOf, rewritePart);
-    }
-
-    /**
-     * 
-     * @param {Array} composedOf 
-     * @param {Array} rewrite 
-     * @returns 
-     */
-    rewrite(composedOf, rewrite) {
-        if (rewrite === undefined) return composedOf;
-
-        return composedOf.map(term => quadStar.eventuallyRebuildQuad(
-            term,
-            t => {
-                let r = rewrite.find(x => x[0].equals(t));
-                if (r === undefined) return t;
-                return r[1];
-            }
-        ));
-    }
-
-    readOldRelationshipRewrite(task) {
-        const that = this;
-        let d = undefined;
-        function find(precTerm, rdfTerm) {
-            let quads = that.store.getQuads(task, precTerm, null, N3.DataFactory.defaultGraph());
-            if (quads.length !== 1) return;
-
-            d = d || [];
-            d.push([rdfTerm, quads[0].object]);
-        }
-
-        for (const substitutable of this.substitutionTerms) {
-            find(substitutable[0], substitutable[1]);
-        }
-
-        return d;
-    }
     
     getRelationshipTransformationRelatedTo(task) {
-        if (task.termType === 'Literal') return undefined;
-
-        let modelAs = this.store.getQuads(task, prec.modelAs, null, N3.DataFactory.defaultGraph());
-
-        if (modelAs.length !== 0) {
-            return this.useRelationshipRule({ task: task }, modelAs[0].object);
-        }
-
-        // Implicit false
-        let rewrite = this.readOldRelationshipRewrite(task);
-        if (rewrite === undefined) return undefined;
-        return this.useRelationshipRule({ rewrite: rewrite }, prec.RDFReification);
-    }
+        let x = this.models.find(t => t[0].equals(task));
+        if (x === undefined) return undefined;
+        return x[1];    }
 
     forEachRule(consumer) {
         this.r.forEach(consumer);

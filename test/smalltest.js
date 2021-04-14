@@ -88,12 +88,6 @@ const contexts = {
             prec:predicate :label ;
             prec:object :target .
     `,
-    useRdfStarrenameTermsExplicit: `
-        prec:Relationships prec:useRdfStar false ;
-            prec:subject :source ;
-            prec:predicate :label ;
-            prec:object :target .
-    `,
     modelAsPG: `
         prec:Relationships prec:modelAs prec:RDFReification ;
             prec:subject :source ;
@@ -307,21 +301,6 @@ describe("Relationship convertion", function () {
             `
         );
     })
-
-    describe("Old prec:useRdfStar", function() {
-
-
-
-
-        runATest("oneEdge", "useRdfStarrenameTermsExplicit",
-            `
-                :edge a pgo:Edge ;
-                :source :s ;
-                :label  :p ;
-                :target :o .
-            `
-        );
-    });
 
     describe("Meta properties", function() {
         runATest("oneEdgeWith1MetaProperty", "emptyContext", basicGraphs["oneEdgeWith1MetaProperty"]);
