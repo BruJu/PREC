@@ -19,43 +19,6 @@ function rdfLiteralToValue(literal) {
 }
 
 
-/**
- * Returns a quad equals to
- * ```
- *  Quad(
- *    unaryFunction(quad.subject),
- *    unaryFunction(quad.predicate),
- *    unaryFunction(quad.object),
- *    unaryFunction(quad.graph)
- *  )
- * ```
- * 
- * Compared to a naive approach, in some cases this quad returns the passed quad
- * if it would be equal.
- * 
- * @param {*} quad Quad to rebuild. Must be of type quad
- * @param {*} unaryFunction Function to call to convert an inner term
- */
-function eventuallyRebuildQuad(quad, unaryFunction) {
-    let elements = [quad.subject, quad.predicate, quad.object, quad.graph];
-
-    let conversion = elements.map(
-        e => {
-            if (e.termType === 'Quad') return eventuallyRebuildQuad(e, unaryFunction);
-            else                       return unaryFunction(e);
-        }
-    );
-
-    for (let i = 0 ; i != 4 ; ++i) {
-        if (elements[i] !== conversion[i]) {
-            return N3.DataFactory.quad(
-                conversion[0], conversion[1], conversion[2], conversion[3]
-            );
-        }
-    }
-    
-    return quad;
-}
 
 
 /**
@@ -125,7 +88,6 @@ function termIsIn(term, listOfTerms) {
 
 module.exports = {
     rdfLiteralToValue,
-    eventuallyRebuildQuad,
     badToString,
     termIsIn
 };

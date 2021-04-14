@@ -7,6 +7,7 @@ const namespace     = require('@rdfjs/namespace');
 const storeAlterer  = require("./store-alterer-from-pattern.js");
 const Context       = require("./vocabulary-reader.js");
 const precUtils     = require("./utils.js")
+const quadStar      = require('./quad-star.js');
 
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , N3.DataFactory);
@@ -167,27 +168,6 @@ function removeUnusedCreatedVocabulary(store, type, expectedSubject, expectedPre
     }
 }
 
-function remapPatternWithVariables(term, mapping) {
-    function remapTerm(t) {
-        let dest = mapping.find(e => e[1].equals(t));
-
-        if (dest !== undefined) {
-            return dest[0];
-        } else if (t.termType !== 'Quad') {
-            return t;
-        } else {
-            return N3.DataFactory.quad(
-                remapTerm(t.subject),
-                remapTerm(t.predicate),
-                remapTerm(t.object),
-                remapTerm(t.graph)
-            );
-        }
-    }
-
-    return remapTerm(term);
-}
-
 function _findBehaviour(context, task) {
     // The task represents the node to execute, or prec.todo.
     if (!prec.todo.equals(task)) {
@@ -198,17 +178,9 @@ function _findBehaviour(context, task) {
     return context.getRelationshipTransformationRelatedTo(prec.Relationships);
 }
 
-function _containsTerm(term, searched) {
-    if (term.equals(searched)) return true;
-    if (term.termType !== 'Quad') return false;
-    return _containsTerm(term.subject  , searched)
-        || _containsTerm(term.predicate, searched)
-        || _containsTerm(term.object   , searched)
-        || _containsTerm(term.graph    , searched);
-}
 
 function _listContains(pattern, searched) {
-    return pattern.find(e => searched.find(s => _containsTerm(e, s)) !== undefined) !== undefined;
+    return pattern.find(e => searched.find(s => quadStar.containsTerm(e, s)) !== undefined) !== undefined;
 }
 
 function modifyRelationships(store, context) {
@@ -226,7 +198,7 @@ function modifyRelationships(store, context) {
         const behaviour = _findBehaviour(context, relation.task);
 
         if (Array.isArray(behaviour)) {
-            let r = behaviour.map(term => remapPatternWithVariables(
+            let r = behaviour.map(term => quadStar.remapPatternWithVariables(
                 term,
                 [
                     [variable('relation')     , pvar.self         ],
@@ -353,6 +325,7 @@ function transformRelationships(store, addedVocabulary) {
 }
 
 
+
 /**
  * 
  * @param {N3.Store} store 
@@ -363,17 +336,6 @@ function filterOutDeletedEdgeLabel(store, nodesToDelete) {
     function addIfComposed(term) {
         if (term.termType === 'Quad') {
             components.push(term);
-        }
-    }
-
-    function recursiveFindInQuad(term, searched) {
-        if (term.termType === 'Quad') {
-            return recursiveFindInQuad(term.subject, searched)
-                || recursiveFindInQuad(term.predicate, searched)
-                || recursiveFindInQuad(term.object, searched)
-                || recursiveFindInQuad(term.graph, searched);
-        } else {
-            return term.equals(searched);
         }
     }
 
@@ -394,7 +356,7 @@ function filterOutDeletedEdgeLabel(store, nodesToDelete) {
         if (!rdfs.label.equals(labelQuad.predicate) || !N3.DataFactory.defaultGraph().equals(labelQuad.graph)) return null;
 
         // Is part of a component?
-        const inComponent = components.find(q => recursiveFindInQuad(q, term));
+        const inComponent = components.find(q => quadStar.containsTerm(q, term));
         if (inComponent !== undefined) return null;
 
         return labelQuad;
@@ -618,7 +580,7 @@ function blankNodeMapping(store, typeOfMappedNodes, prefixIRI) {
  * quad, in which every blank node in the mapping is mapped to the named node
  */
 function _quadBNMap(map, quad) {
-    return precUtils.eventuallyRebuildQuad(quad, term => {
+    return quadStar.eventuallyRebuildQuad(quad, term => {
         if (term.termType === "BlankNode") {
             let mappedTo = map[term.value];
             if (mappedTo === undefined) return term;
