@@ -7,10 +7,13 @@ const fs = require('fs');
 const quadStar         = require('./quad-star.js');
 const multiNestedStore = require('./quad-star-multinested-store.js');
 
+const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
+const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , N3.DataFactory);
 const prec = namespace("http://bruy.at/prec#"             , N3.DataFactory);
 const xsd  = namespace("http://www.w3.org/2001/XMLSchema#", N3.DataFactory);
 const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"        , N3.DataFactory);
 
+const variable = N3.DataFactory.variable;
 
 function readThings(store, predicateIRI, acceptsLiteral, moreComplex) {
     let founds = {};
@@ -175,53 +178,270 @@ function findTermIn(term, list) {
     return list.find(t => t.equals(term));
 }
 
-function readRelations(store, subTerms) {
-    // TODO: Construct an object that is fully responsible for relationship management
-    // The main purpose would be to invalidate relationship nodes that are not valid
-    // (they contains prec:useRdfStar for example)
-    let subTermsKey = subTerms.map(t => t[0]);
 
-    return readThings(store, prec.IRIOfRelationship, true, 
-        quads => {
-            let source = undefined;
-            let rules = [];
-            let priority = 0;
-            let forcedPriority = null;
+function onSubjectOrPredicate_nodeType(labelTarget, conditions, subjectOrObject) {
+    if (labelTarget.termType !== "Literal") return false;
 
-            for (let quad of quads) {
-                const p = quad.predicate;
-                
-                if (prec.relationshipLabel.equals(p)) {
-                    source = quad.object.value;
-                } else if (prec.priority.equals(p)) {
-                    // TODO : check if type is integer
-                    forcedPriority = parseInt(quad.object.value);
-                } else {
-                    if (prec.modelAs.equals(p)) continue;
+    const predicate = rdf[subjectOrObject];
+    const object = variable(subjectOrObject);
 
-                    let sourceOrDest = findTermIn(p, [prec.sourceLabel, prec.destinationLabel]);
-                    if (sourceOrDest !== undefined) {
-                        ++priority;
-                        rules.push([p, readInfo(store, quad.object)]);
-                        continue;
-                    }
+    conditions.push(
+        [
+            [variable("edge")                   , predicate , object                             ],
+            [object                             , rdf.type  , variable("label" + subjectOrObject)],
+            [variable("label" + subjectOrObject), rdfs.label, labelTarget                        ]
+        ]
+    );
 
-                    let isRenaming = findTermIn(p, subTermsKey);
-                    if (!isRenaming) {
-                        console.error("- Relationship rule error");
-                        console.error("Unrecognized " + p.value + " for " + quad.subject.value);
-                    }
+    return true;
+}
+
+class RelationshipsManager {
+    /**
+     * 
+     * @param {*} store 
+     */
+    constructor(store) {
+        this.store = store;
+        this.cachedModels = {};
+        this.substitutionTerms = readSubstitutionTerms(store);
+
+        let subTerms = this.substitutionTerms;
+        let subTermsKey = subTerms.map(t => t[0]);
+
+        this.r = [];
+
+        for (let quad of store.getQuads(null, prec.IRIOfRelationship, null, N3.DataFactory.defaultGraph())) {
+            let relationshipManager = RelationshipManager.make(quad.subject, quad.object, store, subTermsKey);
+            if (relationshipManager.error === undefined) {
+                this.r.push(relationshipManager);
+            } else {
+                console.error(relationshipManager.error);
+            }
+        }
+
+        this.r.sort((lhs, rhs) => {
+            let prioDiff = rhs.priority - lhs.priority;
+
+            if (prioDiff !== 0) return prioDiff;
+
+            if (lhs.iri.value < rhs.iri.value) {
+                return -1;
+            } else if (lhs.iri.value > rhs.iri.value) {
+                return 1;
+            } else {
+                return 0;
+            }
+        });
+    }
+
+
+    useRelationshipRule(task, rule) {
+        const key = JSON.stringify(rule);
+
+        let composedOf;
+
+        if (this.cachedModels[key] !== undefined) {
+            composedOf = this.cachedModels[key];
+        } else {
+            composedOf = this.store.getQuads(rule, prec.composedOf)
+                .map(q => q.object)
+                .map(term => multiNestedStore.remakeMultiNesting(this.store, term))
+
+            this.cachedModels[key] = composedOf;
+        }
+
+        let rewritePart;
+        if (task.rewrite === undefined) {
+            rewritePart = this.readOldRelationshipRewrite(task.task);
+        } else {
+            rewritePart = task.rewrite;
+        }      
+
+        return this.rewrite(composedOf, rewritePart);
+    }
+
+    /**
+     * 
+     * @param {Array} composedOf 
+     * @param {Array} rewrite 
+     * @returns 
+     */
+    rewrite(composedOf, rewrite) {
+        if (rewrite === undefined) return composedOf;
+
+        return composedOf.map(term => quadStar.eventuallyRebuildQuad(
+            term,
+            t => {
+                let r = rewrite.find(x => x[0].equals(t));
+                if (r === undefined) return t;
+                return r[1];
+            }
+        ));
+    }
+
+    readOldRelationshipRewrite(task) {
+        const that = this;
+        let d = undefined;
+        function find(precTerm, rdfTerm) {
+            let quads = that.store.getQuads(task, precTerm, null, N3.DataFactory.defaultGraph());
+            if (quads.length !== 1) return;
+
+            d = d || [];
+            d.push([rdfTerm, quads[0].object]);
+        }
+
+        for (const substitutable of this.substitutionTerms) {
+            find(substitutable[0], substitutable[1]);
+        }
+
+        return d;
+    }
+    
+    getRelationshipTransformationRelatedTo(task) {
+        if (task.termType === 'Literal') return undefined;
+
+        let modelAs = this.store.getQuads(task, prec.modelAs, null, N3.DataFactory.defaultGraph());
+
+        if (modelAs.length !== 0) {
+            return this.useRelationshipRule({ task: task }, modelAs[0].object);
+        }
+
+        // Implicit false
+        let rewrite = this.readOldRelationshipRewrite(task);
+        if (rewrite === undefined) return undefined;
+        return this.useRelationshipRule({ rewrite: rewrite }, prec.RDFReification);
+    }
+
+    forEachRule(consumer) {
+        this.r.forEach(consumer);
+    }       
+}
+
+class RelationshipManager {
+    /**
+     * Return the source pattern of the relations that match this
+     * prec:IRIOfRelationship
+     */
+    getTransformationSource() {
+        return [
+            [variable("edge"), prec.todo    , prec.todo            ],
+            [variable("edge"), rdf.predicate, variable("edgeLabel")]
+        ];
+    }
+
+    /**
+     * Return the condition pattern of the relations that match this
+     * prec:IRIOfRelationship
+     */
+    getTransformationConditions() {
+        return this.conditions;
+    }
+
+    /**
+     * Return the target pattern to map to for the relations of this
+     * prec:IRIOfRelationship. It doesn't apply the model: instead the 
+     * description node is added as a thing todo.
+     */
+    getTransformationTarget() {
+        return [
+            [variable("edge"), rdf.predicate, this.iri            ],
+            [variable("edge"), prec.todo    , this.descriptionNode]
+        ]
+    }
+
+    /**
+     * 
+     * @param {*} iri 
+     * @param {*} description 
+     * @param {N3.Store} store The store that contains the context
+     * @param {*} subTermsKey The list of known renaming terms
+     * @returns Either a `RelationshipManager` or an object with an error field.
+     */
+    static make(iri, description, store, subTermsKey) {
+        let r = new RelationshipManager();
+        r.iri             = iri;
+        r.descriptionNode = description;
+
+        if (iri.termType !== 'NamedNode') {
+            return {
+                error: 'Only Named Nodes can be used as a subject of prec:IRIOfRelationship.'
+            };
+        }
+
+        if (description.termType === 'Literal') {
+            r.conditions = [
+                [[variable("edgeLabel"), rdfs.label, description]]
+            ];
+            r.priority        = 0;
+            return r;
+        }
+
+        const descriptionQuads = store.getQuads(description, null, null, N3.DataFactory.defaultGraph());
+
+        let edgeLabel = undefined;
+        let priority = 0;
+        let forcedPriority = null;
+        let modeledAs = undefined;
+
+        //function invalidCondition(extraCondition) {
+        //    console.error("Conditions are not supported on relation labels:");
+        //    console.error(source);
+        //    console.error(extraConditions);
+        //    console.error(mappedIRI);
+        //    console.error(extraCondition);
+        //}
+        
+        let conditions = [];
+
+        for (let quad of descriptionQuads) {
+            const p = quad.predicate;
+            
+            if (prec.relationshipLabel.equals(p)) {
+                if (edgeLabel !== undefined) return { error: "Two labels on " + description.value };
+                edgeLabel = quad.object.value;
+            } else if (prec.priority.equals(p)) {
+                // TODO : check if type is integer
+                forcedPriority = parseInt(quad.object.value);
+            } else if (prec.sourceLabel.equals(p)) {
+                let ok = onSubjectOrPredicate_nodeType(quad.object, conditions, 'subject');
+                if (!ok) return { error: 'Invalid sourceLabel ' + quad.object.value };
+                ++priority;
+            } else if (prec.destinationLabel.equals(p)) {
+                let ok = onSubjectOrPredicate_nodeType(quad.object, conditions, 'object');
+                if (!ok) return { error: 'Invalid destinationLabel ' + quad.object.value };
+                ++priority;
+            } else if (prec.modelAs.equals(p)) {
+                if (modeledAs !== undefined) return { error: 'Several modelAs' };
+                modeledAs = quad.object;
+            } else {
+                let isRenaming = findTermIn(p, subTermsKey);
+                if (!isRenaming) {
+                    return {
+                        error: "Unrecognized " + p.value + " for " + quad.subject.value
+                    };
                 }
             }
-
-            if (forcedPriority !== null) {
-                priority = forcedPriority;
-            }
-
-            return source === undefined ? null : [source, rules, priority];
         }
-    );
+
+        if (forcedPriority !== null) {
+            priority = forcedPriority;
+        }
+
+        r.conditions = [
+            [[variable("edgeLabel"), rdfs.label, N3.DataFactory.literal(edgeLabel)]]
+            // [[variable("edge"), rdf.type, pgo.Edge]] --> Implicit thanks to prec.todo²
+        ]
+
+        for (const c of conditions) r.conditions.push(c);
+        
+        r.priority = priority;
+
+        return r;
+    }
+
 }
+
 
 function xsdBoolToBool(term) {
     if (term.termType !== "Literal" || !xsd.boolean.equals(term.datatype)) {
@@ -320,9 +540,8 @@ class Context {
         multiNestedStore.addQuadsWithoutMultiNesting(store, contextQuads);
         addBuiltIn(store, __dirname + "/builtin_rules.ttl");
 
-        this.substitutionTerms = readSubstitutionTerms(store);
         this.properties = readProperties(store);
-        this.relations  = readRelations(store, this.substitutionTerms);
+        this.relations  = new RelationshipsManager(store, this.substitutionTerms);
         this.nodeLabels = readThings(store, prec.IRIOfNodeLabel, true, false);
 
         this.flags = readFlags(store);
@@ -343,7 +562,7 @@ class Context {
     }
 
     forEachRelation(callback) {
-        return Context._forEachKnown(this.relations , callback);
+        return this.relations.forEachRule(callback);
     }
     
     forEachProperty(callback) {
@@ -358,81 +577,8 @@ class Context {
         return this.flags[flag];
     }
 
-    useRelationshipRule(task, rule) {
-        const key = JSON.stringify(rule);
-
-        let composedOf;
-
-        if (this.cachedModels[key] !== undefined) {
-            composedOf = this.cachedModels[key];
-        } else {
-            composedOf = this.store.getQuads(rule, prec.composedOf)
-                .map(q => q.object)
-                .map(term => multiNestedStore.remakeMultiNesting(this.store, term))
-
-            this.cachedModels[key] = composedOf;
-        }
-
-        let rewritePart;
-        if (task.rewrite === undefined) {
-            rewritePart = this.readOldRelationshipRewrite(task.task);
-        } else {
-            rewritePart = task.rewrite;
-        }      
-
-        return this.rewrite(composedOf, rewritePart);
-    }
-
-    /**
-     * 
-     * @param {Array} composedOf 
-     * @param {Array} rewrite 
-     * @returns 
-     */
-    rewrite(composedOf, rewrite) {
-        if (rewrite === undefined) return composedOf;
-
-        return composedOf.map(term => quadStar.eventuallyRebuildQuad(
-            term,
-            t => {
-                let r = rewrite.find(x => x[0].equals(t));
-                if (r === undefined) return t;
-                return r[1];
-            }
-        ));
-    }
-
-    readOldRelationshipRewrite(task) {
-        const that = this;
-        let d = undefined;
-        function find(precTerm, rdfTerm) {
-            let quads = that.store.getQuads(task, precTerm, null, N3.DataFactory.defaultGraph());
-            if (quads.length !== 1) return;
-
-            d = d || [];
-            d.push([rdfTerm, quads[0].object]);
-        }
-
-        for (const substitutable of this.substitutionTerms) {
-            find(substitutable[0], substitutable[1]);
-        }
-
-        return d;
-    }
-
     getRelationshipTransformationRelatedTo(task) {
-        if (task.termType === 'Literal') return undefined;
-
-        let modelAs = this.store.getQuads(task, prec.modelAs, null, N3.DataFactory.defaultGraph());
-
-        if (modelAs.length !== 0) {
-            return this.useRelationshipRule({ task: task }, modelAs[0].object);
-        }
-
-        // Implicit false
-        let rewrite = this.readOldRelationshipRewrite(task);
-        if (rewrite === undefined) return undefined;
-        return this.useRelationshipRule({ rewrite: rewrite }, prec.RDFReification);
+        return this.relations.getRelationshipTransformationRelatedTo(task);
     }
 }
 

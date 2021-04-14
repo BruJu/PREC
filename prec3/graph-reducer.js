@@ -239,23 +239,6 @@ function modifyRelationships(store, context) {
     store.removeQuads(store.getQuads(null, prec.todo, prec.todo))
 }
 
-function onSubjectOrPredicate_nodeType(labelTarget, conditions, subjectOrObject) {
-    if (labelTarget.termType !== "Literal") return false;
-
-    const predicate = rdf[subjectOrObject];
-    const object = variable(subjectOrObject);
-
-    conditions.push(
-        [
-            [variable("edge")                   , predicate , object                             ],
-            [object                             , rdf.type  , variable("label" + subjectOrObject)],
-            [variable("label" + subjectOrObject), rdfs.label, labelTarget                        ]
-        ]
-    );
-
-    return true;
-}
-
 function transformRelationships(store, addedVocabulary) {
     // Add an annotation to every quad
     {
@@ -269,46 +252,13 @@ function transformRelationships(store, addedVocabulary) {
     let candidateEdgeLabelsForDeletion = {};
 
     addedVocabulary.forEachRelation(
-        (relationName, mappedIRI, extraConditions) => {
-            function invalidCondition(extraCondition) {
-                console.error("Conditions are not supported on relation labels:");
-                console.error(relationName);
-                console.error(extraConditions);
-                console.error(mappedIRI);
-                console.error(extraCondition);
-            }
-
-            // Extra conditions for match patterns (not deleted)
-            let conditions = [
-                [ [variable("edgeLabel"), rdfs.label   , N3.DataFactory.literal(relationName)] ]
-                // [[variable("edge"), rdf.type, pgo.Edge]] --> Implicit thanks to prec.todo²
-            ];
-            // Added patterns to the transformation source pattern (they will be deleted)
-            let source = [
-                [variable("edge")     , prec.todo    , prec.todo                           ],
-                [variable("edge")     , rdf.predicate, variable("edgeLabel")               ]
-            ];
-            // Transformation destination match pattern
-            let dest = [
-                [variable("edge"), rdf.predicate, mappedIRI],
-                [variable("edge"), prec.todo, extraConditions.id]
-            ];
-
-            for (const extraCondition of extraConditions) {
-                let ok = false;
-
-                if (prec.sourceLabel.equals(extraCondition[0])) {
-                    ok = onSubjectOrPredicate_nodeType(extraCondition[1], conditions, "subject");
-                } else if (prec.destinationLabel.equals(extraCondition[0])) {
-                    ok = onSubjectOrPredicate_nodeType(extraCondition[1], conditions, "object");
-                }
-
-                if (!ok) {
-                    invalidCondition(extraCondition);
-                }
-            }
-
-            let binds = storeAlterer.findFilterReplace(store, source, conditions, dest);
+        relationship => {
+            let binds = storeAlterer.findFilterReplace(
+                store,
+                relationship.getTransformationSource(),
+                relationship.getTransformationConditions(),
+                relationship.getTransformationTarget()
+            );
 
             for (let bind of binds) {
                 const seenEdgeLabel = bind.edgeLabel;
