@@ -112,7 +112,7 @@ function readThings(store, predicateIRI, acceptsLiteral, moreComplex) {
 function readProperties(store) {
     return readThings(
         store,
-        prec.propertyIRIOf,
+        prec.IRIOfProperty,
         true,
         quads => {
             let source = undefined;
@@ -178,7 +178,7 @@ function findTermIn(term, list) {
 function readRelations(store, subTerms) {
     let subTermsKey = subTerms.map(t => t[0]);
 
-    return readThings(store, prec.relationshipIRIOf, true, 
+    return readThings(store, prec.IRIOfRelationship, true, 
         quads => {
             let source = undefined;
             let rules = [];
@@ -321,7 +321,7 @@ class Context {
         this.substitutionTerms = readSubstitutionTerms(store);
         this.properties = readProperties(store);
         this.relations  = readRelations(store, this.substitutionTerms);
-        this.nodeLabels = readThings(store, prec.nodeLabelIRIOf, true, false);
+        this.nodeLabels = readThings(store, prec.IRIOfNodeLabel, true, false);
 
         this.flags = readFlags(store);
 

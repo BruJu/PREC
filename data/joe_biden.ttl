@@ -9,16 +9,16 @@ prec:KeepProvenance prec:flagState false .
 
 # Unconditional property IRI
 
-<https://schema.org/givenName> prec:propertyIRIOf "givenName" .
+<https://schema.org/givenName> prec:IRIOfProperty "givenName" .
 
 
 # Property IRI different depending on the node label
-<https://schema.org/familyName> prec:propertyIRIOf [
+<https://schema.org/familyName> prec:IRIOfProperty [
     prec:propertyName "name" ;
     prec:nodeLabel    "PERSON"
 ] .
 
-<http://example.org/countryName> prec:propertyIRIOf [
+<http://example.org/countryName> prec:IRIOfProperty [
     prec:propertyName "name" ;
     prec:nodeLabel    "COUNTRY"
 ] .
@@ -26,5 +26,5 @@ prec:KeepProvenance prec:flagState false .
 
 # Node labels
 
-<http://dbpedia.org/ontology/Person>  prec:nodeLabelIRIOf "PERSON"  .
-<http://dbpedia.org/ontology/Country> prec:nodeLabelIRIOf "COUNTRY" .
+<http://dbpedia.org/ontology/Person>  prec:IRIOfNodeLabel "PERSON"  .
+<http://dbpedia.org/ontology/Country> prec:IRIOfNodeLabel "COUNTRY" .

@@ -1,11 +1,11 @@
 PREFIX prec: <http://bruy.at/prec#>
 
-<https://schema.org/startDate> prec:propertyIRIOf [
+<https://schema.org/startDate> prec:IRIOfProperty [
     prec:propertyName "startTime"
     # ; prec:killBlankNode true
 ] .
 
-<https://schema.org/endDate> prec:propertyIRIOf [
+<https://schema.org/endDate> prec:IRIOfProperty [
     prec:propertyName "endTime"
     # ; prec:killBlankNode true
 ] .

@@ -6,9 +6,9 @@ prec:KeepProvenance        prec:flagState false .
 
 prec:Relationships prec:useRdfStar prec:AsUnique .
 
-<http://schema.org/actor> prec:relationshipIRIOf "ACTED_IN" .
+<http://schema.org/actor> prec:IRIOfRelationship "ACTED_IN" .
 
-<http://example.org/role> prec:propertyIRIOf [
+<http://example.org/role> prec:IRIOfProperty [
     prec:propertyName "roles"
     # ; prec:multiValue prec:asSet
 ] .

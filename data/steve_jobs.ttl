@@ -9,45 +9,45 @@ prec:KeepProvenance        prec:flagState false .
 
 prec:Relationships prec:useRdfStar prec:AsOccurrences .
 
-<http://schema.org/Person> prec:nodeLabelIRIOf "PERSON" .
-<http://schema.org/Corporation> prec:nodeLabelIRIOf "COMPANY" .
+<http://schema.org/Person> prec:IRIOfNodeLabel "PERSON" .
+<http://schema.org/Corporation> prec:IRIOfNodeLabel "COMPANY" .
 
 # TODO: how do we chech that our bindings are correct?
 
 # TODO: priority
-# schema:knowsAbout prec:relationshipIRIOf "KNOWS" .
+# schema:knowsAbout prec:IRIOfRelationship "KNOWS" .
 
-schema:knows prec:relationshipIRIOf [
+schema:knows prec:IRIOfRelationship [
     prec:relationshipLabel "KNOWS"  ;
     prec:sourceLabel       "PERSON" ;
     prec:destinationLabel  "PERSON" ;
     prec:useRdfStar prec:AsUnique ;
 ] .
 
-schema:knowsAbout prec:relationshipIRIOf [
+schema:knowsAbout prec:IRIOfRelationship [
     prec:relationshipLabel "KNOWS"   ;
     prec:sourceLabel       "PERSON"  ;
     prec:destinationLabel  "COMPANY" ;
     prec:useRdfStar prec:AsUnique
 ] .
 
-<http://schema.org/givenName> prec:propertyIRIOf "surname" .
+<http://schema.org/givenName> prec:IRIOfProperty "surname" .
 
-<http://schema.org/familyName> prec:propertyIRIOf [
+<http://schema.org/familyName> prec:IRIOfProperty [
     prec:propertyName "name" ;
     prec:nodeLabel    "PERSON"
 ] .
 
-<http://schema.org/name> prec:propertyIRIOf [
+<http://schema.org/name> prec:IRIOfProperty [
     prec:propertyName "name" ;
     prec:nodeLabel    "COMPANY"
 ] .
 
 # TODO: target: transform to date
-schema:startDate prec:propertyIRIOf "since" .
-schema:endDate   prec:propertyIRIOf "to" .
+schema:startDate prec:IRIOfProperty "since" .
+schema:endDate   prec:IRIOfProperty "to" .
 
-<http://example.org/workingFor> prec:relationshipIRIOf [
+<http://example.org/workingFor> prec:IRIOfRelationship [
     prec:relationshipLabel "WORKS" ;
     prec:useRdfStar false ;
     prec:subject   ex:employee ;

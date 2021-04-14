@@ -9,14 +9,14 @@ prec:KeepProvenance        prec:flagState false .
 
 
 
-schema:Person prec:nodeLabelIRIOf "Person" .
-schema:Organization prec:nodeLabelIRIOf "Organization" .
+schema:Person prec:IRIOfNodeLabel "Person" .
+schema:Organization prec:IRIOfNodeLabel "Organization" .
 
-schema:name prec:propertyIRIOf "name" .
+schema:name prec:IRIOfProperty "name" .
 
-schema:EducationalOccupationalCredential prec:nodeLabelIRIOf "Diploma" .
+schema:EducationalOccupationalCredential prec:IRIOfNodeLabel "Diploma" .
 
-schema:Book prec:nodeLabelIRIOf "Book" .
+schema:Book prec:IRIOfNodeLabel "Book" .
 
 
-ex:requiredQuantity prec:propertyIRIOf "quantity" .
+ex:requiredQuantity prec:IRIOfProperty "quantity" .

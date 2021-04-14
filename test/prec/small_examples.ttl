@@ -34,14 +34,14 @@ prec:testMetaData prec:kind "SmallExamples" .
     prec:Relationships prec:useRdfStar prec:AsUnique .
     prec:KeepProvenance prec:flagState false .
 
-    :Person prec:nodeLabelIRIOf "Person" .
+    :Person prec:IRIOfNodeLabel "Person" .
 
-    :knows prec:relationshipIRIOf [
+    :knows prec:IRIOfRelationship [
         prec:relationshipLabel "Knows" ;
         prec:destinationLabel  "Person" 
     ] .
 
-    :knowsAbout prec:relationshipIRIOf "Knows" .
+    :knowsAbout prec:IRIOfRelationship "Knows" .
 }
 
 :relationOutput {
@@ -55,14 +55,14 @@ prec:testMetaData prec:kind "SmallExamples" .
     prec:Relationships prec:modelAs prec:RdfStarUnique .
     prec:KeepProvenance prec:flagState false .
 
-    :Person prec:nodeLabelIRIOf "Person" .
+    :Person prec:IRIOfNodeLabel "Person" .
 
-    :knows prec:relationshipIRIOf [
+    :knows prec:IRIOfRelationship [
         prec:relationshipLabel "Knows" ;
         prec:destinationLabel  "Person" 
     ] .
 
-    :knowsAbout prec:relationshipIRIOf "Knows" .
+    :knowsAbout prec:IRIOfRelationship "Knows" .
 }
 
 [] a prec:unitTest ;
@@ -109,18 +109,18 @@ prec:testMetaData prec:kind "SmallExamples" .
     prec:MetaProperty   prec:flagState false .
     prec:KeepProvenance prec:flagState false .
     
-    :Food   prec:nodeLabelIRIOf "Food" .
-    :Animal prec:nodeLabelIRIOf "Animal" .
+    :Food   prec:IRIOfNodeLabel "Food" .
+    :Animal prec:IRIOfNodeLabel "Animal" .
 
-    :food_name      prec:propertyIRIOf :prop_food_name .
+    :food_name      prec:IRIOfProperty :prop_food_name .
     :prop_food_name prec:propertyName "name" ;
                     prec:nodeLabel "Food" .
 
-    :animal_name      prec:propertyIRIOf :prop_animal_name .
+    :animal_name      prec:IRIOfProperty :prop_animal_name .
     :prop_animal_name prec:propertyName "name" ;
                       prec:nodeLabel "Animal" .
 
-    :all_name      prec:propertyIRIOf :prop_all_name .
+    :all_name      prec:IRIOfProperty :prop_all_name .
     :prop_all_name prec:propertyName "name" .
 }
 
@@ -164,7 +164,7 @@ prec:testMetaData prec:kind "SmallExamples" .
 
 :listTestContext {
     prec:KeepProvenance prec:flagState false .
-    :elements prec:propertyIRIOf "elements" .
+    :elements prec:IRIOfProperty "elements" .
 }
 
 

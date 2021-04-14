@@ -100,7 +100,7 @@ Relative path from the expected output file to the used context.
 
 ## Relationships / Edge mapping
 
-### http://bruy.at/prec#relationshipIRIOf
+### http://bruy.at/prec#IRIOfRelationship
 
 Predicate for relationship IRI mapping.
 
@@ -125,7 +125,7 @@ Predicate used to describe how a relationship is materialized.
 Possible subjects are :
 
 - http://bruy.at/prec#Relationships : Matches every relationship (default behaviour)
-- A Blank node that describes the prec:relationshipIRIOf.
+- A Blank node that describes the prec:IRIOfRelationship.
 
 Possible objects are :
 - false : Do not use RDF-star. RDF standard reification will be used
@@ -167,7 +167,7 @@ http://www.bobdc.com/blog/reification-is-a-red-herring/.
 
 *Context*
 ```turtle
-<https://example.org/aRelation> prec:relationshipIRIOf [
+<https://example.org/aRelation> prec:IRIOfRelationship [
     prec:subject <https://example.org/subject> .
     prec:object  <https://example.org/object>  .
 ] .
@@ -225,7 +225,7 @@ Only apply the transformation if the source node has the specified label.
 
 *Context:*
 ```turtle
-<https://example.org/hates> prec:relationshipIRIOf [
+<https://example.org/hates> prec:IRIOfRelationship [
     prec:relationshipLabel "Like" ;
     prec:sourceLabel       "Person"
 ] .
@@ -233,9 +233,9 @@ Only apply the transformation if the source node has the specified label.
 # Always use affirmed standard triples
 prec:Relationships prec:useRdfStar prec:AsUnique ;
 prec:KeepProvenance prec:flagState false .
-ex:Person prec:nodeLabelIRIOf "Person" .
-ex:Cat    prec:nodeLabelIRIOf "Cat"    .
-ex:Food   prec:nodeLabelIRIOf "Food"   .
+ex:Person prec:IRIOfNodeLabel "Person" .
+ex:Cat    prec:IRIOfNodeLabel "Cat"    .
+ex:Food   prec:IRIOfNodeLabel "Food"   .
 ```
 
 *Possible Output:*
@@ -291,14 +291,14 @@ _:second <to> 2011
 
 # Unclassified
 
-## http://bruy.at/prec#propertyIRIOf
+## http://bruy.at/prec#IRIOfProperty
 
 Specifies that an IRI must be uses for the associated properties.
 
 
 ### Example
 
-- Vocab: `<https://schema.org/familyName> prec:propertyIRIOf "name" .`
+- Vocab: `<https://schema.org/familyName> prec:IRIOfProperty "name" .`
 - \+ Cypher: `create (obama { name: 'Obama' })`
 - = `_:obama <https://schema.org/familyName> "Obama".`
 
@@ -310,8 +310,8 @@ Predicate of quads that indicates the priority of a rule. The higher, the more
 the rule will take priority.
 
 If unspecified the rules priority is:
-- http://bruy.at/prec#propertyIRIOf : 0 + 1 per restriction on the node label
-- http://bruy.at/prec#relationshipIRIOf : 0 + 1 per restriction on source or destination node
+- http://bruy.at/prec#IRIOfProperty : 0 + 1 per restriction on the node label
+- http://bruy.at/prec#IRIOfRelationship : 0 + 1 per restriction on source or destination node
 
 In case of priority ties, the smaller IRI in lexicographical order will be
 applied at first.

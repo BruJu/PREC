@@ -49,34 +49,34 @@ const contexts = {
     allOccurences : `prec:Relationships prec:modelAs prec:RdfStarOccurrence . `,
     type1specialization: `
         prec:Relationships prec:modelAs prec:RdfStarUnique .
-        :type1 prec:relationshipIRIOf "type1" .
+        :type1 prec:IRIOfRelationship "type1" .
     `,
     type1specializationBN: `
         prec:Relationships prec:modelAs prec:RdfStarUnique .
-        :type1 prec:relationshipIRIOf [ prec:relationshipLabel "type1" ] .
+        :type1 prec:IRIOfRelationship [ prec:relationshipLabel "type1" ] .
     `,
     type1modelAs: `
         prec:Relationships prec:modelAs prec:RdfStarOccurrence .
-        :type1 prec:relationshipIRIOf [
+        :type1 prec:IRIOfRelationship [
             prec:modelAs prec:RdfStarUnique ;
             prec:relationshipLabel "type1" 
         ] .
     `,
     predicateOnPerson: `
         prec:Relationships prec:modelAs prec:RdfStarOccurrence .
-        :NewPredicate prec:relationshipIRIOf [
+        :NewPredicate prec:IRIOfRelationship [
             prec:modelAs prec:RdfStarUnique ;
             prec:relationshipLabel "Predicate" ;
             prec:sourceLabel "Person"
         ] .
     `,
     bothSpecialization: `
-        :type1 prec:relationshipIRIOf [
+        :type1 prec:IRIOfRelationship [
             prec:relationshipLabel "type1" ;
             prec:modelAs prec:RdfStarUnique
         ] .
         
-        :type2 prec:relationshipIRIOf [
+        :type2 prec:IRIOfRelationship [
             prec:relationshipLabel "type2" ;
             prec:modelAs prec:RdfStarUnique
         ] .
@@ -88,11 +88,11 @@ const contexts = {
     useRdfStarallOccurences : `prec:Relationships prec:useRdfStar prec:AsOccurrences . `,
     useRdfStartype1specialization: `
         prec:Relationships prec:useRdfStar prec:AsUnique .
-        :type1 prec:relationshipIRIOf "type1" .
+        :type1 prec:IRIOfRelationship "type1" .
     `,
     useRdfStartype1modelAs: `
         prec:Relationships prec:useRdfStar prec:AsOccurrences .
-        :type1 prec:relationshipIRIOf [
+        :type1 prec:IRIOfRelationship [
             prec:useRdfStar prec:AsUnique ;
             prec:relationshipLabel "type1" 
         ] .
