@@ -83,20 +83,6 @@ const contexts = {
     `,
 
 
-    
-    useRdfStarallUnique     : `prec:Relationships prec:useRdfStar prec:AsUnique . `,
-    useRdfStarallOccurences : `prec:Relationships prec:useRdfStar prec:AsOccurrences . `,
-    useRdfStartype1specialization: `
-        prec:Relationships prec:useRdfStar prec:AsUnique .
-        :type1 prec:IRIOfRelationship "type1" .
-    `,
-    useRdfStartype1modelAs: `
-        prec:Relationships prec:useRdfStar prec:AsOccurrences .
-        :type1 prec:IRIOfRelationship [
-            prec:useRdfStar prec:AsUnique ;
-            prec:relationshipLabel "type1" 
-        ] .
-    `,
     useRdfStarrenameTermsImplicit: `
         prec:Relationships prec:subject :source ;
             prec:predicate :label ;
@@ -311,67 +297,6 @@ describe("Relationship convertion", function () {
                 :o :p :s .
             `
         );
-    })
-
-    describe("Old prec:useRdfStar", function() {
-        runATest("oneEdge", "useRdfStarallUnique",
-            `
-                << :s :p :o  >> a pgo:Edge .
-                :s :p :o .
-            `
-        );
-        
-        runATest("twoEdges", "useRdfStarallUnique",
-            `
-                << :s1 :p1 :o1  >> a pgo:Edge .
-                :s1 :p1 :o1 .
-                << :s2 :p2 :o2  >> a pgo:Edge .
-                :s2 :p2 :o2 .
-            `
-        );
-
-        runATest("oneEdge", "useRdfStarallOccurences",
-            `
-                :edge a pgo:Edge .
-                :edge prec:occurrenceOf << :s :p :o  >> .
-            `
-        );
-
-        runATest("oneEdgeType", "useRdfStartype1specialization",
-            `
-                << :s :type1 :o >> a pgo:Edge .
-                :s :type1 :o .
-            `
-        );
-
-        runATest("oneEdgeType", "useRdfStartype1modelAs",
-            `
-                << :s :type1 :o >> a pgo:Edge .
-                :s :type1 :o .
-            `
-        );
-
-        runATest("edgeDiff", "useRdfStartype1specialization",
-            `
-                << :s1 :type1 :o1  >> a pgo:Edge .
-                :s1 :type1 :o1 .
-
-                << :s2 :p2 :o2  >> a pgo:Edge .
-                :s2 :p2 :o2 .
-                :p2 rdfs:label "type2" .
-            `
-        );
-    
-        runATest("edgeDiff", "useRdfStartype1modelAs",
-            `
-                << :s1 :type1 :o1  >> a pgo:Edge .
-                :s1 :type1 :o1 .
-
-                :edge2 a pgo:Edge .
-                :edge2 prec:occurrenceOf << :s2 :p2 :o2  >> .
-                :p2 rdfs:label "type2" .
-            `
-        );
 
         runATest("oneEdge", "useRdfStarrenameTermsImplicit",
             `
@@ -381,6 +306,12 @@ describe("Relationship convertion", function () {
                 :target :o .
             `
         );
+    })
+
+    describe("Old prec:useRdfStar", function() {
+
+
+
 
         runATest("oneEdge", "useRdfStarrenameTermsExplicit",
             `

@@ -176,6 +176,9 @@ function findTermIn(term, list) {
 }
 
 function readRelations(store, subTerms) {
+    // TODO: Construct an object that is fully responsible for relationship management
+    // The main purpose would be to invalidate relationship nodes that are not valid
+    // (they contains prec:useRdfStar for example)
     let subTermsKey = subTerms.map(t => t[0]);
 
     return readThings(store, prec.IRIOfRelationship, true, 
@@ -194,8 +197,7 @@ function readRelations(store, subTerms) {
                     // TODO : check if type is integer
                     forcedPriority = parseInt(quad.object.value);
                 } else {
-                    let ignored = findTermIn(p, [prec.modelAs, prec.useRdfStar]);
-                    if (ignored !== undefined) continue;
+                    if (prec.modelAs.equals(p)) continue;
 
                     let sourceOrDest = findTermIn(p, [prec.sourceLabel, prec.destinationLabel]);
                     if (sourceOrDest !== undefined) {
@@ -420,23 +422,6 @@ class Context {
 
     getRelationshipTransformationRelatedTo(task) {
         if (task.termType === 'Literal') return undefined;
-
-        let useRdfStar = this.store.getQuads(task, prec.useRdfStar, null, N3.DataFactory.defaultGraph());
-
-        if (useRdfStar.length !== 0) {
-            const o = useRdfStar[0].object;
-
-            if (N3.DataFactory.literal("false", xsd.boolean).equals(o)) {
-                return this.useRelationshipRule({ task: task }, prec.RDFReification);
-            } else if (prec.AsOccurrences.equals(o)) {
-                return this.useRelationshipRule({ task: task }, prec.RdfStarOccurrence);
-            } else if (prec.AsUnique.equals(o)) {
-                return this.useRelationshipRule({ task: task }, prec.RdfStarUnique);
-            } else {
-                console.error("task " + task.value + " has invalid prec:useRdfStar -> " + o.value);
-                throw "Context::getRelTrans::useRdfStar";
-            }
-        }
 
         let modelAs = this.store.getQuads(task, prec.modelAs, null, N3.DataFactory.defaultGraph());
 

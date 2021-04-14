@@ -59,9 +59,6 @@ function applyVocabulary(store, contextQuads) {
     removeUnusedCreatedVocabulary(store, prec.CreatedRelationshipLabel, 2, 0, 0);
     removeUnusedCreatedVocabulary(store, prec.CreatedNodeLabel, 2, 0, 0);
 
-    // Remove prec.useRdfStar from renamed reification
-    storeAlterer.deleteMatches(store, null, prec.useRdfStar, null);
-
     // -- Remove provenance information if they are not required by the user
     if (addedVocabulary.getStateOf("KeepProvenance") === false) {
         removePGO(store);
