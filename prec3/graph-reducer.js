@@ -198,6 +198,19 @@ function _findBehaviour(context, task) {
     return context.getRelationshipTransformationRelatedTo(prec.Relationships);
 }
 
+function _containsTerm(term, searched) {
+    if (term.equals(searched)) return true;
+    if (term.termType !== 'Quad') return false;
+    return _containsTerm(term.subject  , searched)
+        || _containsTerm(term.predicate, searched)
+        || _containsTerm(term.object   , searched)
+        || _containsTerm(term.graph    , searched);
+}
+
+function _listContains(pattern, searched) {
+    return pattern.find(e => searched.find(s => _containsTerm(e, s)) !== undefined) !== undefined;
+}
+
 function modifyRelationships(store, context) {
     const relations = storeAlterer.matchAndBind(store,
         [
@@ -213,20 +226,44 @@ function modifyRelationships(store, context) {
         const behaviour = _findBehaviour(context, relation.task);
 
         if (Array.isArray(behaviour)) {
-            // TODO: we also have to map properties:
-            // prec:metaPropertyKey    prec:metaPropertyValue
-
-            let remappingOfDest = behaviour.map(term => remapPatternWithVariables(
+            let r = behaviour.map(term => remapPatternWithVariables(
                 term,
                 [
-                    [variable('relation') , pvar.self         ],
-                    [variable('subject')  , pvar.source       ],
-                    [variable('predicate'), pvar.relationLabel],
-                    [variable('object')   , pvar.destination  ]
+                    [variable('relation')     , pvar.self         ],
+                    [variable('subject')      , pvar.source       ],
+                    [variable('predicate')    , pvar.relationLabel],
+                    [variable('object')       , pvar.destination  ],
+                    [variable('propertyKey')  , pvar.propertyKey  ],
+                    [variable('propertyValue'), pvar.propertyValue]
                 ]
-            )).map(q => [q.subject, q.predicate, q.object]);
+            ))
+                .map(q => [q.subject, q.predicate, q.object])
+                .map(l => [l, _listContains(l, [variable('propertyKey'), variable('propertyValue')])]);
 
-            storeAlterer.replaceOneBinding(store, relation, remappingOfDest);
+            const nonPropertiesDependantPattern = r.filter(e => !e[1]).map(e => e[0]);
+            const    propertiesDependantPattern = r.filter(e =>  e[1]).map(e => e[0]);
+
+            // Properties
+            let propertyQuads = store.getQuads(relation.relation, null, null, N3.DataFactory.defaultGraph())
+                .filter(
+                    quad => !precUtils.termIsIn(quad.predicate, [
+                        rdf.type, prec.todo, rdf.subject, rdf.predicate, rdf.object
+                    ])
+                );
+
+            storeAlterer.replaceOneBinding(store, relation, nonPropertiesDependantPattern);
+
+            if (propertyQuads.length !== 0) {
+                store.removeQuads(propertyQuads);
+                relation['@quads'] = []; // No more quad to delete during replaceOneBinding
+
+                for (let propertyQuad of propertyQuads) {
+                    relation.propertyKey   = propertyQuad.predicate;
+                    relation.propertyValue = propertyQuad.object;
+
+                    storeAlterer.replaceOneBinding(store, relation, propertiesDependantPattern);
+                }
+            }
         }
     }
 

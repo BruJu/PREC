@@ -112,10 +112,21 @@ function badToString(quads, indent) {
     return s;
 }
 
+/**
+ * Return true if `term` is in `listOfTerms`
+ * @param {*} term 
+ * @param {Array} listOfTerms 
+ * @returns True if the term is in the list of tems
+ */
+function termIsIn(term, listOfTerms) {
+    return listOfTerms.find(t => t.equals(term));
+}
+
 
 module.exports = {
     rdfLiteralToValue,
     eventuallyRebuildQuad,
-    badToString
+    badToString,
+    termIsIn
 };
 

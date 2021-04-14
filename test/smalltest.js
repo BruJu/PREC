@@ -33,6 +33,14 @@ const basicGraphs = {
         :person a [ rdfs:label "Person" ] .
         :animal a [ rdfs:label "Animal" ] .
     `,
+    oneEdgeWith1MetaProperty: `
+        :edge a pgo:Edge ; rdf:subject :s ; rdf:predicate :p ; rdf:object :o ;
+            :meta1 :metavalue1 .
+    `,
+    oneEdgeWith2MetaProperties: `
+        :edge a pgo:Edge ; rdf:subject :s ; rdf:predicate :p ; rdf:object :o ;
+            :meta1 :metavalue1 ; :meta2 :metavalue2 .
+    `
 };
 
 const contexts = {
@@ -178,205 +186,229 @@ function runATest(graphName, contextName, expected) {
 }
 
 describe("Relationship convertion", function () {
-    runATest("oneEdge", "emptyContext", basicGraphs['oneEdge']);
-    runATest("twoEdges", "emptyContext", basicGraphs['twoEdges']);
-    runATest("oneEdgeType", "emptyContext", basicGraphs['oneEdgeType']);
-    runATest("edgeDiff", "emptyContext", basicGraphs['edgeDiff']);
-    runATest("differentSourceLabel", "emptyContext", basicGraphs['differentSourceLabel']);
+    describe('Lack of context', function() {
+        runATest("oneEdge", "emptyContext", basicGraphs['oneEdge']);
+        runATest("twoEdges", "emptyContext", basicGraphs['twoEdges']);
+        runATest("oneEdgeType", "emptyContext", basicGraphs['oneEdgeType']);
+        runATest("edgeDiff", "emptyContext", basicGraphs['edgeDiff']);
+        runATest("differentSourceLabel", "emptyContext", basicGraphs['differentSourceLabel']);
+    })
 
-    runATest("oneEdge", "allUnique",
-        `
-            << :s :p :o  >> a pgo:Edge .
-            :s :p :o .
-        `
-    );
+    describe("Simple graphs modelAs", function() {
+        runATest("oneEdge", "allUnique",
+            `
+                << :s :p :o  >> a pgo:Edge .
+                :s :p :o .
+            `
+        );
     
-    runATest("twoEdges", "allUnique",
-        `
-            << :s1 :p1 :o1  >> a pgo:Edge .
-            :s1 :p1 :o1 .
-            << :s2 :p2 :o2  >> a pgo:Edge .
-            :s2 :p2 :o2 .
-        `
-    );
+        runATest("twoEdges", "allUnique",
+            `
+                << :s1 :p1 :o1  >> a pgo:Edge .
+                :s1 :p1 :o1 .
+                << :s2 :p2 :o2  >> a pgo:Edge .
+                :s2 :p2 :o2 .
+            `
+        );
 
-    runATest("oneEdge", "allOccurences",
-        `
-            :edge a pgo:Edge .
-            :edge prec:occurrenceOf << :s :p :o  >> .
-        `
-    );
+        runATest("oneEdge", "allOccurences",
+            `
+                :edge a pgo:Edge .
+                :edge prec:occurrenceOf << :s :p :o  >> .
+            `
+        );
 
-    runATest("oneEdgeType", "type1specialization",
-        `
-            << :s :type1 :o >> a pgo:Edge .
-            :s :type1 :o .
-        `
-    );
+        runATest("oneEdgeType", "type1specialization",
+            `
+                << :s :type1 :o >> a pgo:Edge .
+                :s :type1 :o .
+            `
+        );
 
-    runATest("oneEdgeType", "type1modelAs",
-        `
-            << :s :type1 :o >> a pgo:Edge .
-            :s :type1 :o .
-        `
-    );
+        runATest("oneEdgeType", "type1modelAs",
+            `
+                << :s :type1 :o >> a pgo:Edge .
+                :s :type1 :o .
+            `
+        );
 
-    runATest("edgeDiff", "type1specialization",
-        `
-            << :s1 :type1 :o1  >> a pgo:Edge .
-            :s1 :type1 :o1 .
+        runATest("edgeDiff", "type1specialization",
+            `
+                << :s1 :type1 :o1  >> a pgo:Edge .
+                :s1 :type1 :o1 .
 
-            << :s2 :p2 :o2  >> a pgo:Edge .
-            :s2 :p2 :o2 .
-            :p2 rdfs:label "type2" .
-        `
-    );
+                << :s2 :p2 :o2  >> a pgo:Edge .
+                :s2 :p2 :o2 .
+                :p2 rdfs:label "type2" .
+            `
+        );
     
-    runATest("edgeDiff", "type1specializationBN",
-        `
-            << :s1 :type1 :o1  >> a pgo:Edge .
-            :s1 :type1 :o1 .
+        runATest("edgeDiff", "type1specializationBN",
+            `
+                << :s1 :type1 :o1  >> a pgo:Edge .
+                :s1 :type1 :o1 .
 
-            << :s2 :p2 :o2  >> a pgo:Edge .
-            :s2 :p2 :o2 .
-            :p2 rdfs:label "type2" .
-        `
-    );
+                << :s2 :p2 :o2  >> a pgo:Edge .
+                :s2 :p2 :o2 .
+                :p2 rdfs:label "type2" .
+            `
+        );
     
-    runATest("edgeDiff", "type1modelAs",
-        `
-            << :s1 :type1 :o1  >> a pgo:Edge .
-            :s1 :type1 :o1 .
+        runATest("edgeDiff", "type1modelAs",
+            `
+                << :s1 :type1 :o1  >> a pgo:Edge .
+                :s1 :type1 :o1 .
 
-            :edge2 a pgo:Edge .
-            :edge2 prec:occurrenceOf << :s2 :p2 :o2  >> .
-            :p2 rdfs:label "type2" .
-        `
-    );
+                :edge2 a pgo:Edge .
+                :edge2 prec:occurrenceOf << :s2 :p2 :o2  >> .
+                :p2 rdfs:label "type2" .
+            `
+        );
 
-    runATest("differentSourceLabel", "predicateOnPerson",
-        `
-            << :person :NewPredicate :o  >> a pgo:Edge .
-            :person :NewPredicate :o .
+        runATest("differentSourceLabel", "predicateOnPerson",
+            `
+                << :person :NewPredicate :o  >> a pgo:Edge .
+                :person :NewPredicate :o .
 
-            :edge2 a pgo:Edge .
-            :edge2 prec:occurrenceOf << :animal :p :o  >> .
-            :p rdfs:label "Predicate" .
+                :edge2 a pgo:Edge .
+                :edge2 prec:occurrenceOf << :animal :p :o  >> .
+                :p rdfs:label "Predicate" .
 
-            :person a [ rdfs:label "Person" ] .
-            :animal a [ rdfs:label "Animal" ] .
-        `
-    );
+                :person a [ rdfs:label "Person" ] .
+                :animal a [ rdfs:label "Animal" ] .
+            `
+        );
 
-    runATest("edgeDiff", "bothSpecialization",
-        `
-            << :s1 :type1 :o1  >> a pgo:Edge .
-            :s1 :type1 :o1 .
-    
-            << :s2 :type2 :o2  >> a pgo:Edge .
-            :s2 :type2 :o2 .
-        `
-    );
-    
-    runATest("oneEdge", "modelAsPG",
-        `
-        :edge a pgo:Edge ;
-          :source :s ;
-          :label  :p ;
-          :target :o .
-        `
-    );
-    
-    runATest("oneEdge", "modelAsCustom",
-        `
-            rdf:subject rdf:predicate rdf:object .
-            :o :p :s .
-        `
-    );
-    
-    runATest("oneEdge", "modelAsCustomWithRenaming",
-        `
-            :source :label :target .
-            :o :p :s .
-        `
-    );
-
-    // Backward compatibility
-
-    runATest("oneEdge", "useRdfStarallUnique",
-        `
-            << :s :p :o  >> a pgo:Edge .
-            :s :p :o .
-        `
-    );
-    
-    runATest("twoEdges", "useRdfStarallUnique",
-        `
-            << :s1 :p1 :o1  >> a pgo:Edge .
-            :s1 :p1 :o1 .
-            << :s2 :p2 :o2  >> a pgo:Edge .
-            :s2 :p2 :o2 .
-        `
-    );
-
-    runATest("oneEdge", "useRdfStarallOccurences",
-        `
-            :edge a pgo:Edge .
-            :edge prec:occurrenceOf << :s :p :o  >> .
-        `
-    );
-
-    runATest("oneEdgeType", "useRdfStartype1specialization",
-        `
-            << :s :type1 :o >> a pgo:Edge .
-            :s :type1 :o .
-        `
-    );
-
-    runATest("oneEdgeType", "useRdfStartype1modelAs",
-        `
-            << :s :type1 :o >> a pgo:Edge .
-            :s :type1 :o .
-        `
-    );
-
-    runATest("edgeDiff", "useRdfStartype1specialization",
-        `
-            << :s1 :type1 :o1  >> a pgo:Edge .
-            :s1 :type1 :o1 .
-
-            << :s2 :p2 :o2  >> a pgo:Edge .
-            :s2 :p2 :o2 .
-            :p2 rdfs:label "type2" .
-        `
-    );
-    
-    runATest("edgeDiff", "useRdfStartype1modelAs",
-        `
-            << :s1 :type1 :o1  >> a pgo:Edge .
-            :s1 :type1 :o1 .
-
-            :edge2 a pgo:Edge .
-            :edge2 prec:occurrenceOf << :s2 :p2 :o2  >> .
-            :p2 rdfs:label "type2" .
-        `
-    );
-
-    runATest("oneEdge", "useRdfStarrenameTermsImplicit",
-        `
+        runATest("edgeDiff", "bothSpecialization",
+            `
+                << :s1 :type1 :o1  >> a pgo:Edge .
+                :s1 :type1 :o1 .
+        
+                << :s2 :type2 :o2  >> a pgo:Edge .
+                :s2 :type2 :o2 .
+            `
+        );
+        
+        runATest("oneEdge", "modelAsPG",
+            `
             :edge a pgo:Edge ;
-              :source :s ;
-              :label  :p ;
-              :target :o .
-        `
-    );
+            :source :s ;
+            :label  :p ;
+            :target :o .
+            `
+        );
+        
+        runATest("oneEdge", "modelAsCustom",
+            `
+                rdf:subject rdf:predicate rdf:object .
+                :o :p :s .
+            `
+        );
+        
+        runATest("oneEdge", "modelAsCustomWithRenaming",
+            `
+                :source :label :target .
+                :o :p :s .
+            `
+        );
+    })
 
-    runATest("oneEdge", "useRdfStarrenameTermsExplicit",
-        `
-            :edge a pgo:Edge ;
-              :source :s ;
-              :label  :p ;
-              :target :o .
-        `
-    );
+    describe("Old prec:useRdfStar", function() {
+        runATest("oneEdge", "useRdfStarallUnique",
+            `
+                << :s :p :o  >> a pgo:Edge .
+                :s :p :o .
+            `
+        );
+        
+        runATest("twoEdges", "useRdfStarallUnique",
+            `
+                << :s1 :p1 :o1  >> a pgo:Edge .
+                :s1 :p1 :o1 .
+                << :s2 :p2 :o2  >> a pgo:Edge .
+                :s2 :p2 :o2 .
+            `
+        );
+
+        runATest("oneEdge", "useRdfStarallOccurences",
+            `
+                :edge a pgo:Edge .
+                :edge prec:occurrenceOf << :s :p :o  >> .
+            `
+        );
+
+        runATest("oneEdgeType", "useRdfStartype1specialization",
+            `
+                << :s :type1 :o >> a pgo:Edge .
+                :s :type1 :o .
+            `
+        );
+
+        runATest("oneEdgeType", "useRdfStartype1modelAs",
+            `
+                << :s :type1 :o >> a pgo:Edge .
+                :s :type1 :o .
+            `
+        );
+
+        runATest("edgeDiff", "useRdfStartype1specialization",
+            `
+                << :s1 :type1 :o1  >> a pgo:Edge .
+                :s1 :type1 :o1 .
+
+                << :s2 :p2 :o2  >> a pgo:Edge .
+                :s2 :p2 :o2 .
+                :p2 rdfs:label "type2" .
+            `
+        );
+    
+        runATest("edgeDiff", "useRdfStartype1modelAs",
+            `
+                << :s1 :type1 :o1  >> a pgo:Edge .
+                :s1 :type1 :o1 .
+
+                :edge2 a pgo:Edge .
+                :edge2 prec:occurrenceOf << :s2 :p2 :o2  >> .
+                :p2 rdfs:label "type2" .
+            `
+        );
+
+        runATest("oneEdge", "useRdfStarrenameTermsImplicit",
+            `
+                :edge a pgo:Edge ;
+                :source :s ;
+                :label  :p ;
+                :target :o .
+            `
+        );
+
+        runATest("oneEdge", "useRdfStarrenameTermsExplicit",
+            `
+                :edge a pgo:Edge ;
+                :source :s ;
+                :label  :p ;
+                :target :o .
+            `
+        );
+    });
+
+    describe("Meta properties", function() {
+        runATest("oneEdgeWith1MetaProperty", "emptyContext", basicGraphs["oneEdgeWith1MetaProperty"]);
+        runATest("oneEdgeWith2MetaProperties", "emptyContext", basicGraphs["oneEdgeWith2MetaProperties"]);
+
+
+        runATest("oneEdgeWith1MetaProperty", "allUnique", 
+            `
+                :s :p :o .
+                << :s :p :o >> a pgo:Edge ; :meta1 :metavalue1 .
+            `
+        );
+
+        runATest("oneEdgeWith2MetaProperties", "allUnique", 
+            `
+                :s :p :o .
+                << :s :p :o >> a pgo:Edge ; :meta1 :metavalue1 ; :meta2 :metavalue2 .
+            `
+        );
+    })
 });

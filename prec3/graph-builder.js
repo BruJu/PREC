@@ -64,9 +64,6 @@ class RDFGraphBuilder {
         return nodeName;
     }
 
-    /** Returns a new node */
-    _getNewNode() { return this.namespaces.literals[++this.propValueCounter]; }
-
     /** Builds some new node for the literal. The end of the IRI is kind of opaque. */
     _makeNodeForPropertyValue(literal) {
         const propertyValueNode = N3.DataFactory.blankNode("propertyValue" + (++this.counters.properties));
