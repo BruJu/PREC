@@ -1,6 +1,6 @@
 PREFIX prec: <http://bruy.at/prec#>
 PREFIX ex:   <http://example.org/>
-
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 prec:MetaProperty          prec:flagState false .
 prec:KeepProvenance        prec:flagState false .
@@ -8,7 +8,7 @@ prec:KeepProvenance        prec:flagState false .
 # (default)
 # prec:Relationships prec:useRdfStar prec:RDFReification .
 
-prec:Relationships prec:useRdfStar prec:AsOccurrences .
+prec:Relationships prec:modelAs prec:RDFStarOccurrence .
 
 <http://dbpedia.org/ontology/Person> prec:IRIOfNodeLabel "Person" .
 
@@ -17,8 +17,10 @@ prec:Relationships prec:useRdfStar prec:AsOccurrences .
 <https://example.org/likes> prec:IRIOfRelationship [
     prec:sourceLabel       "Person" ;
     prec:relationshipLabel "Likes"  ;
-    prec:useRdfStar false ;
-    prec:subject ex:likedBy
+    prec:modelAs prec:RDFReification ;
+    prec:subject ex:likedBy ;
+    prec:object ex:contentCreator ;
+    prec:predicate rdf:type
 ] .
 
 <https://schema.org/name> prec:IRIOfProperty "name" .

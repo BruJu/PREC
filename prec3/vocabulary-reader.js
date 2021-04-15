@@ -165,16 +165,6 @@ function readProperties(store) {
     );
 }
 
-function readInfo(store, term) {
-    if (term.termType == "BlankNode") {
-        const quads = store.getQuads(term, null, null);
-
-        return quads.map(quad => [quad.predicate, readInfo(store, quad.object)]);
-    } else {
-        return term;
-    }
-}
-
 function findTermIn(term, list) {
     return list.find(t => t.equals(term));
 }
@@ -205,11 +195,13 @@ function readModel(store, descriptionNode, subTerms) {
             .map(q => q.predicate);
 
         let bad = qs.find(t => !t.equals(prec.modelAs) && !precUtils.termIsIn(t, subTerms.map(t => t[0])));
-        if (bad !== undefined) return { error: "Malformed prec:Relationships" + bad.value };
+        if (bad !== undefined) 
+            throw Error(`Malformed relationship description node ${descriptionNode.value} - has a ${bad.value}`);
     }
 
     let modelAs = store.getQuads(descriptionNode, prec.modelAs, null, N3.DataFactory.defaultGraph());
-    if (modelAs.length > 1) return { error: 'More than one model for ' + descriptionNode.value };
+    if (modelAs.length > 1)
+        throw Error(`Malformed relationship description node ${descriptionNode.value} - has more than one model`);
 
     let targetModel = undefined;
     if (modelAs.length === 1) {
@@ -273,28 +265,15 @@ class RelationshipsManager {
 
         for (let quad of store.getQuads(null, prec.IRIOfRelationship, null, N3.DataFactory.defaultGraph())) {
             let relationshipManager = RelationshipManager.make(quad.subject, quad.object, store, subTermsKey);
-            if (relationshipManager.error === undefined) {
-                this.r.push(relationshipManager);
+            if (relationshipManager !== undefined) this.r.push(relationshipManager);
 
-                let model = readModel(store, quad.object, subTerms);
-                if (model !== undefined) {
-                    if (model.error !== undefined) console.error(model.error);
-                    else this.models.push([quad.object, model]);
-                }
-            } else {
-                console.error(relationshipManager.error);
-            }
+            let model = readModel(store, quad.object, subTerms);
+            if (model !== undefined) this.models.push([quad.object, model]);
         }
 
         const precRelationshipsModel = readModel(store, prec.Relationships, subTerms);
         if (precRelationshipsModel !== undefined) {
-            if (precRelationshipsModel.error !== undefined) throw precRelationshipsModel.error;
-            this.models.push(
-                [
-                    prec.Relationships,
-                    precRelationshipsModel
-                ]
-            );
+            this.models.push([prec.Relationships, precRelationshipsModel]);
         }
 
         this.r.sort((lhs, rhs) => {
@@ -368,16 +347,12 @@ class RelationshipManager {
         r.descriptionNode = description;
 
         if (iri.termType !== 'NamedNode') {
-            return {
-                error: 'Only Named Nodes can be used as a subject of prec:IRIOfRelationship.'
-            };
+            throw Error(`Only Named Nodes can be used as a subject of prec:IRIOfRelationship, found ${iri.value} (a ${iri.termType})`);
         }
 
         if (description.termType === 'Literal') {
-            r.conditions = [
-                [[variable("edgeLabel"), rdfs.label, description]]
-            ];
-            r.priority        = 0;
+            r.conditions = [[[variable("edgeLabel"), rdfs.label, description]]];
+            r.priority = 0;
             return r;
         }
 
@@ -388,13 +363,12 @@ class RelationshipManager {
         let forcedPriority = null;
         let modeledAs = undefined;
 
-        //function invalidCondition(extraCondition) {
-        //    console.error("Conditions are not supported on relation labels:");
-        //    console.error(source);
-        //    console.error(extraConditions);
-        //    console.error(mappedIRI);
-        //    console.error(extraCondition);
-        //}
+        function throwError(predicate, message) {
+            throw Error(
+                `${iri.value} prec:IRIOfRelationship ${description.value} - Error on the description node : ` +
+                `${predicate.value} ${message}`
+            );
+        }
         
         let conditions = [];
 
@@ -402,31 +376,29 @@ class RelationshipManager {
             const p = quad.predicate;
             
             if (prec.relationshipLabel.equals(p)) {
-                if (edgeLabel !== undefined) return { error: "Two labels on " + description.value };
+                if (edgeLabel !== undefined) throwError(p, "doesn't have exactly one value");
                 edgeLabel = quad.object.value;
             } else if (prec.priority.equals(p)) {
                 // TODO : check if type is integer
                 forcedPriority = parseInt(quad.object.value);
             } else if (prec.sourceLabel.equals(p)) {
                 let ok = onSubjectOrPredicate_nodeType(quad.object, conditions, 'subject');
-                if (!ok) return { error: 'Invalid sourceLabel ' + quad.object.value };
+                if (!ok) throwError(p, "has invalid object");
                 ++priority;
             } else if (prec.destinationLabel.equals(p)) {
                 let ok = onSubjectOrPredicate_nodeType(quad.object, conditions, 'object');
-                if (!ok) return { error: 'Invalid destinationLabel ' + quad.object.value };
+                if (!ok) throwError(p, "has invalid object");
                 ++priority;
             } else if (prec.modelAs.equals(p)) {
-                if (modeledAs !== undefined) return { error: 'Several modelAs' };
+                if (modeledAs !== undefined) throwError(p, "has more than one value")
                 modeledAs = quad.object;
             } else {
                 let isRenaming = findTermIn(p, subTermsKey);
-                if (!isRenaming) {
-                    return {
-                        error: "Unrecognized " + p.value + " for " + quad.subject.value
-                    };
-                }
+                if (!isRenaming) throwError(p, "is not recognized");
             }
         }
+
+        if (edgeLabel === undefined) throwError(p, "doesn't have exactly one value");
 
         if (forcedPriority !== null) {
             priority = forcedPriority;

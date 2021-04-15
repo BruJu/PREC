@@ -3,4 +3,4 @@ PREFIX prec: <http://bruy.at/prec#>
 prec:MetaProperty          prec:flagState false .
 prec:KeepProvenance        prec:flagState false .
 
-prec:Relationships prec:useRdfStar prec:AsUnique .
+prec:Relationships prec:modelAs prec:RdfStarUnique .

@@ -624,7 +624,6 @@ class PseudoPGBuilder {
             );
 
             // Remove axioms and meta data
-            dataset.deleteMatches(prec.MetaData, prec.GenerationModel);
             dataset.deleteMatches(prec.CreatedNodeLabel, rdfs.subClassOf, prec.CreatedVocabulary);
             dataset.deleteMatches(prec.CreatedRelationshipLabel, rdfs.subClassOf, prec.CreatedVocabulary);
             dataset.deleteMatches(prec.CreatedProperty, rdfs.subClassOf, prec.CreatedVocabulary);

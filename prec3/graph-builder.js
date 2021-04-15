@@ -241,56 +241,6 @@ class RDFGraphBuilder {
         this._addProperties(relation, properties, [label], this.namespaces.relationProperty);
     }
 
-    /**
-     * Adds to the builder the given relationship. Relationships are expected
-     * to be directed and have one and only one label.
-     * 
-     * Relationships are materialized using RDF-* by using this form:
-     * ```turtle
-     * _:start _:label _:end @{ prec:occurrence _:relationship } .
-     * _:relationship _:attribute1 _:attributeValue1 .
-     * ```
-     * 
-     * The relationship triple is asserted
-     * 
-     * - "But RDF-star exists and have been designed for PG": Yes but a triple
-     * is still unique in an RDF-star graph, so it ca not materialize multiples
-     * edges between the same nodes that have the same label. This class
-     * provides a mapping that always works and is always the same so it can't
-     * use RDF-star.
-     * 
-     * @param {*} relId The relationship id in the Property Graph. Have to be
-     * unique.
-     * @param {*} start The starting node id of the relationship.
-     * @param {*} end The ending node id of the relationship.
-     * @param {*} label The relationship label
-     * @param {*} properties The list of properties on the relationship.
-     */
-    addRelationshipRDFStar(relId, start, end, label, properties) {
-        let labelNode = this.namespaces.relationLabel[label];
-        this._labelize(labelNode, label);
-        this._addQuad(labelNode, rdf.type, prec.CreatedRelationshipLabel);
-        this._addQuad(prec.CreatedRelationshipLabel, rdfs.subClassOf, prec.CreatedVocabulary);
-
-        // Assert the triple: the `labelNode` predicate has a weak semantic
-        // It only means that there exists an occurrence of it.
-        let directEdge = N3.DataFactory.quad(
-            N3.DataFactory.blankNode("node" + start),
-            labelNode,
-            N3.DataFactory.blankNode("ndoe" + end)
-        );
-
-        this.quads.push(directEdge);
-
-        // Annotate the created triple in passive form
-        let relation = N3.DataFactory.blankNode("edge" + relId);
-        this._addQuad(directEdge, prec.occurrence, relation);
-
-        // Properties
-        this._addQuad(relation, rdf.type, pgo.Edge);
-        this._addProperties(relation, properties, [label], this.namespaces.relationProperty);
-    }
-
     /** Returns a dictionary with every prefixes used by this object. */
     getPrefixes() {
         const res = {
@@ -313,34 +263,10 @@ class RDFGraphBuilder {
      * 
      * @param {*} neo4jJavascriptArray The list of Json objects exported from
      * Neo4J APOC plugin.
-     * @param {*} mode Translation mode: RDFReification or RDFStar. Default is
-     * "RDFReification" which converts relationships into RDF
-     * standard reificaiton. RDF-* means relationships are materialized into
-     * triples that are annotated. (see `addRelationshipRDFReification`
-     * and `addRelationshipRDFStar`)
      */
-    static neo4jJsToStore(neo4jJavascriptArray, mode) {
-        if (mode === undefined) {
-            mode = "RDFReification";
-        }
-        if (mode !== "RDFReification" && mode !== "RDFStar") {
-            // TODO: proper error handling
-            console.error("RDFGraphBuilder::neo4jJsToStore() - Mode " + mode + " is not recognized");
-            return undefined;
-        }
-
+    static neo4jJsToStore(neo4jJavascriptArray) {
         let builder = new RDFGraphBuilder("http://www.example.org/vocab/");
-
-        switch (mode) {
-            case "RDFReification":
-                builder.addRelationship = builder.addRelationshipRDFReification;
-                builder._addQuad(prec.MetaData, prec.GenerationModel, prec.RelationshipAsRDFReification);
-                break;
-            case "RDFStar":
-                builder.addRelationship = builder.addRelationshipRDFStar;
-                builder._addQuad(prec.MetaData, prec.GenerationModel, prec.RelationshipAsRDFStar);
-                break;
-        }
+        builder.addRelationship = builder.addRelationshipRDFReification;
     
         neo4jJavascriptArray.filter (object => object.type === 'node')
             .forEach(object => builder.addNode(object.id, object.labels || [], object.properties || []));
@@ -386,8 +312,6 @@ class RDFGraphBuilder {
     static neo4JProtocoleToStore(nodes, edges) {
         let builder = new RDFGraphBuilder("http://www.example.org/vocab/");
 
-        builder._addQuad(prec.MetaData, prec.GenerationModel, prec.RelationshipAsRDFReification);
-
         for (let nodeId in nodes) {
             let node = nodes[nodeId];
 
@@ -414,8 +338,6 @@ class RDFGraphBuilder {
 
     static fromTinkerPop(nodes, edges) {
         let builder = new RDFGraphBuilder("http://www.example.org/vocab/");
-
-        builder._addQuad(prec.MetaData, prec.GenerationModel, prec.RelationshipAsRDFReification);
 
         builder._addProperties = builder._addMetaProperties;
 

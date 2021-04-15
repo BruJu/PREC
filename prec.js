@@ -64,26 +64,26 @@ function outputTheStore(store, prefixes) {
 
 function precOnNeo4J(filename, context) {
     const propertyGraphStructure = fileReader.fromNeo4j(filename);
-    const store = RDFGraphBuilder.neo4jJsToStore(propertyGraphStructure, "RDFReification")[0];
+    const store = RDFGraphBuilder.neo4jJsToStore(propertyGraphStructure)[0];
     graphReducer(store, filenameToArrayOfQuads(context));
     return store;
 }
 
 function precOnNeo4JString(json, contextAsQuads) {
     const pgStructure = fileReader.fromNeo4jString(json);
-    const store = RDFGraphBuilder.neo4jJsToStore(pgStructure, "RDFReification")[0];
+    const store = RDFGraphBuilder.neo4jJsToStore(pgStructure)[0];
     graphReducer(store, contextAsQuads);
     return store;
 }
 
 const contentFileToRDFGraph = {
-    "Neo4JAPOC": (path, generationModel) => {
+    "Neo4JAPOC": path => {
         // Read the PG structure
         const propertyGraphStructure = fileReader.fromNeo4j(path);
         // Convert to an expanded RDF graph
-        return RDFGraphBuilder.neo4jJsToStore(propertyGraphStructure, generationModel);
+        return RDFGraphBuilder.neo4jJsToStore(propertyGraphStructure);
     },
-    "Neo4JCypher": (path, _) => {
+    "Neo4JCypher": path => {
         let fileContent = fs.readFileSync(path, 'utf-8');
         let content = JSON.parse(fileContent);
         return RDFGraphBuilder.neo4JCypherToStore(content);
@@ -106,17 +106,6 @@ function main() {
     );
 
     parser.add_argument(
-        "-m",
-        "--GenerationModel",
-        {
-            help: "Generation model. Should be left to RDFReification",
-            default: "RDFReification",
-            choices: [ "RDFReification", "RDFStar" ],
-            nargs: "?",
-        }
-    )
-
-    parser.add_argument(
         "-f",
         "--PGContentFormat",
         {
@@ -130,7 +119,7 @@ function main() {
     let realArgs = parser.parse_args();
 
     // Convert the Property Graph content to RDF
-    const [store, prefixes] = contentFileToRDFGraph[realArgs.PGContentFormat](realArgs.PGContentPath, realArgs.GenerationModel);
+    const [store, prefixes] = contentFileToRDFGraph[realArgs.PGContentFormat](realArgs.PGContentPath);
 
     // Reduce the number of triples
     if (realArgs.Context !== "") {

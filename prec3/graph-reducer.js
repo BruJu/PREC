@@ -118,7 +118,6 @@ function removePGO(store) {
     storeAlterer.deleteMatches(store, null, rdf.type, pgo.Node);
     storeAlterer.deleteMatches(store, null, rdf.type, prec.Property);
     storeAlterer.deleteMatches(store, null, rdf.type, prec.PropertyValue);
-    storeAlterer.deleteMatches(store, null, prec.GenerationModel, null);
 }
 
 function removeMetaProperties(store) {
@@ -406,40 +405,6 @@ function transformProperties(store, addedVocabulary) {
             }
         }
     );
-}
-
-
-/// From an Expanded RDF-* store, remove the prec:occurrence node for relations that
-/// occured only once
-function flatten(store) {
-    if (store.countQuads(prec.MetaData, prec.GenerationModel, prec.RelationshipAsRDFStar) != 1) {
-        console.error("Can't flatten this store");
-        return false;
-    }
-
-    let occurrences = storeAlterer.matchAndBind(
-        store,
-        [
-            [variable("rdfTriple"), prec.occurrence, variable("relation")]
-        ]
-    );
-
-    occurrences = occurrences.filter(dict => store.countQuads(dict["rdfTriple"], prec.occurrence, null) == 1);
-
-    for (const uniqueOccurrence of occurrences) {
-        storeAlterer.directReplace(
-            store,
-            [
-                [uniqueOccurrence.rdfTriple, prec.occurrence, variable("rel")],
-                [variable("rel"), variable("p"), variable("o")]
-            ],
-            [
-                [uniqueOccurrence.rdfTriple, variable("p"), variable("o")]
-            ]
-        );
-    }
-    
-    return true;
 }
 
 function noList(store, firstNode) {

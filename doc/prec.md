@@ -372,30 +372,6 @@ No effect
 
 Subject for meta data
 
-# http://bruy.at/prec#GenerationModel
-
-Generation model used
-
-# http://bruy.at/prec#RelationshipAsRDFReification
-
-RDF graphs generated from PREC3 with the default mode / relationship encoded as standard RDF reification have
-the triple
-
-```
-prec:MetaData prec:GenerationModel prec:RelationshipAsRDFReification
-```
-
-
-# http://bruy.at/prec#RelationshipAsRDFStar
-
-RDF graphs generated from PREC3 with the relationship encoded as RDF star have
-the triple
-
-```
-prec:MetaData prec:GenerationModel prec:RelationshipAsRDFStar
-```
-
-
 # http://bruy.at/prec#CreatedVocabulary
 
 Type of IRIs that has been created by PREC and that

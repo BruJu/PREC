@@ -21,14 +21,14 @@ schema:knows prec:IRIOfRelationship [
     prec:relationshipLabel "KNOWS"  ;
     prec:sourceLabel       "PERSON" ;
     prec:destinationLabel  "PERSON" ;
-    prec:useRdfStar prec:AsUnique ;
+    prec:modelAs prec:RdfStarUnique ;
 ] .
 
 schema:knowsAbout prec:IRIOfRelationship [
     prec:relationshipLabel "KNOWS"   ;
     prec:sourceLabel       "PERSON"  ;
     prec:destinationLabel  "COMPANY" ;
-    prec:useRdfStar prec:AsUnique
+    prec:modelAs prec:RdfStarUnique
 ] .
 
 <http://schema.org/givenName> prec:IRIOfProperty "surname" .
