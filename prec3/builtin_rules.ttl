@@ -59,3 +59,35 @@ prec:substitutionTarget rdfs:domain prec:SubstitutionTerm .
 prec:subject   a prec:SubstitutionTerm ; prec:substitutionTarget rdf:subject   .
 prec:predicate a prec:SubstitutionTerm ; prec:substitutionTarget rdf:predicate .
 prec:object    a prec:SubstitutionTerm ; prec:substitutionTarget rdf:object    .
+
+
+#################
+# ==== Properties
+
+# - These rules match the pattern
+# pvar:entity   pvar:propertyKey       pvar:property
+# pvar:property rdf:value              pvar:propertyValue
+# pvar:property prec:hasMetaProperties pvar:MetaProperties
+#
+# For meta properties, the property rule is applied recursively.
+#
+# With:
+# pvar:propertyKey   a prec:PropertyKey   .
+# pvar:propertyValue a prec:PropertyValue .
+
+
+# prec:PropertyTransformation patterns must:
+# - Keep entity in subject position
+# - prec:receiveFrom appear at most once
+
+prec:DirectTriples a prec:PropertyTransformation ;
+  prec:composedOf
+    <<    pvar:entity pvar:propertyKey pvar:propertyValue                                         >> ,
+    << << pvar:entity pvar:propertyKey pvar:propertyValue >> prec:receiveFrom pvar:MetaProperties >> .
+
+prec:CombinedBlankNodes a prec:PropertyTransformation ;
+  prec:composedOf
+    << pvar:entity   pvar:propertyKey pvar:property       >> ,
+    << pvar:property rdf:value        pvar:propertyValue  >> ,
+    << pvar:property prec:receiveFrom pvar:MetaProperties >> .
+

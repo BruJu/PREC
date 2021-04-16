@@ -140,9 +140,11 @@ class RDFGraphBuilder {
 
             let o = buildPropertyValue(propertyValue);
 
-
             // META
             if (propertyObject.meta !== undefined) {
+                let metaNode = N3.DataFactory.blankNode();
+                this._addQuad(o, prec.hasMetaProperties, metaNode);
+                
                 for (let metaKey in propertyObject.meta) {
                     let metaValue = propertyObject.meta[metaKey];
 
@@ -154,10 +156,9 @@ class RDFGraphBuilder {
 
                     let target = buildPropertyValue(metaValue);
 
-                    this._addQuad(o, propertyNode, target);
+                    this._addQuad(metaNode, propertyNode, target);
                 }
             }
-
         }
     }
 

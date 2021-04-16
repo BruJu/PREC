@@ -33,13 +33,19 @@ const basicGraphs = {
         :person a [ rdfs:label "Person" ] .
         :animal a [ rdfs:label "Animal" ] .
     `,
-    oneEdgeWith1MetaProperty: `
+    oneEdgeWith1Property: `
         :edge a pgo:Edge ; rdf:subject :s ; rdf:predicate :p ; rdf:object :o ;
-            :meta1 :metavalue1 .
+            :propKey1 :propValue1 .
     `,
-    oneEdgeWith2MetaProperties: `
+    oneEdgeWith2Properties: `
         :edge a pgo:Edge ; rdf:subject :s ; rdf:predicate :p ; rdf:object :o ;
-            :meta1 :metavalue1 ; :meta2 :metavalue2 .
+            :propKey1 :propValue1 ; :propKey2 :propValue2 .
+    `,
+    edgeWithMetaProperty: `
+        :edge a pgo:Edge ; rdf:subject :s ; rdf:predicate :p ; rdf:object :o ;
+            :edge :propKey :propValue .
+        
+        << :edge :propKey :propValue >> :metaPropKey :metaPropValue .
     `
 };
 
@@ -303,22 +309,34 @@ describe("Relationship convertion", function () {
     })
 
     describe("Meta properties", function() {
-        runATest("oneEdgeWith1MetaProperty", "emptyContext", basicGraphs["oneEdgeWith1MetaProperty"]);
-        runATest("oneEdgeWith2MetaProperties", "emptyContext", basicGraphs["oneEdgeWith2MetaProperties"]);
+        runATest("oneEdgeWith1Property"  , "emptyContext", basicGraphs["oneEdgeWith1Property"]  );
+        runATest("oneEdgeWith2Properties", "emptyContext", basicGraphs["oneEdgeWith2Properties"]);
 
-
-        runATest("oneEdgeWith1MetaProperty", "allUnique", 
+        runATest("oneEdgeWith1Property", "allUnique", 
             `
                 :s :p :o .
-                << :s :p :o >> a pgo:Edge ; :meta1 :metavalue1 .
+                << :s :p :o >> a pgo:Edge ; :propKey1 :propValue1 .
             `
         );
 
-        runATest("oneEdgeWith2MetaProperties", "allUnique", 
+        runATest("oneEdgeWith2Properties", "allUnique", 
             `
                 :s :p :o .
-                << :s :p :o >> a pgo:Edge ; :meta1 :metavalue1 ; :meta2 :metavalue2 .
+                << :s :p :o >> a pgo:Edge ; :propKey1 :propValue1 ; :propKey2 :propValue2 .
             `
         );
+
+        /*
+        This test currently can not pass as N3.Store does not support multi
+        nested RDF Quads
+        
+        runATest("edgeWithMetaProperty", "allUnique", 
+            `
+            :s :p :o .
+            << :s :p :o >> a pgo:Edge ; :propKey :propValue .
+            << << :s :p :o >> :propKey :propValue >> :metaPropKey :metaPropValue .
+            `
+        );
+        */
     })
 });

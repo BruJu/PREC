@@ -388,3 +388,10 @@ It only applies to labels and property names.
 ## prec:PropertyValue
 
 
+# Reserved IRIs
+
+IRIs in the prec namespace are reserved for the ontology (obviously) and
+[its default implementation](https://github.com/BruJu/PREC/).
+
+IRIs prefixed with `_` and `__` are reserved for implementation . 
+
