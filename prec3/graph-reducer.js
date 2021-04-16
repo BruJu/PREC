@@ -164,86 +164,24 @@ function removeUnusedCreatedVocabulary(store, type, expectedSubject, expectedPre
     }
 }
 
-function _findBehaviour(context, task) {
-    // The task represents the node to execute, or prec.todo.
-    if (!prec.todo.equals(task)) {
-        let r = context.getRelationshipTransformationRelatedTo(task);
-        if (r !== undefined) return r;
-    }
-
-    return context.getRelationshipTransformationRelatedTo(prec.Relationships);
-}
-
-
 function _listContains(pattern, searched) {
     return pattern.find(e => searched.find(s => quadStar.containsTerm(e, s)) !== undefined) !== undefined;
 }
 
-function modifyRelationships(store, context) {
-    const relations = storeAlterer.matchAndBind(store,
-        [
-            [variable("relation"), rdf.type, pgo.Edge],
-            [variable("relation"), prec.todo    , variable("task")     ],
-            [variable("relation"), rdf.subject  , variable("subject")  ],
-            [variable("relation"), rdf.predicate, variable("predicate")],
-            [variable("relation"), rdf.object   , variable("object")   ]
-        ]
-    );
-
-    for (const relation of relations) {
-        const behaviour = _findBehaviour(context, relation.task);
-
-        if (Array.isArray(behaviour)) {
-            let r = behaviour.map(term => quadStar.remapPatternWithVariables(
-                term,
-                [
-                    [variable('relation')     , pvar.self         ],
-                    [variable('subject')      , pvar.source       ],
-                    [variable('predicate')    , pvar.relationLabel],
-                    [variable('object')       , pvar.destination  ],
-                    [variable('propertyKey')  , pvar.propertyKey  ],
-                    [variable('propertyValue'), pvar.propertyValue]
-                ]
-            ))
-                .map(q => [q.subject, q.predicate, q.object])
-                .map(l => [l, _listContains(l, [variable('propertyKey'), variable('propertyValue')])]);
-
-            const nonPropertiesDependantPattern = r.filter(e => !e[1]).map(e => e[0]);
-            const    propertiesDependantPattern = r.filter(e =>  e[1]).map(e => e[0]);
-
-            // Properties
-            let propertyQuads = store.getQuads(relation.relation, null, null, N3.DataFactory.defaultGraph())
-                .filter(
-                    quad => !precUtils.termIsIn(quad.predicate, [
-                        rdf.type, prec.todo, rdf.subject, rdf.predicate, rdf.object
-                    ])
-                );
-
-            storeAlterer.replaceOneBinding(store, relation, nonPropertiesDependantPattern);
-
-            if (propertyQuads.length !== 0) {
-                store.removeQuads(propertyQuads);
-                relation['@quads'] = []; // No more quad to delete during replaceOneBinding
-
-                for (let propertyQuad of propertyQuads) {
-                    relation.propertyKey   = propertyQuad.predicate;
-                    relation.propertyValue = propertyQuad.object;
-
-                    storeAlterer.replaceOneBinding(store, relation, propertiesDependantPattern);
-                }
-            }
-        }
-    }
-
-    store.removeQuads(store.getQuads(null, prec.todo, prec.todo))
-}
 
 function transformRelationships(store, addedVocabulary) {
+    // `prec.__targetDescriptionModel` is added to note during the relationship
+    // loop the list of descriptionModels to apply later.
+    // We don't apply them now so the transformation into the target models does
+    // not conflict with the processing of other edges.
+    // Instead, the `prec:__targetDescriptionModel` object will changed if it
+    // should be and `modifyRelationships` will actually do the replacement.
+
     // Add an annotation to every quad
     {
         const q = store.getQuads(null, rdf.type, pgo.Edge)
             .map(quad => quad.subject)
-            .map(term => N3.DataFactory.quad(term, prec.todo, prec.todo));
+            .map(term => N3.DataFactory.quad(term, prec.__targetDescriptionModel, prec.Relationships));
 
         store.addQuads(q);
     }
@@ -270,7 +208,79 @@ function transformRelationships(store, addedVocabulary) {
     filterOutDeletedEdgeLabel(store, Object.values(candidateEdgeLabelsForDeletion));
 }
 
+/**
+ * Process every `prec:__targetDescriptionModel` request registered in the
+ * store.
+ * 
+ * In other words, this function will map the PREC-0 representation of a
+ * property graph edge to the representation requested by the user, through the
+ * specified model in the context.
+ * 
+ * @param {N3.Store} store The store that contains the quads to process
+ * @param {Context} context The `Context` that contains the information about
+ * the context given by the user
+ */
+function modifyRelationships(store, context) {
+    const relations = storeAlterer.matchAndBind(store,
+        [
+            [variable("relation"), rdf.type, pgo.Edge],
+            [variable("relation"), prec.__targetDescriptionModel, variable("targetDescriptionModel")],
+            [variable("relation"), rdf.subject       , variable("subject")    ],
+            [variable("relation"), rdf.predicate     , variable("predicate")  ],
+            [variable("relation"), rdf.object        , variable("object")     ]
+        ]
+    );
 
+    for (const relation of relations) {
+        const behaviour = context.findRelationshipModel(relation.targetDescriptionModel);
+
+        if (Array.isArray(behaviour)) {
+            // Build the patterns to map to
+            let r = behaviour.map(term => quadStar.remapPatternWithVariables(
+                term,
+                [
+                    [variable('relation')     , pvar.self         ],
+                    [variable('subject')      , pvar.source       ],
+                    [variable('predicate')    , pvar.relationLabel],
+                    [variable('object')       , pvar.destination  ],
+                    [variable('propertyKey')  , pvar.propertyKey  ],
+                    [variable('propertyValue'), pvar.propertyValue]
+                ]
+            ))
+                .map(q => [q.subject, q.predicate, q.object])
+                .map(l => [l, _listContains(l, [variable('propertyKey'), variable('propertyValue')])]);
+
+            const nonPropertiesDependantPattern = r.filter(e => !e[1]).map(e => e[0]);
+            const    propertiesDependantPattern = r.filter(e =>  e[1]).map(e => e[0]);
+
+            // Find every properties to map them later
+            let propertyQuads = store.getQuads(relation.relation, null, null, N3.DataFactory.defaultGraph())
+                .filter(
+                    quad => !precUtils.termIsIn(quad.predicate, [
+                        rdf.type, prec.__targetDescriptionModel, rdf.subject, rdf.predicate, rdf.object
+                    ])
+                );
+
+            // Replace non property dependant quads
+            storeAlterer.replaceOneBinding(store, relation, nonPropertiesDependantPattern);
+
+            // Replace property dependants quads
+            if (propertyQuads.length !== 0) {
+                store.removeQuads(propertyQuads);
+                relation['@quads'] = []; // No more quad to delete during replaceOneBinding
+
+                for (let propertyQuad of propertyQuads) {
+                    relation.propertyKey   = propertyQuad.predicate;
+                    relation.propertyValue = propertyQuad.object;
+
+                    storeAlterer.replaceOneBinding(store, relation, propertiesDependantPattern);
+                }
+            }
+        }
+    }
+
+    store.removeQuads(store.getQuads(null, prec.__targetDescriptionModel, prec.Relationships)); // TODO: ??? I'm not sure if that's needed
+}
 
 /**
  * 
@@ -355,6 +365,15 @@ function transformNodeLabels(store, addedVocabulary) {
 
 
 function transformProperties(store, addedVocabulary) {
+//    TODO: conform to this API which should pass all tests (but does not require to support asSet)
+//    addedVocabulary.forEachProperties(propertyManager => {
+//        storeAlterer.findFilterReplace(
+//            propertyManager.getTransformationSource(),
+//            propertyManager.getTransformationConditions(),
+//            propertyManager.getTransformationTarget()
+//        );
+//    });
+
     addedVocabulary.forEachProperty(
         (propertyName, mappedIRI, extraConditions) => {
             let asSet = false;
