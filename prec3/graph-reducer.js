@@ -372,9 +372,9 @@ function transformProperties(store, addedVocabulary) {
                 } else if (extraCondition["@category"] === "RelationshipLabel") {
                     conditions.push(
                         [
-                            [variable("rel")  , rdf.type  , variable("label")                               ],
-                            [variable("rel")  , rdf.type  , pgo.Edge                                        ],
-                            [variable("label"), rdfs.label, N3.DataFactory.literal(extraCondition.nodeLabel)]
+                            [variable("node")  , rdf.predicate, variable("label")],
+                            [variable("node")  , rdf.type     , pgo.Edge         ],
+                            [variable("label"), rdfs.label, N3.DataFactory.literal(extraCondition.relationshipLabel)]
                         ]
                     );
                 } else if (extraCondition["@category"] === "AsSet") {

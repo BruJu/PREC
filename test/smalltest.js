@@ -140,12 +140,12 @@ function badColorize(s1, s2) {
     return [s1_.join("\n"), s2_.join("\n")]
 }
 
-function print(store, graphName, contextName, expectedStore) {
+function print(store, d1, graphName, d2, contextName, expectedStore) {
     console.error("Error on " + graphName + " x " + contextName);
     console.error("• Base Graph:");
-    console.error(basicGraphs[graphName]);
+    console.error(d1[graphName]);
     console.error("• Context:");
-    console.error(contexts[contextName]);
+    console.error(d2[contextName]);
 
     let result   = precUtils.badToString(store.getQuads(), 8);
     let expected = precUtils.badToString(expectedStore.getQuads(), 8);
@@ -166,7 +166,21 @@ function runATest(graphName, contextName, expected) {
 
         const expectedStore = utility.turtleToStore(expected);
         const r = isSubstituableGraph(store.getQuads(), expectedStore.getQuads());
-        if (!r) print(store, graphName, contextName, expectedStore);
+        if (!r) print(store, basicGraphs, graphName, contexts, contextName, expectedStore);
+        assert.ok(r);
+    });
+}
+
+
+function runATest_(dict, graphName, contextName, expected) {
+    it(graphName + " x " + contextName, function() {
+        const store         = utility.turtleToStore(dict[graphName]);
+        const context       = utility.turtleToQuads(dict[contextName]);
+        graphReducer(store, context);
+
+        const expectedStore = utility.turtleToStore(expected);
+        const r = isSubstituableGraph(store.getQuads(), expectedStore.getQuads());
+        if (!r) print(store, dict, graphName, dict, contextName, expectedStore);
         assert.ok(r);
     });
 }
@@ -329,7 +343,7 @@ describe("Relationship convertion", function () {
         /*
         This test currently can not pass as N3.Store does not support multi
         nested RDF Quads
-        
+
         runATest("edgeWithMetaProperty", "allUnique", 
             `
             :s :p :o .
@@ -340,3 +354,148 @@ describe("Relationship convertion", function () {
         */
     })
 });
+
+describe("Property convertion", function() {
+    const graphs = {
+        empty: ``,
+        oneNode: ` :node a pgo:Node . `,
+        oneEdge: `
+            :edge a pgo:Edge ;
+              rdf:subject :s ;
+              rdf:predicate :p ;
+              rdf:object :o .
+        `,
+        oneNodeWithProperty: `
+            :node a pgo:Node ; :p [ rdf:value "v1" ] .
+            :p a prec:Property, prec:CreatedProperty ; rdfs:label "P1" .
+        `,
+        oneNodeWithTwoProperties: `
+            :node a pgo:Node ; :p1 [ rdf:value "v1" ] ; :p2 [ rdf:value "v2" ] .
+            :p1 a prec:Property, prec:CreatedProperty ; rdfs:label "P1" .
+            :p2 a prec:Property, prec:CreatedProperty ; rdfs:label "P2" .
+        `,
+        oneNodeWithMultiValuedProperty: `
+            :node a pgo:Node ; :p [ rdf:value "v1" ] ; :p [ rdf:value "v2" ] .
+            :p a prec:Property, prec:CreatedProperty ; rdfs:label "P1" .
+        `,
+        oneSimpleGraph: `
+            :edge a pgo:Edge ;
+              rdf:subject :s ;
+              rdf:predicate :p ;
+              rdf:object :o .
+            
+            :s a pgo:Node ; :propertyA [ rdf:value "VANode" ] ; a [ rdfs:label "Subject" ] .
+            :o a pgo:Node ; :propertyB [ rdf:value "VBNode" ] ; a [ rdfs:label "Object"  ] .
+            :p rdfs:label "LabelOfEdge" .
+            :edge :propertyA [ rdf:value "VAEdge" ] .
+            :edge :propertyB [ rdf:value "VBEdge" ] .
+            :propertyA a prec:Property, prec:CreatedProperty ; rdfs:label "PropertyA" .
+            :propertyB a prec:Property, prec:CreatedProperty ; rdfs:label "PropertyB" .
+        `,
+        contextForP1: ` :knows prec:IRIOfProperty "P1" . `,
+        contextForPB: ` :knows prec:IRIOfProperty "PropertyB" . `,
+        contextForPASubjectNodes: `
+            :mappedA prec:IRIOfProperty [
+                prec:propertyName "PropertyA" ;
+                prec:nodeLabel    "Subject"
+            ] .
+        `,
+        contextForPAOnLabelOfEdge: `
+            :mappedA prec:IRIOfProperty [
+                prec:propertyName      "PropertyA" ;
+                prec:relationshipLabel "LabelOfEdge"
+            ] .
+        `
+    };
+
+    describe('Empty context', function() {
+        runATest_(graphs, 'empty'                         , 'empty', graphs.empty);
+        runATest_(graphs, 'oneNode'                       , 'empty', graphs.oneNode);
+        runATest_(graphs, 'oneEdge'                       , 'empty', graphs.oneEdge);
+        runATest_(graphs, 'oneNodeWithProperty'           , 'empty', graphs.oneNodeWithProperty);
+        runATest_(graphs, 'oneNodeWithTwoProperties'      , 'empty', graphs.oneNodeWithTwoProperties);
+        runATest_(graphs, 'oneNodeWithMultiValuedProperty', 'empty', graphs.oneNodeWithMultiValuedProperty);
+        runATest_(graphs, 'oneSimpleGraph'                , 'empty', graphs.oneSimpleGraph);
+    });
+
+    describe("Simple properties", function() {
+        runATest_(graphs, 'empty', 'contextForP1', ``);
+
+        runATest_(graphs, 'oneNodeWithProperty', 'contextForP1',
+        `
+            :node a pgo:Node ; :knows [ rdf:value "v1" ] .
+        `
+        );
+
+        runATest_(graphs, 'oneNodeWithTwoProperties', 'contextForP1',
+        `
+            :node a pgo:Node ; :knows [ rdf:value "v1" ] ; :p2 [ rdf:value "v2" ] .
+            :p2 a prec:Property, prec:CreatedProperty ; rdfs:label "P2" .
+        `
+        );
+
+        runATest_(graphs, 'oneNodeWithMultiValuedProperty', 'contextForP1',
+        `
+            :node a pgo:Node ; :knows [ rdf:value "v1" ] ; :knows [ rdf:value "v2" ] .
+        `
+        );
+
+        runATest_(graphs, 'oneSimpleGraph', 'contextForPB',
+        `
+            :edge a pgo:Edge ;
+              rdf:subject :s ;
+              rdf:predicate :p ;
+              rdf:object :o .
+
+            :s a pgo:Node ; :propertyA [ rdf:value "VANode" ] ; a [ rdfs:label "Subject" ] .
+            :o a pgo:Node ; :knows     [ rdf:value "VBNode" ] ; a [ rdfs:label "Object"  ] .
+            :p rdfs:label "LabelOfEdge" .
+            :edge :propertyA [ rdf:value "VAEdge" ] .
+            :edge :knows [ rdf:value "VBEdge" ] .
+            :propertyA a prec:Property, prec:CreatedProperty ; rdfs:label "PropertyA" .
+            `
+        );
+    
+        runATest_(graphs, 'oneSimpleGraph', 'contextForPASubjectNodes',
+        `
+            :edge a pgo:Edge ;
+            rdf:subject :s ;
+            rdf:predicate :p ;
+            rdf:object :o .
+            
+            :s a pgo:Node ; :mappedA   [ rdf:value "VANode" ] ; a [ rdfs:label "Subject" ] .
+            :o a pgo:Node ; :propertyB [ rdf:value "VBNode" ] ; a [ rdfs:label "Object"  ] .
+            :p rdfs:label "LabelOfEdge" .
+            :edge :propertyA [ rdf:value "VAEdge" ] .
+            :edge :propertyB [ rdf:value "VBEdge" ] .
+            :propertyA a prec:Property, prec:CreatedProperty ; rdfs:label "PropertyA" .
+            :propertyB a prec:Property, prec:CreatedProperty ; rdfs:label "PropertyB" .
+
+        `
+        );
+
+        runATest_(graphs, 'oneSimpleGraph', 'contextForPAOnLabelOfEdge',
+        `
+            :edge a pgo:Edge ;
+            rdf:subject :s ;
+            rdf:predicate :p ;
+            rdf:object :o .
+            
+            :s a pgo:Node ; :propertyA [ rdf:value "VANode" ] ; a [ rdfs:label "Subject" ] .
+            :o a pgo:Node ; :propertyB [ rdf:value "VBNode" ] ; a [ rdfs:label "Object"  ] .
+            :p rdfs:label "LabelOfEdge" .
+            :edge :mappedA   [ rdf:value "VAEdge" ] .
+            :edge :propertyB [ rdf:value "VBEdge" ] .
+            :propertyA a prec:Property, prec:CreatedProperty ; rdfs:label "PropertyA" .
+            :propertyB a prec:Property, prec:CreatedProperty ; rdfs:label "PropertyB" .
+        `
+        );
+    });
+
+    describe("Meta properties", function() {
+
+    });
+
+
+})
+
