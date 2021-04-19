@@ -335,19 +335,10 @@ function filterOutDeletedEdgeLabel(store, nodesToDelete) {
 
 function transformNodeLabels(store, addedVocabulary) {
     addedVocabulary.forEachNodeLabel(
-        (nodeLabelName, mappedIRI, extraConditions) => {
-            if (extraConditions.length != 0) {
-                // TODO
-                console.error("Conditions are not supported on node labels:");
-                console.error(nodeLabelName);
-                console.error(mappedIRI);
-                console.error(extraConditions);
-                return;
-            }
-
-            let pattern = [
+        (nodeLabel, correspondingIRI) => {
+            const pattern = [
                 [variable("nodeLabel"), rdf.type, prec.CreatedNodeLabel],
-                [variable("nodeLabel"), rdfs.label, N3.DataFactory.literal(nodeLabelName)],
+                [variable("nodeLabel"), rdfs.label, N3.DataFactory.literal(nodeLabel)],
             ];
 
             for (const bind of storeAlterer.matchAndBind(store, pattern)) {
@@ -355,10 +346,9 @@ function transformNodeLabels(store, addedVocabulary) {
                     store,
                     [[variable("node"), rdf.type, bind.nodeLabel]],
                     [],
-                    [[variable("node"), rdf.type, mappedIRI]]
+                    [[variable("node"), rdf.type, correspondingIRI]]
                 )
             }
-
         }
     );
 }

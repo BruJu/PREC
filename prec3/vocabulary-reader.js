@@ -589,102 +589,33 @@ class RelationshipManager {
 ////////////////////////////////////////////////////////////////////////////////
 // Anything Goes
 
+function _readNodeLabels(store) {
+    let labelsToIRI = {};
 
-function readThings(store, predicateIRI, acceptsLiteral, moreComplex) {
-    let founds = {};
+    let quads = store.getQuads(null, prec.IRIOfNodeLabel, null, defaultGraph());
 
-    let quads = store.getQuads(null, predicateIRI, null);
+    function invalidTriple(triple, reason) {
+        return Error(
+            "Vocabulary Node Labels: Invalid triple found with prec:IRIOfNodeLabel predicate "
+            + `(${triple.subject.value} ${triple.predicate.value} ${triple.object.value}): `
+            + reason
+        );
+    }
 
     for (const baseRule of quads) {
-        if (baseRule.subject.termType !== "NamedNode") {
-            console.error("Invalid vocab triple:");
-            console.error(baseRule);
-            console.error("Subject must be an IRI.");
-            console.error("Because predicate is: ");
-            console.error(predicateIRI);
-            continue;
-        }
+        if (baseRule.subject.termType !== "NamedNode")
+            throw invalidTriple(baseRule, "Subject should be a blank node");
+        if (baseRule.object.termType !== "Literal")
+            throw invalidTriple(baseRule, "Object should be a literal")
 
-        if (baseRule.object.termType === "Literal") {
-            if (!acceptsLiteral) {
-                console.error("Invalid vocab triple:");
-                console.error(baseRule);
-                console.error("Can't use a simple rule for this predicate.");
-                continue;
-            }
+        const sourceLabel = baseRule.object.value;
+        if (labelsToIRI[sourceLabel] !== undefined)
+            throw invalidTriple(baseRule, "Several triples maps the same node label");
 
-            let sourceLabel = baseRule.object.value;
-
-            if (founds[sourceLabel] === undefined) {
-                founds[sourceLabel] = [];
-            }
-
-            let r = [];
-            r.id = baseRule.object;
-
-            founds[sourceLabel].push({
-                "destination": baseRule.subject,
-                "extraRules" : r,
-                "priority": 0
-            });
-        } else {
-            // Named node or Blank node are both ok
-            if (moreComplex === false) {
-                console.error("Invalid vocab triple:");
-                console.error(baseRule);
-                console.error("Can't use a complex rule for this predicate.");
-                continue;
-            }
-
-            let mapped = moreComplex(
-                store.getQuads(baseRule.object, null, null)
-            );
-
-            if (mapped === undefined || mapped == null) {
-                console.error("Invalid vocab triple (more complex error):");
-                console.error(baseRule);
-                continue;
-            }
-
-            const [source, extra, priority] = mapped;
-
-            if (source == undefined || extra == undefined) {
-                console.error("Invalid vocab triple (???):");
-                console.error(baseRule);
-                continue;
-            }
-
-            if (founds[source] == undefined) {
-                founds[source] = [];
-            }
-
-            extra.id = baseRule.object;
-
-            founds[source].push({
-                destination: baseRule.subject,
-                extraRules : extra,
-                priority   : priority
-            });
-        }
+        labelsToIRI[sourceLabel] = baseRule.subject;
     }
 
-    for (const key in founds) {
-        founds[key] = founds[key].sort((lhs, rhs) => {
-            let prioDiff = rhs.priority - lhs.priority;
-
-            if (prioDiff !== 0) return prioDiff;
-
-            if (lhs.destination.value < rhs.destination.value) {
-                return -1;
-            } else if (lhs.destination.value > rhs.destination.value) {
-                return 1;
-            } else {
-                return 0;
-            }
-        });
-    }
-
-    return founds;
+    return labelsToIRI;
 }
 
 
@@ -768,19 +699,11 @@ class Context {
 
         this.properties = new PropertiesMapper(store, substitutionTerms);
         this.relations  = new RelationshipsManager(store, substitutionTerms);
-        this.nodeLabels = readThings(store, prec.IRIOfNodeLabel, true, false);
+        this.nodeLabels = _readNodeLabels(store);
 
         this.flags = readFlags(store);
 
         this.blankNodeMapping = readBlankNodeMapping(store);
-    }
-
-    static _forEachKnown(r, callback) {
-        for (let source in r) {
-            for (const ruleset of r[source]) {
-                callback(source, ruleset["destination"], ruleset["extraRules"]);
-            }
-        }
     }
 
     forEachRelation(callback) {
@@ -792,7 +715,9 @@ class Context {
     }
 
     forEachNodeLabel(callback) {
-        return Context._forEachKnown(this.nodeLabels, callback);
+        for (const nodeLabel in this.nodeLabels) {
+            callback(nodeLabel, this.nodeLabels[nodeLabel]);
+        }
     }
 
     getStateOf(flag) {
