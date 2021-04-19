@@ -197,58 +197,184 @@ class ModelManager {
 //     --- PROPERTIES  --- PROPERTIES  --- PROPERTIES  --- PROPERTIES  ---  
 //     --- PROPERTIES  --- PROPERTIES  --- PROPERTIES  --- PROPERTIES  ---  
 
+class PropertyMapper {
+    constructor(iri, description, store, subTermsKey) {
+        // TODO: there is a lot of code duplication with `RelationshipManager::RelationshipManager()`.
+        // There might be some refactor that is possible.
 
+        // TODO: Or a least, a common function that returns the individual predicates to actually process?
+        this.iri             = iri;
+        this.descriptionNode = description;
 
-function readProperties(store) {
-    return readThings(
-        store,
-        prec.IRIOfProperty,
-        true,
-        quads => {
-            let source = undefined;
-            let rules = [];
-            let priority = 0;
-            let forcedPriority = null;
-
-            for (let quad of quads) {
-                if (quad.predicate.equals(prec.propertyName)
-                    && quad.object.termType == "Literal") {
-                    source = quad.object.value;
-                } else if (quad.predicate.equals(prec.nodeLabel)
-                    && quad.object.termType == "Literal") {
-                    rules.push({
-                        "@category": "NodeLabel",
-                        "nodeLabel": quad.object.value
-                    });
-
-                    priority += 1;
-                } else if (quad.predicate.equals(prec.relationshipLabel)
-                    && quad.object.termType == "Literal") {
-                    rules.push({
-                        "@category": "RelationshipLabel",
-                        "relationshipLabel": quad.object.value
-                    });
-
-                    priority += 1;
-                } else if (quad.predicate.equals(prec.multiValue) && quad.object.equals(prec.asSet)) {
-                    rules.push( { "@category": "AsSet" })
-                } else if (quad.predicate.equals(prec.priority)) {
-                    // TODO : check if type is integer
-                    forcedPriority = parseInt(quad.object.value);
-                } else {
-                    console.error("Unknown rule description:");
-                    console.error(quad);
-                    return null;
-                }
-            }
-
-            if (forcedPriority !== null) {
-                priority = forcedPriority;
-            }
-
-            return [source, rules, priority];
+        if (iri.termType !== 'NamedNode') {
+            throw Error(`Only Named Nodes can be used as a subject of prec:IRIOfProperty, found ${iri.value} (a ${iri.termType})`);
         }
-    );
+
+        if (description.termType === 'Literal') {
+            this.conditions = [[[variable('propertyKey'), rdfs.label, description]]]
+            this.priority = 0;
+            return;
+        }
+
+        const descriptionQuads = store.getQuads(description, null, null, defaultGraph());
+
+        let propertyKeyLabel = undefined;
+        let priority = 0;
+        let forcedPriority = null;
+        let modeledAs = undefined;
+
+        function throwError(predicate, message) {
+            throw Error(
+                `${iri.value} prec:IRIOfProperty ${description.value} - Error on the description node : ` +
+                `${predicate.value} ${message}`
+            );
+        }
+
+        let conditions = [];
+        let reservedFor = "None";
+
+        for (const quad of descriptionQuads) {
+            const p = quad.predicate;
+
+            if (quad.predicate.equals(prec.propertyName)) {
+                if (propertyKeyLabel !== undefined) throwError(p, "have more than one value");
+
+                if (quad.object.termType !== 'Literal') {
+                    throwError(p, `object should be a literal but found ${quad.object.termType}`);
+                }
+
+                propertyKeyLabel = quad.object;
+            } else if (quad.predicate.equals(prec.nodeLabel)) {
+                if (reservedFor == 'Edge') {
+                    throwError(p, "Found a node as object but this property is reserved for relationships by previous rule");
+                }
+
+                PropertyMapper._processRestrictionOnEntity(quad.object, conditions, pgo.Node, rdf.type, mess => throwError(e, mess));
+                priority += 1;
+                reservedFor = 'Node';
+            } else if (quad.predicate.equals(prec.relationshipLabel)) {
+                if (reservedFor == 'Node') {
+                    throwError(p, "Found a relationship as object but this property is reserved for nodes by previous rule");
+                }
+
+                PropertyMapper._processRestrictionOnEntity(quad.object, conditions, pgo.Edge, rdf.predicate, mess => throwError(e, mess));
+                priority += 1;
+                reservedFor = 'Edge';
+            } else if (prec.priority.equals(p)) {
+                // TODO : check if type is integer
+                forcedPriority = parseInt(quad.object.value);
+            } else if (prec.modelAs.equals(p)) {
+                if (modeledAs !== undefined) throwError(p, "has more than one value");
+                modeledAs = quad.object;
+            } else {
+                let isRenaming = PrecUtils.termIsIn(p, subTermsKey);
+                if (!isRenaming) throwError(p, "is not recognized");
+            }
+        }
+
+        if (propertyKeyLabel === undefined) throwError(prec.propertyName, "doesn't have any value");
+
+        if (forcedPriority !== null) {
+            priority = forcedPriority;
+        }
+
+        this.conditions = [
+            [
+                [variable('propertyKey'), rdfs.label, propertyKeyLabel],
+                [variable('propertyKey'), rdf.type, prec.Property]
+            ],
+            ...conditions
+        ];
+
+        this.priority = priority;
+    }
+
+    static _processRestrictionOnEntity(object, conditions, type_, labelType, throwError) {
+        if (prec.any.equals(object)) {
+            conditions.push([
+                [variable("entity"), rdf.type, type_]
+            ]);
+        } else if (object.termType === 'Literal') {
+            conditions.push([
+                [variable("entity"), labelType , variable("label")],
+                [variable("entity"), rdf.type  , type_            ],
+                [variable("label") , rdfs.label, object           ]
+            ]);
+        } else {
+            throwError(p, "has invalid object");
+        }
+    }
+
+    getTransformationSource() {
+        let s = [
+            [variable("entity")  , variable("propertyKey"), variable("property")]
+       // , [variable("property"), rdf.value              , variable("propertyValue")]
+        ];
+        return s;
+    }
+
+    getTransformationConditions() {
+        return this.conditions;
+    }
+
+    getTransformationTarget() {
+        let s = [
+            [variable("entity"), this.iri, variable("property")]
+        ];
+        return s;
+    }
+}
+
+class PropertiesMapper {
+    constructor(contextStore, substitutionTerms) {
+        const subTermsKey = substitutionTerms.getKeys();
+        const modelManager = new ModelManager(substitutionTerms, prec.Prec0Property);
+
+        this.iriRemapper = [];
+        this.models = [];
+
+        // `prec:IRIOfRelationship` quads management
+        for (let quad of contextStore.getQuads(null, prec.IRIOfProperty, null, defaultGraph())) {
+            // Read remapping
+            this.iriRemapper.push(new PropertyMapper(quad.subject, quad.object, contextStore, subTermsKey));
+
+            // Read model if relevant
+            let model = modelManager.readModel(contextStore, quad.object);
+            if (model !== undefined) this.models.push([quad.object, model]);
+        }
+        
+        _sortArrayByPriorityThenIri(this.iriRemapper)
+
+        // `prec:Relationships` is the default description node
+        //modelManager.throwIfNotAModelDescriptionPredicate(contextStore, prec.Relationships);
+        //
+        //const precRelationshipsModel = modelManager.readModel(contextStore, prec.Relationships);
+        //if (precRelationshipsModel !== undefined) {
+        //    this.models.push([prec.Relationships, precRelationshipsModel]);
+        //}
+    }
+    
+//    /**
+//     * Return the model contained in the given description node
+//     * @param {*} descriptionNode The description node
+//     * @returns The model, or undefined if not specified by the user
+//     */
+//    getRelationshipTransformationRelatedTo(descriptionNode) {
+//        let foundModel = this.models.find(model => model[0].equals(descriptionNode));
+//        if (foundModel === undefined) return undefined;
+//        return foundModel[1];
+//    }
+
+    /**
+     * Apply `consumer` on every known `RelationshipManager`, which
+     * corresponds to the quads with a `prec:IRIOfRelationship` predicate in the
+     * context.
+     * @param {*} consumer The function to apply
+     */
+    forEachRule(consumer) {
+        this.iriRemapper.forEach(consumer);
+    }
+
 }
 
 
@@ -366,7 +492,7 @@ class RelationshipManager {
             const p = quad.predicate;
             
             if (prec.relationshipLabel.equals(p)) {
-                if (edgeLabel !== undefined) throwError(p, "doesn't have exactly one value");
+                if (edgeLabel !== undefined) throwError(p, "have more than one value");
 
                 if (quad.object.termType !== 'Literal') {
                     throwError(p, `object should be a literal but found ${quad.object.termType}`);
@@ -640,7 +766,7 @@ class Context {
 
         const substitutionTerms = new SubstitutionTerms(store);
 
-        this.properties = readProperties(store);
+        this.properties = new PropertiesMapper(store, substitutionTerms);
         this.relations  = new RelationshipsManager(store, substitutionTerms);
         this.nodeLabels = readThings(store, prec.IRIOfNodeLabel, true, false);
 
@@ -662,7 +788,7 @@ class Context {
     }
     
     forEachProperty(callback) {
-        return Context._forEachKnown(this.properties, callback);
+        return this.properties.forEachRule(callback);
     }
 
     forEachNodeLabel(callback) {

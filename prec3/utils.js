@@ -18,9 +18,6 @@ function rdfLiteralToValue(literal) {
     }
 }
 
-
-
-
 /**
  * (Badly) convert a list of quads into a string
  * @param {*} quads 
@@ -85,10 +82,42 @@ function termIsIn(term, listOfTerms) {
     return listOfTerms.find(t => t.equals(term));
 }
 
+/**
+ * 
+ * @param {Array} quads1 
+ * @param {Array} quads2 
+ * @returns 
+ */
+function approximateIsomorphism(quads1, quads2) {
+    function makeBaseR(quads) {
+        let r = [];
+        quads.forEach(q => r.push(undefined));
+        return r;
+    }
+
+    let r1 = makeBaseR(quads1);
+    let r2 = makeBaseR(quads2);
+
+    // First step: equal quads
+    for (let i1 = 0 ; i1 != quads1.length ; ++i1) {
+        let i2 = quads2.findIndex(q2 => quads1[i1].equals(q2));
+
+        if (i2 !== -1) {
+            r1[i1] = i2;
+            r2[i2] = i1;
+        }
+    }
+
+    // Second step: "Well formed" blank node equality
+    // TODO: find a way to have some blank node isomorphism
+
+    return [r1, r2];
+}
+
 
 module.exports = {
     rdfLiteralToValue,
     badToString,
-    termIsIn
+    termIsIn,
+    approximateIsomorphism
 };
-

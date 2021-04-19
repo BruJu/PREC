@@ -365,65 +365,21 @@ function transformNodeLabels(store, addedVocabulary) {
 
 
 function transformProperties(store, addedVocabulary) {
-//    TODO: conform to this API which should pass all tests (but does not require to support asSet)
-//    addedVocabulary.forEachProperties(propertyManager => {
-//        storeAlterer.findFilterReplace(
-//            propertyManager.getTransformationSource(),
-//            propertyManager.getTransformationConditions(),
-//            propertyManager.getTransformationTarget()
-//        );
-//    });
-
-    addedVocabulary.forEachProperty(
-        (propertyName, mappedIRI, extraConditions) => {
-            let asSet = false;
-            let conditions = [];
-
-            for (const extraCondition of extraConditions) {
-                if (extraCondition["@category"] === "NodeLabel") {
-                    conditions.push(
-                        [
-                            [variable("node")     , rdf.type  , variable("nodeLabel")                           ],
-                            [variable("node")     , rdf.type  , pgo.Node                                        ],
-                            [variable("nodeLabel"), rdfs.label, N3.DataFactory.literal(extraCondition.nodeLabel)]
-                        ]
-                    );
-                } else if (extraCondition["@category"] === "RelationshipLabel") {
-                    conditions.push(
-                        [
-                            [variable("node")  , rdf.predicate, variable("label")],
-                            [variable("node")  , rdf.type     , pgo.Edge         ],
-                            [variable("label"), rdfs.label, N3.DataFactory.literal(extraCondition.relationshipLabel)]
-                        ]
-                    );
-                } else if (extraCondition["@category"] === "AsSet") {
-                    asSet = true;
-                }
-            }
-
-            let pattern = [
-                [variable("property"), rdf.type  , prec.Property],
-                [variable("property"), rdfs.label, N3.DataFactory.literal(propertyName)]
-            ];
-            
-            const bind = storeAlterer.matchAndBind(store, pattern);
-
-            for (const bind1 of bind) {
-                let newB = storeAlterer.findFilterReplace(
-                    store,
-                    [[variable("node"), bind1.property, variable("x")]],
-                    conditions,
-                    [[variable("node"), mappedIRI     , variable("x")]]
-                )
-
-                if (asSet) {
-                    for (const bind of newB) {
-                        noList(store, bind.x);
-                    }
-                }
-            }
-        }
-    );
+    addedVocabulary.forEachProperty(propertyManager => {
+        storeAlterer.findFilterReplace(
+            store,
+            propertyManager.getTransformationSource(),
+            propertyManager.getTransformationConditions(),
+            propertyManager.getTransformationTarget()
+        );
+    });
+  
+//  TODO:
+//    if (asSet) {
+//        for (const bind of newB) {
+//            noList(store, bind.x);
+//        }
+//    }
 }
 
 function noList(store, firstNode) {

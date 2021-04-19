@@ -19,6 +19,10 @@ const variable = DataFactory.variable;
  * @param {*} binded A mapping variable -> known value
  */
 function forMatch(term, binded) {
+    if (term === undefined) {
+        debugger
+    }
+
     if (term.termType == "Quad") {
         let s = forMatch(term.subject, binded);
         let p = forMatch(term.predicate, binded);

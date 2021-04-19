@@ -117,27 +117,24 @@ const contexts = {
     `
 }
 
-/**
- * 
- * @param {String} s1 
- * @param {String} s2 
- */
-function badColorize(s1, s2) {
-    let s1_ = s1.split(/\r?\n/);
-    let s2_ = s2.split(/\r?\n/);
+function badToColorizedToString(quads, match, indent) {
+    let asString = precUtils.badToString(quads, indent).split(/\r?\n/);
 
-    for (let i = 0 ; i < Math.min(s1_.length, s2_.length); ++i) {
-        let str = s1_[i];
-        let i2 = s2_.indexOf(str);
+    for (let i = 0 ; i != quads.length ; ++i) {
+        if (match[i] === undefined) continue;
 
-        if (i2 !== -1) {
-            let newS = "\x1b[36m" + str + "\x1b[0m";
-            s1_[i] = newS;
-            s2_[i2] = newS;
-        }
+        if (match[i] >= 0) asString[i] = "\x1b[36m" + asString[i] + "\x1b[0m";
     }
 
-    return [s1_.join("\n"), s2_.join("\n")]
+    return asString.join("\n");
+}
+
+function badToColorizedToStrings(quads1, quads2) {
+    let [s1, s2] = precUtils.approximateIsomorphism(quads1, quads2)
+    return [
+        badToColorizedToString(quads1, s1, 8),
+        badToColorizedToString(quads2, s2, 8)
+    ];
 }
 
 function print(store, d1, graphName, d2, contextName, expectedStore) {
@@ -147,10 +144,7 @@ function print(store, d1, graphName, d2, contextName, expectedStore) {
     console.error("• Context:");
     console.error(d2[contextName]);
 
-    let result   = precUtils.badToString(store.getQuads(), 8);
-    let expected = precUtils.badToString(expectedStore.getQuads(), 8);
-
-    [result, expected] = badColorize(result, expected);
+    [result, expected] = badToColorizedToStrings(store.getQuads(), expectedStore.getQuads());
 
     console.error("• Result:");
     console.error(result);
@@ -393,7 +387,14 @@ describe("Property convertion", function() {
             :propertyB a prec:Property, prec:CreatedProperty ; rdfs:label "PropertyB" .
         `,
         contextForP1: ` :knows prec:IRIOfProperty "P1" . `,
+        contextForP1bis: ` :knows prec:IRIOfProperty [ prec:propertyName "P1" ] . `,
         contextForPB: ` :knows prec:IRIOfProperty "PropertyB" . `,
+        contextForNodes: `
+            :knows prec:IRIOfProperty [ 
+                prec:propertyName "PropertyA" ; 
+                prec:nodeLabel    prec:any
+            ] .
+        `,
         contextForPASubjectNodes: `
             :mappedA prec:IRIOfProperty [
                 prec:propertyName "PropertyA" ;
@@ -440,6 +441,19 @@ describe("Property convertion", function() {
         `
         );
 
+        runATest_(graphs, 'oneNodeWithTwoProperties', 'contextForP1bis',
+        `
+            :node a pgo:Node ; :knows [ rdf:value "v1" ] ; :p2 [ rdf:value "v2" ] .
+            :p2 a prec:Property, prec:CreatedProperty ; rdfs:label "P2" .
+        `
+        );
+
+        runATest_(graphs, 'oneNodeWithMultiValuedProperty', 'contextForP1bis',
+        `
+            :node a pgo:Node ; :knows [ rdf:value "v1" ] ; :knows [ rdf:value "v2" ] .
+        `
+        );
+
         runATest_(graphs, 'oneSimpleGraph', 'contextForPB',
         `
             :edge a pgo:Edge ;
@@ -453,7 +467,24 @@ describe("Property convertion", function() {
             :edge :propertyA [ rdf:value "VAEdge" ] .
             :edge :knows [ rdf:value "VBEdge" ] .
             :propertyA a prec:Property, prec:CreatedProperty ; rdfs:label "PropertyA" .
-            `
+        `
+        );
+
+        runATest_(graphs, 'oneSimpleGraph', 'contextForNodes',
+        `
+            :edge a pgo:Edge ;
+              rdf:subject :s ;
+              rdf:predicate :p ;
+              rdf:object :o .
+
+            :s a pgo:Node ; :knows     [ rdf:value "VANode" ] ; a [ rdfs:label "Subject" ] .
+            :o a pgo:Node ; :propertyB [ rdf:value "VBNode" ] ; a [ rdfs:label "Object"  ] .
+            :p rdfs:label "LabelOfEdge" .
+            :edge :propertyA [ rdf:value "VAEdge" ] .
+            :edge :propertyB [ rdf:value "VBEdge" ] .
+            :propertyA a prec:Property, prec:CreatedProperty ; rdfs:label "PropertyA" .
+            :propertyB a prec:Property, prec:CreatedProperty ; rdfs:label "PropertyB" .
+        `
         );
     
         runATest_(graphs, 'oneSimpleGraph', 'contextForPASubjectNodes',

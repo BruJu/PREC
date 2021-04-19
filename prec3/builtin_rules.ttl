@@ -80,14 +80,24 @@ prec:object    a prec:SubstitutionTerm ; prec:substitutionTarget rdf:object    .
 # - Keep entity in subject position
 # - prec:receiveFrom appear at most once
 
+prec:Prec0Property a prec:PropertyTransformation ;
+  prec:composedOf
+    << pvar:entity   pvar:propertyKey       pvar:property >> ,
+    << pvar:property rdf:value              pvar:propertyValue  >>
+# , << pvar:property prec:hasMetaProperties pvar:MetaProperties >>
+  .
+
+
 prec:DirectTriples a prec:PropertyTransformation ;
   prec:composedOf
-    <<    pvar:entity pvar:propertyKey pvar:propertyValue                                         >> ,
-    << << pvar:entity pvar:propertyKey pvar:propertyValue >> prec:receiveFrom pvar:MetaProperties >> .
+    <<    pvar:entity pvar:propertyKey pvar:propertyValue    >>
+# , << << pvar:entity pvar:propertyKey pvar:propertyValue >> prec:receiveFrom pvar:MetaProperties >>    
+    .
 
 prec:CombinedBlankNodes a prec:PropertyTransformation ;
   prec:composedOf
     << pvar:entity   pvar:propertyKey pvar:property       >> ,
-    << pvar:property rdf:value        pvar:propertyValue  >> ,
-    << pvar:property prec:receiveFrom pvar:MetaProperties >> .
+    << pvar:property rdf:value        pvar:propertyValue  >>
+# , << pvar:property prec:receiveFrom pvar:MetaProperties >>
+    .
 
