@@ -11,6 +11,7 @@ const PrecUtils        = require('./utils.js');
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , N3.DataFactory);
 const prec = namespace("http://bruy.at/prec#"             , N3.DataFactory);
+const pvar = namespace("http://bruy.at/prec-trans#"       , N3.DataFactory);
 const xsd  = namespace("http://www.w3.org/2001/XMLSchema#", N3.DataFactory);
 const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"        , N3.DataFactory);
 
@@ -306,11 +307,11 @@ class PropertyMapper {
     }
 
     getTransformationSource() {
-        let s = [
-            [variable("entity")  , variable("propertyKey"), variable("property")]
+        return [
+            [variable("property"), prec.__targetDescriptionModel, prec.Properties],
+            [variable("entity")  , variable("propertyKey"), variable("property") ]
        // , [variable("property"), rdf.value              , variable("propertyValue")]
         ];
-        return s;
     }
 
     getTransformationConditions() {
@@ -318,130 +319,41 @@ class PropertyMapper {
     }
 
     getTransformationTarget() {
-        let s = [
-            [variable("entity"), this.iri, variable("property")]
+        return [
+            [variable("property"), prec.__targetDescriptionModel, this.descriptionNode],
+            [variable("entity")  , this.iri                     , variable("property")]
         ];
-        return s;
     }
 }
 
-class PropertiesMapper {
-    constructor(contextStore, substitutionTerms) {
-        const subTermsKey = substitutionTerms.getKeys();
-        const modelManager = new ModelManager(substitutionTerms, prec.Prec0Property);
+function _throwIfInvalidPropertyModels(models) {
+    const precReceiveFrom = prec.receiveFrom;
+    const pvarEntity = pvar.entity;
 
-        this.iriRemapper = [];
-        this.models = [];
+    for (const [modelName, targetModel] of models) {
+        let numberOfReceiveFromPredicates = 0;
 
-        // `prec:IRIOfRelationship` quads management
-        for (let quad of contextStore.getQuads(null, prec.IRIOfProperty, null, defaultGraph())) {
-            // Read remapping
-            this.iriRemapper.push(new PropertyMapper(quad.subject, quad.object, contextStore, subTermsKey));
+        for (const quad of targetModel) {
+            if (QuadStar.containsTerm(pvarEntity, quad.predicate)
+                || QuadStar.containsTerm(pvarEntity, quad.object)
+                || QuadStar.containsTerm(pvarEntity, quad.graph)) {
+                throw Error("Propriety Model checker: found pvar:entity somewhere else as subjet in model " + modelName.value);
+            }
 
-            // Read model if relevant
-            let model = modelManager.readModel(contextStore, quad.object);
-            if (model !== undefined) this.models.push([quad.object, model]);
+            if (quad.predicate.equals(precReceiveFrom)) {
+                ++numberOfReceiveFromPredicates;
+            }
         }
-        
-        _sortArrayByPriorityThenIri(this.iriRemapper)
 
-        // `prec:Relationships` is the default description node
-        //modelManager.throwIfNotAModelDescriptionPredicate(contextStore, prec.Relationships);
-        //
-        //const precRelationshipsModel = modelManager.readModel(contextStore, prec.Relationships);
-        //if (precRelationshipsModel !== undefined) {
-        //    this.models.push([prec.Relationships, precRelationshipsModel]);
-        //}
+        if (numberOfReceiveFromPredicates > 0) {
+            throw Error("Propriety Model Checker: prec:receiveFrom is not yet supported");
+        }
     }
-    
-//    /**
-//     * Return the model contained in the given description node
-//     * @param {*} descriptionNode The description node
-//     * @returns The model, or undefined if not specified by the user
-//     */
-//    getRelationshipTransformationRelatedTo(descriptionNode) {
-//        let foundModel = this.models.find(model => model[0].equals(descriptionNode));
-//        if (foundModel === undefined) return undefined;
-//        return foundModel[1];
-//    }
-
-    /**
-     * Apply `consumer` on every known `RelationshipManager`, which
-     * corresponds to the quads with a `prec:IRIOfRelationship` predicate in the
-     * context.
-     * @param {*} consumer The function to apply
-     */
-    forEachRule(consumer) {
-        this.iriRemapper.forEach(consumer);
-    }
-
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //--- RELATIONSHIPS  --- RELATIONSHIPS  --- RELATIONSHIPS  --- RELATIONSHIPS ---
 //--- RELATIONSHIPS  --- RELATIONSHIPS  --- RELATIONSHIPS  --- RELATIONSHIPS ---
-
-/**
- * A class that contains every `prec:IRIOfRelationship` quads, containing both
- * the IRIs to map to for edge labels, the conditions, and the models to map
- * the representation of the different edges to.
- */
-class RelationshipsManager {
-    /**
-     * Build a `RelationshipsManager` from the `contextStore`.
-     * @param {N3.Store} contextStore The store that contains the context
-     * @param {SubstitutionTerms} substitutionTerms The list of term substitutions
-     */
-    constructor(contextStore, substitutionTerms) {
-        const subTermsKey = substitutionTerms.getKeys();
-        const modelManager = new ModelManager(substitutionTerms, prec.RDFReification);
-
-        this.iriRemapper = [];
-        this.models = [];
-
-        // `prec:IRIOfRelationship` quads management
-        for (let quad of contextStore.getQuads(null, prec.IRIOfRelationship, null, defaultGraph())) {
-            // Read remapping
-            this.iriRemapper.push(new RelationshipManager(quad.subject, quad.object, contextStore, subTermsKey));
-
-            // Read model if relevant
-            let model = modelManager.readModel(contextStore, quad.object);
-            if (model !== undefined) this.models.push([quad.object, model]);
-        }
-        
-        _sortArrayByPriorityThenIri(this.iriRemapper)
-
-        // `prec:Relationships` is the default description node
-        modelManager.throwIfNotAModelDescriptionPredicate(contextStore, prec.Relationships);
-
-        const precRelationshipsModel = modelManager.readModel(contextStore, prec.Relationships);
-        if (precRelationshipsModel !== undefined) {
-            this.models.push([prec.Relationships, precRelationshipsModel]);
-        }
-    }
-    
-    /**
-     * Return the model contained in the given description node
-     * @param {*} descriptionNode The description node
-     * @returns The model, or undefined if not specified by the user
-     */
-    getRelationshipTransformationRelatedTo(descriptionNode) {
-        let foundModel = this.models.find(model => model[0].equals(descriptionNode));
-        if (foundModel === undefined) return undefined;
-        return foundModel[1];
-    }
-
-    /**
-     * Apply `consumer` on every known `RelationshipManager`, which
-     * corresponds to the quads with a `prec:IRIOfRelationship` predicate in the
-     * context.
-     * @param {*} consumer The function to apply
-     */
-    forEachRule(consumer) {
-        this.iriRemapper.forEach(consumer);
-    }
-}
 
 /** Manager for a single `?iri prec:IRIOfRelationship ?descriptionode` quad */
 class RelationshipManager {
@@ -587,6 +499,76 @@ class RelationshipManager {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+//  --- ENTITIES MANAGER  ---  ENTITIES MANAGER  ---    ENTITIES MANAGER  ---  
+//  --- ENTITIES MANAGER  ---  ENTITIES MANAGER  ---    ENTITIES MANAGER  ---  
+
+/**
+ * A class that contains every `prec:IRIOf[something]` quads, containing both
+ * the IRIs to map to, the conditions, and the models.
+ */
+class EntitiesManager {
+    /**
+     * Build an `EntitiesManager` from the `contextStore`.
+     * @param {N3.Store} contextStore The store that contains the context
+     * @param {SubstitutionTerms} substitutionTerms The list of term substitutions
+     * @param {*} baseModel The target model if unspecified
+     * @param {*} extraModels List of extra models to load
+     * @param {*} managerInstancier A function to instanciate the manager for
+     * one entitie.
+     */
+     constructor(contextStore, substitutionTerms, iriOfEntity, baseModel, extraModels, managerInstancier) {
+        const subTermsKey = substitutionTerms.getKeys();
+        const modelManager = new ModelManager(substitutionTerms, baseModel);
+
+        this.iriRemapper = [];
+        this.models = [];
+
+        // `prec:IRIOfRelationship` quads management
+        for (let quad of contextStore.getQuads(null, iriOfEntity, null, defaultGraph())) {
+            // Read remapping
+            this.iriRemapper.push(managerInstancier(quad.subject, quad.object, contextStore, subTermsKey));
+
+            // Read model if relevant
+            let model = modelManager.readModel(contextStore, quad.object);
+            if (model !== undefined) this.models.push([quad.object, model]);
+        }
+        
+        _sortArrayByPriorityThenIri(this.iriRemapper)
+        
+        for (let extraModel of extraModels) {
+            modelManager.throwIfNotAModelDescriptionPredicate(contextStore, extraModel);
+            
+            const model = modelManager.readModel(contextStore, extraModel);
+            if (model !== undefined) {
+                this.models.push([extraModel, model]);
+            }
+        }
+    }
+
+    /**
+     * Return the model contained in the given description node
+     * @param {*} descriptionNode The description node
+     * @returns The model, or undefined if not specified by the user
+     */
+    getModelRelatedTo(descriptionNode) {
+        let foundModel = this.models.find(model => model[0].equals(descriptionNode));
+        if (foundModel === undefined) return undefined;
+        return foundModel[1];
+    }
+
+    /**
+     * Apply `consumer` on every known managed entity, which
+     * corresponds to the quads with the "IriOfEntity" predicate given in the
+     * constructor.
+     * @param {*} consumer The function to apply
+     */
+    forEachRule(consumer) {
+        this.iriRemapper.forEach(consumer);
+    }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 // Anything Goes
 
 function _readNodeLabels(store) {
@@ -618,11 +600,8 @@ function _readNodeLabels(store) {
     return labelsToIRI;
 }
 
-
-
 function readFlags(store) {
     let s = {
-        "MetaProperty": true,
         "KeepProvenance": true
     };
 
@@ -697,8 +676,25 @@ class Context {
 
         const substitutionTerms = new SubstitutionTerms(store);
 
-        this.properties = new PropertiesMapper(store, substitutionTerms);
-        this.relations  = new RelationshipsManager(store, substitutionTerms);
+        this.properties = new EntitiesManager(
+            store,
+            substitutionTerms,
+            prec.IRIOfProperty,
+            prec.Prec0Property,
+            [prec.Properties],
+            (a, b, c, d) => new PropertyMapper(a, b, c, d)
+        );
+
+        this.relations  = new EntitiesManager(
+            store,
+            substitutionTerms,
+            prec.IRIOfRelationship,
+            prec.RDFReification,
+            [prec.Relationships],
+            (a, b, c, d) => new RelationshipManager(a, b, c, d)
+        );
+        _throwIfInvalidPropertyModels(this.relations.models)
+
         this.nodeLabels = _readNodeLabels(store);
 
         this.flags = readFlags(store);
@@ -747,11 +743,21 @@ class Context {
      */
     findRelationshipModel(modelDescriptionNode) {
         if (!modelDescriptionNode.equals(prec.Relationships)) {
-            const r = this.relations.getRelationshipTransformationRelatedTo(modelDescriptionNode);
+            const r = this.relations.getModelRelatedTo(modelDescriptionNode);
             if (r !== undefined) return r;
         }
 
-        return this.relations.getRelationshipTransformationRelatedTo(prec.Relationships);
+        return this.relations.getModelRelatedTo(prec.Relationships);
+    }
+
+
+    findPropertyModel(modelDescriptionNode) {
+        if (!modelDescriptionNode.equals(prec.Properties)) {
+            const r = this.properties.getModelRelatedTo(modelDescriptionNode);
+            if (r !== undefined) return r;
+        }
+
+        return this.properties.getModelRelatedTo(prec.Properties);
     }
 }
 

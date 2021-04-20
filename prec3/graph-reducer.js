@@ -16,6 +16,8 @@ const prec = namespace("http://bruy.at/prec#"                       , N3.DataFac
 const pvar = namespace("http://bruy.at/prec-trans#"                 , N3.DataFactory);
 
 const variable = N3.DataFactory.variable;
+const defaultGraph = N3.DataFactory.defaultGraph;
+const QUAD = N3.DataFactory.quad;
 
 // =============================================================================
 
@@ -38,15 +40,8 @@ function applyVocabulary(store, contextQuads) {
 
     // -- Map generated IRI to existing IRIs
 
-    if (addedVocabulary.getStateOf("MetaProperty") == false) {
-        removeMetaProperties(store);
-    }
     transformProperties   (store, addedVocabulary);
-
-    //applyRelationshipRules(store, addedVocabulary);
-
     transformRelationships(store, addedVocabulary);
-    modifyRelationships(store, addedVocabulary);
     transformNodeLabels   (store, addedVocabulary);
 
     // -- Remove the info that generated IRI were generated if there don't
@@ -120,20 +115,6 @@ function removePGO(store) {
     storeAlterer.deleteMatches(store, null, rdf.type, prec.PropertyValue);
 }
 
-function removeMetaProperties(store) {
-    storeAlterer.directReplace(store,
-        [
-            [variable("propertyNode"), rdf.value, variable("value")],
-            [variable("propertyNode"), rdf.type , prec.PropertyValue],
-            [variable("node"), variable("prop"), variable("propertyNode")]
-        ],
-        [
-            [variable("node"), variable("prop"), variable("value")]
-        ]
-    );
-}
-
-
 /**
  * Deletes form the store every occurrences of a named node whose type is
  * type and who appears expectedSubject times in subject position, ...
@@ -206,6 +187,8 @@ function transformRelationships(store, addedVocabulary) {
     );
 
     filterOutDeletedEdgeLabel(store, Object.values(candidateEdgeLabelsForDeletion));
+
+    modifyRelationships(store, addedVocabulary);
 }
 
 /**
@@ -279,7 +262,8 @@ function modifyRelationships(store, context) {
         }
     }
 
-    store.removeQuads(store.getQuads(null, prec.__targetDescriptionModel, prec.Relationships)); // TODO: ??? I'm not sure if that's needed
+    // Remove target model to prec:Relationships if its definition is not explicit
+    store.removeQuads(store.getQuads(null, prec.__targetDescriptionModel, prec.Relationships));
 }
 
 /**
@@ -355,6 +339,16 @@ function transformNodeLabels(store, addedVocabulary) {
 
 
 function transformProperties(store, addedVocabulary) {
+    {
+        const q = store.getQuads(null, rdf.type, prec.Property, defaultGraph())
+            .map(quad => quad.subject)
+            .flatMap(propertyType => store.getQuads(null, propertyType, null, defaultGraph()))
+            .map(quad => quad.object)
+            .map(propertyBlankNode => QUAD(propertyBlankNode, prec.__targetDescriptionModel, prec.Properties));
+
+        store.addQuads(q);
+    }
+
     addedVocabulary.forEachProperty(propertyManager => {
         storeAlterer.findFilterReplace(
             store,
@@ -370,6 +364,50 @@ function transformProperties(store, addedVocabulary) {
 //            noList(store, bind.x);
 //        }
 //    }
+
+    applyPropertyModels(store, addedVocabulary);
+}
+
+/**
+ * Transform the properties models to the required models.
+ * 
+ * The required model is noted with the quad
+ * `?propertyBlankNode prec:__targetDescriptionModel ?descriptionNode`.
+ * @param {N3.Store} store The store that contains the quads
+ * @param {Context} context The context to apply
+ */
+function applyPropertyModels(store, context) {
+    const properties = storeAlterer.matchAndBind(store,
+        [
+            [variable("property"), prec.__targetDescriptionModel, variable("targetDescriptionModel")],
+            [variable("entity")  , variable("propertyKey"), variable("property")],
+            [variable("property"), rdf.value              , variable("propertyValue")]
+        ]
+    );
+
+    for (const property of properties) {
+        const model = context.findPropertyModel(property.targetDescriptionModel);
+
+        if (Array.isArray(model)) {
+            // Build the patterns to map to
+            let r = model.map(term => quadStar.remapPatternWithVariables(term,
+                [
+                    [variable("entity")       , pvar.entity       ],
+                    [variable("propertyKey")  , pvar.propertyKey  ],
+                    [variable("property")     , pvar.property     ],
+                    [variable("propertyValue"), pvar.propertyValue]
+                ]
+            ))
+                .map(q => [q.subject, q.predicate, q.object]);
+
+            storeAlterer.replaceOneBinding(store, property, r);
+        } else {
+            store.removeQuad(QUAD(property.property, prec.__targetDescriptionModel, property.targetDescriptionModel));
+        }
+    }
+
+    // Remove target model to prec:Properties if its definition is not explicit
+    store.removeQuads(store.getQuads(null, prec.__targetDescriptionModel, null, defaultGraph()));
 }
 
 function noList(store, firstNode) {

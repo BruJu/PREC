@@ -13,6 +13,14 @@ Predicate of triples that indicates if a featuere must be activated or not.
 
 ## http://bruy.at/prec#MetaProperty
 
+*Not supported anymore*
+
+> Use 
+> `prec:Properties prec:modelAs prec:DirectTriples .`
+> instead of
+> `prec:MetaProperty prec:flagState false`
+
+
 Tells if the Property Graph contains meta properties or not.
 
 If there are no meta properties, no intermediate node is created between a node / its property
