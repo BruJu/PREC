@@ -30,7 +30,7 @@ function applyVocabulary(store, contextQuads) {
     const context = new Context(contextQuads);
 
     // -- Blank nodes transformation
-    for (let typeOfNode in addedVocabulary.blankNodeMapping) {
+    for (let typeOfNode in context.blankNodeMapping) {
         blankNodeMapping(
             store,
             N3.DataFactory.namedNode(typeOfNode),
@@ -384,8 +384,18 @@ function applyPropertyModels(store, context) {
         ]
     );
 
+    const typeFinder = entity => {
+        let qs = store.getQuads(entity, rdf.type, null, defaultGraph());
+        for (let quad of qs) {
+            let object = quad.object;
+            if (pgo.Node.equals(object)) return prec.NodeProperties;
+            if (pgo.Edge.equals(object)) return prec.RelationshipProperties;
+        }
+        return undefined;
+    };
+
     for (const property of properties) {
-        const model = context.findPropertyModel(property.targetDescriptionModel);
+        const model = context.findPropertyModel(property.targetDescriptionModel, () => typeFinder(property.entity));
 
         if (Array.isArray(model)) {
             // Build the patterns to map to

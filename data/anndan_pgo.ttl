@@ -4,14 +4,39 @@ PREFIX ex:   <http://example.org/>
 PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX pgo:  <http://ii.wb.edu.pl/pgo#>
 
-prec:KeepProvenance        prec:flagState false .
-prec:Properties prec:modelAs prec:pgoProperty .
+# In this file, we try to reproduce this model:
+# https://ieeexplore.ieee.org/document/9115617
 
-prec:pgoProperty prec:composedOf
+prec:KeepProvenance        prec:flagState false .
+
+# -- PGO model
+
+prec:NodeProperties         prec:modelAs prec:pgoNodeProperty .
+prec:RelationshipProperties prec:modelAs prec:pgoEdgeProperty .
+prec:Relationships          prec:modelAs prec:pgoEdgeRepresentation .
+
+prec:pgoNodeProperty prec:composedOf
     << pvar:entity pgo:hasNodeProperty pvar:property >> ,
     << pvar:property pgo:key pvar:propertyKey >> ,
-    << pvar:property pgo:value pvar:propertyValue >> .
+    << pvar:property pgo:value pvar:propertyValue >> ,
+    << pvar:property rdf:type pgo:Property >> .
+
+prec:pgoEdgeProperty prec:composedOf
+    << pvar:entity pgo:hasEdgeProperty pvar:property >> ,
+    << pvar:property pgo:key pvar:propertyKey >> ,
+    << pvar:property pgo:value pvar:propertyValue >> ,
+    << pvar:property rdf:type pgo:Property >> .
+
+prec:pgoEdgeRepresentation prec:composedOf
+    << pvar:self pgo:startNode    pvar:source        >> ,
+    << pvar:self pgo:endNode      pvar:destination   >> ,
+    << pvar:self pgo:label        pvar:relationLabel >> ,
+    << pvar:self rdf:type         pgo:Edge           >> ,
+    << pvar:self pvar:propertyKey pvar:propertyValue >> .
+
+# -- Some IRIs
 
 <http://dbpedia.org/ontology/Person> prec:IRIOfNodeLabel "Person" .
-<https://schema.org/name> prec:IRIOfProperty "name" .
-
+<https://schema.org/name>            prec:IRIOfProperty  "name"   .
+ex:like  prec:IRIOfRelationship "Likes" .
+ex:since prec:IRIOfProperty     "since" .

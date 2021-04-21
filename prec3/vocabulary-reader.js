@@ -681,7 +681,7 @@ class Context {
             substitutionTerms,
             prec.IRIOfProperty,
             prec.Prec0Property,
-            [prec.Properties],
+            [prec.Properties, prec.NodeProperties, prec.RelationshipProperties],
             (a, b, c, d) => new PropertyMapper(a, b, c, d)
         );
 
@@ -751,9 +751,15 @@ class Context {
     }
 
 
-    findPropertyModel(modelDescriptionNode) {
+    findPropertyModel(modelDescriptionNode, alternateDescriptionNodeFinder) {
         if (!modelDescriptionNode.equals(prec.Properties)) {
             const r = this.properties.getModelRelatedTo(modelDescriptionNode);
+            if (r !== undefined) return r;
+        }
+
+        const alternate = alternateDescriptionNodeFinder();
+        if (alternate !== undefined) {
+            const r = this.properties.getModelRelatedTo(alternate);
             if (r !== undefined) return r;
         }
 
