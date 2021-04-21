@@ -92,6 +92,11 @@ prec:DirectTriples a prec:PropertyTransformation ;
   prec:composedOf
     <<    pvar:entity pvar:propertyKey pvar:propertyValue    >>
 # , << << pvar:entity pvar:propertyKey pvar:propertyValue >> prec:receiveFrom pvar:MetaProperties >>    
+  ; rdfs:comment
+    """
+    This model shold not be used if a node or an edge has a multi valued
+    property with at least twice the same value.
+    """@en
     .
 
 prec:CombinedBlankNodes a prec:PropertyTransformation ;
@@ -99,10 +104,5 @@ prec:CombinedBlankNodes a prec:PropertyTransformation ;
     << pvar:entity   pvar:propertyKey pvar:property       >> ,
     << pvar:property rdf:value        pvar:propertyValue  >>
 # , << pvar:property prec:receiveFrom pvar:MetaProperties >>
-  ; rdfs:comment
-    """
-    This model shold not be used if a node or an edge has a multi valued
-    property with at least twice the same value.
-    """@en
   .
 

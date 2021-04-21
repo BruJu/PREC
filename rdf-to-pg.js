@@ -13,17 +13,16 @@
 ////////////////////////////////////////////////////////////////////////////////
 // ==== Imports
 
-const graphyFactory = require('@graphy/core.data.factory');
-const N3 = require("n3");
-const WasmTree = require("@bruju/wasm-tree");
-const precMain = require('./prec.js');
 const { ArgumentParser } = require('argparse');
 const fs = require('fs');
-const namespace     = require('@rdfjs/namespace');
-const neo4j = require('neo4j-driver');
+const precMain  = require('./prec.js');
 const precUtils = require('./prec3/utils.js');
 
-// ==== Namespaces
+// -- RDF
+const graphyFactory = require('@graphy/core.data.factory');
+const N3            = require("n3");
+const WasmTree      = require("@bruju/wasm-tree");
+const namespace     = require('@rdfjs/namespace');
 
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , N3.DataFactory);
@@ -31,6 +30,15 @@ const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , N3.DataFac
 const prec = namespace("http://bruy.at/prec#"                       , N3.DataFactory);
 
 const QUAD = N3.DataFactory.quad;
+
+// -- Property Graph API
+const neo4j = require('neo4j-driver');
+
+const gremlin = require("gremlin");
+const traversal = gremlin.process.AnonymousTraversalSource.traversal;
+const DriverRemoteConnection = gremlin.driver.DriverRemoteConnection;
+const { EnumValue } = gremlin.process;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // ==== Helper functions and extension of dataset
@@ -624,6 +632,7 @@ class PseudoPGBuilder {
             );
 
             // Remove axioms and meta data
+            dataset.deleteMatches(prec.MetaData, prec.GenerationModel);
             dataset.deleteMatches(prec.CreatedNodeLabel, rdfs.subClassOf, prec.CreatedVocabulary);
             dataset.deleteMatches(prec.CreatedRelationshipLabel, rdfs.subClassOf, prec.CreatedVocabulary);
             dataset.deleteMatches(prec.CreatedProperty, rdfs.subClassOf, prec.CreatedVocabulary);
@@ -719,6 +728,55 @@ async function makeNeo4Jrequest(username, password, uri, query) {
     await driver.close();
 }
 
+/**
+ * Insert the content of the property graph in the given Gremlin end point.
+ * @param {*} uri The URI of the Gremlin end point
+ * @param {*} propertyGraphStructure The content of the property graph, in the
+ * meta property-less model
+ */
+async function insertIntoGremlin(uri, propertyGraphStructure) {
+    let connection = new DriverRemoteConnection(uri);
+    const g = traversal().withRemote(connection);
+
+    let numberOfNodes = 0;
+    let numberOfEdges = 0;
+
+    // Properties are not inserted using specific Cardinalities as they seem to
+    // only be "insertion strategies".
+    
+    for (const node of propertyGraphStructure.nodes) {
+        let vertex;
+        if (node.labels.length === 0) {
+            vertex = g.addV();
+        } else {
+            vertex = g.addV(node.labels.join("::"));
+        }
+
+        for (let propertyKey in node.properties) {
+            vertex = vertex.property(propertyKey, node.properties[propertyKey]);
+        }
+
+        node._gremlin = await vertex.next();
+        ++numberOfNodes;
+    }
+
+    for (const edge of propertyGraphStructure.edges) {
+        let gremlinEdge = g.V(edge.source._gremlin.value.id).addE(edge.label);
+        gremlinEdge = gremlinEdge.to(edge.destination._gremlin.value);
+
+        for (let propertyKey in edge.properties) {
+            gremlinEdge = gremlinEdge.property(propertyKey, edge.properties[propertyKey]);
+        }
+
+        edge._gremlin = await gremlinEdge.iterate();
+        ++numberOfEdges;
+    }
+
+    await connection.close();
+    console.error(`${numberOfNodes} node${numberOfNodes===1?'':'s'} `
+        + `and ${numberOfEdges} edge${numberOfEdges===1?'':'s'} `
+        + `have been added to the Gremlin endpoint ${uri}`);
+}
 
 async function main() {
     const parser = new ArgumentParser({
@@ -736,7 +794,7 @@ async function main() {
         {
             help: "Output format",
             default: "Cypher",
-            choices: ["Cypher", "Neo4J", "PGStructure"],
+            choices: ["Cypher", "Neo4J", "PGStructure", "Gremlin"],
             nargs: "?"
         }
     );
@@ -754,6 +812,14 @@ async function main() {
         {
             help: "Neo4J database URI. Only used if output if Neo4J.",
             default: "neo4j://localhost/neo4j", nargs: "?"
+        }
+    );
+    
+    parser.add_argument(
+        "--GremlinURI",
+        {
+            help: "Gremlin end point URI. Only used id output is Gremlin",
+            default: "ws://localhost:8182/gremlin", nargs: "?"
         }
     );
 
@@ -786,6 +852,9 @@ async function main() {
             );
 
             result["Remaining Quads"].free();
+        } else if (args.OutputFormat === 'Gremlin') {
+            const uri = args.GremlinURI;
+            await insertIntoGremlin(uri, result.PropertyGraph);
         } else {
             console.error("Unknown output format " + args.OutputFormat);
         }

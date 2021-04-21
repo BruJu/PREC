@@ -1,0 +1,17 @@
+PREFIX pvar:  <http://bruy.at/prec-trans#>
+PREFIX prec: <http://bruy.at/prec#>
+PREFIX ex:   <http://example.org/>
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX pgo:  <http://ii.wb.edu.pl/pgo#>
+
+prec:KeepProvenance        prec:flagState false .
+prec:Properties prec:modelAs prec:pgoProperty .
+
+prec:pgoProperty prec:composedOf
+    << pvar:entity pgo:hasNodeProperty pvar:property >> ,
+    << pvar:property pgo:key pvar:propertyKey >> ,
+    << pvar:property pgo:value pvar:propertyValue >> .
+
+<http://dbpedia.org/ontology/Person> prec:IRIOfNodeLabel "Person" .
+<https://schema.org/name> prec:IRIOfProperty "name" .
+

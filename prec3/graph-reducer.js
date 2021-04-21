@@ -27,22 +27,21 @@ const QUAD = N3.DataFactory.quad;
  * @param {*} contextQuads The list of quads that are part of the context
  */
 function applyVocabulary(store, contextQuads) {
-    const addedVocabulary = new Context(contextQuads);
+    const context = new Context(contextQuads);
 
     // -- Blank nodes transformation
     for (let typeOfNode in addedVocabulary.blankNodeMapping) {
         blankNodeMapping(
             store,
             N3.DataFactory.namedNode(typeOfNode),
-            addedVocabulary.blankNodeMapping[typeOfNode]
+            context.blankNodeMapping[typeOfNode]
         );
     }
 
     // -- Map generated IRI to existing IRIs
-
-    transformProperties   (store, addedVocabulary);
-    transformRelationships(store, addedVocabulary);
-    transformNodeLabels   (store, addedVocabulary);
+    transformProperties   (store, context);
+    transformRelationships(store, context);
+    transformNodeLabels   (store, context);
 
     // -- Remove the info that generated IRI were generated if there don't
     // appear anymore
@@ -55,7 +54,7 @@ function applyVocabulary(store, contextQuads) {
     removeUnusedCreatedVocabulary(store, prec.CreatedNodeLabel, 2, 0, 0);
 
     // -- Remove provenance information if they are not required by the user
-    if (addedVocabulary.getStateOf("KeepProvenance") === false) {
+    if (context.getStateOf("KeepProvenance") === false) {
         removePGO(store);
     }
 }
