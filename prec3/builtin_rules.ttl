@@ -10,7 +10,7 @@ PREFIX pgo:   <http://ii.uwb.edu.pl/pgo#>
 # - These rules are for the following pattern:
 # pvar:self a pgo:Edge
 # pvar:self rdf:subject      pvar:source
-# pvar:self rdf:predicate    pvar:relationLabel
+# pvar:self rdf:predicate    pvar:relationshipIRI
 # pvar:self rdf:object       pvar:destination
 # pvar:self pvar:propertyKey pvar:propertyValue
 
@@ -19,24 +19,24 @@ PREFIX pgo:   <http://ii.uwb.edu.pl/pgo#>
 prec:RDFReification a prec:EdgeTransformation ;
   prec:composedOf
     << pvar:self a pgo:Edge >> ,
-    << pvar:self rdf:subject      pvar:source        >> ,
-    << pvar:self rdf:predicate    pvar:relationLabel >> ,
-    << pvar:self rdf:object       pvar:destination   >> ,
-    << pvar:self pvar:propertyKey pvar:propertyValue >>
+    << pvar:self rdf:subject      pvar:source          >> ,
+    << pvar:self rdf:predicate    pvar:relationshipIRI >> ,
+    << pvar:self rdf:object       pvar:destination     >> ,
+    << pvar:self pvar:propertyKey pvar:propertyValue   >>
   .
 
 # Encoding as RDF star using regular RDF triples that can be annotated
 prec:RdfStarUnique a prec:EdgeTransformation ;
   prec:composedOf
-    <<    pvar:source pvar:relationLabel pvar:destination               >> ,
-    << << pvar:source pvar:relationLabel pvar:destination >> a pgo:Edge >> ,
-    << << pvar:source pvar:relationLabel pvar:destination >> pvar:propertyKey pvar:propertyValue >> 
+    <<    pvar:source pvar:relationshipIRI pvar:destination               >> ,
+    << << pvar:source pvar:relationshipIRI pvar:destination >> a pgo:Edge >> ,
+    << << pvar:source pvar:relationshipIRI pvar:destination >> pvar:propertyKey pvar:propertyValue >> 
   .
 
 # Encoding as RDF star using occurrences
 prec:RdfStarOccurrence a prec:EdgeTransformation ;
   prec:composedOf
-    << pvar:self prec:occurrenceOf << pvar:source pvar:relationLabel pvar:destination >> >> ,
+    << pvar:self prec:occurrenceOf << pvar:source pvar:relationshipIRI pvar:destination >> >> ,
     << pvar:self a pgo:Edge >> ,
     << pvar:self pvar:propertyKey pvar:propertyValue >>
   .
@@ -44,10 +44,10 @@ prec:RdfStarOccurrence a prec:EdgeTransformation ;
 # Encoding as singleton property
 prec:SingletonProperty a prec:EdgeTransformation ;
   prec:composedOf
-    << pvar:source pvar:self               pvar:destination   >> ,
-    << pvar:self   rdf:singletonPropertyOf pvar:relationLabel >> ,
+    << pvar:source pvar:self               pvar:destination     >> ,
+    << pvar:self   rdf:singletonPropertyOf pvar:relationshipIRI >> ,
     << pvar:self a pgo:Edge >> ,
-    << pvar:self   pvar:propertyKey        pvar:propertyValue >>
+    << pvar:self   pvar:propertyKey        pvar:propertyValue   >>
   .
 
 

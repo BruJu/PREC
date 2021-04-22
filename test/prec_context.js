@@ -103,13 +103,13 @@ const contexts = {
     modelAsCustom: `
         prec:Relationships prec:modelAs [
             prec:composedOf << rdf:subject rdf:predicate rdf:object >> ,
-                << pvar:destination pvar:relationLabel pvar:source >>
+                << pvar:destination pvar:relationshipIRI pvar:source >>
         ] .
     `,
     modelAsCustomWithRenaming: `
         prec:Relationships prec:modelAs [
             prec:composedOf << rdf:subject rdf:predicate rdf:object >> ,
-                << pvar:destination pvar:relationLabel pvar:source >>
+                << pvar:destination pvar:relationshipIRI pvar:source >>
         ] ;
             prec:subject :source ;
             prec:predicate :label ;

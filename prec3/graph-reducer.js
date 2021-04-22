@@ -207,9 +207,9 @@ function modifyRelationships(store, context) {
         [
             [variable("relation"), rdf.type, pgo.Edge],
             [variable("relation"), prec.__targetDescriptionModel, variable("targetDescriptionModel")],
-            [variable("relation"), rdf.subject       , variable("subject")    ],
-            [variable("relation"), rdf.predicate     , variable("predicate")  ],
-            [variable("relation"), rdf.object        , variable("object")     ]
+            [variable("relation"), rdf.subject       , variable("subject")  ],
+            [variable("relation"), rdf.predicate     , variable("predicate")],
+            [variable("relation"), rdf.object        , variable("object")   ]
         ]
     );
 
@@ -221,12 +221,12 @@ function modifyRelationships(store, context) {
             let r = behaviour.map(term => quadStar.remapPatternWithVariables(
                 term,
                 [
-                    [variable('relation')     , pvar.self         ],
-                    [variable('subject')      , pvar.source       ],
-                    [variable('predicate')    , pvar.relationLabel],
-                    [variable('object')       , pvar.destination  ],
-                    [variable('propertyKey')  , pvar.propertyKey  ],
-                    [variable('propertyValue'), pvar.propertyValue]
+                    [variable('relation')     , pvar.self           ],
+                    [variable('subject')      , pvar.source         ],
+                    [variable('predicate')    , pvar.relationshipIRI],
+                    [variable('object')       , pvar.destination    ],
+                    [variable('propertyKey')  , pvar.propertyKey    ],
+                    [variable('propertyValue'), pvar.propertyValue  ]
                 ]
             ))
                 .map(q => [q.subject, q.predicate, q.object])

@@ -141,7 +141,7 @@ The source pattern is the following, where pvar is a prefix for variables:
 ```
 pvar:self a pgo:Edge
 pvar:self rdf:subject      pvar:source
-pvar:self rdf:predicate    pvar:relationLabel
+pvar:self rdf:predicate    pvar:relationshipIRI
 pvar:self rdf:object       pvar:destination
 pvar:self pvar:propertyKey pvar:propertyValue
 ```
@@ -155,7 +155,7 @@ Modelize the relationship as a standard RDF Reification.
 ```
 pvar:self a pgo:Edge
 pvar:self rdf:subject      pvar:source       
-pvar:self rdf:predicate    pvar:relationLabel
+pvar:self rdf:predicate    pvar:relationshipIRI
 pvar:self rdf:object       pvar:destination  
 pvar:self pvar:propertyKey pvar:propertyValue
 ```
@@ -168,9 +168,9 @@ Note that this is the default behaviour.
 Modelize the relationship as a triple that is added to the store.
 
 ```
-pvar:source pvar:relationLabel pvar:destination
-pvar:source pvar:relationLabel pvar:destination >> a pgo:Edge
-pvar:source pvar:relationLabel pvar:destination >> pvar:propertyKey pvar:propertyValue
+pvar:source pvar:relationshipIRI pvar:destination
+pvar:source pvar:relationshipIRI pvar:destination >> a pgo:Edge
+pvar:source pvar:relationshipIRI pvar:destination >> pvar:propertyKey pvar:propertyValue
 ```
 
 This modelization is valid only if two edges between the same nodes don't share

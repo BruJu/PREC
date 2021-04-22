@@ -28,11 +28,11 @@ prec:pgoEdgeProperty prec:composedOf
     << pvar:property rdf:type pgo:Property >> .
 
 prec:pgoEdgeRepresentation prec:composedOf
-    << pvar:self pgo:startNode    pvar:source        >> ,
-    << pvar:self pgo:endNode      pvar:destination   >> ,
-    << pvar:self pgo:label        pvar:relationLabel >> ,
-    << pvar:self rdf:type         pgo:Edge           >> ,
-    << pvar:self pvar:propertyKey pvar:propertyValue >> .
+    << pvar:self pgo:startNode    pvar:source          >> ,
+    << pvar:self pgo:endNode      pvar:destination     >> ,
+    << pvar:self pgo:label        pvar:relationshipIRI >> ,
+    << pvar:self rdf:type         pgo:Edge             >> ,
+    << pvar:self pvar:propertyKey pvar:propertyValue   >> .
 
 # -- Some IRIs
 
