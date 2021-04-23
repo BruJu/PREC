@@ -73,7 +73,7 @@ prec:object    a prec:SubstitutionTerm ; prec:substitutionTarget rdf:object    .
 #
 # With:
 # pvar:propertyKey   a prec:PropertyKey   .
-# pvar:propertyValue a prec:PropertyValue .
+# pvar:property      a prec:PropertyValue .
 
 
 # prec:PropertyTransformation patterns must:

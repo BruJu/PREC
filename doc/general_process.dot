@@ -14,11 +14,11 @@ digraph G {
   
   "Json Representation of\nthe Property Graph" [fontsize = 10]
   
-  "Json Representation of\nthe Property Graph" -> "Expanded RDF Graph" [label="PREC (build)", arrowhead="curve"] ;
+  "Json Representation of\nthe Property Graph" -> "Expanded RDF Graph" [label="PREC-0", arrowhead="curve"] ;
   
   "Context" -> "blanknode" [dir=none];
   "Expanded RDF Graph" -> "blanknode" [dir=none];
-  "blanknode" -> "Usable RDF Graph" [label="PREC (transform)"] ;
+  "blanknode" -> "Usable RDF Graph" [label="PREC-Context"] ;
   
   
   "blanknode" [shape=diamond,style=filled,label="",height=.0,width=.0] ;
