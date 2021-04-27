@@ -106,7 +106,7 @@ See http://bruy.at/prec#KeepProvenance
 
 ## Change the schema of the generated graph
 
-PREC-0 generate an RDF Graph with a certain format. It is possible to change the
+PREC-0 generates an RDF Graph with a certain format. It is possible to change the
 way the properties and the relationships are modelled in the RDF graph.
 
 By default:
@@ -118,7 +118,7 @@ _:aBlankNode rdf:value :propertyValue
 _:aBlankNode prec:hasMetaProperties _:aNodeWithTheMetaPropertiesIfAny
 
 :propertyKey a prec:Property .
-_!aBlankNode a prec:PropertyValue .
+_:aBlankNode a prec:PropertyValue .
 ```
 
 PREC-Context is able to change the format used to represent the properties and
@@ -202,7 +202,8 @@ The type of models that can be used for relationships.
 - `pvar:propertyKey`: matchs every other predicates. Supposed to represent each property key.
 - `pvar:propertyValue`: matchs every other objects. Supposed to represent each property value.
 
-The full list of *built in PREC* relationship transformations is available in 
+The full list of *built in PREC* relationship transformations is available in
+https://github.com/BruJu/PREC/blob/master/prec3/builtin_rules.ttl
 
 *Example 1 of a `prec:EdgeTransformation`: identity / RDF Reification*:
 
@@ -274,7 +275,7 @@ The type of property models.
 - `pvar:propertyKey`: The node that represents the edge label.
 - `pvar:property`: The blank node that represents the property.
 - `pvar:propertyValue`: The literal that contains the property value.
-- `pvar:MetaProperties`: <span color="#808080">The node that contains the meta properties</span> (not yet supported).
+- `pvar:metaProperties`: <span color="#808080">The node that contains the meta properties</span> (not yet supported).
 
 The subsititution mecanism is the same as described in the
 [prec:EdgeTransformation](http://bruy.at/prec#EdgeTransformation) section.
@@ -317,8 +318,8 @@ Specifies for which triple the relationship is an occurrenceOf.
 _:first  prec:occurrenceOf << :joe_biden :workingFor :white_house >>
 _:second prec:occurrenceOf << :joe_biden :workingFor :white_house >>
 
-_:joe_biden :from 2009; :to 2017 ; :role "Vice President" .
-_:joe_biden :from 2021;            :role "President"      .
+_:first  :from 2009; :to 2017 ; :role "Vice President" .
+_:second :from 2021;            :role "President"      .
 ```
 
 *Why do we need this?*
@@ -338,7 +339,7 @@ it is equivalent to writing
     :role "Vice President", "President" .
 ```
 
-While we can deduce from the semantic of from, to and years that Joe Biden
+While we can deduce from the semantic of `:from`, `:to` and years that Joe Biden
 worked from 2009 to 2017 then from 2021 for the White House, and while we know
 that we worked as the Vice President and the President, we are unable to
 distinguish when he was Vice President and when he was President.
