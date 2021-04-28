@@ -100,6 +100,68 @@ describe('StoreAlterer', function() {
 
 
     });
+
+
+    describe("findFilterReplaceRecursive", function() {
+        describe("searchInStore", function() {
+            const store = new N3.Store();
+            store.addQuad(ex.s, ex.p1, ex.o);
+            store.addQuad(ex.s, ex.p2, ex.o);
+            store.addQuad(ex.s1, ex.p1, ex.o);
+            store.addQuad(ex.s2, ex.p2, ex.otherO);
+            store.addQuad(N3.DataFactory.quad(ex.ss, ex.so   , ex.sp1), ex.starP, ex.starO);
+            store.addQuad(N3.DataFactory.quad(ex.ss, ex.so   , ex.sp2), ex.starP, ex.starO);
+            store.addQuad(N3.DataFactory.quad(ex.ss, ex.sobad, ex.sp3), ex.starP, ex.starO);
+
+            it("should work on non rdf-star calls", function() {
+                let r = storeAlterer.findFilterReplaceRecursiveHelper.searchInStore(
+                    store,
+                    N3.DataFactory.quad(
+                        N3.DataFactory.variable("s"),
+                        N3.DataFactory.variable("p"),
+                        N3.DataFactory.variable("o"),
+                        N3.DataFactory.variable("g"),
+                    )
+                );
+
+                assert.strictEqual(r.length, store.size);
+
+                r = storeAlterer.findFilterReplaceRecursiveHelper.searchInStore(
+                    store,
+                    N3.DataFactory.quad(variable("subjectWithP1"), ex.p1, ex.o)
+                );
+
+                assert.strictEqual(r.length, 2);
+
+                r = storeAlterer.findFilterReplaceRecursiveHelper.searchInStore(
+                    store,
+                    N3.DataFactory.quad(ex.s2, ex.p2, variable("o"))
+                );
+
+                assert.strictEqual(r.length, 1);
+                assert.ok(r[0].o.equals(ex.otherO));
+            });
+            
+            it("should work on rdf-star calls", function() {
+                let r = storeAlterer.findFilterReplaceRecursiveHelper.searchInStore(
+                    store,
+                    N3.DataFactory.quad(
+                        N3.DataFactory.quad(
+                            ex.ss,
+                            ex.so,
+                            variable("thesubjectpredicate")
+                        ),
+                        ex.starP,
+                        variable("starO")
+                    )
+                );
+
+                assert.strictEqual(r.length, 2);
+            });
+
+        })
+
+    })
 });
 
 
