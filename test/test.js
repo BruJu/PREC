@@ -9,6 +9,14 @@ const rdf = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFact
 
 const variable = N3.DataFactory.variable;
 
+require("./dataset/DatasetCore.test.js")(
+{
+    quad: N3.DataFactory.quad,
+    literal: N3.DataFactory.literal,
+    blankNode: N3.DataFactory.blankNode,
+    dataset: t => new (require('../dataset/index.js'))(t)
+});
+
 describe('StoreAlterer', function() {
     describe('mapPattern', function() {
         function _equalsPattern(pattern1, pattern2) {
