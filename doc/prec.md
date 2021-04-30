@@ -357,6 +357,15 @@ a *replaced term* with the *replaced with term*.
 The advantage of modifying an existing model is to reduce the risk of error by
 omitting to write a triple that composes the model.
 
+
+- For each description node, a term must be replaced at most once. In other words,
+for the same description node, you can't use two or more times the same
+substitution terms, like two `prec:subject`, neither you can use two
+substitution terms which shares the same substitution target.
+
+- Every subsitution of the same are computed at the same time. It means that it
+is possible to use substitutiosn to swap some elements of the model
+
 *Example*
 
 ```
@@ -366,7 +375,7 @@ prec:Relationships prec:modelAs prec:RDFReification ;
   prec:subject :theSource .
 ```
 
-In this example, `prec:subject` is a subsitution term for `rdf:subject`. It will
+In this example, `prec:subject` is a substitution term for `rdf:subject`. It will
 search `rdf:subject` in the model and replace it with something else.
 
 In `prec:Relationships`, the model is `prec:RDFReification`. As `prec:subject`
@@ -387,6 +396,7 @@ prec:Relationships prec:modelAs [
         << pvar:self pvar:propertyKey pvar:propertyValue   >>
 ] .
 ```
+
 
 #### http://bruy.at/prec#SubstitutionTerm
 

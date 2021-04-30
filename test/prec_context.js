@@ -114,6 +114,9 @@ const contexts = {
             prec:subject :source ;
             prec:predicate :label ;
             prec:object :target .
+    `,
+    modelSwapSO: `
+        prec:Relationships prec:subject rdf:object ; prec:object rdf:subject .
     `
 }
 
@@ -312,6 +315,14 @@ describe("Relationship convertion", function () {
                 :source :s ;
                 :label  :p ;
                 :target :o .
+            `
+        );
+
+        // Subsitutions should be operated at the same time
+        // - In a real application, this test checks if it is possible to revert the direction of every edge.
+        runATest("oneEdge", "modelSwapSO",
+            `
+                :edge  a pgo:Edge ; rdf:object :s  ; rdf:predicate :p  ; rdf:subject :o  .
             `
         );
     })
