@@ -2,6 +2,7 @@ const assert = require('assert');
 const N3 = require('n3');
 
 const storeAlterer = require('../prec3/store-alterer-from-pattern');
+const DStar = require("../dataset/index.js");
 
 const namespace = require('@rdfjs/namespace');
 const ex = namespace("http://example.org/", N3.DataFactory);
@@ -110,39 +111,43 @@ describe('StoreAlterer', function() {
     });
 
 
-    describe("findFilterReplaceRecursive", function() {
+    describe("DStar", function() {
         describe("searchInStore", function() {
-            const store = new N3.Store();
-            store.addQuad(ex.s, ex.p1, ex.o);
-            store.addQuad(ex.s, ex.p2, ex.o);
-            store.addQuad(ex.s1, ex.p1, ex.o);
-            store.addQuad(ex.s2, ex.p2, ex.otherO);
-            store.addQuad(N3.DataFactory.quad(ex.ss, ex.so   , ex.sp1), ex.starP, ex.starO);
-            store.addQuad(N3.DataFactory.quad(ex.ss, ex.so   , ex.sp2), ex.starP, ex.starO);
-            store.addQuad(N3.DataFactory.quad(ex.ss, ex.sobad, ex.sp3), ex.starP, ex.starO);
+            const Quad = N3.DataFactory.quad;
+
+            const dstar = new DStar();
+            dstar.addFromTurtleStar(
+                `
+                    @prefix ex: <http://example.org/> .
+                    ex:s  ex:p1 ex:o .
+                    ex:s  ex:p2 ex:o .
+                    ex:s1 ex:p1 ex:o .
+                    ex:s2 ex:p2 ex:otherO .
+                    << ex:ss ex:so    ex:sp1 >> ex:starP ex:starO .
+                    << ex:ss ex:so    ex:sp2 >> ex:starP ex:starO .
+                    << ex:ss ex:sobad ex:sp3 >> ex:starP ex:starO .
+                `
+            );
 
             it("should work on non rdf-star calls", function() {
-                let r = storeAlterer.findFilterReplaceRecursiveHelper.searchInStore(
-                    store,
-                    N3.DataFactory.quad(
-                        N3.DataFactory.variable("s"),
-                        N3.DataFactory.variable("p"),
-                        N3.DataFactory.variable("o"),
-                        N3.DataFactory.variable("g"),
+                let r = dstar.matchPattern(
+                    Quad(
+                        variable("s"),
+                        variable("p"),
+                        variable("o"),
+                        variable("g")
                     )
                 );
 
-                assert.strictEqual(r.length, store.size);
+                assert.strictEqual(r.length, dstar.size);
 
-                r = storeAlterer.findFilterReplaceRecursiveHelper.searchInStore(
-                    store,
+                r = dstar.matchPattern(
                     N3.DataFactory.quad(variable("subjectWithP1"), ex.p1, ex.o)
                 );
 
                 assert.strictEqual(r.length, 2);
 
-                r = storeAlterer.findFilterReplaceRecursiveHelper.searchInStore(
-                    store,
+                r = dstar.matchPattern(
                     N3.DataFactory.quad(ex.s2, ex.p2, variable("o"))
                 );
 
@@ -151,8 +156,7 @@ describe('StoreAlterer', function() {
             });
             
             it("should work on rdf-star calls", function() {
-                let r = storeAlterer.findFilterReplaceRecursiveHelper.searchInStore(
-                    store,
+                let r = dstar.matchPattern(
                     N3.DataFactory.quad(
                         N3.DataFactory.quad(
                             ex.ss,

@@ -258,75 +258,6 @@ function findFilterReplace(store, source, conditions, destination) {
 }
 
 
-const findFilterReplaceRecursiveHelper = {
-    getPositionAt: function(quad, path) {
-        let term = quad;
-        for (let p of path) term = term[p];
-        return term;
-    },
-    searchInStore: function(store, quad) {
-        // Build a function object
-        let extractVariableEvaluationsPaths = [];
-        let extractVariableEvaluations = function(quad) {
-            let d = {};
-
-            for (let path of extractVariableEvaluationsPaths) {
-                d[path.variable] = findFilterReplaceRecursiveHelper.getPositionAt(quad, path.path);
-            }
-
-            return d;
-        }
-
-        let extraFilterExpected = [];
-        let extraFilter = function(quad) {
-            for (let expected of extraFilterExpected) {
-                let term = findFilterReplaceRecursiveHelper.getPositionAt(quad, expected.path);
-                if (!term.equals(expected.term)) return false;
-            }
-
-            return true;
-        }
-
-        function decomposeNested(term, path) {
-            if (term.termType === 'Variable') {
-                extractVariableEvaluationsPaths.push({
-                    variable: term.value,
-                    path: path
-                });
-                return null;
-            } else if (term.termType === 'Quad') {
-                let s = decomposeNested(term.subject  , [...path, 'subject'  ]);
-                let p = decomposeNested(term.predicate, [...path, 'predicate']);
-                let o = decomposeNested(term.object   , [...path, 'object'   ]);
-                let g = decomposeNested(term.graph    , [...path, 'graph'    ]);
-
-                if (s === null || p === null || o === null || g === null) {
-                    return null;
-                }
-
-                return term;
-            } else {
-                if (path.length !== 1)
-                    extraFilterExpected.push({term, path});
-                return term;
-            }
-        }
-    
-        let sSearch = decomposeNested(quad.subject  , ['subject'  ]);
-        let pSearch = decomposeNested(quad.predicate, ['predicate']);
-        let oSearch = decomposeNested(quad.object   , ['object'   ]);
-        let gSearch = decomposeNested(quad.graph    , ['graph'    ]);
-    
-        let quads = store.getQuads(sSearch, pSearch, oSearch, gSearch);
-    
-        return quads.filter(extraFilter).map(extractVariableEvaluations);
-    }
-
-
-
-
-};
-
 /**
  * 
  * @param {*} store 
@@ -335,28 +266,28 @@ const findFilterReplaceRecursiveHelper = {
  * @param {N3.Quad} next 
  * @param {N3.Quad} join
  */
-function findFilterReplaceRecursive(store, startingPoint, source, conditions, destination, next, join) {
-    const init = findFilterReplaceRecursiveHelper._searchInStore(store, startingPoint);
-
-    for (let startingBinding of init) {
-        fFRR_fromPoint(store, startingBinding, source, conditions, destination, next, join);
-    }
-}
-
-function fFRR_fromPoint(store, startingBinding, source, conditions, destination, next, join) {
-    const evaluation = fRRR_partialEvaluationPattern(source, startingBinding);
-    const found = fRRR_find(store, evaluation);
-    const filtered = fRRR_filter(store, found, conditions);
-    
-    for (const match of filtered) {
-        fRRR_replace(store, match, destination);
-
-        const nextEvaluation = fRRR_findNext(store, match, next);
-        if (nextEvaluation !== undefiend) {
-            fRRR_replaceNext(store, nextEvaluation, join);
-        }
-    }
-}
+//function findFilterReplaceRecursive(store, startingPoint, source, conditions, destination, next, join) {
+//    const init = findFilterReplaceRecursiveHelper.searchInStore(store, startingPoint);
+//
+//    for (let startingBinding of init) {
+//        fFRR_fromPoint(store, startingBinding, source, conditions, destination, next, join);
+//    }
+//}
+//
+//function fFRR_fromPoint(store, startingBinding, source, conditions, destination, next, join) {
+//    const evaluation = fRRR_partialEvaluationPattern(source, startingBinding);
+//    const found = fRRR_find(store, evaluation);
+//    const filtered = fRRR_filter(store, found, conditions);
+//    
+//    for (const match of filtered) {
+//        fRRR_replace(store, match, destination);
+//
+//        const nextEvaluation = fRRR_findNext(store, match, next);
+//        if (nextEvaluation !== undefiend) {
+//            fRRR_replaceNext(store, nextEvaluation, join);
+//        }
+//    }
+//}
 
 
 module.exports = {
@@ -367,6 +298,5 @@ module.exports = {
     directReplace: directReplace,
     extractRecursive: extractRecursive,
     findFilterReplace: findFilterReplace,
-    mapPattern: mapPattern,
-    findFilterReplaceRecursive, findFilterReplaceRecursiveHelper
+    mapPattern: mapPattern
 };
