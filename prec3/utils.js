@@ -114,10 +114,53 @@ function approximateIsomorphism(quads1, quads2) {
     return [r1, r2];
 }
 
+/**
+ * A map that uses object.value as a key and the equal function to check if
+ * two keys are actually equals.
+ */
+class TermDict {
+    /** Build an empty `TermDict` */
+    constructor() {
+        this.map = {};
+    }
+
+    /** Return the value stored for key */
+    get(key) {
+        let list = this.map[key.value];
+        if (list === undefined) return undefined;
+
+        for (let term of list) {
+            if (term[0].equals(key)) {
+                return term[1];
+            }
+        }
+
+        return undefined;
+    }
+
+    /** Set the given value for the given key */
+    set(key, value) {
+        let list = this.map[key.value];
+        if (list === undefined) {
+            list = [];
+            this.map[key.value] = list;
+        }
+
+        for (let term of list) {
+            if (term[0].equals(key)) {
+                term[1] = value;
+                return;
+            }
+        }
+
+        list.push([key, value]);
+    }
+}
 
 module.exports = {
     rdfLiteralToValue,
     badToString,
     termIsIn,
-    approximateIsomorphism
+    approximateIsomorphism,
+    TermDict
 };
