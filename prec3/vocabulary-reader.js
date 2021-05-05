@@ -48,22 +48,15 @@ function xsdBoolToBool(term) {
 }
 
 /**
- * Sort the elements an array by `element.priority` then `element.iri`. The
+ * Sort the elements an array by `element.priority`. The
  * higher the priority, the lower the element is.
  * @param {Array} array The array to sort
  */
- function _sortArrayByPriorityThenIri(array) {
+ function _sortArrayByPriority(array) {
     array.sort((lhs, rhs) => {
         const prioDiff = rhs.priority - lhs.priority;
         if (prioDiff !== 0) return prioDiff;
-
-        if (lhs.iri.value < rhs.iri.value) {
-            return -1;
-        } else if (lhs.iri.value > rhs.iri.value) {
-            return 1;
-        } else {
-            return 0;
-        }
+        return 0;
     });
 }
 
@@ -308,20 +301,18 @@ class PropertyMapper {
 
     getTransformationSource() {
         return [
-            [variable("property"), prec.__targetDescriptionModel, prec.Properties],
-            [variable("entity")  , variable("propertyKey"), variable("property") ]
+            [variable("property"), prec.__appliedPropertyRule, prec._NoRuleFound]
+       // , [variable("entity")  , variable("propertyKey"), variable("property") ]
        // , [variable("property"), rdf.value              , variable("propertyValue")]
         ];
     }
 
-    getTransformationConditions() {
-        return this.conditions;
-    }
+    getTransformationConditions() { return this.conditions; }
 
     getTransformationTarget() {
         return [
-            [variable("property"), prec.__targetDescriptionModel, this.descriptionNode],
-            [variable("entity")  , this.iri                     , variable("property")]
+            [variable("property"), prec.__appliedPropertyRule, this.descriptionNode]
+            // , [variable("entity")  , this.iri                     , variable("property")]
         ];
     }
 }
@@ -472,8 +463,8 @@ class RelationshipManager {
      */
     getTransformationSource() {
         return [
-            [variable("edge"), prec.__targetDescriptionModel, prec.Relationships   ],
-            [variable("edge"), rdf.predicate                , variable("edgeLabel")]
+            [variable("edge"), prec.__appliedEdgeRule, prec.Relationships   ]
+            //, [variable("edge"), rdf.predicate                , variable("edgeLabel")]
         ];
     }
 
@@ -492,8 +483,8 @@ class RelationshipManager {
      */
     getTransformationTarget() {
         return [
-            [variable("edge"), prec.__targetDescriptionModel, this.descriptionNode],
-            [variable("edge"), rdf.predicate                , this.iri            ]
+            [variable("edge"), prec.__appliedEdgeRule, this.descriptionNode]
+            //, [variable("edge"), rdf.predicate                , this.iri            ]
         ]
     }
 }
@@ -501,6 +492,88 @@ class RelationshipManager {
 ////////////////////////////////////////////////////////////////////////////////
 //  --- ENTITIES MANAGER  ---  ENTITIES MANAGER  ---    ENTITIES MANAGER  ---  
 //  --- ENTITIES MANAGER  ---  ENTITIES MANAGER  ---    ENTITIES MANAGER  ---  
+
+
+/**
+ * 
+ * @param {N3.Store} contextStore 
+ * @param {*} ruleNode 
+ */
+function splitDefinition(quads, ruleNode, main, otherConditions, substitutionTerms) {
+    let r = {
+        type: undefined,
+
+        conditions: {
+            label: undefined,
+            explicitPriority: undefined,
+            otherLength: 0,
+            other: []
+        },
+
+        materialization: {
+            modelAs: undefined,
+            substitutions: []
+        }
+    };
+
+    function errorMalformedRule(message) {
+        return Error(`Rule ${ruleNode.value} is malformed - ${message}`);
+    }
+
+    function throwIfNotALiteral(term, predicate) {
+        throw errorMalformedRule(`${predicate.value} value (${term.value}) is not a literal.`)
+    }
+
+    for (const quad of quads) {
+        if (rdf.type.equals(quad.predicate)) {
+            r.type = quad.object;
+        } else if (main.equals(quad.predicate)) {
+            if (r.conditions.label !== undefined)
+                throw errorMalformedRule(`${predicate.value} should appear only once.`);
+            
+            throwIfNotALiteral(quad.object);
+            r.conditions.label = quad.object;
+        } else if (prec.priority.equals(quad.predicate)) {
+            if (r.conditions.explicitPriority !== undefined)
+                throw errorMalformedRule(`prec:priority should have at most one value.`);
+            
+            throwIfNotALiteral(quad.object);
+            // TODO: check if integer type
+            r.conditions.explicitPriority = parseInt(quad.object.value);
+        } else if (PrecUtils.termIsIn(quad.predicate, otherConditions)) {
+            let list = r.conditions.other.find(e => e[0].equals(quad.predicate));
+            if (list === undefined) {
+                list = [quad.predicate, []];
+                r.conditions.other.push(list);
+            }
+            list.push(quad.object);
+        } else if (prec.modelAs.equals(quad.predicate)) {
+            if (r.materialization.modelAs !== undefined)
+                throw errorMalformedRule(`prec:modelAs should have at most one value.`);
+            
+            r.materialization.modelAs = quad.object;
+        } else if (PrecUtils.termIsIn(quad.predicate, substitutionTerms)) {
+            r.materialization.substitutions.push([quad.predicate, quad.object]);
+        } else {
+            throw errorMalformedRule(`Unknown predicate ${quad.object}`);
+        }
+    }
+
+    if (r.type === undefined) throw errorMalformedRule("No type");
+
+    r.conditions.otherLength = r.conditions.other.length;
+
+    r.conditions.other.sort((lhs, rhs) => {
+        const l = JSON.stringify(lhs);
+        const r = JSON.stringify(rhs);
+
+        if (l < r) return -1;
+        if (l > r) return 1;
+        return 0;
+    })
+
+    return r;
+}
 
 /**
  * A class that contains every `prec:IRIOf[something]` quads, containing both
@@ -516,24 +589,40 @@ class EntitiesManager {
      * @param {*} managerInstancier A function to instanciate the manager for
      * one entitie.
      */
-     constructor(contextStore, substitutionTerms, iriOfEntity, baseModel, extraModels, managerInstancier) {
+     constructor(contextStore, substitutionTerms, typeOfRule, baseModel, extraModels, managerInstancier) {
         const subTermsKey = substitutionTerms.getKeys();
         const modelManager = new ModelManager(substitutionTerms, baseModel);
 
         this.iriRemapper = [];
         this.models = [];
 
+        let existingNodes = {};
+
         // `prec:IRIOfRelationship` quads management
-        for (let quad of contextStore.getQuads(null, iriOfEntity, null, defaultGraph())) {
+        for (let quad of contextStore.getQuads(null, rdf.type, typeOfRule, defaultGraph())) {
+            const descriptionNode = quad.subject;
+
+            const splitted = splitDefinition(contextStore, descriptionNode);
+
+            let conditions = JSON.stringify(splitted.conditions);
+            if (existingNodes[conditions] !== undefined) {
+                throw Error(
+                    `Invalid context: nodes ${existingNodes[conditions].value} `
+                    + `and ${quad.subject.value} `
+                    + `have the exact same target`
+                );
+            }
+            existingNodes[conditions] = quad.subject;
+
             // Read remapping
-            this.iriRemapper.push(managerInstancier(quad.subject, quad.object, contextStore, subTermsKey));
+            this.iriRemapper.push(managerInstancier(descriptionNode, contextStore, subTermsKey));
 
             // Read model if relevant
-            let model = modelManager.readModel(contextStore, quad.object);
-            if (model !== undefined) this.models.push([quad.object, model]);
+            let model = modelManager.readModel(contextStore, descriptionNode);
+            if (model !== undefined) this.models.push([descriptionNode, model]);
         }
         
-        _sortArrayByPriorityThenIri(this.iriRemapper)
+        _sortArrayByPriority(this.iriRemapper)
         
         for (let extraModel of extraModels) {
             modelManager.throwIfNotAModelDescriptionPredicate(contextStore, extraModel);
@@ -586,7 +675,7 @@ function _readNodeLabels(store) {
 
     for (const baseRule of quads) {
         if (baseRule.subject.termType !== "NamedNode")
-            throw invalidTriple(baseRule, "Subject should be a blank node");
+            throw invalidTriple(baseRule, "Subject should be a named node");
         if (baseRule.object.termType !== "Literal")
             throw invalidTriple(baseRule, "Object should be a literal")
 
@@ -667,6 +756,61 @@ function addBuiltIn(store, file) {
     MultiNestedStore.addQuadsWithoutMultiNesting(store, (new N3.Parser()).parse(trig));
 }
 
+/**
+ * Replace the triples in the form `iri prec:IRIOfThing label .` in the store
+ * with a fully developed rule.
+ * 
+ * The fully developed rule is:
+ * ```
+ * [] a <ruleTypeIRI> ; <conditionIRI> label ; <substitutionIRI> iri .
+ * ```
+ * @param {N3.Store} store The context
+ * @param {*} sugarIRI IRI used to write rules in the form `iri <sugarIRI> label`
+ * @param {*} ruleTypeIRI Type of the rules written in complete form
+ * @param {*} conditionIRI IRI used to make a condition on the label
+ * @param {*} substitutionIRI IRI used to substitute the forged node
+ */
+function _removeSugarForRules(store, sugarIRI, ruleTypeIRI, conditionIRI, substitutionIRI) {
+    let sugared = store.getQuads(null, sugarIRI, null, defaultGraph());
+
+    for (let quad of sugared) {
+        const iri = quad.subject;
+        const label = quad.object;
+
+        if (label.termType !== 'Literal') {
+            throw Error(
+                `${sugarIRI.value} only accepts literal in object position - `
+                + `found ${label.value} (a ${label.termType}) for ${iri.value}`
+            );
+        }
+
+        store.addQuad(N3.DataFactory.quad(ruleNode, rdf.type       , ruleTypeIRI));
+        store.addQuad(N3.DataFactory.quad(ruleNode, conditionIRI   , label));
+        store.addQuad(N3.DataFactory.quad(ruleNode, substitutionIRI, iri));
+    }
+
+    store.removeQuads(sugared);
+}
+
+/**
+ * Replace every quad in the form `prec:Properties ?p ?o ?g` with the quads :
+ * ```
+ * prec:NodeProperties         ?p ?o ?g .
+ * prec:RelationshipProperties ?p ?o ?g .
+ * ```
+ * @param {N3.Store} context The store that contains the context quads
+ */
+function _copyPropertiesValuesToSpecificProperties(context) {
+    let quads = context.getQuads(prec.Properties, null, null, null);
+
+    for (const quad of quads) {
+        context.addQuad(prec.NodeProperties        , quad.predicate, quad.object, quad.graph);
+        context.addQuad(prec.RelationshipProperties, quad.predicate, quad.object, quad.graph);
+    }
+
+    context.removeQuads(quads);
+}
+
 class Context {
     constructor(contextQuads) {
         const store = new N3.Store();
@@ -674,24 +818,28 @@ class Context {
         addBuiltIn(store, __dirname + "/builtin_rules.ttl");
         this.store = store;
 
+        _removeSugarForRules(context, prec.IRIOfProperty    , prec.PropertyRule    , prec.propertyName , prec.propertyIRI);
+        _removeSugarForRules(context, prec.IRIOfRelationship, prec.RelationshipRule, prec.relationLabel, prec.relatinshipIRI);
+        _copyPropertiesValuesToSpecificProperties(context);
+
         const substitutionTerms = new SubstitutionTerms(store);
 
         this.properties = new EntitiesManager(
             store,
             substitutionTerms,
-            prec.IRIOfProperty,
+            prec.PropertyRule,
             prec.Prec0Property,
             [prec.Properties, prec.NodeProperties, prec.RelationshipProperties],
-            (a, b, c, d) => new PropertyMapper(a, b, c, d)
+            (b, c, d) => new PropertyMapper(b, c, d)
         );
 
         this.relations  = new EntitiesManager(
             store,
             substitutionTerms,
-            prec.IRIOfRelationship,
+            prec.RelationshipRule,
             prec.RDFReification,
             [prec.Relationships],
-            (a, b, c, d) => new RelationshipManager(a, b, c, d)
+            (b, c, d) => new RelationshipManager(b, c, d)
         );
         _throwIfInvalidPropertyModels(this.relations.models)
 

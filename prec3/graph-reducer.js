@@ -161,31 +161,31 @@ function transformRelationships(store, addedVocabulary) {
     {
         const q = store.getQuads(null, rdf.type, pgo.Edge)
             .map(quad => quad.subject)
-            .map(term => N3.DataFactory.quad(term, prec.__targetDescriptionModel, prec.Relationships));
+            .map(term => N3.DataFactory.quad(term, prec.__appliedEdgeRule, prec.__unknownRule));
 
         store.addQuads(q);
     }
 
-    let candidateEdgeLabelsForDeletion = {};
+    //let candidateEdgeLabelsForDeletion = {};
 
     addedVocabulary.forEachRelation(
         relationship => {
-            let binds = storeAlterer.findFilterReplace(
+            storeAlterer.findFilterReplace(
                 store,
                 relationship.getTransformationSource(),
                 relationship.getTransformationConditions(),
                 relationship.getTransformationTarget()
             );
 
-            for (let bind of binds) {
-                const seenEdgeLabel = bind.edgeLabel;
-                const key = JSON.stringify(seenEdgeLabel);
-                candidateEdgeLabelsForDeletion[key] = bind.edgeLabel;
-            }
+            //for (let bind of binds) {
+            //    const seenEdgeLabel = bind.edgeLabel;
+            //    const key = JSON.stringify(seenEdgeLabel);
+            //    candidateEdgeLabelsForDeletion[key] = bind.edgeLabel;
+            //}
         }
     );
 
-    filterOutDeletedEdgeLabel(store, Object.values(candidateEdgeLabelsForDeletion));
+    //filterOutDeletedEdgeLabel(store, Object.values(candidateEdgeLabelsForDeletion));
 
     modifyRelationships(store, addedVocabulary);
 }
@@ -206,7 +206,7 @@ function modifyRelationships(store, context) {
     const relations = storeAlterer.matchAndBind(store,
         [
             [variable("relation"), rdf.type, pgo.Edge],
-            [variable("relation"), prec.__targetDescriptionModel, variable("targetDescriptionModel")],
+            [variable("relation"), prec.__appliedEdgeRule, variable("targetDescriptionModel")],
             [variable("relation"), rdf.subject       , variable("subject")  ],
             [variable("relation"), rdf.predicate     , variable("predicate")],
             [variable("relation"), rdf.object        , variable("object")   ]
@@ -239,7 +239,7 @@ function modifyRelationships(store, context) {
             let propertyQuads = store.getQuads(relation.relation, null, null, N3.DataFactory.defaultGraph())
                 .filter(
                     quad => !precUtils.termIsIn(quad.predicate, [
-                        rdf.type, prec.__targetDescriptionModel, rdf.subject, rdf.predicate, rdf.object
+                        rdf.type, prec.__appliedEdgeRule, rdf.subject, rdf.predicate, rdf.object
                     ])
                 );
 
@@ -262,7 +262,7 @@ function modifyRelationships(store, context) {
     }
 
     // Remove target model to prec:Relationships if its definition is not explicit
-    store.removeQuads(store.getQuads(null, prec.__targetDescriptionModel, prec.Relationships));
+    store.removeQuads(store.getQuads(null, prec.__appliedEdgeRule, prec.Relationships));
 }
 
 /**
@@ -343,7 +343,7 @@ function transformProperties(store, addedVocabulary) {
             .map(quad => quad.subject)
             .flatMap(propertyType => store.getQuads(null, propertyType, null, defaultGraph()))
             .map(quad => quad.object)
-            .map(propertyBlankNode => QUAD(propertyBlankNode, prec.__targetDescriptionModel, prec.Properties));
+            .map(propertyBlankNode => QUAD(propertyBlankNode, prec.__appliedPropertyRule, prec._NoRuleFound));
 
         store.addQuads(q);
     }
@@ -378,9 +378,9 @@ function transformProperties(store, addedVocabulary) {
 function applyPropertyModels(store, context) {
     const properties = storeAlterer.matchAndBind(store,
         [
-            [variable("property"), prec.__targetDescriptionModel, variable("targetDescriptionModel")],
-            [variable("entity")  , variable("propertyKey"), variable("property")],
-            [variable("property"), rdf.value              , variable("propertyValue")]
+            [variable("property"), prec.__appliedPropertyRule, variable("targetDescriptionModel")],
+            [variable("entity")  , variable("propertyKey")   , variable("property")],
+            [variable("property"), rdf.value                 , variable("propertyValue")]
         ]
     );
 
@@ -411,12 +411,11 @@ function applyPropertyModels(store, context) {
 
             storeAlterer.replaceOneBinding(store, property, r);
         } else {
-            store.removeQuad(QUAD(property.property, prec.__targetDescriptionModel, property.targetDescriptionModel));
+            store.removeQuad(QUAD(property.property, prec.__appliedPropertyRule, property.targetDescriptionModel));
         }
     }
 
-    // Remove target model to prec:Properties if its definition is not explicit
-    store.removeQuads(store.getQuads(null, prec.__targetDescriptionModel, null, defaultGraph()));
+    store.removeQuads(store.getQuads(null, prec.__appliedPropertyRule, null, defaultGraph()));
 }
 
 function noList(store, firstNode) {
