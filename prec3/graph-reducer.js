@@ -5,7 +5,7 @@ const graphyFactory = require('@graphy/core.data.factory');
 const namespace     = require('@rdfjs/namespace');
 
 const storeAlterer  = require("./store-alterer-from-pattern.js");
-const Context       = require("./vocabulary-reader.js");
+const Context       = require("./context-loader.js");
 const precUtils     = require("./utils.js")
 const quadStar      = require('./quad-star.js');
 
@@ -161,12 +161,10 @@ function transformRelationships(store, addedVocabulary) {
     {
         const q = store.getQuads(null, rdf.type, pgo.Edge)
             .map(quad => quad.subject)
-            .map(term => N3.DataFactory.quad(term, prec.__appliedEdgeRule, prec.__unknownRule));
+            .map(term => N3.DataFactory.quad(term, prec.__appliedEdgeRule, prec.Relationships));
 
         store.addQuads(q);
     }
-
-    //let candidateEdgeLabelsForDeletion = {};
 
     addedVocabulary.forEachRelation(
         relationship => {
@@ -176,16 +174,10 @@ function transformRelationships(store, addedVocabulary) {
                 relationship.getTransformationConditions(),
                 relationship.getTransformationTarget()
             );
-
-            //for (let bind of binds) {
-            //    const seenEdgeLabel = bind.edgeLabel;
-            //    const key = JSON.stringify(seenEdgeLabel);
-            //    candidateEdgeLabelsForDeletion[key] = bind.edgeLabel;
-            //}
         }
     );
 
-    //filterOutDeletedEdgeLabel(store, Object.values(candidateEdgeLabelsForDeletion));
+//    console.error(precUtils.badToString(store.getQuads(null, prec.__appliedEdgeRule)));
 
     modifyRelationships(store, addedVocabulary);
 }
@@ -213,10 +205,14 @@ function modifyRelationships(store, context) {
         ]
     );
 
+    let candidateLabelForDeletion = new precUtils.TermDict();
+
     for (const relation of relations) {
         const behaviour = context.findRelationshipModel(relation.targetDescriptionModel);
 
         if (Array.isArray(behaviour)) {
+            candidateLabelForDeletion.set(relation.predicate, true);
+
             // Build the patterns to map to
             let r = behaviour.map(term => quadStar.remapPatternWithVariables(
                 term,
@@ -258,8 +254,14 @@ function modifyRelationships(store, context) {
                     storeAlterer.replaceOneBinding(store, relation, propertiesDependantPattern);
                 }
             }
+
+            
         }
     }
+
+    let l = [];
+    candidateLabelForDeletion.forEach((node, _True) => l.push(node));
+    filterOutDeletedEdgeLabel(store, Object.values(l));
 
     // Remove target model to prec:Relationships if its definition is not explicit
     store.removeQuads(store.getQuads(null, prec.__appliedEdgeRule, prec.Relationships));
@@ -317,6 +319,7 @@ function filterOutDeletedEdgeLabel(store, nodesToDelete) {
 }
 
 function transformNodeLabels(store, addedVocabulary) {
+    // TODO: it probably can be simplified
     addedVocabulary.forEachNodeLabel(
         (nodeLabel, correspondingIRI) => {
             const pattern = [
@@ -336,14 +339,13 @@ function transformNodeLabels(store, addedVocabulary) {
     );
 }
 
-
 function transformProperties(store, addedVocabulary) {
     {
         const q = store.getQuads(null, rdf.type, prec.Property, defaultGraph())
             .map(quad => quad.subject)
             .flatMap(propertyType => store.getQuads(null, propertyType, null, defaultGraph()))
             .map(quad => quad.object)
-            .map(propertyBlankNode => QUAD(propertyBlankNode, prec.__appliedPropertyRule, prec._NoRuleFound));
+            .map(propertyBlankNode => QUAD(propertyBlankNode, prec.__appliedPropertyRule, prec._NoPropertyRuleFound));
 
         store.addQuads(q);
     }
@@ -356,6 +358,8 @@ function transformProperties(store, addedVocabulary) {
             propertyManager.getTransformationTarget()
         );
     });
+
+//    console.error(precUtils.badToString(store.getQuads(null, prec.__appliedPropertyRule)));
   
 //  TODO:
 //    if (asSet) {
@@ -395,7 +399,7 @@ function applyPropertyModels(store, context) {
     };
 
     for (const property of properties) {
-        const model = context.findPropertyModel(property.targetDescriptionModel, () => typeFinder(property.entity));
+        const model = context.findPropertyModel(property.targetDescriptionModel, typeFinder(property.entity));
 
         if (Array.isArray(model)) {
             // Build the patterns to map to

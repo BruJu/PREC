@@ -69,7 +69,7 @@ prec:predicate       a prec:SubstitutionTerm ; prec:substitutionTarget rdf:predi
 prec:object          a prec:SubstitutionTerm ; prec:substitutionTarget rdf:object    .
 
 prec:relationshipIRI a prec:SubstitutionTerm ; prec:substitutionTarget pvar:relationshipIRI .
-prec:propertyIRI     a prec:SubstitutionTerm ; prec:substitutionTarget pvar:propertyIRI     .
+prec:propertyIRI     a prec:SubstitutionTerm ; prec:substitutionTarget pvar:propertyKey     .
 
 
 #################

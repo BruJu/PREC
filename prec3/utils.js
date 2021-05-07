@@ -3,7 +3,7 @@ const namespace = require('@rdfjs/namespace');
 const xsd = namespace("http://www.w3.org/2001/XMLSchema#", N3.DataFactory);
 
 /**
- * Converts a RDF.JS literal to its value. If its type represents a number,
+ * Converts an RDF/JS literal to its value. If its type represents a number,
  * it returns a number. Else it returns a literal.
  */
 function rdfLiteralToValue(literal) {
@@ -15,6 +15,21 @@ function rdfLiteralToValue(literal) {
         return parseFloat(literal.value);
     } else {
         return literal.value;
+    }
+}
+
+/** Convert term into its boolean value. Return undefined if it's not a valid boolean */
+function xsdBoolToBool(term) {
+    if (term.termType !== "Literal" || !xsd.boolean.equals(term.datatype)) {
+        return undefined;
+    }
+
+    if (term.value === "true") {
+        return true;
+    } else if (term.value === "false") {
+        return false;
+    } else {
+        return undefined;
     }
 }
 
@@ -155,10 +170,23 @@ class TermDict {
 
         list.push([key, value]);
     }
+
+    isEmpty() {
+        return Object.keys(this.map).length === 0;
+    }
+
+    forEach(callback) {
+        for (const kvPairWithSameHash of Object.values(this.map)) {
+            for (const [key, value] of kvPairWithSameHash) {
+                callback(key, value);
+            }
+        }
+    }
 }
 
 module.exports = {
     rdfLiteralToValue,
+    xsdBoolToBool,
     badToString,
     termIsIn,
     approximateIsomorphism,

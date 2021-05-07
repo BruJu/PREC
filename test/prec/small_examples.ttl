@@ -36,10 +36,10 @@ prec:testMetaData prec:kind "SmallExamples" .
 
     :Person prec:IRIOfNodeLabel "Person" .
 
-    :knows prec:IRIOfRelationship [
+    :LongRule a prec:RelationshipRule ;
+        prec:relationshipIRI :knows ;
         prec:relationshipLabel "Knows" ;
-        prec:destinationLabel  "Person" 
-    ] .
+        prec:destinationLabel  "Person" .
 
     :knowsAbout prec:IRIOfRelationship "Knows" .
 }
@@ -85,17 +85,20 @@ prec:testMetaData prec:kind "SmallExamples" .
     
     :Food   prec:IRIOfNodeLabel "Food" .
     :Animal prec:IRIOfNodeLabel "Animal" .
-
-    :food_name      prec:IRIOfProperty :prop_food_name .
-    :prop_food_name prec:propertyName "name" ;
+    
+    :prop_food_name a prec:PropertyRule ;
+                    prec:propertyIRI :food_name ;
+                    prec:propertyName "name" ;
                     prec:nodeLabel "Food" .
 
-    :animal_name      prec:IRIOfProperty :prop_animal_name .
-    :prop_animal_name prec:propertyName "name" ;
-                      prec:nodeLabel "Animal" .
+    :prop_animal_name a prec:PropertyRule ;
+                    prec:propertyIRI :animal_name;
+                    prec:propertyName "name" ;
+                    prec:nodeLabel "Animal" .
 
-    :all_name      prec:IRIOfProperty :prop_all_name .
-    :prop_all_name prec:propertyName "name" .
+    :prop_all_name a prec:PropertyRule ;
+                    prec:propertyIRI :all_name;
+                    prec:propertyName "name" .
 }
 
 :priorityGraphBase prec:testIsBaseOf :allPriority, :animalPriority, :foodPriority, :defaultPriority .
@@ -143,7 +146,5 @@ prec:testMetaData prec:kind "SmallExamples" .
 
 
 :listTestInput {
-    _:node :elements (
-        [ rdf:value "a" ] [ rdf:value "b" ]
-    ) .
+    _:node :elements [ rdf:value ( "a" "b" ) ] .
  }
