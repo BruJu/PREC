@@ -21,6 +21,15 @@ const QUAD = N3.DataFactory.quad;
 
 // =============================================================================
 
+function storeFFF(store, object) {
+    return storeAlterer.findFilterReplace(
+        store,
+        object.source,
+        object.conditions,
+        object.destination
+    );
+}
+
 /**
  * 
  * @param {N3.Store} store 
@@ -150,14 +159,11 @@ function _listContains(pattern, searched) {
 
 
 function transformRelationships(store, addedVocabulary) {
-    // `prec.__targetDescriptionModel` is added to note during the relationship
-    // loop the list of descriptionModels to apply later.
-    // We don't apply them now so the transformation into the target models does
-    // not conflict with the processing of other edges.
-    // Instead, the `prec:__targetDescriptionModel` object will changed if it
-    // should be and `modifyRelationships` will actually do the replacement.
+    // To transform the relationship, we first identify the rule to apply to
+    // each relationship.
+    // We do the identification process first to avoid conflicts between rules.
 
-    // Add an annotation to every quad
+    // Mark every relationship with a "neutral" rule
     {
         const q = store.getQuads(null, rdf.type, pgo.Edge)
             .map(quad => quad.subject)
@@ -166,29 +172,22 @@ function transformRelationships(store, addedVocabulary) {
         store.addQuads(q);
     }
 
+    // Find the proper rule
     addedVocabulary.forEachRelation(
-        relationship => {
-            storeAlterer.findFilterReplace(
-                store,
-                relationship.getTransformationSource(),
-                relationship.getTransformationConditions(),
-                relationship.getTransformationTarget()
-            );
-        }
+        relationship => storeFFF(store, relationship.getFilter())
     );
 
-//    console.error(precUtils.badToString(store.getQuads(null, prec.__appliedEdgeRule)));
-
+    // Do the transformations
     modifyRelationships(store, addedVocabulary);
 }
 
 /**
- * Process every `prec:__targetDescriptionModel` request registered in the
+ * Process every `prec:__appliedEdgeRule` request registered in the
  * store.
  * 
  * In other words, this function will map the PREC-0 representation of a
  * property graph edge to the representation requested by the user, through the
- * specified model in the context.
+ * specified model for the rule.
  * 
  * @param {N3.Store} store The store that contains the quads to process
  * @param {Context} context The `Context` that contains the information about
@@ -198,7 +197,7 @@ function modifyRelationships(store, context) {
     const relations = storeAlterer.matchAndBind(store,
         [
             [variable("relation"), rdf.type, pgo.Edge],
-            [variable("relation"), prec.__appliedEdgeRule, variable("targetDescriptionModel")],
+            [variable("relation"), prec.__appliedEdgeRule, variable("ruleNode")],
             [variable("relation"), rdf.subject       , variable("subject")  ],
             [variable("relation"), rdf.predicate     , variable("predicate")],
             [variable("relation"), rdf.object        , variable("object")   ]
@@ -208,7 +207,7 @@ function modifyRelationships(store, context) {
     let candidateLabelForDeletion = new precUtils.TermDict();
 
     for (const relation of relations) {
-        const behaviour = context.findRelationshipModel(relation.targetDescriptionModel);
+        const behaviour = context.findRelationshipModel(relation.ruleNode);
 
         if (Array.isArray(behaviour)) {
             candidateLabelForDeletion.set(relation.predicate, true);
@@ -253,9 +252,7 @@ function modifyRelationships(store, context) {
 
                     storeAlterer.replaceOneBinding(store, relation, propertiesDependantPattern);
                 }
-            }
-
-            
+            } 
         }
     }
 
@@ -263,14 +260,14 @@ function modifyRelationships(store, context) {
     candidateLabelForDeletion.forEach((node, _True) => l.push(node));
     filterOutDeletedEdgeLabel(store, Object.values(l));
 
-    // Remove target model to prec:Relationships if its definition is not explicit
+    // Remove target model to prec:Relationships if its definition was not explicit
     store.removeQuads(store.getQuads(null, prec.__appliedEdgeRule, prec.Relationships));
 }
 
 /**
- * 
- * @param {N3.Store} store 
- * @param {*} nodesToDelete 
+ * Remove from store every node in `nodesToDelete` that only have one occurence,
+ * and for which the occurence is in the form
+ * `?theNode rdfs:label ?_anything`
  */
 function filterOutDeletedEdgeLabel(store, nodesToDelete) {
     let components = [];
@@ -318,28 +315,29 @@ function filterOutDeletedEdgeLabel(store, nodesToDelete) {
     }
 }
 
-function transformNodeLabels(store, addedVocabulary) {
-    // TODO: it probably can be simplified
-    addedVocabulary.forEachNodeLabel(
-        (nodeLabel, correspondingIRI) => {
-            const pattern = [
-                [variable("nodeLabel"), rdf.type, prec.CreatedNodeLabel],
-                [variable("nodeLabel"), rdfs.label, N3.DataFactory.literal(nodeLabel)],
-            ];
-
-            for (const bind of storeAlterer.matchAndBind(store, pattern)) {
-                storeAlterer.findFilterReplace(
-                    store,
-                    [[variable("node"), rdf.type, bind.nodeLabel]],
-                    [],
-                    [[variable("node"), rdf.type, correspondingIRI]]
-                )
-            }
-        }
-    );
+/**
+ * Transforms every node label specified in the context with its proper IRI
+ * @param {N3.Store} store The data store
+ * @param {Context} context The context
+ */
+function transformNodeLabels(store, context) {
+    context.forEachNodeLabel((nodeLabel, correspondingIRI) => {
+        storeAlterer.findFilterReplace(
+            store,
+            [[variable("node"), rdf.type, variable("nodeLabel")]],
+            [
+                [
+                    [variable("nodeLabel"), rdfs.label, N3.DataFactory.literal(nodeLabel)],
+                    [variable("nodeLabel"), rdf.type  , prec.CreatedNodeLabel]
+                ]
+            ],
+            [[variable("node"), rdf.type, correspondingIRI]]
+        )
+    });
 }
 
 function transformProperties(store, addedVocabulary) {
+    // Mark every property value node
     {
         const q = store.getQuads(null, rdf.type, prec.Property, defaultGraph())
             .map(quad => quad.subject)
@@ -350,16 +348,10 @@ function transformProperties(store, addedVocabulary) {
         store.addQuads(q);
     }
 
-    addedVocabulary.forEachProperty(propertyManager => {
-        storeAlterer.findFilterReplace(
-            store,
-            propertyManager.getTransformationSource(),
-            propertyManager.getTransformationConditions(),
-            propertyManager.getTransformationTarget()
-        );
-    });
-
-//    console.error(precUtils.badToString(store.getQuads(null, prec.__appliedPropertyRule)));
+    // Find the proper rule to apply
+    addedVocabulary.forEachProperty(
+        propertyManager => storeFFF(store, propertyManager.getFilter())
+    );
   
 //  TODO:
 //    if (asSet) {
@@ -368,6 +360,7 @@ function transformProperties(store, addedVocabulary) {
 //        }
 //    }
 
+    // apply the new model
     applyPropertyModels(store, addedVocabulary);
 }
 
@@ -375,14 +368,14 @@ function transformProperties(store, addedVocabulary) {
  * Transform the properties models to the required models.
  * 
  * The required model is noted with the quad
- * `?propertyBlankNode prec:__targetDescriptionModel ?descriptionNode`.
+ * `?propertyBlankNode prec:__appliedPropertyRule ?ruleNode`.
  * @param {N3.Store} store The store that contains the quads
  * @param {Context} context The context to apply
  */
 function applyPropertyModels(store, context) {
     const properties = storeAlterer.matchAndBind(store,
         [
-            [variable("property"), prec.__appliedPropertyRule, variable("targetDescriptionModel")],
+            [variable("property"), prec.__appliedPropertyRule, variable("ruleNode")],
             [variable("entity")  , variable("propertyKey")   , variable("property")],
             [variable("property"), rdf.value                 , variable("propertyValue")]
         ]
@@ -399,7 +392,7 @@ function applyPropertyModels(store, context) {
     };
 
     for (const property of properties) {
-        const model = context.findPropertyModel(property.targetDescriptionModel, typeFinder(property.entity));
+        const model = context.findPropertyModel(property.ruleNode, typeFinder(property.entity));
 
         if (Array.isArray(model)) {
             // Build the patterns to map to
@@ -415,7 +408,7 @@ function applyPropertyModels(store, context) {
 
             storeAlterer.replaceOneBinding(store, property, r);
         } else {
-            store.removeQuad(QUAD(property.property, prec.__appliedPropertyRule, property.targetDescriptionModel));
+            store.removeQuad(QUAD(property.property, prec.__appliedPropertyRule, property.ruleNode));
         }
     }
 
@@ -517,6 +510,5 @@ function _quadBNMap(map, quad) {
         }
     });
 }
-
 
 module.exports = applyVocabulary;
