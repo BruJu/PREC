@@ -21,7 +21,10 @@ prec:EdgeShape a sh:NodeShape ;
 
 prec:PropertyValueShape a sh:NodeShape ;
   sh:targetClass prec:PropertyValue ;
-  sh:property [ sh:path rdf:value ; sh:nodeKind sh:Literal ] .
+  sh:property [
+    sh:path rdf:value
+    # ; sh:nodeKind sh:Literal # Literal or list of literals
+  ] .
 
 # TODO:
 # All predicates of type prec:Property must have :

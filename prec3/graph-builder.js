@@ -40,7 +40,7 @@ class RDFGraphBuilder {
         this.namespaces = {
             nodeLabel        : namespace(vocab + "node/label/"),
             nodeProperty     : namespace(vocab + "node/property/"),
-            relationLabel    : namespace(vocab + "relation/label/"),
+            relationshipLabel: namespace(vocab + "relation/label/"),
             relationProperty : namespace(vocab + "relation/property/")
         };
         
@@ -72,6 +72,17 @@ class RDFGraphBuilder {
         return propertyValueNode;
     }
 
+    /** Builds some new node for a list of literal. The end of the IRI is kind of opaque. */
+    _makeNodeForPropertyValues(literals) {
+        const asRdfLiterals = literals.map(lit => N3.DataFactory.literal(lit));
+        const head = this._addList(asRdfLiterals);
+
+        const propertyValueNode = N3.DataFactory.blankNode("propertyValue" + (++this.counters.properties));
+        this._addQuad(propertyValueNode, rdf.value, head);
+        this._addQuad(propertyValueNode, rdf.type, prec.PropertyValue);
+        return propertyValueNode;
+    }
+
     /**
      * Add the properties of the node. Properties are suffixed with the list
      * of labels.
@@ -98,8 +109,7 @@ class RDFGraphBuilder {
                 let nodeValue = this._makeNodeForPropertyValue(properties[property]);
                 this._addQuad(node, propertyNode, nodeValue);
             } else {
-                let listOfNodes = properties[property].map(p => this._makeNodeForPropertyValue(p));
-                let listHead = this._addList(listOfNodes);
+                let listHead = this._makeNodeForPropertyValues(properties[property]);
                 this._addQuad(node, propertyNode, listHead);
             }
         }
@@ -131,8 +141,7 @@ class RDFGraphBuilder {
                     self._addQuad(node, propertyNode, nodeValue);
                     return nodeValue;
                 } else {
-                    let listOfNodes = propertyValue.map(p => self._makeNodeForPropertyValue(p));
-                    let listHead = self._addList(listOfNodes);
+                    let listHead = self._makeNodeForPropertyValues(propertyValue);
                     self._addQuad(node, propertyNode, listHead);
                     return listHead;
                 }
@@ -231,7 +240,7 @@ class RDFGraphBuilder {
         this._addQuad(relation, rdf.subject, N3.DataFactory.blankNode("node" + start));
         this._addQuad(relation, rdf.object, N3.DataFactory.blankNode("node" + end));
 
-        let labelNode = this.namespaces.relationLabel[label];
+        let labelNode = this.namespaces.relationshipLabel[label];
         this._addQuad(relation, rdf.predicate, labelNode);
         
         this._addQuad(labelNode, rdf.type, prec.CreatedRelationshipLabel);

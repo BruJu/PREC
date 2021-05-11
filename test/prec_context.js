@@ -59,33 +59,38 @@ const contexts = {
     `,
     type1specializationBN: `
         prec:Relationships prec:modelAs prec:RdfStarUnique .
-        :type1 prec:IRIOfRelationship [ prec:relationshipLabel "type1" ] .
+        [] a prec:RelationshipRule ;
+            prec:relationshipIRI   :type1 ;
+            prec:relationshipLabel "type1" .
     `,
     type1modelAs: `
         prec:Relationships prec:modelAs prec:RdfStarOccurrence .
-        :type1 prec:IRIOfRelationship [
-            prec:modelAs prec:RdfStarUnique ;
-            prec:relationshipLabel "type1" 
-        ] .
+        [] a prec:RelationshipRule ;
+            prec:relationshipIRI   :type1 ;
+            prec:relationshipLabel "type1" ;
+            prec:modelAs prec:RdfStarUnique .
     `,
     predicateOnPerson: `
         prec:Relationships prec:modelAs prec:RdfStarOccurrence .
-        :NewPredicate prec:IRIOfRelationship [
+        [] a prec:RelationshipRule ;
+            prec:relationshipIRI :NewPredicate ;
             prec:modelAs prec:RdfStarUnique ;
             prec:relationshipLabel "Predicate" ;
             prec:sourceLabel "Person"
-        ] .
+        .
     `,
     bothSpecialization: `
-        :type1 prec:IRIOfRelationship [
+        [] a prec:RelationshipRule ;
+            prec:relationshipIRI :type1 ;
             prec:relationshipLabel "type1" ;
             prec:modelAs prec:RdfStarUnique
-        ] .
+        .
         
-        :type2 prec:IRIOfRelationship [
+        [] a prec:RelationshipRule ;
+            prec:relationshipIRI :type2 ;
             prec:relationshipLabel "type2" ;
             prec:modelAs prec:RdfStarUnique
-        ] .
+        .
     `,
 
 
@@ -398,25 +403,32 @@ describe("Property convertion", function() {
             :propertyB a prec:Property, prec:CreatedProperty ; rdfs:label "PropertyB" .
         `,
         contextForP1: ` :knows prec:IRIOfProperty "P1" . `,
-        contextForP1bis: ` :knows prec:IRIOfProperty [ prec:propertyName "P1" ] . `,
+        contextForP1bis: `
+            [] a prec:PropertyRule ;
+                prec:propertyIRI :knows ;
+                prec:propertyName "P1"  .
+        `,
         contextForPB: ` :knows prec:IRIOfProperty "PropertyB" . `,
         contextForNodes: `
-            :knows prec:IRIOfProperty [ 
+            [] a prec:PropertyRule ;
+                prec:propertyIRI  :knows ;
                 prec:propertyName "PropertyA" ; 
                 prec:nodeLabel    prec:any
-            ] .
+            .
         `,
         contextForPASubjectNodes: `
-            :mappedA prec:IRIOfProperty [
+            [] a prec:PropertyRule ;
+                prec:propertyIRI  :mappedA ;
                 prec:propertyName "PropertyA" ;
                 prec:nodeLabel    "Subject"
-            ] .
+            .
         `,
         contextForPAOnLabelOfEdge: `
-            :mappedA prec:IRIOfProperty [
+            [] a prec:PropertyRule ;
+                prec:propertyIRI       :mappedA ;
                 prec:propertyName      "PropertyA" ;
                 prec:relationshipLabel "LabelOfEdge"
-            ] .
+            .
         `
     };
 
