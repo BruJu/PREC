@@ -17,20 +17,12 @@ const pvar = namespace("http://bruy.at/prec-trans#"                 , N3.DataFac
 
 const variable = N3.DataFactory.variable;
 const defaultGraph = N3.DataFactory.defaultGraph;
-const QUAD = N3.DataFactory.quad;
+const $quad = N3.DataFactory.quad;
 
 // =============================================================================
 
-function storeFFF(dataset, object) {
-    return dataset.findFilterReplace(
-        object.source,
-        object.conditions,
-        object.destination
-    );
-}
-
 /**
- * 
+ * Transform the dataset by applying the given context.
  * @param {DStar} dataset The DStar dataset that contains the quad
  * @param {*} contextQuads The list of quads that are part of the context
  */
@@ -71,45 +63,6 @@ function applyContext(dataset, contextQuads) {
 // =============================================================================
 
 /**
- * Converts a term to its Graphy concise representation
- * @param {*} term The term I guess?
- */
-function concise(term) { return graphyFactory.term(term).concise(); }
-
-function _findTripleAbleRelations(requestResult) {
-    // 1.
-    const predicates = {};
-
-    for (let bindings of requestResult) {
-        const key = concise(bindings.p);
-
-        if (predicates[key] === undefined) {
-            predicates[key] = new N3.Store();
-        } else if (predicates[key] === "HadDuplicates") {
-            continue;
-        }
-
-        if (predicates[key].countQuads(bindings.s, bindings.p, bindings.o) >= 1) {
-            predicates[key] = "HadDuplicates";
-        } else {
-            predicates[key].addQuad(bindings.s, bindings.p, bindings.o);
-        }
-    }
-
-    // 2.
-    const result = new Set();
-
-    for (const key in predicates) {
-        if (predicates[key] !== "HadDuplicates") {
-            result.add(key);
-        }
-    }
-
-    return result;
-}
-
-
-/**
  * Deletes every occurrence of pgo:Edge pgo:Node, prec:Property and prec:PropertyValue.
  * 
  * While the PGO ontology is usefull to describe the PG structure, and to
@@ -127,7 +80,7 @@ function removePGO(dataset) {
  * type and who appears expectedSubject times in subject position, ...
  */
 function removeUnusedCreatedVocabulary(dataset, type, expectedSubject, expectedPredicate, expectedObject) {
-    let r = dataset.matchAndBind([QUAD(variable("voc"), rdf.type, type)]);
+    let r = dataset.matchAndBind([$quad(variable("voc"), rdf.type, type)]);
 
     for (let bind1 of r) {
         let asSubject   = dataset.getQuads(bind1.voc, null, null).length;
@@ -150,11 +103,6 @@ function removeUnusedCreatedVocabulary(dataset, type, expectedSubject, expectedP
     }
 }
 
-function _listContains(pattern, searched) {
-    return pattern.find(e => searched.find(s => quadStar.containsTerm(e, s)) !== undefined) !== undefined;
-}
-
-
 function transformRelationships(dataset, addedVocabulary) {
     // To transform the relationship, we first identify the rule to apply to
     // each relationship.
@@ -171,7 +119,10 @@ function transformRelationships(dataset, addedVocabulary) {
 
     // Find the proper rule
     addedVocabulary.forEachRelation(
-        relationship => storeFFF(dataset, relationship.getFilter())
+        relationship => {
+            const { source, conditions, destination } = relationship.getFilter();
+            dataset.findFilterReplace(source, conditions, destination);
+        }
     );
 
     // Do the transformations
@@ -193,11 +144,11 @@ function transformRelationships(dataset, addedVocabulary) {
 function modifyRelationships(dataset, context) {
     const relations = dataset.matchAndBind(
         [
-            QUAD(variable("relation"), rdf.type, pgo.Edge),
-            QUAD(variable("relation"), prec.__appliedEdgeRule, variable("ruleNode")),
-            QUAD(variable("relation"), rdf.subject       , variable("subject")  ),
-            QUAD(variable("relation"), rdf.predicate     , variable("predicate")),
-            QUAD(variable("relation"), rdf.object        , variable("object")   )
+            $quad(variable("relation"), rdf.type, pgo.Edge),
+            $quad(variable("relation"), prec.__appliedEdgeRule, variable("ruleNode")),
+            $quad(variable("relation"), rdf.subject       , variable("subject")  ),
+            $quad(variable("relation"), rdf.predicate     , variable("predicate")),
+            $quad(variable("relation"), rdf.object        , variable("object")   )
         ]
     );
 
@@ -222,7 +173,8 @@ function modifyRelationships(dataset, context) {
                 ]
             ))
                 .map(l => [l, 
-                    quadStar.containsTerm(l, variable('propertyKey')) || quadStar.containsTerm(l, variable('propertyValue'))
+                    quadStar.containsTerm(l, variable('propertyKey'))
+                    || quadStar.containsTerm(l, variable('propertyValue'))
                 ]);
 
             const nonPropertiesDependantPattern = r.filter(e => !e[1]).map(e => e[0]);
@@ -321,14 +273,14 @@ function filterOutDeletedEdgeLabel(dataset, nodesToDelete) {
 function transformNodeLabels(dataset, context) {
     context.forEachNodeLabel((nodeLabel, correspondingIRI) => {
         dataset.findFilterReplace(
-            [QUAD(variable("node"), rdf.type, variable("nodeLabel"))],
+            [$quad(variable("node"), rdf.type, variable("nodeLabel"))],
             [
                 [
-                    QUAD(variable("nodeLabel"), rdfs.label, N3.DataFactory.literal(nodeLabel)),
-                    QUAD(variable("nodeLabel"), rdf.type  , prec.CreatedNodeLabel)
+                    $quad(variable("nodeLabel"), rdfs.label, N3.DataFactory.literal(nodeLabel)),
+                    $quad(variable("nodeLabel"), rdf.type  , prec.CreatedNodeLabel)
                 ]
             ],
-            [QUAD(variable("node"), rdf.type, correspondingIRI)]
+            [$quad(variable("node"), rdf.type, correspondingIRI)]
         )
     });
 }
@@ -340,22 +292,18 @@ function transformProperties(dataset, addedVocabulary) {
             .map(quad => quad.subject)
             .flatMap(propertyType => dataset.getQuads(null, propertyType, null, defaultGraph()))
             .map(quad => quad.object)
-            .map(propertyBlankNode => QUAD(propertyBlankNode, prec.__appliedPropertyRule, prec._NoPropertyRuleFound));
+            .map(propertyBlankNode => $quad(propertyBlankNode, prec.__appliedPropertyRule, prec._NoPropertyRuleFound));
 
         dataset.addAll(q);
     }
 
     // Find the proper rule to apply
     addedVocabulary.forEachProperty(
-        propertyManager => storeFFF(dataset, propertyManager.getFilter())
+        propertyManager => {
+            const { source, conditions, destination } = propertyManager.getFilter();
+            dataset.findFilterReplace(source, conditions, destination);
+        }
     );
-  
-//  TODO:
-//    if (asSet) {
-//        for (const bind of newB) {
-//            noList(store, bind.x);
-//        }
-//    }
 
     // apply the new model
     applyPropertyModels(dataset, addedVocabulary);
@@ -372,9 +320,9 @@ function transformProperties(dataset, addedVocabulary) {
 function applyPropertyModels(dataset, context) {
     const properties = dataset.matchAndBind(
         [
-            QUAD(variable("property"), prec.__appliedPropertyRule, variable("ruleNode")),
-            QUAD(variable("entity")  , variable("propertyKey")   , variable("property")),
-            QUAD(variable("property"), rdf.value                 , variable("propertyValue"))
+            $quad(variable("property"), prec.__appliedPropertyRule, variable("ruleNode")),
+            $quad(variable("entity")  , variable("propertyKey")   , variable("property")),
+            $quad(variable("property"), rdf.value                 , variable("propertyValue"))
         ]
     );
 
@@ -404,70 +352,13 @@ function applyPropertyModels(dataset, context) {
 
             dataset.replaceOneBinding(property, r);
         } else {
-            dataset.delete(QUAD(property.property, prec.__appliedPropertyRule, property.ruleNode));
+            dataset.delete($quad(property.property, prec.__appliedPropertyRule, property.ruleNode));
         }
     }
 
     dataset.deleteMatches(null, prec.__appliedPropertyRule, null, defaultGraph());
 }
 
-function noList(store, firstNode) {
-    const listHeads = storeAlterer.matchAndBind(store,
-        [
-            [firstNode    , rdf.type     , rdf.List ],
-            [variable("s"), variable("p"), firstNode]
-        ]
-    );
-
-    if (listHeads.length !== 1) {
-        console.error("noList: Not exactly one match");
-        return;
-    }
-
-    const listHead = listHeads[0];;
-
-    const l = storeAlterer.extractRecursive(
-        store,
-        firstNode,
-        [
-            [variable("(R) current"), rdf.type , rdf.List            ],
-            [variable("(R) current"), rdf.first, variable("value")   ],
-            [variable("(R) current"), rdf.rest , variable("(R) next")]
-        ],
-        rdf.nil,
-        []
-    );
-
-    storeAlterer.replace(store, listHeads, []);
-
-    for (const element of l) {
-        store.addQuad(listHead.s, listHead.p, element);
-    }
-}
-
-function searchUnmapped(store) {
-    const r = storeAlterer.matchAndBind(store,
-        [[variable("word"), rdf.type, prec.CreatedVocabulary]]
-    );
-
-    let unmapped = [];
-
-    for (let r1 of r) {
-        const word = r1.word;
-
-        if (store.countQuads(null, word, null) > 0
-        || store.countQuads(null, rdf.predicate, word) > 0) {
-            unmapped.push(word);
-        }
-    }
-
-    let quads = store.getQuads();
-    store.removeQuads(quads);
-
-    for (const term of unmapped) {
-        store.addQuad(term, rdf.type, prec.CreatedVocabulary);
-    }
-}
 
 /**
  * Transform the blank nodes of the given type to named nodes, by appending to

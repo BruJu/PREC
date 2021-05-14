@@ -26,5 +26,4 @@ function readQuads(turtleContent) {
 module.exports = {
     turtleToQuads: readQuads,
     turtleToDStar: content => new DStar(readQuads(content)),
-    turtleToStore: content => new N3.Store(readQuads(content))
 };
