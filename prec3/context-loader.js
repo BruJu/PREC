@@ -109,7 +109,7 @@ class PropertyRule {
     constructor(conditions, hash, ruleNode) {
         this.conditions = [
             [
-                [variable('propertyKey'), rdf.type, prec.Property]
+                $quad(variable('propertyKey'), rdf.type, prec.Property)
             ]
         ];
         this.ruleNode = ruleNode;
@@ -118,7 +118,7 @@ class PropertyRule {
         if (conditions.label !== undefined) {
             this.conditions.push(
                 [
-                    [variable('propertyKey'), rdfs.label, conditions.label]
+                    $quad(variable('propertyKey'), rdfs.label, conditions.label)
                 ]
             );
         }
@@ -167,13 +167,13 @@ class PropertyRule {
     static _processRestrictionOnEntity(object, conditions, type_, labelType, throwError) {
         if (prec.any.equals(object)) {
             conditions.push([
-                [variable("entity"), rdf.type, type_]
+                $quad(variable("entity"), rdf.type, type_)
             ]);
         } else if (object.termType === 'Literal') {
             conditions.push([
-                [variable("entity"), labelType , variable("label")],
-                [variable("entity"), rdf.type  , type_            ],
-                [variable("label") , rdfs.label, object           ]
+                $quad(variable("entity"), labelType , variable("label")),
+                $quad(variable("entity"), rdf.type  , type_            ),
+                $quad(variable("label") , rdfs.label, object           )
             ]);
         } else {
             throwError(p, "has invalid object");
@@ -187,13 +187,13 @@ class PropertyRule {
     getFilter() {
         return {
             source: [
-                [variable("property"), prec.__appliedPropertyRule, prec._NoPropertyRuleFound],
-                [variable("entity")  , variable("propertyKey")   , variable("property")     ]
+                $quad(variable("property"), prec.__appliedPropertyRule, prec._NoPropertyRuleFound),
+                $quad(variable("entity")  , variable("propertyKey")   , variable("property")     )
             ],
             conditions: this.conditions,
             destination: [
-                [variable("property"), prec.__appliedPropertyRule, this.ruleNode       ],
-                [variable("entity")  , variable("propertyKey")   , variable("property")]
+                $quad(variable("property"), prec.__appliedPropertyRule, this.ruleNode       ),
+                $quad(variable("entity")  , variable("propertyKey")   , variable("property"))
             ]
         };
     }
@@ -263,8 +263,8 @@ class RelationshipRule {
         if (conditions.label !== undefined) {
             this.conditions.push(
                 [
-                    [variable("edge")     , rdf.predicate, variable("edgeLabel")],
-                    [variable("edgeLabel"), rdfs.label   , conditions.label     ]
+                    $quad(variable("edge")     , rdf.predicate, variable("edgeLabel")),
+                    $quad(variable("edgeLabel"), rdfs.label   , conditions.label     )
                 ]
             );
         }
@@ -293,9 +293,9 @@ class RelationshipRule {
 
             this.conditions.push(
                 [
-                    [variable("edge") , predicate , variable("node") ],
-                    [variable("node") , rdf.type  , variable("label")],
-                    [variable("label"), rdfs.label, value            ]
+                    $quad(variable("edge") , predicate , variable("node") ),
+                    $quad(variable("node") , rdf.type  , variable("label")),
+                    $quad(variable("label"), rdfs.label, value            )
                 ]
             );
         }
@@ -308,11 +308,11 @@ class RelationshipRule {
     getFilter() {
         return {
             source: [
-                [variable("edge"), prec.__appliedEdgeRule, prec.Relationships   ]
+                $quad(variable("edge"), prec.__appliedEdgeRule, prec.Relationships)
             ],
             conditions: this.conditions,
             destination: [
-                [variable("edge"), prec.__appliedEdgeRule, this.ruleNode]
+                $quad(variable("edge"), prec.__appliedEdgeRule, this.ruleNode)
             ]
         };
     }

@@ -49,7 +49,7 @@ function assertEqualStores(store1, store2) {
 
 describe("PREC context applier", function () {
     it("should map blank nodes", function() {
-        let store = utility.turtleToStore("_:toto a pgo:Node .");
+        let store = utility.turtleToDStar("_:toto a pgo:Node .");
         assert.strictEqual(store.size, 1);
 
         let context = utility.turtleToQuads("pgo:Node prec:mapBlankNodesToPrefix <http://totoland/> .");

@@ -1,4 +1,5 @@
 const N3 = require("n3");
+const DStar = require('../dataset/index.js');
 
 function readQuads(turtleContent) {
     const prefixes =
@@ -24,5 +25,5 @@ function readQuads(turtleContent) {
 
 module.exports = {
     turtleToQuads: readQuads,
-    turtleToStore: content => new N3.Store(readQuads(content))
+    turtleToDStar: content => new DStar(readQuads(content)),
 };

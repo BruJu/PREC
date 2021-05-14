@@ -162,11 +162,11 @@ function print(store, d1, graphName, d2, contextName, expectedStore) {
 
 function runATest(graphName, contextName, expected) {
     it(graphName + " x " + contextName, function() {
-        const store         = utility.turtleToStore(basicGraphs[graphName]);
+        const store         = utility.turtleToDStar(basicGraphs[graphName]);
         const context       = utility.turtleToQuads(contexts[contextName]);
         graphReducer(store, context);
 
-        const expectedStore = utility.turtleToStore(expected);
+        const expectedStore = utility.turtleToDStar(expected);
         const r = isSubstituableGraph(store.getQuads(), expectedStore.getQuads());
         if (!r) print(store, basicGraphs, graphName, contexts, contextName, expectedStore);
         assert.ok(r);
@@ -176,11 +176,11 @@ function runATest(graphName, contextName, expected) {
 
 function runATest_(dict, graphName, contextName, expected) {
     it(graphName + " x " + contextName, function() {
-        const store         = utility.turtleToStore(dict[graphName]);
+        const store         = utility.turtleToDStar(dict[graphName]);
         const context       = utility.turtleToQuads(dict[contextName]);
         graphReducer(store, context);
 
-        const expectedStore = utility.turtleToStore(expected);
+        const expectedStore = utility.turtleToDStar(expected);
         const r = isSubstituableGraph(store.getQuads(), expectedStore.getQuads());
         if (!r) print(store, dict, graphName, dict, contextName, expectedStore);
         assert.ok(r);
