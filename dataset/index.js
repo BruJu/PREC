@@ -1,6 +1,7 @@
 const N3 = require('n3');
+const QuadStar = require('../prec3/quad-star.js');
 
-
+/** Return true if the quad contains a nested quad */
 function isRdfStarQuad(quad) {
     return quad.subject.termType === 'Quad'
         || quad.predicate.termType === 'Quad'
@@ -8,6 +9,7 @@ function isRdfStarQuad(quad) {
         || quad.graph.termType === 'Quad';
 }
 
+/** Return true if `something` is null or undefined */
 function isLikeNone(something) {
     return something === null || something === undefined;
 }
@@ -16,6 +18,20 @@ function getTermAtPosition(quad, path) {
     let term = quad;
     for (let p of path) term = term[p];
     return term;
+}
+
+function bindVariables(bindings, quad) {
+    return QuadStar.eventuallyRebuildQuad(quad, term => {
+        if (term.termType !== 'Variable')
+            return term;
+
+        const variableValue = bindings[term.value];
+        return variableValue !== undefined ? variableValue : term;
+    });
+}
+
+function mapPatterns(binds, patterns) {
+    return patterns.map(quad => bindVariables(binds, quad));
 }
 
 class Dataset {
@@ -80,16 +96,7 @@ class Dataset {
     }
 
     match(subject, predicate, object, graph) {
-        let inStore = this.store.getQuads(subject, predicate, object, graph);
-
-        let inArray = this.starQuads.filter(quad => {
-            return (isLikeNone(subject)   || quad.subject  .equals(subject))
-                && (isLikeNone(predicate) || quad.predicate.equals(predicate))
-                && (isLikeNone(object)    || quad.object   .equals(object))
-                && (isLikeNone(graph)     || quad.graph    .equals(graph));
-        });
-
-        return new Dataset([...inStore, ...inArray]);
+        return new Dataset(this.getQuads(subject, predicate, object, graph));
     }
 
     *[Symbol.iterator]() {
@@ -99,6 +106,40 @@ class Dataset {
 
         for (let quad of this.starQuads) {
             yield quad;
+        }
+    }
+
+    forEach(callback) {
+        for (const quad of this) {
+            callback(quad);
+        }
+    }
+
+
+    addAll(quads) {
+        for (const quad of quads) {
+            this.add(quad);
+        }
+    }
+
+    // =========================================================================
+
+    getQuads(subject, predicate, object, graph) {
+        let inStore = this.store.getQuads(subject, predicate, object, graph);
+
+        let inArray = this.starQuads.filter(quad => {
+            return (isLikeNone(subject)   || quad.subject  .equals(subject))
+                && (isLikeNone(predicate) || quad.predicate.equals(predicate))
+                && (isLikeNone(object)    || quad.object   .equals(object))
+                && (isLikeNone(graph)     || quad.graph    .equals(graph));
+        });
+
+        return [...inStore, ...inArray];
+    }
+    
+    removeQuads(quads) {
+        for (const quad of quads) {
+            this.delete(quad);
         }
     }
 
@@ -114,7 +155,7 @@ class Dataset {
         let extractVariableEvaluations = function(quad) {
             let d = {};
 
-            d["@Quads"] = [quad];
+            d["@quad"] = quad;
 
             for (let path of extractVariableEvaluationsPaths) {
                 d[path.variable] = getTermAtPosition(quad, path.path);
@@ -178,10 +219,81 @@ class Dataset {
             .map(extractVariableEvaluations);
     }
 
-    matchArrayPattern(arrayPattern) {
+    findFilterReplace(source, conditions, destination) {
+        // Find
+        let binds = this.matchAndBind(source);
 
+        // Filter
+        binds = binds.filter(bind => {
+                const mappedConditions = conditions.map(pattern => mapPatterns(bind, pattern));
+                return !mappedConditions.find(condition => this.matchAndBind(condition).length === 0)
+            });
+        
+        // Replace
+        this._replaceFromBindings(binds, destination);
 
+        return binds;
+    }
 
+    matchAndBind(patterns) {
+        return this._matchAndBind(patterns, 0, [ { "@quads": [] }]);
+    }
+
+    _matchAndBind(patterns, iPattern, results) {
+        if (iPattern == patterns.length) {
+            return results;
+        }
+
+        const pattern = patterns[iPattern];
+
+        const newBindings = [];
+
+        for (const knownResult of results) {
+            const bindedPattern = bindVariables(knownResult, pattern);
+            const bindings = this.matchPattern(bindedPattern);
+
+            for (let binding of bindings) {
+                const r = { "@quads": [...knownResult['@quads'], binding['@quad']] };
+
+                for (let x in knownResult) {
+                    if (x === '@quads') continue;
+                    r[x] = knownResult[x];
+                }
+
+                for (let x in binding) {
+                    if (x === '@quad') continue;
+                    r[x] = binding[x];
+                }
+
+                newBindings.push(r);
+            }
+        }
+
+        return this._matchAndBind(patterns, iPattern + 1, newBindings);
+    }
+    
+    _replaceFromBindings(bindings, destinationPatterns) {
+        bindings.forEach(binding => this.replaceOneBinding(binding, destinationPatterns));
+    }
+    
+    replaceOneBinding(bindings, destinationPatterns) {
+        bindings['@quads'].forEach(quad => this.delete(quad));
+
+        const r = { "binds": bindings, "quads": [] };
+
+        for (const destinationPattern of destinationPatterns) {
+            const newQuad = bindVariables(bindings, destinationPattern);
+
+            r.quads.push(newQuad);
+            this.add(newQuad);
+        }
+
+        return r;
+    }
+
+    deleteMatches(subject, predicate, object, graph) {
+        let quads = this.getQuads(subject, predicate, object, graph);
+        this.removeQuads(quads);
     }
 };
 

@@ -5,6 +5,7 @@
 
 // Libraries
 const N3        = require('n3');
+const DStar     = require('../dataset/index.js');
 const namespace = require('@rdfjs/namespace');
 
 // Namespaces
@@ -56,7 +57,15 @@ class RDFGraphBuilder {
     }
 
     /** Builds a store using the quads stored in this builder */
-    toStore() { return new N3.Store(this.quads); }
+    toStore() {
+        let dataset = new DStar();
+        
+        for (const quad of this.quads) {
+            dataset.add(quad);
+        }
+
+        return dataset;
+    }
 
     /** Adds the quad(nodeName, rdfs.label, literal) */
     _labelize(nodeName, literal) {
