@@ -6,8 +6,6 @@
 @prefix pgo: <http://ii.uwb.edu.pl/pgo#>.
 @prefix prec: <http://bruy.at/prec#>.
 @prefix dash: <http://datashapes.org/dash#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix schema: <http://schema.org/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 prec:NodeShape a sh:NodeShape ;
@@ -21,10 +19,22 @@ prec:EdgeShape a sh:NodeShape ;
 
 prec:PropertyValueShape a sh:NodeShape ;
   sh:targetClass prec:PropertyValue ;
-  sh:property [
-    sh:path rdf:value
-    # ; sh:nodeKind sh:Literal # Literal or list of literals
-  ] .
+  sh:or (
+    # The value must be either a literal
+    [
+      sh:path rdf:value ;
+      sh:nodeKind sh:Literal
+    ]
+    # Or a list of literals
+    [
+      sh:path rdf:value ;
+      sh:property [
+        sh:path ( [ sh:zeroOrMorePath rdf:rest ] rdf:first ) ;
+        sh:nodeKind sh:Literal
+      ]
+    ]
+  )
+.
 
 # TODO:
 # All predicates of type prec:Property must have :
