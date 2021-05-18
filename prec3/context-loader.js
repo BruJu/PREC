@@ -234,6 +234,25 @@ function _throwIfInvalidPropertyModels(models) {
             }
         });
     });
+
+    models.get(prec.RelationshipProperties).forEach(
+        (modelName, targetModel) => {
+            const invalidTriple = targetModel.find(triple => {
+                return undefined !== ["subject", "predicate", "object", "graph"].find(role => {
+                    const embedded = triple[role];
+                    if (embedded.termType !== 'Quad') return false;
+                    return undefined === targetModel.find(assertedTriple => assertedTriple.equals(embedded));
+                });
+            });
+
+            const hasInvalidTriple = invalidTriple !== undefined;
+            if (hasInvalidTriple) {
+                throw Error("Property Model checker: the model " + modelName.value
+                + " is used as a property model for relationships but contains an"
+                + " embedded triple that is not asserted by the model.");
+            }
+        }
+    );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
