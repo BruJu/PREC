@@ -71,39 +71,43 @@ prec:object          a prec:SubstitutionTerm ; prec:substitutionTarget rdf:objec
 prec:relationshipIRI a prec:SubstitutionTerm ; prec:substitutionTarget pvar:relationshipIRI .
 prec:propertyIRI     a prec:SubstitutionTerm ; prec:substitutionTarget pvar:propertyKey     .
 
+prec:propertyValue   a prec:SubstitutionTerm ; prec:substitutionTarget pvar:propertyValue .
 
 #################
 # ==== Properties
 
 # - These rules match the pattern
-# pvar:entity   pvar:propertyKey       pvar:property
-# pvar:property rdf:value              pvar:propertyValue
-# pvar:property prec:hasMetaProperties pvar:MetaProperties
+# pvar:entity           pvar:propertyKey       pvar:property
+# pvar:property         rdf:value              pvar:propertyValue
+# pvar:property         a prec:PropertyValue .
+# pvar:property         prec:hasMetaProperties pvar:MetaPropertyNode  # optional
+# pvar:metaPropertyNode pvar:metaPropertyKey   pvar:metaPropertyValue # 0...n
 #
 # For meta properties, the property rule is applied recursively.
 #
 # With:
 # pvar:propertyKey   a prec:PropertyKey   .
-# pvar:property      a prec:PropertyValue .
 
 
 # prec:PropertyTransformation patterns must:
-# - Keep entity in subject position
-# - prec:receiveFrom appear at most once
+# - Keep entity in subject position (or subject-subject, ...)
+# - pvar:metaPropertyKey and pvar:metaPropertyValue are only usable in triples
+# of form << ?s pvar:metaPropertyKey pvar:metaPropertyValue >>
+# - Embedded triples used in property model must be asserted.
 
 prec:Prec0Property a prec:PropertyTransformation ;
   prec:composedOf
-    << pvar:entity   pvar:propertyKey       pvar:property >> ,
-    << pvar:property rdf:value              pvar:propertyValue  >>
-# , << pvar:property prec:hasMetaProperties pvar:MetaProperties >>
-  .
-
+    << pvar:entity           pvar:propertyKey       pvar:property          >> ,
+    << pvar:property         rdf:value              pvar:propertyValue     >> ,
+    << pvar:property         rdf:type               prec:PropertyValue     >> ,
+    << pvar:property         prec:hasMetaProperties pvar:metaPropertyNode  >> ,
+    << pvar:metaPropertyNode pvar:metaPropertyKey   pvar:metaPropertyValue >> .
 
 prec:DirectTriples a prec:PropertyTransformation ;
   prec:composedOf
-    <<    pvar:entity pvar:propertyKey pvar:propertyValue    >>
-# , << << pvar:entity pvar:propertyKey pvar:propertyValue >> prec:receiveFrom pvar:MetaProperties >>    
-  ; rdfs:comment
+    <<    pvar:entity pvar:propertyKey pvar:propertyValue >> ,
+    << << pvar:entity pvar:propertyKey pvar:propertyValue >> pvar:metaPropertyKey pvar:metaPropertyValue >> ;
+  rdfs:comment
     """
     This model shold not be used if a node or an edge has a multi valued
     property with at least twice the same value.
@@ -112,8 +116,7 @@ prec:DirectTriples a prec:PropertyTransformation ;
 
 prec:CombinedBlankNodes a prec:PropertyTransformation ;
   prec:composedOf
-    << pvar:entity   pvar:propertyKey pvar:property       >> ,
-    << pvar:property rdf:value        pvar:propertyValue  >>
-# , << pvar:property prec:receiveFrom pvar:MetaProperties >>
-  .
-
+    << pvar:entity   pvar:propertyKey     pvar:property          >> ,
+    << pvar:property rdf:value            pvar:propertyValue     >> ,
+    << pvar:property rdf:type             prec:PropertyValue     >> ,
+    << pvar:property pvar:metaPropertyKey pvar:metaPropertyValue >> .

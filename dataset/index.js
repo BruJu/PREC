@@ -432,9 +432,83 @@ class Dataset {
      */
     replaceOneBinding(bindings, destinationPatterns) {
         bindings['@quads'].forEach(quad => this.delete(quad));
-
+        
         for (const destinationPattern of destinationPatterns) {
             this.add(bindVariables(bindings, destinationPattern));
+        }
+    }
+
+    /**
+     * 
+     * It is evil because it break referentially opaque semantic and can throw.
+     * 
+     * @param {*} initialBindings 
+     * @param {*} sourcePattern 
+     * @param {*} destinationPattern 
+     */
+    evilFindAndReplace(initialBindings, sourcePattern, destinationPattern) {
+        function findAssociatedPattern(source, possibleDestinations) {
+            return possibleDestinations.find(
+                quad => source.predicate.equals(quad.predicate)
+                    && source.object.equals(quad.object)
+                    && source.graph.equals(quad.graph)
+            );
+        }
+
+        function rewriteQuad(match, quad, associatedSubject, binding) {
+            if (associatedSubject.termType === 'Variable' && binding[associatedSubject.value] !== undefined) {
+                associatedSubject = binding[associatedSubject.value];
+            }
+
+            function remapTerm(term) {
+                if (term.equals(quad)) {
+                    return N3.DataFactory.quad(
+                        associatedSubject,
+                        term.predicate,
+                        term.object,
+                        term.graph,
+                    );
+                } else if (term.termType === 'Quad') {
+                    return N3.DataFactory.quad(
+                        remapTerm(term.subject),
+                        remapTerm(term.predicate),
+                        remapTerm(term.object),
+                        remapTerm(term.graph),
+                    );
+                } else {
+                    return term;
+                }
+            }
+
+            return remapTerm(match);
+        }
+
+        // The nice part
+        sourcePattern      = sourcePattern     .map(p => bindVariables(initialBindings, p));
+        destinationPattern = destinationPattern.map(p => bindVariables(initialBindings, p));
+
+        let newBindings = this.matchAndBind(sourcePattern);
+        this._replaceFromBindings(newBindings, destinationPattern);
+
+        // The evil part
+        for (const binding of newBindings) {
+            for (let i = 0 ; i != binding['@quads'].length ; ++i) {
+                const quad = binding['@quads'][i];
+                let matches = this.starQuads.filter(q => QuadStar.containsTerm(q, quad))
+
+                if (matches.length === 0) continue;
+
+                let associated = findAssociatedPattern(sourcePattern[i], destinationPattern);
+                if (associated === undefined) {
+                    throw Error(
+                        `Requires the associated quad for ${JSON.stringify(sourcePattern[i])}
+                        but it does not exist in ${JSON.stringify(destinationPattern)}`
+                    );
+                }
+
+                matches.forEach(match => this.delete(match));
+                this.addAll(matches.map(match => rewriteQuad(match, quad, associated.subject, binding)));
+            }
         }
     }
 };

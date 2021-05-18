@@ -97,8 +97,9 @@ class PropertyRule {
     static MainLabel          = prec.propertyName;
     static PossibleConditions = [prec.nodeLabel, prec.relationshipLabel]
     static ModelBases = [
-        [prec.NodeProperties        , prec.relationshipLabel],
-        [prec.RelationshipProperties, prec.nodeLabel        ]
+        [prec.NodeProperties        , [prec.relationshipLabel]                ],
+        [prec.RelationshipProperties, [                        prec.nodeLabel]],
+        [prec.MetaProperties        , [prec.relationshipLabel, prec.nodeLabel]]
     ];
     static ShortcutIRI        = prec.IRIOfProperty;
     static SubstitutionTerm   = prec.propertyIRI;
@@ -221,9 +222,16 @@ function _throwIfInvalidPropertyModels(models) {
         return _isInvalidTerm(term.subject);
     }
 
+    function _hasInvalidMetaPropertyUsage(term) {
+        const mpkey = term.predicate.equals(pvar.metaPropertyKey);
+        const mpvalue = term.object.equals(pvar.metaPropertyValue);
+        return mpkey !== mpvalue;
+    }
+
     models.forEach((classModel, targetModels) => {
         targetModels.forEach((modelName, targetModel) => {
             for (const quad of targetModel) {
+                // pvar:entity as subject only
                 if (_isInvalidTerm(quad)) {
                     throw Error(
                         "Propriety Model checker: found pvar:entity somewhere" +
@@ -231,12 +239,20 @@ function _throwIfInvalidPropertyModels(models) {
                         modelName.value
                     );
                 }
-            }
-        });
-    });
 
-    models.get(prec.RelationshipProperties).forEach(
-        (modelName, targetModel) => {
+                // ?s pvar:metaPropertyKey pvar:metaPropertyValue
+                if (_hasInvalidMetaPropertyUsage(quad)) {
+                    throw Error(
+                        "Propriety Model checker: pvar:metaPropertyKey and pvar:metaPropertyValue" +
+                        " may only be used in triples of form << ?s pvar:metaPropertyKey pvar:metaPropertyValue >>"
+                        + " but the model { " + classModel.value + " x " + modelName.value + " } "
+                        + " violates this restriction"
+                    );
+                }
+            }
+
+            // Used Embedded triples must be asserted
+
             const invalidTriple = targetModel.find(triple => {
                 return undefined !== ["subject", "predicate", "object", "graph"].find(role => {
                     const embedded = triple[role];
@@ -248,11 +264,11 @@ function _throwIfInvalidPropertyModels(models) {
             const hasInvalidTriple = invalidTriple !== undefined;
             if (hasInvalidTriple) {
                 throw Error("Property Model checker: the model " + modelName.value
-                + " is used as a property model for relationships but contains an"
+                + " is used as a property model but contains an"
                 + " embedded triple that is not asserted by the model.");
             }
-        }
-    );
+        });
+    });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -267,7 +283,7 @@ class RelationshipRule {
     static DefaultModel       = prec.RDFReification;
     static MainLabel          = prec.relationshipLabel;
     static PossibleConditions = [prec.sourceLabel, prec.destinationLabel]
-    static ModelBases         = [[prec.Relationships, null]];
+    static ModelBases         = [[prec.Relationships, []]];
     static ShortcutIRI        = prec.IRIOfRelationship;
     static SubstitutionTerm   = prec.relationshipIRI;
 
@@ -593,13 +609,13 @@ class EntitiesManager {
             // Read remapping=
             this.iriRemapper.push(new Cls(splitted.conditions, conditions, quad.subject));
 
-            for (const [modelName, forbiddenPredicate] of Cls.ModelBases) {
+            for (const [modelName, forbiddenPredicates] of Cls.ModelBases) {
                 // Check if this model x the current base model are compatible
-                let forbidden = forbiddenPredicate !== null
-                    && splitted.conditions.other.find(c => c[0].equals(forbiddenPredicate));
+                let forbidden = forbiddenPredicates.find(forbiddenPredicate =>
+                    splitted.conditions.other.find(c => c[0].equals(forbiddenPredicate)) !== undefined
+                ) !== undefined;
                 
-                if (forbidden !== false && forbidden !== undefined)
-                    continue;
+                if (forbidden) continue;
 
                 // Add the pair
                 const model = computeModel([splitted.materialization, baseModels.get(modelName)])
@@ -802,6 +818,7 @@ function _copyPropertiesValuesToSpecificProperties(context) {
     for (const quad of quads) {
         context.addQuad(prec.NodeProperties        , quad.predicate, quad.object, quad.graph);
         context.addQuad(prec.RelationshipProperties, quad.predicate, quad.object, quad.graph);
+        context.addQuad(prec.MetaProperties        , quad.predicate, quad.object, quad.graph);
     }
 
     context.removeQuads(quads);

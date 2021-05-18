@@ -318,11 +318,12 @@ function transformProperties(dataset, addedVocabulary) {
  * @param {Context} context The context to apply
  */
 function applyPropertyModels(dataset, context) {
-    const properties = dataset.matchAndBind(
+    let properties = dataset.matchAndBind(
         [
             $quad(variable("property"), prec.__appliedPropertyRule, variable("ruleNode")),
             $quad(variable("entity")  , variable("propertyKey")   , variable("property")),
-            $quad(variable("property"), rdf.value                 , variable("propertyValue"))
+            $quad(variable("property"), rdf.value                 , variable("propertyValue")),
+            $quad(variable("property"), rdf.type, prec.PropertyValue)
         ]
     );
 
@@ -333,30 +334,107 @@ function applyPropertyModels(dataset, context) {
             if (pgo.Node.equals(object)) return prec.NodeProperties;
             if (pgo.Edge.equals(object)) return prec.RelationshipProperties;
         }
-        return undefined;
+        return undefined; // Meta property
     };
+
+    properties = properties.filter(
+        propertyBindings => typeFinder(propertyBindings.entity) !== undefined
+    );
 
     for (const property of properties) {
         const model = context.findPropertyModel(property.ruleNode, typeFinder(property.entity));
 
         if (Array.isArray(model)) {
-            // Build the patterns to map to
-            let r = model.map(term => quadStar.remapPatternWithVariables(term,
-                [
-                    [variable("entity")       , pvar.entity       ],
-                    [variable("propertyKey")  , pvar.propertyKey  ],
-                    [variable("property")     , pvar.property     ],
-                    [variable("propertyValue"), pvar.propertyValue]
-                ]
-            ));
-
-            dataset.replaceOneBinding(property, r);
+            transformProperty(dataset, context, property, model);
         } else {
             dataset.delete($quad(property.property, prec.__appliedPropertyRule, property.ruleNode));
         }
     }
 
     dataset.deleteMatches(null, prec.__appliedPropertyRule, null, defaultGraph());
+}
+
+function transformProperty(dataset, context, bindings, model) {
+    // Build the patterns to map to
+    const r = model.map(term => quadStar.remapPatternWithVariables(term,
+        [
+            [variable("entity")           , pvar.entity           ],
+            [variable("propertyKey")      , pvar.propertyKey      ],
+            [variable("property")         , pvar.property         ],
+            [variable("propertyValue")    , pvar.propertyValue    ],
+            [variable("metaPropertyNode") , pvar.metaPropertyNode ],
+            [variable("metaPropertyKey")  , pvar.metaPropertyKey  ],
+            [variable("metaPropertyValue"), pvar.metaPropertyValue],
+        ]
+    ));
+
+    let separation = r.reduce(
+        (previous, quad) => {
+            if (quadStar.containsTerm(quad, variable("metaPropertyKey"))
+                || quadStar.containsTerm(quad, variable("metaPropertyValue")))
+                previous.hasMeta.push(quad);
+            else if (quadStar.containsTerm(quad, variable("metaPropertyNode")))
+                previous.hasMetaNode.push(quad);
+            else
+                previous.unique.push(quad);
+            
+            return previous;
+        },
+        { unique: [], hasMetaNode: [], hasMeta: [] }
+    );
+
+    let metaNodeIdentityQuads = dataset.getQuads(bindings.property, prec.hasMetaProperties, null, defaultGraph());
+
+    if (metaNodeIdentityQuads.length === 0) {
+        // No match for hasMetaNode and hasMeta parts
+        dataset.replaceOneBinding(bindings, separation.unique);
+    } else {
+        if (metaNodeIdentityQuads.length !== 1)
+            throw Error("Invalid data graph: more than one meta node for " + bindings.property.value);
+
+        const metaNode = metaNodeIdentityQuads[0].object;
+        
+        // Add the new found binding
+        bindings.metaPropertyNode = metaNode;
+        bindings['@quads'].push(metaNodeIdentityQuads[0]);
+
+        // Apply the meta property model to the meta property
+        transformMetaProperty(dataset, context, metaNode);
+
+        // The property
+        dataset.replaceOneBinding(bindings, separation.unique);
+        bindings['@quads'] = [];
+        dataset.replaceOneBinding(bindings, separation.hasMetaNode);
+
+        // The meta properties
+        dataset.evilFindAndReplace(
+            bindings,
+            [ $quad(variable('metaPropertyNode'), variable('metaPropertyKey'), variable('metaPropertyValue')) ],
+            separation.hasMeta
+        );
+    }
+}
+
+function transformMetaProperty(dataset, context, node) {
+    let properties = dataset.matchAndBind(
+        [
+            $quad(node                , variable("propertyKey")   , variable("property")),
+            $quad(variable("property"), prec.__appliedPropertyRule, variable("ruleNode")),
+            $quad(variable("property"), rdf.value                 , variable("propertyValue")),
+            $quad(variable("property"), rdf.type, prec.PropertyValue)
+        ]
+    );
+
+    for (const property of properties) {
+        property.entity = node;
+        const model = context.findPropertyModel(property.ruleNode, prec.MetaProperties);
+
+        if (Array.isArray(model)) {
+            transformProperty(dataset, context, property, model);
+        } else {
+            dataset.delete($quad(node, prec.__appliedPropertyRule, property.ruleNode));
+        }
+    }
 }
 
 
