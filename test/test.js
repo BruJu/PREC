@@ -18,7 +18,55 @@ require("./dataset/DatasetCore.test.js")(
     dataset: t => new (require('../dataset/index.js'))(t)
 });
 
-describe('StoreAlterer', function() {
+describe('DStar', function() {
+    describe('bindVariables', function() {
+        function _equalsPattern(pattern1, pattern2) {
+            if (Array.isArray(pattern1) && Array.isArray(pattern2)) {
+                if (pattern1.length != pattern2.length) {
+                    return false;
+                }
+        
+                for (let i = 0 ; i != pattern1.length ; ++i) {
+                    if (!_equalsPattern(pattern1[i], pattern2[i])) {
+                        return false;
+                    }
+                }
+        
+                return true;
+            } else if (!Array.isArray(pattern1) && !Array.isArray(pattern2)) {
+                return pattern1.equals(pattern2);
+            } else {
+                return false;
+            }
+        }
+
+        function equalsPattern(bind, source, expected) {
+            return _equalsPattern(
+                DStar.bindVariables(bind, source),
+                expected
+            );
+        }
+
+        it('should do nothing on empty patterns', function() {
+            assert.ok(equalsPattern({}                       , [], []));
+            assert.ok(equalsPattern({ "someNode": ex.SomeURI}, [], []));
+        })
+
+        it('should work', function() {
+            assert.ok(equalsPattern(
+                {},
+                [$quad(variable("a"), variable("b"), ex.object)],
+                [$quad(variable("a"), variable("b"), ex.object)]
+            ));
+
+            assert.ok(equalsPattern(
+                { a: ex.Value },
+                [$quad(variable("a"), variable("b"), ex.object)],
+                [$quad(ex.Value     , variable("b"), ex.object)]
+            ));
+        })
+    });
+
     describe("findFilterReplace", function() {
         it("should work", function() {
             const dstar = new DStar();

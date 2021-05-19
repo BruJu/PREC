@@ -3,7 +3,6 @@ const utility = require("./utility.js");
 const graphReducer = require("../prec3/graph-reducer.js");
 const assert = require('assert');
 const { isomorphic } = require("rdf-isomorphic");
-const { isSubstituableGraph } = require('../graph-substitution.js');
 const precUtils = require('../prec3/utils.js')
 
 
@@ -168,7 +167,7 @@ function runATest(graphName, contextName, expected) {
         graphReducer(store, context);
 
         const expectedStore = utility.turtleToDStar(expected);
-        const r = isSubstituableGraph(store.getQuads(), expectedStore.getQuads());
+        const r = isomorphic(store.getQuads(), expectedStore.getQuads());
         if (!r) print(store, basicGraphs, graphName, contexts, contextName, expectedStore);
         assert.ok(r);
     });
@@ -183,8 +182,6 @@ function runATest_(dict, graphName, contextName, expected) {
 
         const expectedStore = utility.turtleToDStar(expected);
         const r = isomorphic(store.getQuads(), expectedStore.getQuads());
-
-        //const r = isSubstituableGraph(store.getQuads(), expectedStore.getQuads());
         if (!r) print(store, dict, graphName, dict, contextName, expectedStore);
         assert.ok(r);
     });

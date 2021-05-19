@@ -25,26 +25,6 @@ function getTermAtPosition(quad, path) {
     return term;
 }
 
-/**
- * Convert the variables in the quad into their value.
- * 
- * @param {*} bindings A mapping of variable names to their value
- * @param {*} quad The quad to convert
- */
-function bindVariables(bindings, quad) {
-    return QuadStar.eventuallyRebuildQuad(quad, term => {
-        if (term.termType !== 'Variable')
-            return term;
-
-        const variableValue = bindings[term.value];
-        return variableValue !== undefined ? variableValue : term;
-    });
-}
-
-/** `bindVariables` for each quad of patterns */
-function mapPatterns(binds, patterns) {
-    return patterns.map(quad => bindVariables(binds, quad));
-}
 
 /**
  * An RDF.JS implementation that stores separately the standard RDF quads and
@@ -55,6 +35,35 @@ function mapPatterns(binds, patterns) {
  * (see `findFilterReplace`).
  */
 class Dataset {
+    /**
+     * Convert the variables in the given quad to their values found in the
+     * `bindings` object.
+     * 
+     * - Variables found in `quad` are replaced in the returned quad by the
+     * value at bindings[variable_name] if present.
+     * - If `quad` is an `Array`, a new array is built, by calling recursively
+     * this function on every member.
+     * 
+     * @param {*} bindings A mapping of variable names to their value
+     * @param {*} quad The quad to convert, or an `Array` of `quad` (see the
+     * description of the method).
+     */
+    static bindVariables(bindings, quad) {
+        if (Array.isArray(quad)) {
+            return quad.map(q => Dataset.bindVariables(bindings, q));
+        }
+
+        return QuadStar.eventuallyRebuildQuad(quad, term => {
+            if (term.termType !== 'Variable')
+                return term;
+
+            const variableValue = bindings[term.value];
+            return variableValue !== undefined ? variableValue : term;
+        });
+    }
+
+    // =========================================================================
+
     /** Build a dataset. If quads are provided, they are added to the dataset. */
     constructor(quads) {
         // A store that contains the non rdf star quads
@@ -347,7 +356,7 @@ class Dataset {
 
         // Filter
         binds = binds.filter(bind => {
-                const mappedConditions = conditions.map(pattern => mapPatterns(bind, pattern));
+                const mappedConditions = Dataset.bindVariables(bind, conditions);
                 return !mappedConditions.find(condition => this.matchAndBind(condition).length === 0)
             });
         
@@ -391,7 +400,7 @@ class Dataset {
         const newBindings = [];
 
         for (const knownResult of results) {
-            const bindedPattern = bindVariables(knownResult, pattern);
+            const bindedPattern = Dataset.bindVariables(knownResult, pattern);
             const bindings = this.matchPattern(bindedPattern);
 
             for (let binding of bindings) {
@@ -439,7 +448,7 @@ class Dataset {
         bindings['@quads'].forEach(quad => this.delete(quad));
         
         for (const destinationPattern of destinationPatterns) {
-            this.add(bindVariables(bindings, destinationPattern));
+            this.add(Dataset.bindVariables(bindings, destinationPattern));
         }
     }
 
@@ -489,8 +498,8 @@ class Dataset {
         }
 
         // The nice part
-        sourcePattern      = sourcePattern     .map(p => bindVariables(initialBindings, p));
-        destinationPattern = destinationPattern.map(p => bindVariables(initialBindings, p));
+        sourcePattern      = Dataset.bindVariables(initialBindings, sourcePattern     );
+        destinationPattern = Dataset.bindVariables(initialBindings, destinationPattern);
 
         let newBindings = this.matchAndBind(sourcePattern);
         this._replaceFromBindings(newBindings, destinationPattern);

@@ -155,7 +155,7 @@ function modifyRelationships(dataset, context) {
     let candidateLabelForDeletion = new precUtils.TermDict();
 
     for (const relation of relations) {
-        const appliedTheModel = transformTheModel(dataset, context, relation);
+        const appliedTheModel = RelationshipModelApplier.transformTheModel(dataset, context, relation);
         if (appliedTheModel) {
             candidateLabelForDeletion.set(relation.predicate, true);
         }
@@ -170,7 +170,57 @@ function modifyRelationships(dataset, context) {
 }
 
 const RelationshipModelApplier = {
-
+    transformTheModel: function(dataset, context, relation) {
+        const behaviour = context.findRelationshipModel(relation.ruleNode);
+    
+        if (!Array.isArray(behaviour)) {
+            return false;
+        }
+    
+        // Build the patterns to map to
+        const r = behaviour.map(term => quadStar.remapPatternWithVariables(
+            term,
+            [
+                [variable('relation')     , pvar.self           ],
+                [variable('subject')      , pvar.source         ],
+                [variable('predicate')    , pvar.relationshipIRI],
+                [variable('object')       , pvar.destination    ],
+                [variable('propertyKey')  , pvar.propertyKey    ],
+                [variable('propertyValue'), pvar.propertyValue  ]
+            ]
+        ));
+    
+        // Split the pattern
+        const pattern = r.reduce(
+            (previous, quad) => {
+                if (quadStar.containsTerm(quad, variable('propertyKey'))
+                    || quadStar.containsTerm(quad, variable('propertyValue'))) {
+                    previous.properties.push(quad);
+                } else {
+                    previous.unique.push(quad);
+                }
+                
+                return previous;
+            },
+            { unique: [], properties: [] }
+        );
+    
+        // Find every properties to map them later
+        let propertyQuads = dataset.getQuads(relation.relation, null, null, defaultGraph())
+            .filter(
+                quad => !precUtils.termIsIn(quad.predicate, [
+                    rdf.type, prec.__appliedEdgeRule, rdf.subject, rdf.predicate, rdf.object
+                ])
+            );
+    
+        // Replace non property dependant quads
+        dataset.replaceOneBinding(relation, pattern.unique);
+    
+        // Replace property dependants quads
+        RelationshipModelApplier.transformProperties(dataset, relation, propertyQuads, pattern.properties);
+    
+        return true;
+    },
 
     transformProperties: function(dataset, relation, propertyQuads, pattern) {        
         if (propertyQuads.length === 0) {
@@ -183,16 +233,15 @@ const RelationshipModelApplier = {
         const quadsToDelete = [];
         const quadsToAdd    = [];
 
+        // Asserted properties
         for (const propertyQuad of propertyQuads) {
             relation.propertyKey = propertyQuad.predicate;
             relation.propertyValue = propertyQuad.object;
-        
-            // DStar.bindVariables
-            let dstar = new DStar();
-            dstar.replaceOneBinding(relation, pattern);
-            quadsToAdd.push(...dstar.getQuads());
+
+            quadsToAdd.push(...DStar.bindVariables(relation, pattern));
         }
 
+        // Embedded properties
         for (const quadInTheDataset of dataset.getRDFStarQuads()) {
             // - We are looking for nested quads in the form
             // ?entity ?propertyKey ?propertyValue
@@ -214,9 +263,7 @@ const RelationshipModelApplier = {
             relation.propertyValue = nestedMatchedQuad.object;
 
             // DStar.bindVariables
-            let dstar = new DStar();
-            dstar.replaceOneBinding(relation, pattern);
-            let newNestedMatchedQuads = [...dstar.getQuads()];
+            let newNestedMatchedQuads = [...DStar.bindVariables(relation, pattern)];
 
             newNestedMatchedQuads = newNestedMatchedQuads.map(newNested =>
                 RelationshipModelApplier.remake(newNested, depth, quadInTheDataset)
@@ -225,6 +272,7 @@ const RelationshipModelApplier = {
             quadsToAdd.push(...newNestedMatchedQuads);
         }
 
+        // Modify the dataset
         dataset.removeQuads(quadsToDelete);
         dataset.addAll(quadsToAdd);
     },
@@ -259,58 +307,6 @@ const RelationshipModelApplier = {
     }
 
 };
-
-function transformTheModel(dataset, context, relation) {
-    const behaviour = context.findRelationshipModel(relation.ruleNode);
-
-    if (!Array.isArray(behaviour)) {
-        return false;
-    }
-
-    // Build the patterns to map to
-    const r = behaviour.map(term => quadStar.remapPatternWithVariables(
-        term,
-        [
-            [variable('relation')     , pvar.self           ],
-            [variable('subject')      , pvar.source         ],
-            [variable('predicate')    , pvar.relationshipIRI],
-            [variable('object')       , pvar.destination    ],
-            [variable('propertyKey')  , pvar.propertyKey    ],
-            [variable('propertyValue'), pvar.propertyValue  ]
-        ]
-    ));
-
-    // Split the pattern
-    const pattern = r.reduce(
-        (previous, quad) => {
-            if (quadStar.containsTerm(quad, variable('propertyKey'))
-                || quadStar.containsTerm(quad, variable('propertyValue'))) {
-                previous.properties.push(quad);
-            } else {
-                previous.unique.push(quad);
-            }
-            
-            return previous;
-        },
-        { unique: [], properties: [] }
-    );
-
-    // Find every properties to map them later
-    let propertyQuads = dataset.getQuads(relation.relation, null, null, defaultGraph())
-        .filter(
-            quad => !precUtils.termIsIn(quad.predicate, [
-                rdf.type, prec.__appliedEdgeRule, rdf.subject, rdf.predicate, rdf.object
-            ])
-        );
-
-    // Replace non property dependant quads
-    dataset.replaceOneBinding(relation, pattern.unique);
-
-    // Replace property dependants quads
-    RelationshipModelApplier.transformProperties(dataset, relation, propertyQuads, pattern.properties);
-
-    return true;
-}
 
 /**
  * Remove from store every node in `nodesToDelete` that only have one occurence,
