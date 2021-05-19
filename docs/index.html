@@ -204,7 +204,7 @@
                 # We want the destination to be the source and the destination
                 # to be the source so let's write our own model!
                 prec:modelAs [
-                  a prec:EdgeTransformation ;
+                  a prec:RelationshipModel ;
                   prec:composedOf
                     # Assert the triple
                     <<    pvar:destination pvar:relationshipIRI pvar:source               >> ,
@@ -674,15 +674,11 @@
           </section>
 
           <section>
-            <h5><dfn data-lt="prec:EdgeTransformation">http://bruy.at/prec#EdgeTransformation</dfn></h5>
-
-            <aside class="warning">
-              TODO: EdgeTransformation should be named RelationshipModel
-            </aside>
+            <h5><dfn data-lt="prec:RelationshipModel">http://bruy.at/prec#RelationshipModel</dfn></h5>
 
             <p>The type of models that can be used for relationships.</p>
 
-            <p>`EdgeTransformation`s use the following variable:</p>
+            <p>`RelationshipModel`s use the following variable:</p>
             <ul>
               <li>`pvar:self`: The RDF node that was created to identify the relationship.</li>
               <li>`pvar:source`: The RDF node that represents the PG source node of the relationship.</li>
@@ -696,13 +692,13 @@
               We are going to show how a user can define its own model
 
             <aside class="example">
-              <p>An [= prec:EdgeTransformation =] that is the identity / the standard RDF Reification</p>
+              <p>An [= prec:RelationshipModel =] that is the identity / the standard RDF Reification</p>
               <pre data-transform="updateExample"
                  data-content-type="text/turtle"
                  class="nohighlight"
               >
                 <!--
-                prec:RDFReification a prec:EdgeTransformation ;
+                prec:RDFReification a prec:RelationshipModel ;
                   prec:composedOf
                     << pvar:self a pgo:Edge >> ,
                     << pvar:self rdf:subject      pvar:source          >> ,
@@ -730,7 +726,7 @@
                  class="nohighlight"
               >
                 <!--
-                prec:RdfStarUnique a prec:EdgeTransformation ;
+                prec:RdfStarUnique a prec:RelationshipModel ;
                   prec:composedOf
                     <<    pvar:source pvar:relationshipIRI pvar:destination               >> , # (a)
                     << << pvar:source pvar:relationshipIRI pvar:destination >> a pgo:Edge >> , # (b)
@@ -785,15 +781,15 @@
           </section>
 
           <section>
-            <h5><dfn data-lt="prec:PropertyTransformation">http://bruy.at/prec#PropertyTransformation</dfn></h5>
+            <h5><dfn data-lt="prec:PropertyModel">http://bruy.at/prec#PropertyModel</dfn></h5>
 
             <p>The type of models that can be used for properties.</p>
             
             <aside class="warning">
-              <p>TODO: PropertyTransformation should be named PropertyModel</p>
+              <p>TODO: PropertyModel should be named PropertyModel</p>
             </aside>
 
-            <p>`prec:PropertyTransformation`s use the following variables:</p>
+            <p>`prec:PropertyModel`s use the following variables:</p>
             <ul>
               <li>`pvar:entity`: The RDF node that was created to identify the edge of the node.</li>
               <li>`pvar:propertyKey`: The node that represents the edge label.</li>
@@ -806,7 +802,7 @@
 
             <p>
               The substitution mecanism is the same as described in the
-              [= prec:EdgeTransformation =] section.
+              [= prec:RelationshipModel =] section.
             </p>
 
             <p>Some restrictions exists on property models:
