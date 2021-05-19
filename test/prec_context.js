@@ -2,6 +2,7 @@
 const utility = require("./utility.js");
 const graphReducer = require("../prec3/graph-reducer.js");
 const assert = require('assert');
+const { isomorphic } = require("rdf-isomorphic");
 const { isSubstituableGraph } = require('../graph-substitution.js');
 const precUtils = require('../prec3/utils.js')
 
@@ -181,7 +182,9 @@ function runATest_(dict, graphName, contextName, expected) {
         graphReducer(store, context);
 
         const expectedStore = utility.turtleToDStar(expected);
-        const r = isSubstituableGraph(store.getQuads(), expectedStore.getQuads());
+        const r = isomorphic(store.getQuads(), expectedStore.getQuads());
+
+        //const r = isSubstituableGraph(store.getQuads(), expectedStore.getQuads());
         if (!r) print(store, dict, graphName, dict, contextName, expectedStore);
         assert.ok(r);
     });
@@ -636,3 +639,91 @@ describe("Property convertion", function() {
 
 })
 
+
+describe("Relationship and Property convertion", function() {
+    const graphs = {
+        edgeWithMetaProperty: `
+            :source      a pgo:Node .
+            :destination a pgo:Node .
+
+            :edge rdf:subject   :source       ;
+                  rdf:predicate :predicate    ;
+                  rdf:object    :destination  ;
+                  rdf:type      pgo:Edge      ;
+                  :property1    :property1_bn ;
+                  :property2    :property2_bn .
+
+            :predicate rdfs:label "The Predicate Label" .
+
+            :property1 a prec:Property, prec:CreatedProperty ; rdfs:label "Property 1" .
+            :property2 a prec:Property, prec:CreatedProperty ; rdfs:label "Property 2" .
+
+            :property1_bn a prec:PropertyValue ; rdf:value "Value 1" .
+            :property2_bn a prec:PropertyValue ; rdf:value "Value 2" .
+            
+            :property2_bn prec:hasMetaProperties :meta_property .
+
+            :meta_property :property1 :meta_property_bn .
+            :meta_property_bn a prec:PropertyValue ; rdf:value "TheMetaProperty" .
+        `,
+
+        contextSPOPartial: `
+            prec:Properties     prec:modelAs prec:DirectTriples .
+            prec:KeepProvenance prec:flagState false .
+
+            [] a prec:PropertyRule ;
+                prec:propertyName "Property 1" ;
+                prec:propertyIRI  :Z_FIRST .
+            
+            [] a prec:PropertyRule ;
+                prec:propertyName "Property 2" ;
+                prec:propertyIRI  :Z_SECOND .
+        `,
+
+        contextSPO: `
+            prec:Properties     prec:modelAs prec:DirectTriples .
+            prec:Relationships  prec:modelAs prec:RdfStarUnique .
+            prec:KeepProvenance prec:flagState false .
+
+            [] a prec:RelationshipRule ;
+                prec:relationshipLabel "The Predicate Label" ;
+                prec:relationshipIRI :Z_PREDICATE .
+                
+            [] a prec:PropertyRule ;
+                prec:propertyName "Property 1" ;
+                prec:propertyIRI  :Z_FIRST .
+            
+            [] a prec:PropertyRule ;
+                prec:propertyName "Property 2" ;
+                prec:propertyIRI  :Z_SECOND .
+        `
+    };
+
+    runATest_(graphs, 'edgeWithMetaProperty', 'contextSPO',
+        `
+                  :source :Z_PREDICATE :destination .
+               << :source :Z_PREDICATE :destination >> :Z_FIRST  "Value 1" .
+               << :source :Z_PREDICATE :destination >> :Z_SECOND "Value 2" .
+            << << :source :Z_PREDICATE :destination >> :Z_SECOND "Value 2" >> :Z_FIRST "TheMetaProperty" .
+        `
+    );
+
+
+    runATest_(graphs, 'edgeWithMetaProperty', 'contextSPOPartial',
+        `
+            # Predicate Label is untouched
+            :predicate rdfs:label "The Predicate Label" .
+
+            # The edge, not yet as S P O
+                  :edge rdf:subject   :source       ;
+                        rdf:predicate :predicate    ;
+                        rdf:object    :destination  .
+
+                  :edge                                :Z_FIRST  "Value 1" .
+                  :edge                                :Z_SECOND "Value 2" .
+            <<    :edge                                :Z_SECOND "Value 2" >> :Z_FIRST "TheMetaProperty" .
+        `
+    );
+        
+
+})

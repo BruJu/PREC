@@ -176,6 +176,11 @@ class Dataset {
 
         return [...inStore, ...inArray];
     }
+
+    /** Return an array with every quad that contains a nested triple */
+    getRDFStarQuads() {
+        return [...this.starQuads];
+    }
     
     /** Removes */
     removeQuads(quads) {
