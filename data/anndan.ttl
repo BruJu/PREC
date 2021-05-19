@@ -14,13 +14,14 @@ prec:Relationships prec:modelAs prec:RDFStarOccurrence .
 
 # <https://example.org/likes> prec:IRIOfRelationship "Likes" .
 
-<https://example.org/likes> prec:IRIOfRelationship [
+[] a prec:RelationshipRule ;
     prec:sourceLabel       "Person" ;
     prec:relationshipLabel "Likes"  ;
+    prec:relationshipIRI <https://example.org/likes> ;
     prec:modelAs prec:RDFReification ;
     prec:subject ex:likedBy ;
     prec:object ex:contentCreator ;
     prec:predicate rdf:type
-] .
+.
 
 <https://schema.org/name> prec:IRIOfProperty "name" .

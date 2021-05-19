@@ -92,7 +92,13 @@
 
       <section>
         <h3>Schema of the PREC-0 graphs</h3>
-        <p>TODO</p>
+        <p>
+          A partial SHACL Shapes Graph is available at
+          <a href="https://github.com/BruJu/PREC/blob/master/docs/prec0shape.ttl">
+            https://github.com/BruJu/PREC/blob/master/docs/prec0shape.ttl
+          </a>. This SHACL Shapes Graph should be conform on every PREC-0
+          generated graph (graphs extracted by PREC without any context).
+        </p>
       </section>
 
       <section>
@@ -116,7 +122,146 @@
       <section>
         <h3>Example of a context</h3>
 
-        <p>TODO</p>
+        <aside class="example">
+          <p>
+            In this section, we will present the ontology through a practical
+            example. Considering a property graph with the following data
+            (exposed in a format similar to a Cypher query):
+          </p>
+
+          <pre>
+            ( haddock   :Person { name: "Haddock", firstName: "Archibald" } ),
+            ( snowy     :Animal { name: "Snowy"  } ),
+            ( the_serie :Serie  { name: "The Adventures of Tintin" } ),
+
+            ( haddock ) -[ :appears { since: "The Crab with the Golden Claws"   } ]->( the_serie ),
+            ( snowy   ) -[ :appears { since: "Tintin in the Land of the Soviets" }]->( the_serie ),
+            ( haddock ) -[ :knows ]->( snowy )
+          </pre>
+
+          <p>
+            PREC enables us to convert this Property Graph into an RDF graph.
+            The graph generated without any context is very verbose, and will
+            not be displayed here. Instead, we are going to write a context to
+            produce a small and readable graph.
+          </p>
+
+          <pre data-transform="updateExample"
+            data-content-type="text/turtle"
+            class="nohighlight"
+          >
+            <!--
+              @prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+              @prefix prec: <http://bruy.at/prec#> .
+              @prefix pvar: <http://bruy.at/prec-trans#> .
+              @prefix pgo:  <http://ii.uwb.edu.pl/pgo#> .
+
+              # We want properties to be written in the RDF-graph as
+              # [the node or relationship] [iri of the property] [the value]
+              prec:Properties prec:modelAs prec:DirectTriples .
+
+              # We want relationships to be written in the RDF-graph as
+              # [the source] [the label] [the destination]
+              # and use RDF-star for properties
+              prec:Relationships prec:modelAs prec:RdfStarUnique .
+
+              # == Properties
+
+              # The name of a person is its family name
+              [] a prec:PropertyRule ;
+                prec:propertyName "name" ;
+                prec:propertyIRI <http://schema.org/familyName> ;
+                prec:nodeLabel "Person" .
+              
+              [] a prec:PropertyRule ;
+                prec:propertyName "firstName" ;
+                prec:propertyIRI <http://schema.org/givenName> .
+
+              # Other names are names
+              [] a prec:PropertyRule ;
+                prec:propertyName "name" ;
+                prec:propertyIRI <http://schema.org/name> .
+              
+              # We use an IRI from dbpedia for since
+              # As writing rules for simples things is very long, we are
+              # going to use a syntatctic sugar
+              <http://dbpedia.org/property/debut> prec:IRIOfProperty "since" .
+
+              # == Node labels
+              <http://dbpedia.org/resource/Person> prec:IRIOfNodeLabel "Person" .
+              <http://dbpedia.org/resource/Animal> prec:IRIOfNodeLabel "Animal" .
+              <http://dbpedia.org/class/yago/Series108457976> prec:IRIOfNodeLabel "Serie" .
+
+              # == Relationships
+              <http://schema.org/knowsAbout> prec:IRIOfRelationship "knows" .
+              <http://schema.org/knowsAbout> prec:IRIOfRelationship "knows" .
+
+              # Map appears to schema:character. One problem of schema:character
+              # is that is expect the serie as the subject and the character as
+              # an object, but we can fix the order!
+              [] a prec:RelationshipRule ;
+                prec:relationshipLabel "appears" ;
+                # We want the destination to be the source and the destination
+                # to be the source so let's write our own model!
+                prec:modelAs [
+                  a prec:RelationshipModel ;
+                  prec:composedOf
+                    # Assert the triple
+                    <<    pvar:destination pvar:relationshipIRI pvar:source               >> ,
+                    # Keep the provenance
+                    << << pvar:destination pvar:relationshipIRI pvar:source >> a pgo:Edge >> ,
+                    # Keep the properties
+                    << << pvar:destination pvar:relationshipIRI pvar:source >> pvar:propertyKey pvar:propertyValue >> 
+                ] ;
+                # prec:relationshipIRI will actually replace pvar:relationship with schema:character
+                prec:relationshipIRI <http://schema.org/character> .
+            -->
+          </pre>
+
+          <p>
+            The produce RDF-graph will be isomorphic to be following:
+          </p>
+
+          <pre data-transform="updateExample"
+            data-content-type="text/turtle"
+            class="nohighlight"
+          >
+            <!--
+            # Note that Haddock have no http://schema.org/name
+            _:haddock a pgo:Node, <http://dbpedia.org/resource/Person>;
+                <http://schema.org/givenName> "Archibald";
+                <http://schema.org/familyName> "Haddock".
+            
+            _:snowy a pgo:Node, <http://dbpedia.org/resource/Animal>;
+                <http://schema.org/name> "Snowy".
+            
+            _:adventures_of_tintin a pgo:Node, <http://dbpedia.org/class/yago/Series108457976>;
+                <http://schema.org/name> "The Adventures of Tintin";
+                # The relationship have been properly inverted
+                <http://schema.org/character> _:haddock, _:snowy.     
+
+            _:haddock <http://schema.org/knowsAbout> _:snowy.
+            <<_:haddock <http://schema.org/knowsAbout> _:snowy>> a pgo:Edge.
+              
+            # When did every character appear?
+            <<_:adventures_of_tintin <http://schema.org/character> _:haddock>> a pgo:Edge;
+                <http://dbpedia.org/property/debut> "The Crab with the Golden Claws".
+
+            <<_:adventures_of_tintin <http://schema.org/character> _:snowy>> a pgo:Edge;
+                <http://dbpedia.org/property/debut> "Tintin in the Land of the Soviets".
+            -->
+          </pre>
+
+          <p>
+            Note that in this example, while the produced output is easy to
+            read and reuse existing ontologies, we are not conforming to the DBPedia
+            usual schema, as in DBpedia, `<http://dbpedia.org/property/debut>`
+            would be used with the character as the subject and the book (and
+            not its name) as the object ; and in the current state of the
+            ontology we can not do better. This is one of the weakness of
+            the ontology: it can not conform to every schema.
+          </p>
+        </aside>
       </section>
     </section>
 
@@ -431,9 +576,10 @@
 
             <p>
               The domain of every properties. A triple that has
-              [= prec:Properties =] as a subject is equivalent to two triples,
-              one with [= prec:NodeProperties =] as the subject and another with
-              [= prec:RelationshipProperties =] as the subject.
+              [= prec:Properties =] as a subject is equivalent to three triples,
+              one with [= prec:NodeProperties =] as the subject, another with
+              [= prec:RelationshipProperties =] as the subject and another
+              with [= prec:MetaProperties =] as the subject.
             </p>
           </section>
 
@@ -454,6 +600,14 @@
           </section>
 
           <section>
+            <h5><dfn data-lt="prec:MetaProperties">http://bruy.at/prec#MetaProperties</dfn></h5>
+
+            <p>
+              The domain of every meta properties (properties on properties).
+            </p>
+          </section>
+
+          <section>
             <h5><dfn data-lt="prec:Prec0Property">http://bruy.at/prec#Prec0Property</dfn></h5>
 
             <p>
@@ -461,10 +615,6 @@
               [= prec:hasMetaProperties =] example. This is the default
               behaviour.
             </p>
-
-            <aside class="warning">
-              <p><em>This mode may not be the default behaviour in the future.</em></p>
-            </aside>
           </section>
 
           <section>
@@ -502,6 +652,13 @@
             without actually using a real variable.
           </p>
 
+          <aside class="note">
+            <p>
+              Every built-in model is actually defined in a turtle file that
+              is loaded and included to every context you write.
+            </p>
+          </aside>
+
           <section>
             <h5><dfn data-lt="prec:composedOf">http://bruy.at/prec#composedOf</dfn></h5>
 
@@ -517,15 +674,11 @@
           </section>
 
           <section>
-            <h5><dfn data-lt="prec:EdgeTransformation">http://bruy.at/prec#EdgeTransformation</dfn></h5>
-
-            <aside class="warning">
-              TODO: EdgeTransformation should be named RelationshipModel
-            </aside>
+            <h5><dfn data-lt="prec:RelationshipModel">http://bruy.at/prec#RelationshipModel</dfn></h5>
 
             <p>The type of models that can be used for relationships.</p>
 
-            <p>`EdgeTransformation`s use the following variable:</p>
+            <p>`RelationshipModel`s use the following variable:</p>
             <ul>
               <li>`pvar:self`: The RDF node that was created to identify the relationship.</li>
               <li>`pvar:source`: The RDF node that represents the PG source node of the relationship.</li>
@@ -536,16 +689,16 @@
             </ul>
 
             <p>
-              We are going to show how an user can define its own model
+              We are going to show how a user can define its own model
 
             <aside class="example">
-              <p>An [= prec:EdgeTransformation =] that is the identity / the standard RDF Reification</p>
+              <p>An [= prec:RelationshipModel =] that is the identity / the standard RDF Reification</p>
               <pre data-transform="updateExample"
                  data-content-type="text/turtle"
                  class="nohighlight"
               >
                 <!--
-                prec:RDFReification a prec:EdgeTransformation ;
+                prec:RDFReification a prec:RelationshipModel ;
                   prec:composedOf
                     << pvar:self a pgo:Edge >> ,
                     << pvar:self rdf:subject      pvar:source          >> ,
@@ -573,7 +726,7 @@
                  class="nohighlight"
               >
                 <!--
-                prec:RdfStarUnique a prec:EdgeTransformation ;
+                prec:RdfStarUnique a prec:RelationshipModel ;
                   prec:composedOf
                     <<    pvar:source pvar:relationshipIRI pvar:destination               >> , # (a)
                     << << pvar:source pvar:relationshipIRI pvar:destination >> a pgo:Edge >> , # (b)
@@ -628,33 +781,56 @@
           </section>
 
           <section>
-            <h5><dfn data-lt="prec:PropertyTransformation">http://bruy.at/prec#PropertyTransformation</dfn></h5>
+            <h5><dfn data-lt="prec:PropertyModel">http://bruy.at/prec#PropertyModel</dfn></h5>
 
             <p>The type of models that can be used for properties.</p>
             
             <aside class="warning">
-              <p>TODO: PropertyTransformation should be named PropertyModel</p>
-            </aside>
-            
-            <aside class="warning">
-              <p>Meta properties are not yet supported.</p>
+              <p>TODO: PropertyModel should be named PropertyModel</p>
             </aside>
 
-            <p>`prec:PropertyTransformation`s use the following variables:</p>
+            <p>`prec:PropertyModel`s use the following variables:</p>
             <ul>
               <li>`pvar:entity`: The RDF node that was created to identify the edge of the node.</li>
               <li>`pvar:propertyKey`: The node that represents the edge label.</li>
               <li>`pvar:property`: The blank node that represents the property.</li>
               <li>`pvar:propertyValue`: The literal that contains the property value.</li>
+              <li>`pvar:metaPropertyNode`: The blank node that contains every meta property, as described in [= prec:hasMetaProperties =]</li>
+              <li>`pvar:metaPropertyKey`: The predicate of a meta property triple.</li>
+              <li>`pvar:metaPropertyValue`: The object of a meta property triple.</li>
             </ul>
 
             <p>
               The substitution mecanism is the same as described in the
-              [= prec:EdgeTransformation =] section.
+              [= prec:RelationshipModel =] section.
+            </p>
+
+            <p>Some restrictions exists on property models:
+              <ul>
+                <li>
+                  `pvar:entity` can only appear in the "subject-star" position.
+                  The `subject-star` position is defined recursively as either
+                  the subject of the quad if it is not a nested quad, or the
+                  "subject-star" of the quad in the subject position. In other
+                  words, when the Triple-star is written in the N-Triples-star
+                  format, it is the first non RDF-star term that appears for
+                  this triple.
+                </li>
+                <li>
+                  Every embedded triple must be asserted by the model.
+                </li>
+                <li>
+                  `pvar:metaPropertyKey` and `pvar:metaPropertyValue`, if they
+                  appear, must appear both at the same time, and as repectively
+                  the predicate and the object.
+                </li>
+              </ul>
+            </p>
+            <p>
+              These restriction exists to make between combinaisons a
+              relationship model and different property models possible.
             </p>
           </section>
-
-
         </section>
 
       <section>
@@ -1003,7 +1179,7 @@
           </section>
 
           <section>
-            <h5><dfn data-lt="prec:relationshipLabel (used in a property rule)">http://bruy.at/prec#propertyLabel</dfn></h5>
+            <h5><dfn data-lt="prec:relationshipLabel (used in a property rule)">http://bruy.at/prec#relationshipLabel (in a property Rule)</dfn></h5>
 
             <p>
               States the label that the relationship must have for the rule to

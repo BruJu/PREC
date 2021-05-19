@@ -97,8 +97,9 @@ class PropertyRule {
     static MainLabel          = prec.propertyName;
     static PossibleConditions = [prec.nodeLabel, prec.relationshipLabel]
     static ModelBases = [
-        [prec.NodeProperties        , prec.relationshipLabel],
-        [prec.RelationshipProperties, prec.nodeLabel        ]
+        [prec.NodeProperties        , [prec.relationshipLabel]                ],
+        [prec.RelationshipProperties, [                        prec.nodeLabel]],
+        [prec.MetaProperties        , [prec.relationshipLabel, prec.nodeLabel]]
     ];
     static ShortcutIRI        = prec.IRIOfProperty;
     static SubstitutionTerm   = prec.propertyIRI;
@@ -199,6 +200,51 @@ class PropertyRule {
     }
 }
 
+const ModelChecker = {
+    /**
+     * Return true if every embedded triple used in the model is asserted.
+     * @param {*} model An array of quads that constitute the model
+     */
+    embeddedTriplesAreAsserted: function(model) {
+        const invalidTriple = model.find(triple => {
+            return undefined !== ["subject", "predicate", "object", "graph"].find(role => {
+                const embedded = triple[role];
+                if (embedded.termType !== 'Quad') return false;
+                return undefined === model.find(assertedTriple => assertedTriple.equals(embedded));
+            });
+        });
+
+        return invalidTriple === undefined;
+    },
+
+    /**
+     * Return true if the given term only appear in subject-star position.
+     * 
+     * Subject-star means that the term can only be the subject, the subject
+     * of the embedded triple in subject (subject-subject), ...
+     * In other words, in a N-Triple-star document, it is the first pure RDF
+     * term that appears in the triple.
+     * @param {*} model An array of quads that constitute the model
+     * @param {*} onlyAsSubject The term that must only appear in subject-star
+     * position
+     */
+    termMustBeInSubjectStarPosition: function(model, onlyAsSubject) {
+        function _isInvalidTerm(term) {
+            if (term.termType !== 'Quad') {
+                return false;
+            }
+            
+            if (QuadStar.containsTerm(term.predicate, onlyAsSubject)) return true;
+            if (QuadStar.containsTerm(term.object   , onlyAsSubject)) return true;
+            if (QuadStar.containsTerm(term.graph    , onlyAsSubject)) return true;
+    
+            return _isInvalidTerm(term.subject);
+        }
+
+        return undefined === model.find(quad => _isInvalidTerm(quad));
+    }
+};
+
 /**
  * Check if there are no model that have pvar:entity at another place than
  * subject.
@@ -209,27 +255,61 @@ class PropertyRule {
 function _throwIfInvalidPropertyModels(models) {
     const pvarEntity = pvar.entity;
 
-    function _isInvalidTerm(term) {
-        if (term.termType !== 'Quad') {
-            return false;
-        }
-        
-        if (QuadStar.containsTerm(pvarEntity, term.predicate)) return true;
-        if (QuadStar.containsTerm(pvarEntity, term.object   )) return true;
-        if (QuadStar.containsTerm(pvarEntity, term.graph    )) return true;
-
-        return _isInvalidTerm(term.subject);
+    function _hasInvalidMetaPropertyUsage(term) {
+        // TODO: refine the verification
+        const mpkey = term.predicate.equals(pvar.metaPropertyKey);
+        const mpvalue = term.object.equals(pvar.metaPropertyValue);
+        return mpkey !== mpvalue;
     }
 
     models.forEach((classModel, targetModels) => {
         targetModels.forEach((modelName, targetModel) => {
+            // pvar:entity in subject-star position
+            if (!ModelChecker.termMustBeInSubjectStarPosition(targetModel, pvarEntity)) {
+                throw Error(
+                    "Propriety Model checker: found pvar:entity somewhere" +
+                    " else as subjet in model " + classModel.value + " x " +
+                    modelName.value
+                );
+            }
+
             for (const quad of targetModel) {
-                if (_isInvalidTerm(quad)) {
+                // ?s pvar:metaPropertyKey pvar:metaPropertyValue
+                if (_hasInvalidMetaPropertyUsage(quad)) {
                     throw Error(
-                        "Propriety Model checker: found pvar:entity somewhere" +
-                        " else as subjet in model " + classModel.value + " x " +
-                        modelName.value
+                        "Propriety Model checker: pvar:metaPropertyKey and pvar:metaPropertyValue" +
+                        " may only be used in triples of form << ?s pvar:metaPropertyKey pvar:metaPropertyValue >>"
+                        + " but the model { " + classModel.value + " x " + modelName.value + " } "
+                        + " violates this restriction"
                     );
+                }
+            }
+
+            // Used Embedded triples must be asserted
+            if (!ModelChecker.embeddedTriplesAreAsserted(targetModel)) {
+                throw Error("Property Model checker: the model " + modelName.value
+                + " is used as a property model but contains an"
+                + " embedded triple that is not asserted.");
+            }
+        });
+    });
+}
+
+function _throwIfInvalidRelationshipModels(models) {
+    const pvarKey = pvar.propertyKey;
+    const pvarVal = pvar.propertyValue;
+
+    models.forEach((_, targetModels) => {
+        targetModels.forEach((modelName, targetModel) => {
+            for (const quad of targetModel) {
+                // TODO: refine the verification and refactor with predicate
+                // this check
+                const pkeyAsPredicate = pvarKey.equals(quad.predicate);
+                const pvalAsObject    = pvarVal.equals(quad.object);
+                if (pkeyAsPredicate !== pvalAsObject) {
+                    throw Error(`Relationship model checker: ${modelName.value}`
+                    + ` triples must conform to either ?s pvar:propertyKey pvar:propertyValue `
+                    + ` or have neither pvar:propertyKey and pvar:propertyValue.`);
                 }
             }
         });
@@ -248,7 +328,7 @@ class RelationshipRule {
     static DefaultModel       = prec.RDFReification;
     static MainLabel          = prec.relationshipLabel;
     static PossibleConditions = [prec.sourceLabel, prec.destinationLabel]
-    static ModelBases         = [[prec.Relationships, null]];
+    static ModelBases         = [[prec.Relationships, []]];
     static ShortcutIRI        = prec.IRIOfRelationship;
     static SubstitutionTerm   = prec.relationshipIRI;
 
@@ -574,13 +654,13 @@ class EntitiesManager {
             // Read remapping=
             this.iriRemapper.push(new Cls(splitted.conditions, conditions, quad.subject));
 
-            for (const [modelName, forbiddenPredicate] of Cls.ModelBases) {
+            for (const [modelName, forbiddenPredicates] of Cls.ModelBases) {
                 // Check if this model x the current base model are compatible
-                let forbidden = forbiddenPredicate !== null
-                    && splitted.conditions.other.find(c => c[0].equals(forbiddenPredicate));
+                let forbidden = forbiddenPredicates.find(forbiddenPredicate =>
+                    splitted.conditions.other.find(c => c[0].equals(forbiddenPredicate)) !== undefined
+                ) !== undefined;
                 
-                if (forbidden !== false && forbidden !== undefined)
-                    continue;
+                if (forbidden) continue;
 
                 // Add the pair
                 const model = computeModel([splitted.materialization, baseModels.get(modelName)])
@@ -783,6 +863,7 @@ function _copyPropertiesValuesToSpecificProperties(context) {
     for (const quad of quads) {
         context.addQuad(prec.NodeProperties        , quad.predicate, quad.object, quad.graph);
         context.addQuad(prec.RelationshipProperties, quad.predicate, quad.object, quad.graph);
+        context.addQuad(prec.MetaProperties        , quad.predicate, quad.object, quad.graph);
     }
 
     context.removeQuads(quads);
@@ -808,6 +889,7 @@ class Context {
         const substitutionTerms = new SubstitutionTerms(store);
 
         this.relations  = new EntitiesManager(store, substitutionTerms, RelationshipRule);
+        _throwIfInvalidRelationshipModels(this.relations.models)
         this.properties = new EntitiesManager(store, substitutionTerms, PropertyRule    );
         _throwIfInvalidPropertyModels(this.properties.models)
 

@@ -137,7 +137,7 @@ function transformRelationships(dataset, addedVocabulary) {
  * property graph edge to the representation requested by the user, through the
  * specified model for the rule.
  * 
- * @param {N3.Store} store The store that contains the quads to process
+ * @param {DStar} dataset The store that contains the quads to process
  * @param {Context} context The `Context` that contains the information about
  * the context given by the user
  */
@@ -155,64 +155,158 @@ function modifyRelationships(dataset, context) {
     let candidateLabelForDeletion = new precUtils.TermDict();
 
     for (const relation of relations) {
-        const behaviour = context.findRelationshipModel(relation.ruleNode);
-
-        if (Array.isArray(behaviour)) {
+        const appliedTheModel = RelationshipModelApplier.transformTheModel(dataset, context, relation);
+        if (appliedTheModel) {
             candidateLabelForDeletion.set(relation.predicate, true);
-
-            // Build the patterns to map to
-            let r = behaviour.map(term => quadStar.remapPatternWithVariables(
-                term,
-                [
-                    [variable('relation')     , pvar.self           ],
-                    [variable('subject')      , pvar.source         ],
-                    [variable('predicate')    , pvar.relationshipIRI],
-                    [variable('object')       , pvar.destination    ],
-                    [variable('propertyKey')  , pvar.propertyKey    ],
-                    [variable('propertyValue'), pvar.propertyValue  ]
-                ]
-            ))
-                .map(l => [l, 
-                    quadStar.containsTerm(l, variable('propertyKey'))
-                    || quadStar.containsTerm(l, variable('propertyValue'))
-                ]);
-
-            const nonPropertiesDependantPattern = r.filter(e => !e[1]).map(e => e[0]);
-            const    propertiesDependantPattern = r.filter(e =>  e[1]).map(e => e[0]);
-
-            // Find every properties to map them later
-            let propertyQuads = dataset.getQuads(relation.relation, null, null, N3.DataFactory.defaultGraph())
-                .filter(
-                    quad => !precUtils.termIsIn(quad.predicate, [
-                        rdf.type, prec.__appliedEdgeRule, rdf.subject, rdf.predicate, rdf.object
-                    ])
-                );
-
-            // Replace non property dependant quads
-            dataset.replaceOneBinding(relation, nonPropertiesDependantPattern);
-
-            // Replace property dependants quads
-            if (propertyQuads.length !== 0) {
-                dataset.removeQuads(propertyQuads);
-                relation['@quads'] = []; // No more quad to delete during replaceOneBinding
-
-                for (let propertyQuad of propertyQuads) {
-                    relation.propertyKey   = propertyQuad.predicate;
-                    relation.propertyValue = propertyQuad.object;
-
-                    dataset.replaceOneBinding(relation, propertiesDependantPattern);
-                }
-            } 
         }
     }
 
     let l = [];
     candidateLabelForDeletion.forEach((node, _True) => l.push(node));
-    filterOutDeletedEdgeLabel(dataset, Object.values(l));
+    filterOutDeletedEdgeLabel(dataset, l);
 
     // Remove target model to prec:Relationships if its definition was not explicit
     dataset.deleteMatches(null, prec.__appliedEdgeRule, prec.Relationships, defaultGraph());
 }
+
+const RelationshipModelApplier = {
+    transformTheModel: function(dataset, context, relation) {
+        const behaviour = context.findRelationshipModel(relation.ruleNode);
+    
+        if (!Array.isArray(behaviour)) {
+            return false;
+        }
+    
+        // Build the patterns to map to
+        const r = behaviour.map(term => quadStar.remapPatternWithVariables(
+            term,
+            [
+                [variable('relation')     , pvar.self           ],
+                [variable('subject')      , pvar.source         ],
+                [variable('predicate')    , pvar.relationshipIRI],
+                [variable('object')       , pvar.destination    ],
+                [variable('propertyKey')  , pvar.propertyKey    ],
+                [variable('propertyValue'), pvar.propertyValue  ]
+            ]
+        ));
+    
+        // Split the pattern
+        const pattern = r.reduce(
+            (previous, quad) => {
+                if (quadStar.containsTerm(quad, variable('propertyKey'))
+                    || quadStar.containsTerm(quad, variable('propertyValue'))) {
+                    previous.properties.push(quad);
+                } else {
+                    previous.unique.push(quad);
+                }
+                
+                return previous;
+            },
+            { unique: [], properties: [] }
+        );
+    
+        // Find every properties to map them later
+        let propertyQuads = dataset.getQuads(relation.relation, null, null, defaultGraph())
+            .filter(
+                quad => !precUtils.termIsIn(quad.predicate, [
+                    rdf.type, prec.__appliedEdgeRule, rdf.subject, rdf.predicate, rdf.object
+                ])
+            );
+    
+        // Replace non property dependant quads
+        dataset.replaceOneBinding(relation, pattern.unique);
+    
+        // Replace property dependants quads
+        RelationshipModelApplier.transformProperties(dataset, relation, propertyQuads, pattern.properties);
+    
+        return true;
+    },
+
+    transformProperties: function(dataset, relation, propertyQuads, pattern) {        
+        if (propertyQuads.length === 0) {
+            return;
+        }
+
+        dataset.removeQuads(propertyQuads);
+        relation['@quads'] = []; // No more quad to delete during replaceOneBinding
+
+        const quadsToDelete = [];
+        const quadsToAdd    = [];
+
+        // Asserted properties
+        for (const propertyQuad of propertyQuads) {
+            relation.propertyKey = propertyQuad.predicate;
+            relation.propertyValue = propertyQuad.object;
+
+            quadsToAdd.push(...DStar.bindVariables(relation, pattern));
+        }
+
+        // Embedded properties
+        for (const quadInTheDataset of dataset.getRDFStarQuads()) {
+            // - We are looking for nested quads in the form
+            // ?entity ?propertyKey ?propertyValue
+            // - But a property model can only have ?entity in subject-star
+            // position
+            // - It means that the ?entity ?propertyKey ?propertyValue
+            // nested quads are only in subject position.
+
+            const searchResult = RelationshipModelApplier.searchInSubjectStarPlus(quadInTheDataset, propertyQuads);
+            if (searchResult === null) {
+                continue;
+            }
+
+            const { nestedMatchedQuad, depth } = searchResult;
+
+            quadsToDelete.push(quadInTheDataset);
+
+            relation.propertyKey = nestedMatchedQuad.predicate;
+            relation.propertyValue = nestedMatchedQuad.object;
+
+            // DStar.bindVariables
+            let newNestedMatchedQuads = [...DStar.bindVariables(relation, pattern)];
+
+            newNestedMatchedQuads = newNestedMatchedQuads.map(newNested =>
+                RelationshipModelApplier.remake(newNested, depth, quadInTheDataset)
+            );
+
+            quadsToAdd.push(...newNestedMatchedQuads);
+        }
+
+        // Modify the dataset
+        dataset.removeQuads(quadsToDelete);
+        dataset.addAll(quadsToAdd);
+    },
+
+    remake: function(newNested, depth, quadInTheDataset) {
+        if (depth === -1) return newNested;
+        return N3.DataFactory.quad(
+            RelationshipModelApplier.remake(newNested, depth - 1, quadInTheDataset.subject),
+            quadInTheDataset.predicate,
+            quadInTheDataset.object,
+            quadInTheDataset.graph
+        );
+    },
+
+    searchInSubjectStarPlus: function(quad, searchedQuads) {
+        let depth = 0;
+        
+        while (quad.subject.termType === 'Quad') {
+            let found = searchedQuads.find(q => q.equals(quad.subject));
+            if (found !== undefined) {
+                return {
+                    nestedMatchedQuad: found,
+                    depth: depth
+                };
+            }
+
+            quad = quad.subject;
+            ++depth;
+        }
+
+        return null;
+    }
+
+};
 
 /**
  * Remove from store every node in `nodesToDelete` that only have one occurence,
@@ -306,57 +400,146 @@ function transformProperties(dataset, addedVocabulary) {
     );
 
     // apply the new model
-    applyPropertyModels(dataset, addedVocabulary);
+    PropertyModelApplier.applyPropertyModels(dataset, addedVocabulary);
 }
 
-/**
- * Transform the properties models to the required models.
- * 
- * The required model is noted with the quad
- * `?propertyBlankNode prec:__appliedPropertyRule ?ruleNode`.
- * @param {DStar} dataset The dataset that contains the quads
- * @param {Context} context The context to apply
- */
-function applyPropertyModels(dataset, context) {
-    const properties = dataset.matchAndBind(
-        [
-            $quad(variable("property"), prec.__appliedPropertyRule, variable("ruleNode")),
-            $quad(variable("entity")  , variable("propertyKey")   , variable("property")),
-            $quad(variable("property"), rdf.value                 , variable("propertyValue"))
-        ]
-    );
-
-    const typeFinder = entity => {
-        let qs = dataset.getQuads(entity, rdf.type, null, defaultGraph());
-        for (let quad of qs) {
-            let object = quad.object;
-            if (pgo.Node.equals(object)) return prec.NodeProperties;
-            if (pgo.Edge.equals(object)) return prec.RelationshipProperties;
+/* Namespace for the funtions used to transform a property model */
+const PropertyModelApplier = {
+    /* Return the inherited property rules for the entity */
+    findTypeInDataset: function(dataset, entity) {
+        if (dataset.has($quad(entity, rdf.type, pgo.Node))) {
+            return prec.NodeProperties;
         }
+
+        if (dataset.has($quad(entity, rdf.type, pgo.Edge))) {
+            return prec.RelationshipProperties;
+        }
+
+        // Probably a meta property
         return undefined;
-    };
+    },
 
-    for (const property of properties) {
-        const model = context.findPropertyModel(property.ruleNode, typeFinder(property.entity));
+    /**
+     * Transform the properties models to the required models.
+     * 
+     * The required model is noted with the quad
+     * `?propertyBlankNode prec:__appliedPropertyRule ?ruleNode`.
+     * @param {DStar} dataset The dataset that contains the quads
+     * @param {Context} context The context to apply
+     */
+    applyPropertyModels: function(dataset, context) {
+        const properties = dataset.matchAndBind(
+            [
+                $quad(variable("property"), prec.__appliedPropertyRule, variable("ruleNode")),
+                $quad(variable("entity")  , variable("propertyKey")   , variable("property")),
+                $quad(variable("property"), rdf.value                 , variable("propertyValue")),
+                $quad(variable("property"), rdf.type, prec.PropertyValue)
+            ]
+        )
+            .map(bindings => [bindings, PropertyModelApplier.findTypeInDataset(dataset, bindings.entity)])
+            .filter(bindings => bindings[1] !== undefined);
 
-        if (Array.isArray(model)) {
-            // Build the patterns to map to
-            let r = model.map(term => quadStar.remapPatternWithVariables(term,
-                [
-                    [variable("entity")       , pvar.entity       ],
-                    [variable("propertyKey")  , pvar.propertyKey  ],
-                    [variable("property")     , pvar.property     ],
-                    [variable("propertyValue"), pvar.propertyValue]
-                ]
-            ));
-
-            dataset.replaceOneBinding(property, r);
-        } else {
-            dataset.delete($quad(property.property, prec.__appliedPropertyRule, property.ruleNode));
+        for (const [property, typeOfHolder] of properties) {
+            PropertyModelApplier.transformProperty(dataset, context, property, typeOfHolder);
         }
-    }
 
-    dataset.deleteMatches(null, prec.__appliedPropertyRule, null, defaultGraph());
+        dataset.deleteMatches(null, prec.__appliedPropertyRule, null, defaultGraph());
+    },
+
+    /**
+     * Transform the given meta property by applying the given context.
+     * 
+     * @param {DStar} dataset The dataset which contains the dataset
+     * @param {Context} context The context
+     * @param {*} node The node that represents the meta property
+     */
+    transformMetaProperty: function(dataset, context, node) {
+        let properties = dataset.matchAndBind(
+            [
+                $quad(node                , variable("propertyKey")   , variable("property")),
+                $quad(variable("property"), prec.__appliedPropertyRule, variable("ruleNode")),
+                $quad(variable("property"), rdf.value                 , variable("propertyValue")),
+                $quad(variable("property"), rdf.type, prec.PropertyValue)
+            ]
+        );
+    
+        for (const property of properties) {
+            property.entity = node;
+            const t = prec.MetaProperties;
+            PropertyModelApplier.transformProperty(dataset, context, property, t);
+        }
+    },
+
+    transformProperty: function(dataset, context, bindings, typeOfHolder) {
+        const model = context.findPropertyModel(bindings.ruleNode, typeOfHolder);
+        if (!Array.isArray(model)) {
+            dataset.delete($quad(bindings.property, prec.__appliedPropertyRule, bindings.ruleNode));
+            return;
+        }
+    
+        // Build the patterns to map to
+        const r = model.map(term => quadStar.remapPatternWithVariables(term,
+            [
+                [variable("entity")           , pvar.entity           ],
+                [variable("propertyKey")      , pvar.propertyKey      ],
+                [variable("property")         , pvar.property         ],
+                [variable("propertyValue")    , pvar.propertyValue    ],
+                [variable("metaPropertyNode") , pvar.metaPropertyNode ],
+                [variable("metaPropertyKey")  , pvar.metaPropertyKey  ],
+                [variable("metaPropertyValue"), pvar.metaPropertyValue],
+            ]
+        ));
+    
+        // Split the pattern in 3 parts
+        let pattern = r.reduce(
+            (previous, quad) => {
+                if (quadStar.containsTerm(quad, variable("metaPropertyKey"))
+                    || quadStar.containsTerm(quad, variable("metaPropertyValue")))
+                    previous.metaValues.push(quad);
+                else if (quadStar.containsTerm(quad, variable("metaPropertyNode")))
+                    previous.optional.push(quad);
+                else
+                    previous.mandatory.push(quad);
+                
+                return previous;
+            },
+            { mandatory: [], optional: [], metaValues: [] }
+        );
+    
+        let metaNodeIdentityQuads = dataset.getQuads(bindings.property, prec.hasMetaProperties, null, defaultGraph());
+    
+        if (metaNodeIdentityQuads.length === 0) {
+            // No match for hasMetaNode and hasMeta parts
+            // = no meta property
+            dataset.replaceOneBinding(bindings, pattern.mandatory);
+            return;
+        }
+
+        // We have to manage the meta property node
+        if (metaNodeIdentityQuads.length !== 1)
+            throw Error("Invalid data graph: more than one meta node for " + bindings.property.value);
+
+        const metaNode = metaNodeIdentityQuads[0].object;
+        
+        // Add the new found binding to the meta property node
+        bindings.metaPropertyNode = metaNode;
+        bindings['@quads'].push(metaNodeIdentityQuads[0]);
+
+        // Apply the meta property model to the meta property
+        PropertyModelApplier.transformMetaProperty(dataset, context, metaNode);
+
+        // Model the property
+        dataset.replaceOneBinding(bindings, pattern.mandatory);
+        bindings['@quads'] = [];
+        dataset.replaceOneBinding(bindings, pattern.optional);
+
+        // Remodel the meta properties
+        dataset.evilFindAndReplace(
+            bindings,
+            [ $quad(variable('metaPropertyNode'), variable('metaPropertyKey'), variable('metaPropertyValue')) ],
+            pattern.metaValues
+        );
+    }
 }
 
 

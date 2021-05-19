@@ -18,7 +18,55 @@ require("./dataset/DatasetCore.test.js")(
     dataset: t => new (require('../dataset/index.js'))(t)
 });
 
-describe('StoreAlterer', function() {
+describe('DStar', function() {
+    describe('bindVariables', function() {
+        function _equalsPattern(pattern1, pattern2) {
+            if (Array.isArray(pattern1) && Array.isArray(pattern2)) {
+                if (pattern1.length != pattern2.length) {
+                    return false;
+                }
+        
+                for (let i = 0 ; i != pattern1.length ; ++i) {
+                    if (!_equalsPattern(pattern1[i], pattern2[i])) {
+                        return false;
+                    }
+                }
+        
+                return true;
+            } else if (!Array.isArray(pattern1) && !Array.isArray(pattern2)) {
+                return pattern1.equals(pattern2);
+            } else {
+                return false;
+            }
+        }
+
+        function equalsPattern(bind, source, expected) {
+            return _equalsPattern(
+                DStar.bindVariables(bind, source),
+                expected
+            );
+        }
+
+        it('should do nothing on empty patterns', function() {
+            assert.ok(equalsPattern({}                       , [], []));
+            assert.ok(equalsPattern({ "someNode": ex.SomeURI}, [], []));
+        })
+
+        it('should work', function() {
+            assert.ok(equalsPattern(
+                {},
+                [$quad(variable("a"), variable("b"), ex.object)],
+                [$quad(variable("a"), variable("b"), ex.object)]
+            ));
+
+            assert.ok(equalsPattern(
+                { a: ex.Value },
+                [$quad(variable("a"), variable("b"), ex.object)],
+                [$quad(ex.Value     , variable("b"), ex.object)]
+            ));
+        })
+    });
+
     describe("findFilterReplace", function() {
         it("should work", function() {
             const dstar = new DStar();
@@ -131,6 +179,130 @@ describe('StoreAlterer', function() {
 
         })
 
+        describe('evilFindAndReplace', function() {
+            it("should work as usual on non rdf-star datasets with non rdf star patterns", function() {
+                const dstar = new DStar();
+                dstar.addFromTurtleStar(
+                    `
+                        @prefix ex: <http://example.org/> .
+                        ex:s  ex:p1 ex:o .
+                        ex:s  ex:p2 ex:o .
+                        ex:s1 ex:p1 ex:o .
+                        ex:s2 ex:p2 ex:otherO .
+                    `
+                );
+
+                dstar.evilFindAndReplace(
+                    {},
+                    [$quad(variable('s'), ex.p1, variable('o'))],
+                    [$quad(variable('o'), ex.p1, variable('s'))]
+                );
+
+                assert.strictEqual(dstar.size, 4);
+
+                assert.ok(dstar.has($quad(ex.s , ex.p2, ex.o)));
+                assert.ok(dstar.has($quad(ex.s2, ex.p2, ex.otherO)));
+
+                assert.ok(dstar.has($quad(ex.o , ex.p1, ex.s)));
+                assert.ok(dstar.has($quad(ex.o , ex.p1, ex.s1)));
+            })
+
+            it("should work on rdf star datasets for which the evil part is not used", function() {
+                const dstar = new DStar();
+                dstar.addFromTurtleStar(
+                    `
+                        @prefix ex: <http://example.org/> .
+                        ex:s    ex:p  ex:o .
+                        ex:toto ex:says << ex:toto ex:says ex:unicorn >> .
+                    `
+                );
+
+                dstar.evilFindAndReplace(
+                    {},
+                    [$quad(variable('s'), ex.p, variable('o'))],
+                    [$quad(variable('o'), ex.p, variable('s'))]
+                );
+
+                assert.strictEqual(dstar.size, 2);
+
+                assert.ok( dstar.has($quad(ex.o, ex.p, ex.s)));
+                assert.ok(!dstar.has($quad(ex.s, ex.p, ex.o)));
+            })
+
+            it("should work on rdf star datasets for which the evil part is used properly", function() {
+                const dstar = new DStar();
+                dstar.addFromTurtleStar(
+                    `
+                        @prefix ex: <http://example.org/> .
+                                           ex:john ex:in ex:wonderland    .
+                        ex:toto ex:says << ex:john ex:in ex:wonderland >> .
+                    `
+                );
+
+                dstar.evilFindAndReplace(
+                    {},
+                    [$quad(variable('john'), ex.in, ex.wonderland)],
+                    [$quad(ex.alice        , ex.in, ex.wonderland)]
+                );
+
+                assert.strictEqual(dstar.size, 2);
+
+                assert.ok(dstar.has(                        $quad(ex.alice, ex.in, ex.wonderland)) );
+                assert.ok(dstar.has($quad(ex.toto, ex.says, $quad(ex.alice, ex.in, ex.wonderland))));
+            })
+
+            it("should refuse to work with an invalid corresponding pattern", function() {
+                const dstar = new DStar();
+                dstar.addFromTurtleStar(
+                    `
+                        @prefix ex: <http://example.org/> .
+                                           ex:john ex:in ex:wonderland    .
+                        ex:toto ex:says << ex:john ex:in ex:wonderland >> .
+                    `
+                );
+
+                try {
+                    dstar.evilFindAndReplace(
+                        {},
+                        [$quad(variable('john'), ex.in, ex.wonderland)],
+                        []
+                    );
+                    assert.ok(false, "should have thrown because no associated triple")
+                } catch (e) {
+                    assert.ok(true);
+                }
+            })
+            
+            it("should work on rdf star datasets for which the evil part is used properly (composed source and model)", function() {
+                const dstar = new DStar();
+                dstar.addFromTurtleStar(
+                    `
+                        @prefix ex: <http://example.org/> .
+                                           ex:john ex:in ex:wonderland    .
+                        ex:toto ex:says << ex:john ex:in ex:wonderland >> .
+                        ex:john ex:is ex:Person .
+                    `
+                );
+
+                dstar.evilFindAndReplace(
+                    {},
+                    [
+                        $quad(variable('john'), ex.is, ex.Person),
+                        $quad(variable('john'), ex.in, ex.wonderland)
+                    ],
+                    [
+                        $quad(ex.alice        , ex.in, ex.wonderland),
+                        $quad(variable('john'), ex.is, ex.Imposter)
+                    ]
+                );
+
+                assert.strictEqual(dstar.size, 3);
+
+                assert.ok(dstar.has(                        $quad(ex.alice, ex.in, ex.wonderland)) );
+                assert.ok(dstar.has($quad(ex.toto, ex.says, $quad(ex.alice, ex.in, ex.wonderland))));
+                assert.ok(dstar.has($quad(ex.john, ex.is, ex.Imposter)));
+            })
+        });
     })
 });
 
