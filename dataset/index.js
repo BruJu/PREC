@@ -454,6 +454,10 @@ class Dataset {
 
     /**
      * 
+     * 
+     * The matched patterns must be independant (the quads that contribute
+     * to a binding must be not contribute to any other biding)
+     * 
      * It is evil because it break referentially opaque semantic and can throw.
      * 
      * @param {*} initialBindings 
@@ -461,48 +465,15 @@ class Dataset {
      * @param {*} destinationPattern 
      */
     evilFindAndReplace(initialBindings, sourcePattern, destinationPattern) {
-        function findAssociatedPattern(source, possibleDestinations) {
-            return possibleDestinations.find(
-                quad => source.predicate.equals(quad.predicate)
-                    && source.object.equals(quad.object)
-                    && source.graph.equals(quad.graph)
-            );
-        }
-
-        function rewriteQuad(match, quad, associatedSubject, binding) {
-            if (associatedSubject.termType === 'Variable' && binding[associatedSubject.value] !== undefined) {
-                associatedSubject = binding[associatedSubject.value];
-            }
-
-            function remapTerm(term) {
-                if (term.equals(quad)) {
-                    return N3.DataFactory.quad(
-                        associatedSubject,
-                        term.predicate,
-                        term.object,
-                        term.graph,
-                    );
-                } else if (term.termType === 'Quad') {
-                    return N3.DataFactory.quad(
-                        remapTerm(term.subject),
-                        remapTerm(term.predicate),
-                        remapTerm(term.object),
-                        remapTerm(term.graph),
-                    );
-                } else {
-                    return term;
-                }
-            }
-
-            return remapTerm(match);
-        }
-
         // The nice part
         sourcePattern      = Dataset.bindVariables(initialBindings, sourcePattern     );
         destinationPattern = Dataset.bindVariables(initialBindings, destinationPattern);
 
         let newBindings = this.matchAndBind(sourcePattern);
         this._replaceFromBindings(newBindings, destinationPattern);
+
+        let deletionList = [];
+        let additionList = [];
 
         // The evil part
         for (const binding of newBindings) {
@@ -512,7 +483,7 @@ class Dataset {
 
                 if (matches.length === 0) continue;
 
-                let associated = findAssociatedPattern(sourcePattern[i], destinationPattern);
+                let associated = IntrusiveFindAndReplace.findAssociatedQuad(sourcePattern[i], destinationPattern);
                 if (associated === undefined) {
                     throw Error(
                         `Requires the associated quad for ${JSON.stringify(sourcePattern[i])}
@@ -520,10 +491,61 @@ class Dataset {
                     );
                 }
 
-                matches.forEach(match => this.delete(match));
-                this.addAll(matches.map(match => rewriteQuad(match, quad, associated.subject, binding)));
+                deletionList.push(...matches);
+                additionList.push(...matches.map(match => IntrusiveFindAndReplace.rewriteQuad(match, quad, associated.subject, binding)));
             }
         }
+
+        this.removeQuads(deletionList);
+        this.addAll(additionList);
+    }
+};
+
+/* Helper function for an intrusive find and replace */
+const IntrusiveFindAndReplace = {
+    /**
+     * Find the associated quad to source in possibleDestinations.
+     * 
+     * An associated term is a term that shares the same predicate, object
+     * and graph.
+     * @param {*} source An RDF/JS term
+     * @param {any[]} possibleDestinations An array of RDF/JS term
+     * @returns The associated term if it exists, or undefined
+     */
+    findAssociatedQuad: function(source, possibleDestinations) {
+        return possibleDestinations.find(
+            quad => source.predicate.equals(quad.predicate)
+                && source.object.equals(quad.object)
+                && source.graph.equals(quad.graph)
+        );
+    },
+
+    rewriteQuad: function(match, quad, associatedSubject, binding) {
+        if (associatedSubject.termType === 'Variable' && binding[associatedSubject.value] !== undefined) {
+            associatedSubject = binding[associatedSubject.value];
+        }
+
+        function remapTerm(term) {
+            if (term.equals(quad)) {
+                return N3.DataFactory.quad(
+                    associatedSubject,
+                    term.predicate,
+                    term.object,
+                    term.graph,
+                );
+            } else if (term.termType === 'Quad') {
+                return N3.DataFactory.quad(
+                    remapTerm(term.subject),
+                    remapTerm(term.predicate),
+                    remapTerm(term.object),
+                    remapTerm(term.graph),
+                );
+            } else {
+                return term;
+            }
+        }
+
+        return remapTerm(match);
     }
 };
 
