@@ -532,6 +532,10 @@ const PropertyModelApplier = {
             && pattern.metaValuesIndividual.length === 0
         );
 
+        let indiv = DStar.bindVariables(bindings, pattern.mandatoryIndividual)
+        addedQuads.push(...individualValues.flatMap(value => DStar.bindVariables({ "individualValue": value }, indiv)));
+
+
         const metaProperties = PropertyModelApplier.findAndEraseMetaProperties(
             dataset, context,
             bindings.property,
@@ -544,24 +548,26 @@ const PropertyModelApplier = {
         if (metaProperties !== null) {
             deletedQuads.push(metaProperties.optionalPart['@quad']);
 
-            let q = DStar.bindVariables(bindings, pattern.optional);
-            q = DStar.bindVariables({ metaPropertyNode: metaProperties.optionalPart.metaPropertyNode }, q);
-            addedQuads.push(...q);
-            
-            q = DStar.bindVariables(bindings, pattern.metaValues);
-            q = DStar.bindVariables({ metaPropertyNode: metaProperties.optionalPart.metaPropertyNode }, q);
-            
-            metaProperties.metaValues.forEach(metaValue => {
-                const remadeQuads = q.map(modelQuad =>
-                    RelationshipModelApplier.remake(
-                        DStar.bindVariables(metaValue, modelQuad),
-                        metaValue['@depth'] - 1, metaValue['@quad']
-                    )
-                );
+            let [opt1, metaValues1, optN, metaValuesN] = PropertyModelApplier.bindMultipleVariableSets(
+                [bindings, { metaPropertyNode: metaProperties.optionalPart.metaPropertyNode }],
+                [
+                    pattern.optional,
+                    pattern.metaValues,
+                    pattern.optionalIndividual,
+                    pattern.metaValuesIndividual
+                ]
+            );
 
+            addedQuads.push(...opt1);
+            addedQuads.push(...individualValues.flatMap(value => DStar.bindVariables({ "individualValue": value }, optN)));
+
+            metaProperties.metaValues.forEach(metaValue => {
                 deletedQuads.push(metaValue['@quad']);
-                addedQuads.push(...remadeQuads);
-            })
+
+                let x = pattern => PropertyModelApplier.remake(metaValue, pattern);
+                addedQuads.push(...x(metaValues1));
+                addedQuads.push(...x(individualValues.flatMap(value => DStar.bindVariables({ "individualValue": value }, metaValuesN))));
+            });
         }
 
         dataset.removeQuads(deletedQuads);
@@ -585,15 +591,17 @@ const PropertyModelApplier = {
         let result = [];
         let currentList = propertyValue;
 
+        dataset.getQuads(null, null, currentList).forEach(q => console.error(q.subject));
+
         while (!rdf.nil.equals(currentList)) {
             let theLiteral = dataset.getQuads(currentList, rdf.first, null, defaultGraph());
-            if (theLiteral.length !== 0)
+            if (theLiteral.length !== 1)
                 throw Error(`Malformed list ${currentList.value}: ${theLiteral.length} values for rdf:first`);
 
             result.push(theLiteral[0].object);
 
             let theRest = dataset.getQuads(currentList, rdf.rest, null, defaultGraph());
-            if (theRest.length !== 0)
+            if (theRest.length !== 1)
                 throw Error(`Malformed list ${currentList.value}: ${theRest.length} values for rdf:rest`);
 
             let nextElement = theRest[0].object;
@@ -601,6 +609,8 @@ const PropertyModelApplier = {
             currentList = nextElement;
         }
 
+        console.error(propertyValue);
+        console.error(result);
         return result;
     },
 
@@ -674,6 +684,22 @@ const PropertyModelApplier = {
         }
 
         return result;
+    },
+
+    bindMultipleVariableSets: function(listOfBindings, pattern) {
+        for (let bindings of listOfBindings) {
+            pattern = DStar.bindVariables(bindings, pattern);
+        }
+        return pattern;
+    },
+
+    remake: function(foundBinding, destinationPattern) {
+        return destinationPattern.map(modelQuad =>
+            RelationshipModelApplier.remake(
+                DStar.bindVariables(foundBinding, modelQuad),
+                foundBinding['@depth'] - 1, foundBinding['@quad']
+            )
+        );
     }
 
 }

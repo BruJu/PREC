@@ -638,6 +638,17 @@ describe("Property convertion", function() {
 
 
 describe("Relationship and Property convertion", function() {
+    const anEdge =
+    `
+        :source      a pgo:Node .
+        :destination a pgo:Node .
+
+        :edge rdf:subject   :source       ;
+              rdf:predicate :predicate    ;
+              rdf:object    :destination  ;
+              rdf:type      pgo:Edge      ;
+    `;
+
     const graphs = {
         edgeWithMetaProperty: `
             :source      a pgo:Node .
@@ -693,6 +704,34 @@ describe("Relationship and Property convertion", function() {
             [] a prec:PropertyRule ;
                 prec:propertyName "Property 2" ;
                 prec:propertyIRI  :Z_SECOND .
+        `,
+
+        edgeWithList:
+            //anEdge +
+        `
+            :node a pgo:Node ; :property :property_bn .
+            :property a prec:Property, prec:CreatedProperty ; rdfs:label "Property" .
+            :property_bn a prec:PropertyValue ; rdf:value ( "A" "B" "C" "D" "E" ) .
+
+            :property_bn prec:hasMetaProperties :meta_property_bn .
+
+            :meta_property_bn :property :numbers_bn .
+            :numbers_bn a prec:PropertyValue ; rdf:value ( 1 2 3 ) .
+        `,
+        cartesianProductOfMetaLists:
+        `
+            prec:Properties     prec:modelAs prec:CartesianProduct .
+            prec:KeepProvenance prec:flagState false .
+        
+            prec:CartesianProduct a prec:PropertyModel ;
+                prec:composedOf
+                       << pvar:entity pvar:propertyKey pvar:individualValue >> ,
+                    << << pvar:entity pvar:propertyKey pvar:individualValue >> pvar:metaPropertyKey pvar:metaPropertyValue >> .
+                
+            [] a prec:PropertyRule ;
+                prec:propertyName "Property" ;
+                prec:propertyIRI :element .
+            
         `
     };
 
@@ -721,6 +760,30 @@ describe("Relationship and Property convertion", function() {
             <<    :edge                                :Z_SECOND "Value 2" >> :Z_FIRST "TheMetaProperty" .
         `
     );
-        
+
+    runATest_(graphs, 'edgeWithList', 'cartesianProductOfMetaLists',
+    `
+           <http://test/node> <http://test/element> "A" .
+           <http://test/node> <http://test/element> "B" .
+           <http://test/node> <http://test/element> "C" .
+           <http://test/node> <http://test/element> "D" .
+           <http://test/node> <http://test/element> "E" .
+        << <http://test/node> <http://test/element> "A" >> <http://test/element> "1" .
+        << <http://test/node> <http://test/element> "B" >> <http://test/element> "1" .
+        << <http://test/node> <http://test/element> "C" >> <http://test/element> "1" .
+        << <http://test/node> <http://test/element> "D" >> <http://test/element> "1" .
+        << <http://test/node> <http://test/element> "E" >> <http://test/element> "1" .
+        << <http://test/node> <http://test/element> "A" >> <http://test/element> "2" .
+        << <http://test/node> <http://test/element> "B" >> <http://test/element> "2" .
+        << <http://test/node> <http://test/element> "C" >> <http://test/element> "2" .
+        << <http://test/node> <http://test/element> "D" >> <http://test/element> "2" .
+        << <http://test/node> <http://test/element> "E" >> <http://test/element> "2" .
+        << <http://test/node> <http://test/element> "A" >> <http://test/element> "3" .
+        << <http://test/node> <http://test/element> "B" >> <http://test/element> "3" .
+        << <http://test/node> <http://test/element> "C" >> <http://test/element> "3" .
+        << <http://test/node> <http://test/element> "D" >> <http://test/element> "3" .
+        << <http://test/node> <http://test/element> "E" >> <http://test/element> "3" .
+    `
+);
 
 })
