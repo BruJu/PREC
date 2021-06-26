@@ -122,6 +122,11 @@ const contexts = {
     `,
     modelSwapSO: `
         prec:Relationships prec:subject rdf:object ; prec:object rdf:subject .
+    `,
+    modelWithLabel: `
+        prec:Relationships prec:modelAs [
+            prec:composedOf << :anEdge :holdsTheLabel pvar:label  >>
+        ] .
     `
 }
 
@@ -330,6 +335,14 @@ describe("Relationship convertion", function () {
                 :edge  a pgo:Edge ; rdf:object :s  ; rdf:predicate :p  ; rdf:subject :o  .
             `
         );
+        
+        // Labels
+        runATest("edgeDiff", "modelWithLabel",
+        `
+            :anEdge :holdsTheLabel "type1" .
+            :anEdge :holdsTheLabel "type2" .
+        `
+        )
     })
 
     describe("Meta properties", function() {
@@ -473,6 +486,14 @@ describe("Property convertion", function() {
         `,
         contextCollapseMetaProperties: `
             prec:MetaProperties prec:modelAs prec:DirectTriples .
+        `,
+        contextPGOProperty: `
+            prec:Properties prec:modelAs [
+                prec:composedOf
+                    << pvar:entity   pgo:hasProperty pvar:property         >> ,
+                    << pvar:property pgo:key         pvar:propertyKeyLabel >> ,
+                    << pvar:property pgo:value       pvar:propertyValue    >>
+            ] .
         `
     };
 
@@ -597,6 +618,29 @@ describe("Property convertion", function() {
             :propertyB a prec:Property, prec:CreatedProperty ; rdfs:label "PropertyB" .
         `
         );
+
+
+        runATest_(graphs, 'oneNodeWithProperty', 'contextPGOProperty',
+        `
+            :node a pgo:Node .
+            :node pgo:hasProperty _:theProperty .
+            _:theProperty pgo:key "P1" .
+            _:theProperty pgo:value "v1" .
+        `
+        )
+        
+        runATest_(graphs, 'oneNodeWithTwoProperties', 'contextPGOProperty',
+        `
+            :node a pgo:Node .
+            :node pgo:hasProperty _:theProperty1 .
+            _:theProperty1 pgo:key "P1" .
+            _:theProperty1 pgo:value "v1" .
+
+            :node pgo:hasProperty _:theProperty2 .
+            _:theProperty2 pgo:key "P2" .
+            _:theProperty2 pgo:value "v2" .
+        `
+        )
     });
 
     describe("Meta properties", function() {
