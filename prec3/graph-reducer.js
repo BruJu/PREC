@@ -591,8 +591,6 @@ const PropertyModelApplier = {
         let result = [];
         let currentList = propertyValue;
 
-        dataset.getQuads(null, null, currentList).forEach(q => console.error(q.subject));
-
         while (!rdf.nil.equals(currentList)) {
             let theLiteral = dataset.getQuads(currentList, rdf.first, null, defaultGraph());
             if (theLiteral.length !== 1)
@@ -609,8 +607,6 @@ const PropertyModelApplier = {
             currentList = nextElement;
         }
 
-        console.error(propertyValue);
-        console.error(result);
         return result;
     },
 

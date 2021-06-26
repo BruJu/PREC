@@ -768,21 +768,21 @@ describe("Relationship and Property convertion", function() {
            <http://test/node> <http://test/element> "C" .
            <http://test/node> <http://test/element> "D" .
            <http://test/node> <http://test/element> "E" .
-        << <http://test/node> <http://test/element> "A" >> <http://test/element> "1" .
-        << <http://test/node> <http://test/element> "B" >> <http://test/element> "1" .
-        << <http://test/node> <http://test/element> "C" >> <http://test/element> "1" .
-        << <http://test/node> <http://test/element> "D" >> <http://test/element> "1" .
-        << <http://test/node> <http://test/element> "E" >> <http://test/element> "1" .
-        << <http://test/node> <http://test/element> "A" >> <http://test/element> "2" .
-        << <http://test/node> <http://test/element> "B" >> <http://test/element> "2" .
-        << <http://test/node> <http://test/element> "C" >> <http://test/element> "2" .
-        << <http://test/node> <http://test/element> "D" >> <http://test/element> "2" .
-        << <http://test/node> <http://test/element> "E" >> <http://test/element> "2" .
-        << <http://test/node> <http://test/element> "A" >> <http://test/element> "3" .
-        << <http://test/node> <http://test/element> "B" >> <http://test/element> "3" .
-        << <http://test/node> <http://test/element> "C" >> <http://test/element> "3" .
-        << <http://test/node> <http://test/element> "D" >> <http://test/element> "3" .
-        << <http://test/node> <http://test/element> "E" >> <http://test/element> "3" .
+        << <http://test/node> <http://test/element> "A" >> <http://test/element> 1 .
+        << <http://test/node> <http://test/element> "B" >> <http://test/element> 1 .
+        << <http://test/node> <http://test/element> "C" >> <http://test/element> 1 .
+        << <http://test/node> <http://test/element> "D" >> <http://test/element> 1 .
+        << <http://test/node> <http://test/element> "E" >> <http://test/element> 1 .
+        << <http://test/node> <http://test/element> "A" >> <http://test/element> 2 .
+        << <http://test/node> <http://test/element> "B" >> <http://test/element> 2 .
+        << <http://test/node> <http://test/element> "C" >> <http://test/element> 2 .
+        << <http://test/node> <http://test/element> "D" >> <http://test/element> 2 .
+        << <http://test/node> <http://test/element> "E" >> <http://test/element> 2 .
+        << <http://test/node> <http://test/element> "A" >> <http://test/element> 3 .
+        << <http://test/node> <http://test/element> "B" >> <http://test/element> 3 .
+        << <http://test/node> <http://test/element> "C" >> <http://test/element> 3 .
+        << <http://test/node> <http://test/element> "D" >> <http://test/element> 3 .
+        << <http://test/node> <http://test/element> "E" >> <http://test/element> 3 .
     `
 );
 
