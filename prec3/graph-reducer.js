@@ -524,7 +524,7 @@ const PropertyModelApplier = {
         addedQuads.push(...DStar.bindVariables(bindings, pattern.mandatory));
         deletedQuads.push(...bindings['@quads']);
 
-        const individualValues = PropertyModelApplier.extractIndividualValues(
+        const { individualValues, track } = PropertyModelApplier.extractIndividualValues(
             dataset,
             bindings.propertyValue,
             pattern.mandatoryIndividual.length === 0
@@ -572,23 +572,29 @@ const PropertyModelApplier = {
 
         dataset.removeQuads(deletedQuads);
         dataset.addAll(addedQuads);
+
+        for (const term of track) {
+            const r = dataset.allUsageOfAre(term, [
+                $quad(term, rdf.first), $quad(term, rdf.rest)
+            ]);
+
+            if (r !== null) {
+                dataset.removeQuads(r);
+            }
+        }
     },
 
     extractIndividualValues: function(dataset, propertyValue, ignore) {
-        // TODO: the curernt rules to delete a list (if its individual values
-        // are read) is a bad solution. It would be better to check instead
-        // if the list is still used or not after transforming the property.
-        // Example of application: keeping both the list and storing the
-        // individual values for easier access
-        if (ignore === true) return [];
+        if (ignore === true) return { individualValues: [], track: [] };
 
         // A literal alone
         if (propertyValue.termType === 'Literal') {
-            return [propertyValue];
+            return { individualValues: [propertyValue], track: [] };
         }
 
         // An RDF list
         let result = [];
+        let track = [];
         let currentList = propertyValue;
 
         while (!rdf.nil.equals(currentList)) {
@@ -603,11 +609,11 @@ const PropertyModelApplier = {
                 throw Error(`Malformed list ${currentList.value}: ${theRest.length} values for rdf:rest`);
 
             let nextElement = theRest[0].object;
-            dataset.deleteMatches(currentList, null, null, defaultGraph());
+            track.push(currentList);
             currentList = nextElement;
         }
 
-        return result;
+        return { individualValues: result, track: track };
     },
 
     findAndEraseMetaProperties: function(dataset, context, propertyNode, ignore) {

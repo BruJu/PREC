@@ -304,6 +304,46 @@ describe('DStar', function() {
             })
         });
     })
+
+    describe("allUsageOfAre", function () {
+        it('test1', function () {
+            const dstar = new DStar();
+            dstar.addFromTurtleStar(
+                `
+                @prefix ex:  <http://example.org/> .
+                @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+                
+                ex:subject ex:predicate1 ex:object .
+                ex:subject ex:predicate2 ex:object .
+                ex:other ex:predicate1 ex:object .
+                `
+            );
+
+            assert.ok(
+                dstar.allUsageOfAre(ex.subject,
+                    [
+                        $quad(ex.subject, null, ex.object)
+                    ]
+                ) !== null
+            );
+
+            assert.ok(
+                dstar.allUsageOfAre(ex.other,
+                    [
+                        $quad(ex.other, null, null)
+                    ]
+                ) !== null
+            );
+
+            assert.ok(
+                dstar.allUsageOfAre(ex.object,
+                    [
+                        $quad(ex.other, null, ex.object)
+                    ]
+                ) === null
+            );
+        })
+    });
 });
 
 

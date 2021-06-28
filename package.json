@@ -34,6 +34,7 @@
         "rdf-isomorphic": "^1.2.0"
     },
     "devDependencies": {
+        "@rdfjs/types": "^1.0.1",
         "mocha": "^8.3.2"
     }
 }

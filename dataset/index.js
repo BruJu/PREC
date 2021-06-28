@@ -1,6 +1,11 @@
 const N3 = require('n3');
 const QuadStar = require('../prec3/quad-star.js');
 
+/**
+ * @typedef { import("rdf-js").Term } Term
+ * @typedef { import("rdf-js").Quad } Quad
+ */
+
 /** Return true if the quad contains a nested quad */
 function isRdfStarQuad(quad) {
     return quad.subject.termType === 'Quad'
@@ -167,6 +172,56 @@ class Dataset {
         let quads = this.getQuads(subject, predicate, object, graph);
         this.removeQuads(quads);
         return this;
+    }
+
+    // =========================================================================
+
+    /**
+     * Look for every occurrence of term, returning them if they all match an
+     * auhtorized pattern.  
+     * @param {Term} term The term
+     * @param {Quad[]} authorizedPatterns The authorized patterns for quad
+     * @returns {Quad[]} The list of every occurences of term in the dataset
+     * if all of them matches one of the given pattern. null if at least one
+     * does not match any of the patterns
+     */
+    allUsageOfAre(term, authorizedPatterns) {
+        let matches = [];
+
+        function isAuthorized(quad) {
+            const x = authorizedPatterns.find(
+                pattern => QuadStar.matches(quad, pattern)
+            );
+
+            return x !== undefined;
+        }
+
+        for (let quads of [
+            this.match(term, null, null, null),
+            this.match(null, term, null, null),
+            this.match(null, null, term, null),
+            this.match(null, null, null, term)
+        ]) {
+            for (let quad of quads) {
+                if (isAuthorized(quad)) {
+                    matches.push(quad);
+                } else {
+                    return null;
+                }
+            }
+        }
+
+        for (let quad of this.starQuads) {
+            if (QuadStar.containsTerm(term)) {
+                if (isAuthorized(quad)) {
+                    matches.push(quad);
+                } else {
+                    return null;
+                }
+            }
+        }
+
+        return matches;
     }
 
     // =========================================================================

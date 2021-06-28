@@ -182,7 +182,34 @@ function runATest_(dict, graphName, contextName, expected) {
 
         const expectedStore = utility.turtleToDStar(expected);
         const r = isomorphic(store.getQuads(), expectedStore.getQuads());
-        if (!r) print(store, dict, graphName, dict, contextName, expectedStore);
+        if (!r) print(store, dict, "a", dict, "b", expectedStore);
+        assert.ok(r);
+    });
+}
+
+function test(name, source, context, expected) {
+    it(name, function () {
+        const store         = utility.turtleToDStar(source);
+        const ctx           = utility.turtleToQuads(context);
+        graphReducer(store, ctx);
+
+        const expectedStore = utility.turtleToDStar(expected);
+        const r = isomorphic(store.getQuads(), expectedStore.getQuads());
+        if (!r) {
+            console.error("Error on " + name);
+            console.error("• Base Graph:");
+            console.error(source);
+            console.error("• Context:");
+            console.error(context);
+        
+            [result, expected] = badToColorizedToStrings(store.getQuads(), expectedStore.getQuads());
+        
+            console.error(`• Result (${store.size} quads):`);
+            console.error(result);
+            console.error(`• Expected (${expectedStore.size} quads):`);
+            console.error(expected);
+        }
+        
         assert.ok(r);
     });
 }
@@ -633,6 +660,49 @@ describe("Property convertion", function() {
 
     });
 
+    describe('Property list', function () {
+        const simpleProperty = `
+            :node a pgo:Node .
+            :node :pName :pBlankNode .
+            :pBlankNode rdf:value ( "a" "b" "c" ) ; a prec:PropertyValue .
+            :pName rdfs:label "key" ; a prec:Property, prec:CreatedProperty .
+        `;
+
+        const modelAs = function (model) {
+            return `
+                prec:Properties prec:modelAs [ prec:composedOf ${model} ] .
+                [] a prec:PropertyRule ;
+                    prec:propertyName "key" ;
+                    prec:propertyIRI :k .
+            `;
+        };
+
+        test(
+            "Regular property conversion",
+            simpleProperty,
+            modelAs("<< pvar:entity pvar:propertyKey pvar:propertyValue >>"),
+            `
+            :node a pgo:Node .
+            :node :k ( "a" "b" "c" ) .
+            `
+        );
+
+        test(
+            "Only keep individual values",
+            simpleProperty,
+            modelAs("<< pvar:entity pvar:propertyKey pvar:individualValue >>"),
+            ` :node a pgo:Node ; :k "a", "b", "c" . `
+        );
+
+        test(
+            "Keep both",
+            simpleProperty,
+            modelAs("<< pvar:entity pvar:propertyKey pvar:individualValue >> ,"
+                + "\n << pvar:entity :usedList pvar:propertyValue >>"),
+            ` :node a pgo:Node ; :k "a", "b", "c" ; :usedList ( "a" "b" "c" ).`
+        );
+
+    })
 
 })
 
@@ -784,6 +854,5 @@ describe("Relationship and Property convertion", function() {
         << <http://test/node> <http://test/element> "D" >> <http://test/element> 3 .
         << <http://test/node> <http://test/element> "E" >> <http://test/element> 3 .
     `
-);
-
+    );
 })
