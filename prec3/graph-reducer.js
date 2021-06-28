@@ -154,6 +154,11 @@ function modifyRelationships(dataset, context) {
     let candidateLabelForDeletion = new precUtils.TermDict();
 
     for (const relation of relations) {
+        const label = dataset.getQuads(relation.predicate, rdfs.label, null, defaultGraph());
+        if (label.length !== 0) {
+            relation.label = label[0].object;
+        }
+
         const appliedTheModel = RelationshipModelApplier.transformTheModel(dataset, context, relation);
         if (appliedTheModel) {
             candidateLabelForDeletion.set(relation.predicate, true);
@@ -183,6 +188,7 @@ const RelationshipModelApplier = {
                 [variable('relation')     , pvar.self           ],
                 [variable('subject')      , pvar.source         ],
                 [variable('predicate')    , pvar.relationshipIRI],
+                [variable('label')        , pvar.label          ],
                 [variable('object')       , pvar.destination    ],
                 [variable('propertyKey')  , pvar.propertyKey    ],
                 [variable('propertyValue'), pvar.propertyValue  ]
@@ -439,6 +445,11 @@ const PropertyModelApplier = {
             .filter(bindings => bindings[1] !== undefined);
 
         for (const [property, typeOfHolder] of properties) {
+            const label = dataset.getQuads(property.propertyKey, rdfs.label, null, defaultGraph());
+            if (label.length !== 0) {
+                property.propertyKeyLabel = label[0].object;
+            }
+
             PropertyModelApplier.transformProperty(dataset, context, property, typeOfHolder);
         }
 
@@ -481,6 +492,7 @@ const PropertyModelApplier = {
             [
                 [variable("entity")           , pvar.entity           ],
                 [variable("propertyKey")      , pvar.propertyKey      ],
+                [variable("propertyKeyLabel") , pvar.propertyKeyLabel ],
                 [variable("property")         , pvar.property         ],
                 [variable("propertyValue")    , pvar.propertyValue    ],
                 [variable("individualValue")  , pvar.individualValue  ],
