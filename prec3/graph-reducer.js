@@ -102,7 +102,7 @@ function removeUnusedCreatedVocabulary(dataset, type, expectedSubject, expectedP
     }
 }
 
-function transformRelationships(dataset, addedVocabulary) {
+function transformRelationships(dataset, context) {
     // To transform the relationship, we first identify the rule to apply to
     // each relationship.
     // We do the identification process first to avoid conflicts between rules.
@@ -117,7 +117,7 @@ function transformRelationships(dataset, addedVocabulary) {
     }
 
     // Find the proper rule
-    addedVocabulary.forEachRelation(
+    context.forEachRelation(
         relationship => {
             const { source, conditions, destination } = relationship.getFilter();
             dataset.findFilterReplace(source, conditions, destination);
@@ -125,7 +125,7 @@ function transformRelationships(dataset, addedVocabulary) {
     );
 
     // Do the transformations
-    modifyRelationships(dataset, addedVocabulary);
+    modifyRelationships(dataset, context);
 }
 
 /**
@@ -364,27 +364,95 @@ function filterOutDeletedEdgeLabel(dataset, nodesToDelete) {
     }
 }
 
+function filterOutDeletedNodeLabel(dataset, nodesToDelete) {
+    filterOutDeletedEdgeLabel(dataset, nodesToDelete);
+}
+
 /**
  * Transforms every node label specified in the context with its proper IRI
  * @param {DStar} dataset The data dataset
  * @param {Context} context The context
  */
 function transformNodeLabels(dataset, context) {
-    context.forEachNodeLabel((nodeLabel, correspondingIRI) => {
-        dataset.findFilterReplace(
-            [$quad(variable("node"), rdf.type, variable("nodeLabel"))],
+    // Add mark
+    {
+        const bindings = dataset.matchAndBind([
+            $quad(variable('node'), rdf.type, pgo.Node),
+            $quad(variable('node'), rdf.type, variable('pgLabeliri')),
+            $quad(variable('pgLabeliri'), rdfs.label, variable('trueLabel'))
+        ]);
+
+        bindings.forEach(binding => {
+            dataset.add(
+                $quad(
+                    $quad(binding.node, rdf.type, binding.pgLabeliri),
+                    prec.__appliedNodeRule,
+                    prec.NodeLabels
+                )
+            );
+        });
+    }
+
+    // Look for more refined rules
+    context.forEachNodeLabel(
+        edgeLabelManager => {
+            const { source, conditions, destination } = edgeLabelManager.getFilter();
+            dataset.findFilterReplace(source, conditions, destination);
+        }
+    );
+
+    // Boom
+    {
+        const nodesToLabels = dataset.matchAndBind(
             [
+                $quad(
+                    $quad(variable('node'), rdf.type, variable('labelIRI')),
+                    prec.__appliedNodeRule,
+                    variable("ruleNode"),
+                ),
+                $quad(variable('node'), rdf.type, variable('labelIRI'))
+            ]
+        );
+    
+        let candidateLabelForDeletion = new precUtils.TermDict();
+    
+        for (const nodeToLabel of nodesToLabels) {
+            const label = dataset.getQuads(nodeToLabel.labelIRI, rdfs.label, null, defaultGraph());
+            if (label.length !== 0) {
+                nodeToLabel.label = label[0].object;
+            }
+    
+            const model = context.findNodeLabelModel(nodeToLabel.ruleNode)
+            if (!Array.isArray(model)) {
+                continue;
+            }
+
+            const target = model.map(term => quadStar.remapPatternWithVariables(
+                term,
                 [
-                    $quad(variable("nodeLabel"), rdfs.label, N3.DataFactory.literal(nodeLabel)),
-                    $quad(variable("nodeLabel"), rdf.type  , prec.CreatedNodeLabel)
+                    [variable('node'), pvar.node],
+                    // labelIRI, captured by the pattern of nodesToLabels
+                    [variable("labelIRI"), pvar.nodeLabelIRI],
+                    // label as a string, captured at the beginning of this loop
+                    [variable("label")   , pvar.label]
                 ]
-            ],
-            [$quad(variable("node"), rdf.type, correspondingIRI)]
-        )
-    });
+            ));
+
+            dataset.replaceOneBinding(nodeToLabel, target);
+            
+            candidateLabelForDeletion.set(nodeToLabel.labelIRI, true);
+        }
+    
+        // Cleanup
+        let l = [];
+        candidateLabelForDeletion.forEach((node, _True) => l.push(node));
+        filterOutDeletedNodeLabel(dataset, l);
+    
+        dataset.deleteMatches(null, prec.__appliedNodeRule, prec.NodeLabels, defaultGraph());
+    }
 }
 
-function transformProperties(dataset, addedVocabulary) {
+function transformProperties(dataset, context) {
     // Mark every property value node
     {
         const q = dataset.getQuads(null, rdf.type, prec.Property, defaultGraph())
@@ -397,7 +465,7 @@ function transformProperties(dataset, addedVocabulary) {
     }
 
     // Find the proper rule to apply
-    addedVocabulary.forEachProperty(
+    context.forEachProperty(
         propertyManager => {
             const { source, conditions, destination } = propertyManager.getFilter();
             dataset.findFilterReplace(source, conditions, destination);
@@ -405,7 +473,7 @@ function transformProperties(dataset, addedVocabulary) {
     );
 
     // apply the new model
-    PropertyModelApplier.applyPropertyModels(dataset, addedVocabulary);
+    PropertyModelApplier.applyPropertyModels(dataset, context);
 }
 
 /* Namespace for the funtions used to transform a property model */

@@ -899,4 +899,54 @@ describe("Relationship and Property convertion", function() {
         << <http://test/node> <http://test/element> "E" >> <http://test/element> 3 .
     `
     );
-})
+});
+
+
+
+describe('Node label rules', function () {
+    describe('Remodeliation', function () {
+        test('should let the user defined how node labels are defined',
+        `
+            :alice rdf:type pgo:Node, _:person .
+            _:person a prec:CreatedNodeLabel ; rdfs:label "Person" .
+        `,
+        `
+            prec:NodeLabels prec:modelAs [
+                prec:composedOf
+                    << pvar:node :somePGsaysThatTheyAreA pvar:nodeLabelIRI >> ,
+                    << pvar:nodeLabelIRI :labelsTheNode pvar:node  >> ,
+                    << << pvar:node pvar:node pvar:node >> rdf:type :rdfstartriple >>
+            ] .
+        `,
+        `
+            :alice rdf:type pgo:Node .
+            :alice :somePGsaysThatTheyAreA _:person .
+            _:person :labelsTheNode :alice .
+            << :alice :alice :alice >> rdf:type :rdfstartriple .
+            _:person a prec:CreatedNodeLabel ; rdfs:label "Person" .
+        `
+        )
+
+        test('should let the user use string literal labels',
+        `
+            :myNode rdf:type pgo:Node ;
+              rdf:type pgo:myLabel .
+            
+            :myOtherNode rdf:type pgo:Node ;
+              rdf:type pgo:myLabel, pgo:myOtherLabel .
+            
+            pgo:myLabel      a prec:CreatedNodeLabel ; rdfs:label "Cat" .
+            pgo:myOtherLabel a prec:CreatedNodeLabel ; rdfs:label "Kitten" .
+        `,
+        `
+            prec:NodeLabels prec:modelAs [
+                prec:composedOf << pvar:node :isLabeled pvar:label >>
+            ] .
+        `,
+        `
+            :myNode      rdf:type pgo:Node ; :isLabeled "Cat" .
+            :myOtherNode rdf:type pgo:Node ; :isLabeled "Cat", "Kitten" .        
+        `
+        );
+    });
+});

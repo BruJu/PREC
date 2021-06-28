@@ -699,37 +699,62 @@ class EntitiesManager {
 ////////////////////////////////////////////////////////////////////////////////
 // Anything Goes
 
-/**
- * Reader for the `prec:IRIOfNodeLabel` "rules"
- * Return the list of node labels -> IRIs
- */
-function _readNodeLabels(store) {
-    let labelsToIRI = {};
+/** An individual node label rule */
+class NodeLabelRule {
+    // ==== IRIs related to relationship
 
-    let quads = store.getQuads(null, prec.IRIOfNodeLabel, null, $defaultGraph());
+    static RuleType           = prec.NodeLabelRule;
+    static DefaultModel       = prec.NodeLabelsTypeOfLabelIRI;
+    static MainLabel          = prec.nodeLabel;
+    static PossibleConditions = [];
+    static ModelBases         = [[prec.NodeLabels, []]];
+    static ShortcutIRI        = prec.IRIOfNodeLabel;
+    static SubstitutionTerm   = prec.nodeLabelIRI;
 
-    function invalidTriple(triple, reason) {
-        return Error(
-            "Vocabulary Node Labels: Invalid triple found with prec:IRIOfNodeLabel predicate "
-            + `(${triple.subject.value} ${triple.predicate.value} ${triple.object.value}): `
-            + reason
+    // ==== One rule
+
+    /** Build a node label rule from its definition */
+    constructor(conditions, hash, ruleNode) {
+        this.conditions = [];
+        this.ruleNode = ruleNode;
+
+        // prec:nodeLabel
+        if (conditions.label !== undefined) {
+            this.conditions.push(
+                [
+                    $quad(variable("node")     , rdf.type  , variable("nodeLabel")),
+                    $quad(variable("nodeLabel"), rdfs.label, conditions.label)
+                ]
+            );
+        }
+
+        // prec:priority
+        if (conditions.explicitPriority !== undefined) {
+            this.priority = [conditions.explicitPriority, hash];
+        } else {
+            this.priority = [undefined, hash];
+        }
+    }
+
+    /**
+     * Return the arguments to pass to `StoreAlterer::findFilterReplace` to tag
+     * the nodes that matches this rule with its rule node.
+     */
+    getFilter() {
+        const markedTriple = $quad(
+            variable("node"), rdf.type, variable("nodeLabel")
         );
+
+        return {
+            source: [
+                $quad(markedTriple, prec.__appliedNodeRule, prec.NodeLabels)
+            ],
+            conditions: this.conditions,
+            destination: [
+                $quad(markedTriple, prec.__appliedNodeRule, this.ruleNode)
+            ]
+        };
     }
-
-    for (const baseRule of quads) {
-        if (baseRule.subject.termType !== "NamedNode")
-            throw invalidTriple(baseRule, "Subject should be a named node");
-        if (baseRule.object.termType !== "Literal")
-            throw invalidTriple(baseRule, "Object should be a literal")
-
-        const sourceLabel = baseRule.object.value;
-        if (labelsToIRI[sourceLabel] !== undefined)
-            throw invalidTriple(baseRule, "Several triples maps the same node label");
-
-        labelsToIRI[sourceLabel] = baseRule.subject;
-    }
-
-    return labelsToIRI;
 }
 
 /**
@@ -884,6 +909,7 @@ class Context {
 
         _removeSugarForRules(store, RelationshipRule);
         _removeSugarForRules(store, PropertyRule    );
+        _removeSugarForRules(store, NodeLabelRule   );
         _copyPropertiesValuesToSpecificProperties(store);
 
         const substitutionTerms = new SubstitutionTerms(store);
@@ -893,7 +919,8 @@ class Context {
         this.properties = new EntitiesManager(store, substitutionTerms, PropertyRule    );
         _throwIfInvalidPropertyModels(this.properties.models)
 
-        this.nodeLabels = _readNodeLabels(store);
+        this.nodeLabels = new EntitiesManager(store, substitutionTerms, NodeLabelRule   );
+        // TODO: throw if invalid node label model
 
         this.flags = readFlags(store);
 
@@ -909,9 +936,7 @@ class Context {
     }
 
     forEachNodeLabel(callback) {
-        for (const nodeLabel in this.nodeLabels) {
-            callback(nodeLabel, this.nodeLabels[nodeLabel]);
-        }
+        return this.nodeLabels.forEachRule(callback);
     }
 
     getStateOf(flag) {
@@ -947,6 +972,10 @@ class Context {
      */
     findPropertyModel(ruleNode, type) {
         return this.properties.getModelRelatedTo(ruleNode, type);
+    }
+
+    findNodeLabelModel(ruleNode) {
+        return this.nodeLabels.getModelRelatedTo(ruleNode, prec.NodeLabels);
     }
 }
 

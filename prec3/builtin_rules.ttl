@@ -120,3 +120,12 @@ prec:CombinedBlankNodes a prec:PropertyModel ;
     << pvar:property rdf:value            pvar:propertyValue     >> ,
     << pvar:property rdf:type             prec:PropertyValue     >> ,
     << pvar:property pvar:metaPropertyKey pvar:metaPropertyValue >> .
+
+
+##################
+# ==== Node Labels
+
+prec:NodeLabelsTypeOfLabelIRI a prec:NodeLabelModel ;
+  prec:composedOf << pvar:node rdf:type pvar:nodeLabelIRI >> .
+
+prec:nodeLabelIRI a prec:SubstitutionTerm ; prec:substitutionTarget pvar:nodeLabelIRI .
