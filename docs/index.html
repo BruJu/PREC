@@ -684,8 +684,8 @@
               <li>`pvar:source`: The RDF node that represents the PG source node of the relationship.</li>
               <li>`pvar:destination`: The RDF node that represents the PG destination relationship.</li>
               <li>`pvar:relationshipIRI`: The RDF node that represents the label of the edge.</li>
-              <li>`pvar:propertyKey`: matchs every other predicates. Supposed to represent each property key.</li>
-              <li>`pvar:propertyValue`: matchs every other objects. Supposed to represent each property value.</li>
+              <li>`pvar:propertyKey`: matches every other predicates. Supposed to represent each property key.</li>
+              <li>`pvar:propertyValue`: matches every other objects. Supposed to represent each property value.</li>
             </ul>
 
             <p>
@@ -791,6 +791,7 @@
               <li>`pvar:propertyKey`: The node that represents the edge label.</li>
               <li>`pvar:property`: The blank node that represents the property.</li>
               <li>`pvar:propertyValue`: The literal that contains the property value.</li>
+              <li>`pvar:individualValue`: Most of the time equals to `propertyValue`. If `propertyValue` is an rdf list, `individualValue` will match each individual literal contained in the list instead of the list itself.</li>
               <li>`pvar:metaPropertyNode`: The blank node that contains every meta property, as described in [= prec:hasMetaProperties =]</li>
               <li>`pvar:metaPropertyKey`: The predicate of a meta property triple.</li>
               <li>`pvar:metaPropertyValue`: The object of a meta property triple.</li>

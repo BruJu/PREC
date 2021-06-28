@@ -3,6 +3,11 @@
 const N3 = require('n3');
 
 /**
+ * @typedef { import("rdf-js").Term } Term
+ * @typedef { import("rdf-js").Quad } Quad
+ */
+
+/**
  * Returns a quad equals to
  * ```
  *  Quad(
@@ -82,9 +87,47 @@ function containsTerm(term, searched) {
         || containsTerm(term.graph    , searched);
 }
 
+/**
+ * Checks if realQuad and patternQuad are equals. `null` and `undefined` are
+ * considered wildcards: any term matches it in the pattern quad.
+ * 
+ * `realQuad` must not contain any wildcard
+ * 
+ * @param {Quad} realQuad A quad with no wildcards
+ * @param {Quad} patternQuad A quad that may contain wildcards
+ * @returns {boolean} True if the readQuad matches the patternQuad
+ */
+function matches(realQuad, patternQuad) {
+    for (const position of ['subject', 'predicate', 'object', 'graph']) {
+        const rightTerm = patternQuad[position];
+        if (rightTerm === null || rightTerm === undefined) {
+            continue;
+        }
+
+        const leftTerm = realQuad[position];
+
+        if (rightTerm.termType === 'Quad') {
+            if (leftTerm.termType !== 'Quad') {
+                return false;
+            }
+
+            if (!matches(leftTerm, rightTerm)) {
+                return false;
+            }
+        } else {
+            if (!leftTerm.equals(rightTerm)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 
 module.exports = {
     eventuallyRebuildQuad,
     remapPatternWithVariables,
-    containsTerm
+    containsTerm,
+    matches
 };

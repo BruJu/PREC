@@ -2,7 +2,6 @@
 
 const N3            = require('n3');
 const DStar         = require('../dataset/index.js');
-const graphyFactory = require('@graphy/core.data.factory');
 const namespace     = require('@rdfjs/namespace');
 
 const Context       = require("./context-loader.js");
@@ -496,6 +495,7 @@ const PropertyModelApplier = {
                 [variable("propertyKeyLabel") , pvar.propertyKeyLabel ],
                 [variable("property")         , pvar.property         ],
                 [variable("propertyValue")    , pvar.propertyValue    ],
+                [variable("individualValue")  , pvar.individualValue  ],
                 [variable("metaPropertyNode") , pvar.metaPropertyNode ],
                 [variable("metaPropertyKey")  , pvar.metaPropertyKey  ],
                 [variable("metaPropertyValue"), pvar.metaPropertyValue],
@@ -505,53 +505,217 @@ const PropertyModelApplier = {
         // Split the pattern in 3 parts
         let pattern = r.reduce(
             (previous, quad) => {
+                let containerName = "";
+
                 if (quadStar.containsTerm(quad, variable("metaPropertyKey"))
-                    || quadStar.containsTerm(quad, variable("metaPropertyValue")))
-                    previous.metaValues.push(quad);
-                else if (quadStar.containsTerm(quad, variable("metaPropertyNode")))
-                    previous.optional.push(quad);
-                else
-                    previous.mandatory.push(quad);
+                    || quadStar.containsTerm(quad, variable("metaPropertyValue"))) {
+                    containerName = "metaValues";
+                } else if (quadStar.containsTerm(quad, variable("metaPropertyNode"))) {
+                    containerName = "optional";
+                } else {
+                    containerName = "mandatory";
+                }
+
+                if (quadStar.containsTerm(quad, variable("individualValue"))) {
+                    containerName += "Individual";
+                }
+
+                previous[containerName].push(quad);
                 
                 return previous;
             },
-            { mandatory: [], optional: [], metaValues: [] }
+            {
+                mandatory: [], optional: [], metaValues: [],
+                mandatoryIndividual: [], optionalIndividual: [], metaValuesIndividual: [],
+            }
         );
-    
-        let metaNodeIdentityQuads = dataset.getQuads(bindings.property, prec.hasMetaProperties, null, defaultGraph());
-    
-        if (metaNodeIdentityQuads.length === 0) {
-            // No match for hasMetaNode and hasMeta parts
-            // = no meta property
-            dataset.replaceOneBinding(bindings, pattern.mandatory);
-            return;
+
+        let addedQuads = [];
+        let deletedQuads = [];
+        
+        addedQuads.push(...DStar.bindVariables(bindings, pattern.mandatory));
+        deletedQuads.push(...bindings['@quads']);
+
+        const { individualValues, track } = PropertyModelApplier.extractIndividualValues(
+            dataset,
+            bindings.propertyValue,
+            pattern.mandatoryIndividual.length === 0
+            && pattern.optionalIndividual.length === 0
+            && pattern.metaValuesIndividual.length === 0
+        );
+
+        let indiv = DStar.bindVariables(bindings, pattern.mandatoryIndividual)
+        addedQuads.push(...individualValues.flatMap(value => DStar.bindVariables({ "individualValue": value }, indiv)));
+
+
+        const metaProperties = PropertyModelApplier.findAndEraseMetaProperties(
+            dataset, context,
+            bindings.property,
+            pattern.optional.length === 0
+            && pattern.metaValues.length === 0
+            && pattern.optionalIndividual.length === 0
+            && pattern.metaValuesIndividual.length === 0
+        );
+
+        if (metaProperties !== null) {
+            deletedQuads.push(metaProperties.optionalPart['@quad']);
+
+            let [opt1, metaValues1, optN, metaValuesN] = PropertyModelApplier.bindMultipleVariableSets(
+                [bindings, { metaPropertyNode: metaProperties.optionalPart.metaPropertyNode }],
+                [
+                    pattern.optional,
+                    pattern.metaValues,
+                    pattern.optionalIndividual,
+                    pattern.metaValuesIndividual
+                ]
+            );
+
+            addedQuads.push(...opt1);
+            addedQuads.push(...individualValues.flatMap(value => DStar.bindVariables({ "individualValue": value }, optN)));
+
+            metaProperties.metaValues.forEach(metaValue => {
+                deletedQuads.push(metaValue['@quad']);
+
+                let x = pattern => PropertyModelApplier.remake(metaValue, pattern);
+                addedQuads.push(...x(metaValues1));
+                addedQuads.push(...x(individualValues.flatMap(value => DStar.bindVariables({ "individualValue": value }, metaValuesN))));
+            });
         }
 
-        // We have to manage the meta property node
+        dataset.removeQuads(deletedQuads);
+        dataset.addAll(addedQuads);
+
+        for (const term of track) {
+            const r = dataset.allUsageOfAre(term, [
+                $quad(term, rdf.first), $quad(term, rdf.rest)
+            ]);
+
+            if (r !== null) {
+                dataset.removeQuads(r);
+            }
+        }
+    },
+
+    extractIndividualValues: function(dataset, propertyValue, ignore) {
+        if (ignore === true) return { individualValues: [], track: [] };
+
+        // A literal alone
+        if (propertyValue.termType === 'Literal') {
+            return { individualValues: [propertyValue], track: [] };
+        }
+
+        // An RDF list
+        let result = [];
+        let track = [];
+        let currentList = propertyValue;
+
+        while (!rdf.nil.equals(currentList)) {
+            let theLiteral = dataset.getQuads(currentList, rdf.first, null, defaultGraph());
+            if (theLiteral.length !== 1)
+                throw Error(`Malformed list ${currentList.value}: ${theLiteral.length} values for rdf:first`);
+
+            result.push(theLiteral[0].object);
+
+            let theRest = dataset.getQuads(currentList, rdf.rest, null, defaultGraph());
+            if (theRest.length !== 1)
+                throw Error(`Malformed list ${currentList.value}: ${theRest.length} values for rdf:rest`);
+
+            let nextElement = theRest[0].object;
+            track.push(currentList);
+            currentList = nextElement;
+        }
+
+        return { individualValues: result, track: track };
+    },
+
+    findAndEraseMetaProperties: function(dataset, context, propertyNode, ignore) {
+        if (ignore === true) return null;
+
+        const metaNodeIdentityQuads = dataset.getQuads(propertyNode, prec.hasMetaProperties, null, defaultGraph());
+
+        if (metaNodeIdentityQuads.length === 0) return null;
+
         if (metaNodeIdentityQuads.length !== 1)
-            throw Error("Invalid data graph: more than one meta node for " + bindings.property.value);
+            throw Error("Invalid data graph: more than one meta node for " + propertyNode.value);
 
         const metaNode = metaNodeIdentityQuads[0].object;
-        
-        // Add the new found binding to the meta property node
-        bindings.metaPropertyNode = metaNode;
-        bindings['@quads'].push(metaNodeIdentityQuads[0]);
+
+        let result = {
+            optionalPart: {
+                "@quad": metaNodeIdentityQuads[0],
+                metaPropertyNode: metaNode
+            },
+            metaValues: []
+        };
 
         // Apply the meta property model to the meta property
+        // = setup the definitive ?metaPropertyNode ?metaPropertyKey ?metaPropertyValue triples
         PropertyModelApplier.transformMetaProperty(dataset, context, metaNode);
 
-        // Model the property
-        dataset.replaceOneBinding(bindings, pattern.mandatory);
-        bindings['@quads'] = [];
-        dataset.replaceOneBinding(bindings, pattern.optional);
+        // Extract the ?mPN ?mPK ?mPV values
+        const mPNmPKmPV = dataset.getQuads(
+            /* ?metaPropertyNode  */ metaNode,
+            /* ?metaPropertyKey   */ null,
+            /* ?metaPropertyValue */ null,
+            defaultGraph()
+        );
 
-        // Remodel the meta properties
-        dataset.evilFindAndReplace(
-            bindings,
-            [ $quad(variable('metaPropertyNode'), variable('metaPropertyKey'), variable('metaPropertyValue')) ],
-            pattern.metaValues
+        let everyRdfStarQuads = dataset.getRDFStarQuads();
+
+        result.metaValues = mPNmPKmPV.map(quad => {
+            return {
+                "@quad": quad,
+                "@depth": 0,
+                metaPropertyKey: quad.predicate,
+                metaPropertyValue: quad.object
+            };
+        })
+
+        for (const rdfStarQuad of everyRdfStarQuads) {
+            let depth = 1;
+
+            let currentTerm = rdfStarQuad.subject;
+
+            while (currentTerm.termType === 'Quad') {
+                let isMine = mPNmPKmPV.find(e => currentTerm.equals(e));
+
+                if (isMine !== undefined) {
+                    result.metaValues.push(
+                        {
+                            "@quad": rdfStarQuad,
+                            "@depth": depth,
+                            metaPropertyKey: isMine.predicate,
+                            metaPropertyValue: isMine.object
+                        }
+                    )
+
+                    break;
+                }
+
+                currentTerm = currentTerm.subject;
+                ++depth;
+            }
+        }
+
+        return result;
+    },
+
+    bindMultipleVariableSets: function(listOfBindings, pattern) {
+        for (let bindings of listOfBindings) {
+            pattern = DStar.bindVariables(bindings, pattern);
+        }
+        return pattern;
+    },
+
+    remake: function(foundBinding, destinationPattern) {
+        return destinationPattern.map(modelQuad =>
+            RelationshipModelApplier.remake(
+                DStar.bindVariables(foundBinding, modelQuad),
+                foundBinding['@depth'] - 1, foundBinding['@quad']
+            )
         );
     }
+
 }
 
 
