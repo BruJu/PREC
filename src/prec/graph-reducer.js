@@ -46,10 +46,10 @@ function applyContext(dataset, contextQuads) {
     // appear anymore
     
     // Property: ?p a createdProp, ?p a Property, ?p rdfs.label Thing
-    // Relationship Label: ?p a createdRelationShipLabel, ?p rdfs.label Thing
+    // Edge label: ?p a CreatedEdgeLabel, ?p rdfs.label Thing
     // Node label : same
     removeUnusedCreatedVocabulary(dataset, prec.CreatedProperty, 3, 0, 0);
-    removeUnusedCreatedVocabulary(dataset, prec.CreatedRelationshipLabel, 2, 0, 0);
+    removeUnusedCreatedVocabulary(dataset, prec.CreatedEdgeLabel, 2, 0, 0);
     removeUnusedCreatedVocabulary(dataset, prec.CreatedNodeLabel, 2, 0, 0);
 
     // -- Remove provenance information if they are not required by the user

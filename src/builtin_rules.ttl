@@ -6,7 +6,7 @@ PREFIX pgo:   <http://ii.uwb.edu.pl/pgo#>
 
 
 # = Special rules:
-# prec:Relationships         : every relationship
+# prec:Edges                 : every edge
 # prec:Properties            : every property
 # prec:NodeProperties        : every property on nodes       , disables prec:Properties on nodes
 # prec:RelationshipProperties: every property on relationship, disables prec:Properties on relationships

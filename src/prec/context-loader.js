@@ -954,7 +954,7 @@ class Context {
     constructor(contextQuads) {
         const store = new N3.Store();
         MultiNestedStore.addQuadsWithoutMultiNesting(store, contextQuads);
-        addBuiltIn(store, __dirname + "/builtin_rules.ttl");
+        addBuiltIn(store, __dirname + "/../builtin_rules.ttl");
         replaceSynonyms(store);
         this.store = store;
 

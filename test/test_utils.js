@@ -1,4 +1,4 @@
-const precUtils = require("../prec3/utils.js");
+const precUtils = require("../src/prec/utils.js");
 const assert = require('assert');
 
 

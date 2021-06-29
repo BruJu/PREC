@@ -1,9 +1,9 @@
 
 const utility = require("./utility.js");
-const graphReducer = require("../prec3/graph-reducer.js");
+const graphReducer = require("../src/prec/graph-reducer.js");
 const assert = require('assert');
 const { isomorphic } = require("rdf-isomorphic");
-const precUtils = require('../prec3/utils.js')
+const precUtils = require('../src/prec/utils.js')
 
 
 const basicGraphs = {
@@ -968,8 +968,8 @@ describe('Synonyms', function () {
         :node1o a pgo:Node .
         :node2o a pgo:Node .
 
-        :knows   a prec:CreatedRelationshipLabel ; rdfs:label "WhoKnows" .
-        :ignores a prec:CreatedRelationshipLabel ; rdfs:label "DoesntKnow" .
+        :knows   a prec:CreatedEdgeLabel ; rdfs:label "WhoKnows" .
+        :ignores a prec:CreatedEdgeLabel ; rdfs:label "DoesntKnow" .
     `,
     `
         :worstTemplate a prec:EdgeTemplate ;

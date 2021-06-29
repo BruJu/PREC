@@ -21,7 +21,7 @@ const { isomorphic } = require("rdf-isomorphic");
 
 // PREC
 const precm1            = require('./rdf-to-pg.js');
-const graphReducer      = require("./prec3/graph-reducer.js");
+const graphReducer      = require("./src/prec/graph-reducer.js");
 const precMain          = require("./prec.js");
 
 // Namespace

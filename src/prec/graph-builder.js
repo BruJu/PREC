@@ -252,8 +252,8 @@ class RDFGraphBuilder {
         let labelNode = this.namespaces.relationshipLabel[label];
         this._addQuad(relation, rdf.predicate, labelNode);
         
-        this._addQuad(labelNode, rdf.type, prec.CreatedRelationshipLabel);
-        this._addQuad(prec.CreatedRelationshipLabel, rdfs.subClassOf, prec.CreatedVocabulary);
+        this._addQuad(labelNode, rdf.type, prec.CreatedEdgeLabel);
+        this._addQuad(prec.CreatedEdgeLabel, rdfs.subClassOf, prec.CreatedVocabulary);
 
         this._labelize(labelNode, label);
 

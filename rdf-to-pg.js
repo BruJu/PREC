@@ -16,7 +16,7 @@
 const { ArgumentParser } = require('argparse');
 const fs = require('fs');
 const precMain  = require('./prec.js');
-const precUtils = require('./prec3/utils.js');
+const precUtils = require('./src/prec/utils.js');
 
 // -- RDF
 const graphyFactory = require('@graphy/core.data.factory');
@@ -372,7 +372,7 @@ function extractEdgeSPO(dataset, rdfEdge) {
     function extractLabel(dataset, rdfEdge, predicate) {
         let result = dataset.followThrough(rdfEdge, predicate);
         if (!result) throw "Edge has no " + predicate.value;
-        return [result, dataset.getRealLabel(result, prec.CreatedRelationshipLabel)];
+        return [result, dataset.getRealLabel(result, prec.CreatedEdgeLabel)];
     }
 
     return [
@@ -604,7 +604,7 @@ class PseudoPGBuilder {
             
             remvoeSubjectIfMatchPaths(dataset,
                 [
-                    [rdf.type, prec.CreatedRelationshipLabel],
+                    [rdf.type, prec.CreatedEdgeLabel],
                     [rdfs.label, null]
                 ],
                 [],
@@ -634,7 +634,7 @@ class PseudoPGBuilder {
             // Remove axioms and meta data
             dataset.deleteMatches(prec.MetaData, prec.GenerationModel);
             dataset.deleteMatches(prec.CreatedNodeLabel, rdfs.subClassOf, prec.CreatedVocabulary);
-            dataset.deleteMatches(prec.CreatedRelationshipLabel, rdfs.subClassOf, prec.CreatedVocabulary);
+            dataset.deleteMatches(prec.CreatedEdgeLabel, rdfs.subClassOf, prec.CreatedVocabulary);
             dataset.deleteMatches(prec.CreatedProperty, rdfs.subClassOf, prec.CreatedVocabulary);
 
             // End
