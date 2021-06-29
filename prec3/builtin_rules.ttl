@@ -17,20 +17,20 @@ PREFIX pgo:   <http://ii.uwb.edu.pl/pgo#>
 
 # - These rules are for the following pattern:
 # pvar:self a pgo:Edge
-# pvar:self rdf:subject      pvar:source
-# pvar:self rdf:predicate    pvar:relationshipIRI
-# pvar:self rdf:object       pvar:destination
-# pvar:self pvar:propertyKey pvar:propertyValue
+# pvar:self rdf:subject            pvar:source
+# pvar:self rdf:predicate          pvar:relationshipIRI
+# pvar:self rdf:object             pvar:destination
+# pvar:self pvar:propertyPredicate pvar:propertyObject
 
 # Encoding as standard RDF Reificaiton. It is the default pattern, so this
 # target is not useful in this form.
 prec:RDFReification a prec:RelationshipModel ;
   prec:composedOf
     << pvar:self a pgo:Edge >> ,
-    << pvar:self rdf:subject      pvar:source          >> ,
-    << pvar:self rdf:predicate    pvar:relationshipIRI >> ,
-    << pvar:self rdf:object       pvar:destination     >> ,
-    << pvar:self pvar:propertyKey pvar:propertyValue   >>
+    << pvar:self rdf:subject            pvar:source          >> ,
+    << pvar:self rdf:predicate          pvar:relationshipIRI >> ,
+    << pvar:self rdf:object             pvar:destination     >> ,
+    << pvar:self pvar:propertyPredicate pvar:propertyObject  >>
   .
 
 # Encoding as RDF star using regular RDF triples that can be annotated
@@ -38,7 +38,7 @@ prec:RdfStarUnique a prec:RelationshipModel ;
   prec:composedOf
     <<    pvar:source pvar:relationshipIRI pvar:destination               >> ,
     << << pvar:source pvar:relationshipIRI pvar:destination >> a pgo:Edge >> ,
-    << << pvar:source pvar:relationshipIRI pvar:destination >> pvar:propertyKey pvar:propertyValue >> 
+    << << pvar:source pvar:relationshipIRI pvar:destination >> pvar:propertyPredicate pvar:propertyObject >> 
   .
 
 # Encoding as RDF star using occurrences
@@ -46,7 +46,7 @@ prec:RdfStarOccurrence a prec:RelationshipModel ;
   prec:composedOf
     << pvar:self prec:occurrenceOf << pvar:source pvar:relationshipIRI pvar:destination >> >> ,
     << pvar:self a pgo:Edge >> ,
-    << pvar:self pvar:propertyKey pvar:propertyValue >>
+    << pvar:self pvar:propertyPredicate pvar:propertyObject >>
   .
 
 # Encoding as singleton property
@@ -55,7 +55,7 @@ prec:SingletonProperty a prec:RelationshipModel ;
     << pvar:source pvar:self               pvar:destination     >> ,
     << pvar:self   rdf:singletonPropertyOf pvar:relationshipIRI >> ,
     << pvar:self a pgo:Edge >> ,
-    << pvar:self   pvar:propertyKey        pvar:propertyValue   >>
+    << pvar:self   pvar:propertyPredicate  pvar:propertyObject   >>
   .
 
 
@@ -80,8 +80,8 @@ prec:propertyValue   a prec:SubstitutionTerm ; prec:substitutionTarget pvar:prop
 # pvar:entity           pvar:propertyKey       pvar:property
 # pvar:property         rdf:value              pvar:propertyValue
 # pvar:property         a prec:PropertyValue .
-# pvar:property         prec:hasMetaProperties pvar:MetaPropertyNode  # optional
-# pvar:metaPropertyNode pvar:metaPropertyKey   pvar:metaPropertyValue # 0...n
+# pvar:property         prec:hasMetaProperties     pvar:MetaPropertyNode   # optional
+# pvar:metaPropertyNode pvar:metaPropertyPredicate pvar:metaPropertyObject # 0...n
 #
 # For meta properties, the property rule is applied recursively.
 #
@@ -91,22 +91,22 @@ prec:propertyValue   a prec:SubstitutionTerm ; prec:substitutionTarget pvar:prop
 
 # prec:PropertyModel patterns must:
 # - Keep entity in subject position (or subject-subject, ...)
-# - pvar:metaPropertyKey and pvar:metaPropertyValue are only usable in triples
-# of form << ?s pvar:metaPropertyKey pvar:metaPropertyValue >>
+# - pvar:metaPropertyPredicate and pvar:metaPropertyObject are only usable in triples
+# of form << ?s pvar:metaPropertyPredicate pvar:metaPropertyObject >>
 # - Embedded triples used in property model must be asserted.
 
 prec:Prec0Property a prec:PropertyModel ;
   prec:composedOf
-    << pvar:entity           pvar:propertyKey       pvar:property          >> ,
-    << pvar:property         rdf:value              pvar:propertyValue     >> ,
-    << pvar:property         rdf:type               prec:PropertyValue     >> ,
-    << pvar:property         prec:hasMetaProperties pvar:metaPropertyNode  >> ,
-    << pvar:metaPropertyNode pvar:metaPropertyKey   pvar:metaPropertyValue >> .
+    << pvar:entity           pvar:propertyKey           pvar:property          >> ,
+    << pvar:property         rdf:value                  pvar:propertyValue     >> ,
+    << pvar:property         rdf:type                   prec:PropertyValue     >> ,
+    << pvar:property         prec:hasMetaProperties     pvar:metaPropertyNode  >> ,
+    << pvar:metaPropertyNode pvar:metaPropertyPredicate pvar:metaPropertyObject >> .
 
 prec:DirectTriples a prec:PropertyModel ;
   prec:composedOf
     <<    pvar:entity pvar:propertyKey pvar:propertyValue >> ,
-    << << pvar:entity pvar:propertyKey pvar:propertyValue >> pvar:metaPropertyKey pvar:metaPropertyValue >> ;
+    << << pvar:entity pvar:propertyKey pvar:propertyValue >> pvar:metaPropertyPredicate pvar:metaPropertyObject >> ;
   rdfs:comment
     """
     This model shold not be used if a node or an edge has a multi valued
@@ -119,7 +119,7 @@ prec:CombinedBlankNodes a prec:PropertyModel ;
     << pvar:entity   pvar:propertyKey     pvar:property          >> ,
     << pvar:property rdf:value            pvar:propertyValue     >> ,
     << pvar:property rdf:type             prec:PropertyValue     >> ,
-    << pvar:property pvar:metaPropertyKey pvar:metaPropertyValue >> .
+    << pvar:property pvar:metaPropertyPredicate pvar:metaPropertyObject >> .
 
 
 ##################

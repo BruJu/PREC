@@ -185,21 +185,21 @@ const RelationshipModelApplier = {
         const r = behaviour.map(term => quadStar.remapPatternWithVariables(
             term,
             [
-                [variable('relation')     , pvar.self           ],
-                [variable('subject')      , pvar.source         ],
-                [variable('predicate')    , pvar.relationshipIRI],
-                [variable('label')        , pvar.label          ],
-                [variable('object')       , pvar.destination    ],
-                [variable('propertyKey')  , pvar.propertyKey    ],
-                [variable('propertyValue'), pvar.propertyValue  ]
+                [variable('relation')         , pvar.self             ],
+                [variable('subject')          , pvar.source           ],
+                [variable('predicate')        , pvar.relationshipIRI  ],
+                [variable('label')            , pvar.label            ],
+                [variable('object')           , pvar.destination      ],
+                [variable('propertyPredicate'), pvar.propertyPredicate],
+                [variable('propertyObject')   , pvar.propertyObject   ]
             ]
         ));
     
         // Split the pattern
         const pattern = r.reduce(
             (previous, quad) => {
-                if (quadStar.containsTerm(quad, variable('propertyKey'))
-                    || quadStar.containsTerm(quad, variable('propertyValue'))) {
+                if (quadStar.containsTerm(quad, variable('propertyPredicate'))
+                    || quadStar.containsTerm(quad, variable('propertyObject'))) {
                     previous.properties.push(quad);
                 } else {
                     previous.unique.push(quad);
@@ -240,8 +240,8 @@ const RelationshipModelApplier = {
 
         // Asserted properties
         for (const propertyQuad of propertyQuads) {
-            relation.propertyKey = propertyQuad.predicate;
-            relation.propertyValue = propertyQuad.object;
+            relation.propertyPredicate = propertyQuad.predicate;
+            relation.propertyObject    = propertyQuad.object;
 
             quadsToAdd.push(...DStar.bindVariables(relation, pattern));
         }
@@ -249,10 +249,10 @@ const RelationshipModelApplier = {
         // Embedded properties
         for (const quadInTheDataset of dataset.getRDFStarQuads()) {
             // - We are looking for nested quads in the form
-            // ?entity ?propertyKey ?propertyValue
+            // ?entity ?propertyPredicate ?propertyObject
             // - But a property model can only have ?entity in subject-star
             // position
-            // - It means that the ?entity ?propertyKey ?propertyValue
+            // - It means that the ?entity ?propertyPredicate ?propertyObject
             // nested quads are only in subject position.
 
             const searchResult = RelationshipModelApplier.searchInSubjectStarPlus(quadInTheDataset, propertyQuads);
@@ -264,8 +264,8 @@ const RelationshipModelApplier = {
 
             quadsToDelete.push(quadInTheDataset);
 
-            relation.propertyKey = nestedMatchedQuad.predicate;
-            relation.propertyValue = nestedMatchedQuad.object;
+            relation.propertyPredicate = nestedMatchedQuad.predicate;
+            relation.propertyObject    = nestedMatchedQuad.object;
 
             // DStar.bindVariables
             let newNestedMatchedQuads = [...DStar.bindVariables(relation, pattern)];
@@ -558,15 +558,15 @@ const PropertyModelApplier = {
         // Build the patterns to map to
         const r = model.map(term => quadStar.remapPatternWithVariables(term,
             [
-                [variable("entity")           , pvar.entity           ],
-                [variable("propertyKey")      , pvar.propertyKey      ],
-                [variable("label")            , pvar.label            ],
-                [variable("property")         , pvar.property         ],
-                [variable("propertyValue")    , pvar.propertyValue    ],
-                [variable("individualValue")  , pvar.individualValue  ],
-                [variable("metaPropertyNode") , pvar.metaPropertyNode ],
-                [variable("metaPropertyKey")  , pvar.metaPropertyKey  ],
-                [variable("metaPropertyValue"), pvar.metaPropertyValue],
+                [variable("entity")               , pvar.entity               ],
+                [variable("propertyKey")          , pvar.propertyKey          ],
+                [variable("label")                , pvar.label                ],
+                [variable("property")             , pvar.property             ],
+                [variable("propertyValue")        , pvar.propertyValue        ],
+                [variable("individualValue")      , pvar.individualValue      ],
+                [variable("metaPropertyNode")     , pvar.metaPropertyNode     ],
+                [variable("metaPropertyPredicate"), pvar.metaPropertyPredicate],
+                [variable("metaPropertyObject")   , pvar.metaPropertyObject   ],
             ]
         ));
     
@@ -575,8 +575,8 @@ const PropertyModelApplier = {
             (previous, quad) => {
                 let containerName = "";
 
-                if (quadStar.containsTerm(quad, variable("metaPropertyKey"))
-                    || quadStar.containsTerm(quad, variable("metaPropertyValue"))) {
+                if (quadStar.containsTerm(quad, variable("metaPropertyPredicate"))
+                    || quadStar.containsTerm(quad, variable("metaPropertyObject"))) {
                     containerName = "metaValues";
                 } else if (quadStar.containsTerm(quad, variable("metaPropertyNode"))) {
                     containerName = "optional";
@@ -717,14 +717,16 @@ const PropertyModelApplier = {
         };
 
         // Apply the meta property model to the meta property
-        // = setup the definitive ?metaPropertyNode ?metaPropertyKey ?metaPropertyValue triples
+        // = setup the definitive
+        // (?metaPropertyNode, ?metaPropertyPredicate, ?metaPropertyObjet)
+        // triples
         PropertyModelApplier.transformMetaProperty(dataset, context, metaNode);
 
         // Extract the ?mPN ?mPK ?mPV values
         const mPNmPKmPV = dataset.getQuads(
-            /* ?metaPropertyNode  */ metaNode,
-            /* ?metaPropertyKey   */ null,
-            /* ?metaPropertyValue */ null,
+            /* ?metaPropertyNode      */ metaNode,
+            /* ?metaPropertyPredicate */ null,
+            /* ?metaPropertyObject    */ null,
             defaultGraph()
         );
 
@@ -734,8 +736,8 @@ const PropertyModelApplier = {
             return {
                 "@quad": quad,
                 "@depth": 0,
-                metaPropertyKey: quad.predicate,
-                metaPropertyValue: quad.object
+                metaPropertyPredicate: quad.predicate,
+                metaPropertyObject   : quad.object
             };
         })
 
@@ -752,8 +754,8 @@ const PropertyModelApplier = {
                         {
                             "@quad": rdfStarQuad,
                             "@depth": depth,
-                            metaPropertyKey: isMine.predicate,
-                            metaPropertyValue: isMine.object
+                            metaPropertyPredicate: isMine.predicate,
+                            metaPropertyObject   : isMine.object
                         }
                     )
 

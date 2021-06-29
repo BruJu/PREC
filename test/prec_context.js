@@ -840,7 +840,7 @@ describe("Relationship and Property convertion", function() {
             prec:CartesianProduct a prec:PropertyModel ;
                 prec:composedOf
                        << pvar:entity pvar:propertyKey pvar:individualValue >> ,
-                    << << pvar:entity pvar:propertyKey pvar:individualValue >> pvar:metaPropertyKey pvar:metaPropertyValue >> .
+                    << << pvar:entity pvar:propertyKey pvar:individualValue >> pvar:metaPropertyPredicate pvar:metaPropertyObject >> .
                 
             [] a prec:PropertyRule ;
                 prec:propertyName "Property" ;

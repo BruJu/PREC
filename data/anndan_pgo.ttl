@@ -17,22 +17,22 @@ prec:Relationships          prec:modelAs prec:pgoEdgeRepresentation .
 
 prec:pgoNodeProperty prec:composedOf
     << pvar:entity pgo:hasNodeProperty pvar:property >> ,
-    << pvar:property pgo:key pvar:propertyKey >> ,
+    << pvar:property pgo:key pvar:label >> ,
     << pvar:property pgo:value pvar:propertyValue >> ,
     << pvar:property rdf:type pgo:Property >> .
 
 prec:pgoEdgeProperty prec:composedOf
     << pvar:entity pgo:hasEdgeProperty pvar:property >> ,
-    << pvar:property pgo:key pvar:propertyKey >> ,
+    << pvar:property pgo:key pvar:label >> ,
     << pvar:property pgo:value pvar:propertyValue >> ,
     << pvar:property rdf:type pgo:Property >> .
 
 prec:pgoEdgeRepresentation prec:composedOf
-    << pvar:self pgo:startNode    pvar:source          >> ,
-    << pvar:self pgo:endNode      pvar:destination     >> ,
-    << pvar:self pgo:label        pvar:relationshipIRI >> ,
-    << pvar:self rdf:type         pgo:Edge             >> ,
-    << pvar:self pvar:propertyKey pvar:propertyValue   >> .
+    << pvar:self pgo:startNode          pvar:source          >> ,
+    << pvar:self pgo:endNode            pvar:destination     >> ,
+    << pvar:self pgo:label              pvar:relationshipIRI >> ,
+    << pvar:self rdf:type               pgo:Edge             >> ,
+    << pvar:self pvar:propertyPredicate pvar:propertyObject  >> .
 
 # -- Some IRIs
 

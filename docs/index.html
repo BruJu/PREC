@@ -211,7 +211,7 @@
                     # Keep the provenance
                     << << pvar:destination pvar:relationshipIRI pvar:source >> a pgo:Edge >> ,
                     # Keep the properties
-                    << << pvar:destination pvar:relationshipIRI pvar:source >> pvar:propertyKey pvar:propertyValue >> 
+                    << << pvar:destination pvar:relationshipIRI pvar:source >> pvar:propertyPredicate pvar:propertyObject >> 
                 ] ;
                 # prec:relationshipIRI will actually replace pvar:relationship with schema:character
                 prec:relationshipIRI <http://schema.org/character> .
@@ -684,8 +684,8 @@
               <li>`pvar:source`: The RDF node that represents the PG source node of the relationship.</li>
               <li>`pvar:destination`: The RDF node that represents the PG destination relationship.</li>
               <li>`pvar:relationshipIRI`: The RDF node that represents the label of the edge.</li>
-              <li>`pvar:propertyKey`: matches every other predicates. Supposed to represent each property key.</li>
-              <li>`pvar:propertyValue`: matches every other objects. Supposed to represent each property value.</li>
+              <li>`pvar:propertyPredicate`: matches every other predicates, which most likely concerns already transformed properties.</li>
+              <li>`pvar:propertyObject`: matches every other objects, which most likely concerns already transformed properties.</li>
             </ul>
 
             <p>
@@ -704,7 +704,7 @@
                     << pvar:self rdf:subject      pvar:source          >> ,
                     << pvar:self rdf:predicate    pvar:relationshipIRI >> ,
                     << pvar:self rdf:object       pvar:destination     >> ,
-                    << pvar:self pvar:propertyKey pvar:propertyValue   >>
+                    << pvar:self pvar:propertyPredicate pvar:propertyObject >>
                 .
                 -->
               </pre>
@@ -730,7 +730,7 @@
                   prec:composedOf
                     <<    pvar:source pvar:relationshipIRI pvar:destination               >> , # (a)
                     << << pvar:source pvar:relationshipIRI pvar:destination >> a pgo:Edge >> , # (b)
-                    << << pvar:source pvar:relationshipIRI pvar:destination >> pvar:propertyKey pvar:propertyValue >>  # (c)
+                    << << pvar:source pvar:relationshipIRI pvar:destination >> pvar:propertyPredicate pvar:propertyObject >>  # (c)
                 .
                 -->
               </pre>
@@ -754,15 +754,15 @@
               <p>The variables will match as follow:</p>
 
               <table>
-                <tr><th>Variable name</th>             <th>Value</th>               </tr>
-                <tr><td> `pvar:self`              </td><td> `_:edge1`          </td></tr>
-                <tr><td> `pvar:source`            </td><td> `_:src`            </td></tr>
-                <tr><td> `pvar:destination`       </td><td> `_:dest`           </td></tr>
-                <tr><td> `pvar:relationshipIRI`   </td><td> `_:label`          </td></tr>
-                <tr><td> `pvar:propertyKey`   (1) </td><td> `_:propPlace`      </td></tr>
-                <tr><td> `pvar:propertyValue` (2) </td><td> `_:propValuePlace` </td></tr>
-                <tr><td> `pvar:propertyKey`   (2) </td><td> `_:propTime`       </td></tr>
-                <tr><td> `pvar:propertyValue` (2) </td><td> `_:propValueTime`  </td></tr>
+                <tr><th>Variable name</th>                 <th>Value</th>               </tr>
+                <tr><td> `pvar:self`                  </td><td> `_:edge1`          </td></tr>
+                <tr><td> `pvar:source`                </td><td> `_:src`            </td></tr>
+                <tr><td> `pvar:destination`           </td><td> `_:dest`           </td></tr>
+                <tr><td> `pvar:relationshipIRI`       </td><td> `_:label`          </td></tr>
+                <tr><td> `pvar:propertyPredicate` (1) </td><td> `_:propPlace`      </td></tr>
+                <tr><td> `pvar:propertyObject` (2)    </td><td> `_:propValuePlace` </td></tr>
+                <tr><td> `pvar:propertyPredicate` (2) </td><td> `_:propTime`       </td></tr>
+                <tr><td> `pvar:propertyObject`(2)     </td><td> `_:propValueTime`  </td></tr>
               </table>
               
               <p>And the produced graph will be the following:</p>
@@ -794,8 +794,8 @@
               <li>`pvar:propertyValue`: The literal that contains the property value.</li>
               <li>`pvar:individualValue`: Most of the time equals to `propertyValue`. If `propertyValue` is an rdf list, `individualValue` will match each individual literal contained in the list instead of the list itself.</li>
               <li>`pvar:metaPropertyNode`: The blank node that contains every meta property, as described in [= prec:hasMetaProperties =]</li>
-              <li>`pvar:metaPropertyKey`: The predicate of a meta property triple.</li>
-              <li>`pvar:metaPropertyValue`: The object of a meta property triple.</li>
+              <li>`pvar:metaPropertyPredicate`: The predicate of a meta property triple.</li>
+              <li>`pvar:metaPropertyObject`: The object of a meta property triple.</li>
             </ul>
 
             <p>
@@ -818,7 +818,7 @@
                   Every embedded triple must be asserted by the model.
                 </li>
                 <li>
-                  `pvar:metaPropertyKey` and `pvar:metaPropertyValue`, if they
+                  `pvar:metaPropertyPredicate` and `pvar:metaPropertyObject`, if they
                   appear, must appear both at the same time, and as repectively
                   the predicate and the object.
                 </li>

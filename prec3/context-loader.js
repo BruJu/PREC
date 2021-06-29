@@ -257,8 +257,8 @@ function _throwIfInvalidPropertyModels(models) {
 
     function _hasInvalidMetaPropertyUsage(term) {
         // TODO: refine the verification
-        const mpkey = term.predicate.equals(pvar.metaPropertyKey);
-        const mpvalue = term.object.equals(pvar.metaPropertyValue);
+        const mpkey = term.predicate.equals(pvar.metaPropertyPredicate);
+        const mpvalue = term.object.equals(pvar.metaPropertyObject);
         return mpkey !== mpvalue;
     }
 
@@ -274,11 +274,11 @@ function _throwIfInvalidPropertyModels(models) {
             }
 
             for (const quad of targetModel) {
-                // ?s pvar:metaPropertyKey pvar:metaPropertyValue
+                // ?s pvar:metaPropertyPredicate pvar:metaPropertyObject
                 if (_hasInvalidMetaPropertyUsage(quad)) {
                     throw Error(
-                        "Propriety Model checker: pvar:metaPropertyKey and pvar:metaPropertyValue" +
-                        " may only be used in triples of form << ?s pvar:metaPropertyKey pvar:metaPropertyValue >>"
+                        "Propriety Model checker: pvar:metaPropertyPredicate and pvar:metaPropertyObject" +
+                        " may only be used in triples of form << ?s pvar:metaPropertyPredicate pvar:metaPropertyObject >>"
                         + " but the model { " + classModel.value + " x " + modelName.value + " } "
                         + " violates this restriction"
                     );
@@ -296,8 +296,8 @@ function _throwIfInvalidPropertyModels(models) {
 }
 
 function _throwIfInvalidRelationshipModels(models) {
-    const pvarKey = pvar.propertyKey;
-    const pvarVal = pvar.propertyValue;
+    const pvarKey = pvar.propertyPredicate;
+    const pvarVal = pvar.propertyObject;
 
     models.forEach((_, targetModels) => {
         targetModels.forEach((modelName, targetModel) => {
@@ -308,8 +308,8 @@ function _throwIfInvalidRelationshipModels(models) {
                 const pvalAsObject    = pvarVal.equals(quad.object);
                 if (pkeyAsPredicate !== pvalAsObject) {
                     throw Error(`Relationship model checker: ${modelName.value}`
-                    + ` triples must conform to either ?s pvar:propertyKey pvar:propertyValue `
-                    + ` or have neither pvar:propertyKey and pvar:propertyValue.`);
+                    + ` triples must conform to either ?s pvar:propertyPredicate pvar:propertyObject `
+                    + ` or have neither pvar:propertyPredicate and pvar:propertyObject.`);
                 }
             }
         });
