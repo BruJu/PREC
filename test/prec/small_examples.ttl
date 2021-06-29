@@ -31,7 +31,7 @@ prec:testMetaData prec:kind "SmallExamples" .
    .
 
 :relationContext {
-    prec:Relationships prec:modelAs prec:RdfStarUnique .
+    prec:Relationships prec:templatedBy prec:RdfStarUnique .
     prec:KeepProvenance prec:flagState false .
 
     :Person prec:IRIOfNodeLabel "Person" .
@@ -80,7 +80,7 @@ prec:testMetaData prec:kind "SmallExamples" .
 
 
 :priorityGraphBase {
-    prec:Properties prec:modelAs prec:DirectTriples .
+    prec:Properties prec:templatedBy prec:DirectTriples .
     prec:KeepProvenance prec:flagState false .
     
     :Food   prec:IRIOfNodeLabel "Food" .

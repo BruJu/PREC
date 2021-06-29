@@ -1,6 +1,6 @@
 PREFIX prec: <http://bruy.at/prec#>
 
-prec:Properties prec:modelAs prec:DirectTriples .
+prec:Properties prec:templatedBy prec:DirectTriples .
 prec:KeepProvenance        prec:flagState false .
 
-prec:Relationships prec:modelAs prec:RdfStarUnique .
+prec:Relationships prec:templatedBy prec:RdfStarUnique .

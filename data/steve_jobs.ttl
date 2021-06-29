@@ -4,7 +4,7 @@ PREFIX schema: <http:/schema.org/>
 PREFIX ex:     <http://example.org/>
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 
-prec:Properties prec:modelAs prec:DirectTriples .
+prec:Properties prec:templatedBy prec:DirectTriples .
 prec:KeepProvenance        prec:flagState false .
 
 prec:Relationships prec:useRdfStar prec:AsOccurrences .
@@ -21,14 +21,14 @@ schema:knows prec:IRIOfRelationship [
     prec:relationshipLabel "KNOWS"  ;
     prec:sourceLabel       "PERSON" ;
     prec:destinationLabel  "PERSON" ;
-    prec:modelAs prec:RdfStarUnique ;
+    prec:templatedBy prec:RdfStarUnique ;
 ] .
 
 schema:knowsAbout prec:IRIOfRelationship [
     prec:relationshipLabel "KNOWS"   ;
     prec:sourceLabel       "PERSON"  ;
     prec:destinationLabel  "COMPANY" ;
-    prec:modelAs prec:RdfStarUnique
+    prec:templatedBy prec:RdfStarUnique
 ] .
 
 <http://schema.org/givenName> prec:IRIOfProperty "surname" .

@@ -437,7 +437,7 @@ class SplitNamespace {
      *   }
      * 
      *   materialization: {
-     *      modelAs: name of the model to model to,
+     *      templatedBy: name of the template to template with,
      *      substitutions: list of pairs of [substitutedTerm, substitutitedWith]
      *   }
      * }
@@ -455,7 +455,7 @@ class SplitNamespace {
             },
     
             materialization: {
-                modelAs: undefined,
+                templatedBy: undefined,
                 substitutions: []
             }
         };
@@ -490,11 +490,11 @@ class SplitNamespace {
                 r.conditions.explicitPriority = parseInt(quad.object.value);
             } else if (PrecUtils.termIsIn(quad.predicate, Cls.PossibleConditions)) {
                 r.conditions.other.push([quad.predicate, quad.object]);
-            } else if (prec.modelAs.equals(quad.predicate)) {
-                if (r.materialization.modelAs !== undefined)
-                    throw errorMalformedRule(`prec:modelAs should have at most one value.`);
+            } else if (prec.templatedBy.equals(quad.predicate)) {
+                if (r.materialization.templatedBy !== undefined)
+                    throw errorMalformedRule(`prec:templatedBy should have at most one value.`);
                 
-                r.materialization.modelAs = quad.object;
+                r.materialization.templatedBy = quad.object;
             } else if (PrecUtils.termIsIn(quad.predicate, substitutionTerms.getKeys())) {
                 let substitutedTerm = substitutionTerms.get(quad.predicate);
                 r.materialization.substitutions.push([substitutedTerm, quad.object]);
@@ -576,8 +576,8 @@ function _buildModel(store, materializations, defaultModel) {
         }
 
         // Is the model there?
-        if (materialization.modelAs !== undefined) {
-            model = materialization.modelAs;
+        if (materialization.templatedBy !== undefined) {
+            model = materialization.templatedBy;
             break;
         }
     }

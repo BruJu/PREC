@@ -51,30 +51,30 @@ const basicGraphs = {
 
 const contexts = {
     emptyContext  : ``,
-    allUnique     : `prec:Relationships prec:modelAs prec:RdfStarUnique . `,
-    allOccurences : `prec:Relationships prec:modelAs prec:RdfStarOccurrence . `,
+    allUnique     : `prec:Relationships prec:templatedBy prec:RdfStarUnique . `,
+    allOccurences : `prec:Relationships prec:templatedBy prec:RdfStarOccurrence . `,
     type1specialization: `
-        prec:Relationships prec:modelAs prec:RdfStarUnique .
+        prec:Relationships prec:templatedBy prec:RdfStarUnique .
         :type1 prec:IRIOfRelationship "type1" .
     `,
     type1specializationBN: `
-        prec:Relationships prec:modelAs prec:RdfStarUnique .
+        prec:Relationships prec:templatedBy prec:RdfStarUnique .
         [] a prec:RelationshipRule ;
             prec:relationshipIRI   :type1 ;
             prec:relationshipLabel "type1" .
     `,
-    type1modelAs: `
-        prec:Relationships prec:modelAs prec:RdfStarOccurrence .
+    type1templatedBy: `
+        prec:Relationships prec:templatedBy prec:RdfStarOccurrence .
         [] a prec:RelationshipRule ;
             prec:relationshipIRI   :type1 ;
             prec:relationshipLabel "type1" ;
-            prec:modelAs prec:RdfStarUnique .
+            prec:templatedBy prec:RdfStarUnique .
     `,
     predicateOnPerson: `
-        prec:Relationships prec:modelAs prec:RdfStarOccurrence .
+        prec:Relationships prec:templatedBy prec:RdfStarOccurrence .
         [] a prec:RelationshipRule ;
             prec:relationshipIRI :NewPredicate ;
-            prec:modelAs prec:RdfStarUnique ;
+            prec:templatedBy prec:RdfStarUnique ;
             prec:relationshipLabel "Predicate" ;
             prec:sourceLabel "Person"
         .
@@ -83,13 +83,13 @@ const contexts = {
         [] a prec:RelationshipRule ;
             prec:relationshipIRI :type1 ;
             prec:relationshipLabel "type1" ;
-            prec:modelAs prec:RdfStarUnique
+            prec:templatedBy prec:RdfStarUnique
         .
         
         [] a prec:RelationshipRule ;
             prec:relationshipIRI :type2 ;
             prec:relationshipLabel "type2" ;
-            prec:modelAs prec:RdfStarUnique
+            prec:templatedBy prec:RdfStarUnique
         .
     `,
 
@@ -99,20 +99,20 @@ const contexts = {
             prec:predicate :label ;
             prec:object :target .
     `,
-    modelAsPG: `
-        prec:Relationships prec:modelAs prec:RDFReification ;
+    templatedByPG: `
+        prec:Relationships prec:templatedBy prec:RDFReification ;
             prec:subject :source ;
             prec:predicate :label ;
             prec:object :target .
     `,
-    modelAsCustom: `
-        prec:Relationships prec:modelAs [
+    templatedByCustom: `
+        prec:Relationships prec:templatedBy [
             prec:composedOf << rdf:subject rdf:predicate rdf:object >> ,
                 << pvar:destination pvar:relationshipIRI pvar:source >>
         ] .
     `,
-    modelAsCustomWithRenaming: `
-        prec:Relationships prec:modelAs [
+    templatedByCustomWithRenaming: `
+        prec:Relationships prec:templatedBy [
             prec:composedOf << rdf:subject rdf:predicate rdf:object >> ,
                 << pvar:destination pvar:relationshipIRI pvar:source >>
         ] ;
@@ -124,7 +124,7 @@ const contexts = {
         prec:Relationships prec:subject rdf:object ; prec:object rdf:subject .
     `,
     modelWithLabel: `
-        prec:Relationships prec:modelAs [
+        prec:Relationships prec:templatedBy [
             prec:composedOf << :anEdge :holdsTheLabel pvar:label  >>
         ] .
     `
@@ -228,7 +228,7 @@ describe("Relationship convertion", function () {
         runATest("differentSourceLabel", "emptyContext", basicGraphs['differentSourceLabel']);
     })
 
-    describe("Simple graphs modelAs", function() {
+    describe("Simple graphs templatedBy", function() {
         runATest("oneEdge", "allUnique",
             `
                 << :s :p :o  >> a pgo:Edge .
@@ -259,7 +259,7 @@ describe("Relationship convertion", function () {
             `
         );
 
-        runATest("oneEdgeType", "type1modelAs",
+        runATest("oneEdgeType", "type1templatedBy",
             `
                 << :s :type1 :o >> a pgo:Edge .
                 :s :type1 :o .
@@ -288,7 +288,7 @@ describe("Relationship convertion", function () {
             `
         );
     
-        runATest("edgeDiff", "type1modelAs",
+        runATest("edgeDiff", "type1templatedBy",
             `
                 << :s1 :type1 :o1  >> a pgo:Edge .
                 :s1 :type1 :o1 .
@@ -323,7 +323,7 @@ describe("Relationship convertion", function () {
             `
         );
         
-        runATest("oneEdge", "modelAsPG",
+        runATest("oneEdge", "templatedByPG",
             `
             :edge a pgo:Edge ;
             :source :s ;
@@ -332,14 +332,14 @@ describe("Relationship convertion", function () {
             `
         );
         
-        runATest("oneEdge", "modelAsCustom",
+        runATest("oneEdge", "templatedByCustom",
             `
                 rdf:subject rdf:predicate rdf:object .
                 :o :p :s .
             `
         );
         
-        runATest("oneEdge", "modelAsCustomWithRenaming",
+        runATest("oneEdge", "templatedByCustomWithRenaming",
             `
                 :source :label :target .
                 :o :p :s .
@@ -512,10 +512,10 @@ describe("Property convertion", function() {
             .
         `,
         contextCollapseMetaProperties: `
-            prec:MetaProperties prec:modelAs prec:DirectTriples .
+            prec:MetaProperties prec:templatedBy prec:DirectTriples .
         `,
         contextPGOProperty: `
-            prec:Properties prec:modelAs [
+            prec:Properties prec:templatedBy [
                 prec:composedOf
                     << pvar:entity   pgo:hasProperty pvar:property      >> ,
                     << pvar:property pgo:key         pvar:label         >> ,
@@ -712,9 +712,9 @@ describe("Property convertion", function() {
             :pName rdfs:label "key" ; a prec:Property, prec:CreatedProperty .
         `;
 
-        const modelAs = function (model) {
+        const templatedBy = function (model) {
             return `
-                prec:Properties prec:modelAs [ prec:composedOf ${model} ] .
+                prec:Properties prec:templatedBy [ prec:composedOf ${model} ] .
                 [] a prec:PropertyRule ;
                     prec:propertyName "key" ;
                     prec:propertyIRI :k .
@@ -724,7 +724,7 @@ describe("Property convertion", function() {
         test(
             "Regular property conversion",
             simpleProperty,
-            modelAs("<< pvar:entity pvar:propertyKey pvar:propertyValue >>"),
+            templatedBy("<< pvar:entity pvar:propertyKey pvar:propertyValue >>"),
             `
             :node a pgo:Node .
             :node :k ( "a" "b" "c" ) .
@@ -734,14 +734,14 @@ describe("Property convertion", function() {
         test(
             "Only keep individual values",
             simpleProperty,
-            modelAs("<< pvar:entity pvar:propertyKey pvar:individualValue >>"),
+            templatedBy("<< pvar:entity pvar:propertyKey pvar:individualValue >>"),
             ` :node a pgo:Node ; :k "a", "b", "c" . `
         );
 
         test(
             "Keep both",
             simpleProperty,
-            modelAs("<< pvar:entity pvar:propertyKey pvar:individualValue >> ,"
+            templatedBy("<< pvar:entity pvar:propertyKey pvar:individualValue >> ,"
                 + "\n << pvar:entity :usedList pvar:propertyValue >>"),
             ` :node a pgo:Node ; :k "a", "b", "c" ; :usedList ( "a" "b" "c" ).`
         );
@@ -790,7 +790,7 @@ describe("Relationship and Property convertion", function() {
         `,
 
         contextSPOPartial: `
-            prec:Properties     prec:modelAs prec:DirectTriples .
+            prec:Properties     prec:templatedBy prec:DirectTriples .
             prec:KeepProvenance prec:flagState false .
 
             [] a prec:PropertyRule ;
@@ -803,8 +803,8 @@ describe("Relationship and Property convertion", function() {
         `,
 
         contextSPO: `
-            prec:Properties     prec:modelAs prec:DirectTriples .
-            prec:Relationships  prec:modelAs prec:RdfStarUnique .
+            prec:Properties     prec:templatedBy prec:DirectTriples .
+            prec:Relationships  prec:templatedBy prec:RdfStarUnique .
             prec:KeepProvenance prec:flagState false .
 
             [] a prec:RelationshipRule ;
@@ -834,7 +834,7 @@ describe("Relationship and Property convertion", function() {
         `,
         cartesianProductOfMetaLists:
         `
-            prec:Properties     prec:modelAs prec:CartesianProduct .
+            prec:Properties     prec:templatedBy prec:CartesianProduct .
             prec:KeepProvenance prec:flagState false .
         
             prec:CartesianProduct a prec:PropertyTemplate ;
@@ -911,7 +911,7 @@ describe('Node label rules', function () {
             _:person a prec:CreatedNodeLabel ; rdfs:label "Person" .
         `,
         `
-            prec:NodeLabels prec:modelAs [
+            prec:NodeLabels prec:templatedBy [
                 prec:composedOf
                     << pvar:node :somePGsaysThatTheyAreA pvar:nodeLabelIRI >> ,
                     << pvar:nodeLabelIRI :labelsTheNode pvar:node  >> ,
@@ -939,7 +939,7 @@ describe('Node label rules', function () {
             pgo:myOtherLabel a prec:CreatedNodeLabel ; rdfs:label "Kitten" .
         `,
         `
-            prec:NodeLabels prec:modelAs [
+            prec:NodeLabels prec:templatedBy [
                 prec:composedOf << pvar:node :isLabeled pvar:label >>
             ] .
         `,
@@ -978,14 +978,14 @@ describe('Synonyms', function () {
             << pvar:self    :endArrow   pvar:destination >> ,
             << pvar:edgeIRI :labels     pvar:self >> .
         
-        prec:Edges prec:modelAs :worstTemplate .
+        prec:Edges prec:templatedBy :worstTemplate .
 
         :whoKnows prec:IRIOfEdge "WhoKnows" .
 
         :doesntRule a prec:EdgeRule ;
           prec:edgeLabel "DoesntKnow" ;
           prec:edgeIRI :imlost ;
-          prec:modelAs prec:RdfStarUnique .
+          prec:templatedBy prec:RdfStarUnique .
     `,
     `
         :nodes a pgo:Node .

@@ -11,9 +11,9 @@ prec:KeepProvenance        prec:flagState false .
 
 # -- PGO model
 
-prec:NodeProperties         prec:modelAs prec:pgoNodeProperty .
-prec:RelationshipProperties prec:modelAs prec:pgoEdgeProperty .
-prec:Relationships          prec:modelAs prec:pgoEdgeRepresentation .
+prec:NodeProperties         prec:templatedBy prec:pgoNodeProperty .
+prec:RelationshipProperties prec:templatedBy prec:pgoEdgeProperty .
+prec:Relationships          prec:templatedBy prec:pgoEdgeRepresentation .
 
 prec:pgoNodeProperty prec:composedOf
     << pvar:entity pgo:hasNodeProperty pvar:property >> ,

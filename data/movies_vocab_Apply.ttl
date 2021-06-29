@@ -1,10 +1,10 @@
 PREFIX prec: <http://bruy.at/prec#>
 PREFIX pgo:  <http://ii.uwb.edu.pl/pgo#>
 
-prec:Properties prec:modelAs prec:DirectTriples .
+prec:Properties prec:templatedBy prec:DirectTriples .
 prec:KeepProvenance        prec:flagState false .
 
-prec:Relationships prec:modelAs prec:RdfStarUnique .
+prec:Relationships prec:templatedBy prec:RdfStarUnique .
 
 <http://schema.org/actor> prec:IRIOfRelationship "ACTED_IN" .
 

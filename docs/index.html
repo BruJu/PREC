@@ -90,6 +90,16 @@
         <p>This ontology is currently very tentative and is subject to change.</p>
       </aside>
 
+      <aside class="warning" title="Edges and relationships">
+        <p>
+          In PREC, edge and relationship can be used interchangeably.
+          Originally, the term relationship was used everywhere. Now, we tend to
+          prefer the term Edge which is shorter. In contexts, you can either
+          write edge or relationship: for example both `prec:edgeLabel` and
+          `prec:relationshipLabel` works.
+        </p>
+      </aside>
+
       <section>
         <h3>Schema of the PREC-0 graphs</h3>
         <p>
@@ -157,13 +167,13 @@
               @prefix pgo:  <http://ii.uwb.edu.pl/pgo#> .
 
               # We want properties to be written in the RDF-graph as
-              # [the node or relationship] [iri of the property] [the value]
-              prec:Properties prec:modelAs prec:DirectTriples .
+              # [the node or edge] [iri of the property] [the value]
+              prec:Properties prec:templatedBy prec:DirectTriples .
 
-              # We want relationships to be written in the RDF-graph as
+              # We want edges to be written in the RDF-graph as
               # [the source] [the label] [the destination]
               # and use RDF-star for properties
-              prec:Relationships prec:modelAs prec:RdfStarUnique .
+              prec:Edges prec:templatedBy prec:RdfStarUnique .
 
               # == Properties
 
@@ -182,9 +192,9 @@
                 prec:propertyName "name" ;
                 prec:propertyIRI <http://schema.org/name> .
               
-              # We use an IRI from dbpedia for since
-              # As writing rules for simples things is very long, we are
-              # going to use a syntatctic sugar
+              # We use an IRI from dbpedia for the since property
+              # As writing rules for simple things is very long, we are
+              # going to use a syntactic sugar
               <http://dbpedia.org/property/debut> prec:IRIOfProperty "since" .
 
               # == Node labels
@@ -192,9 +202,9 @@
               <http://dbpedia.org/resource/Animal> prec:IRIOfNodeLabel "Animal" .
               <http://dbpedia.org/class/yago/Series108457976> prec:IRIOfNodeLabel "Serie" .
 
-              # == Relationships
-              <http://schema.org/knowsAbout> prec:IRIOfRelationship "knows" .
-              <http://schema.org/knowsAbout> prec:IRIOfRelationship "knows" .
+              # == Edges
+              <http://schema.org/knowsAbout> prec:IRIOfEdge "knows" .
+              <http://schema.org/knowsAbout> prec:IRIOfEdge "knows" .
 
               # Map appears to schema:character. One problem of schema:character
               # is that is expect the serie as the subject and the character as
@@ -203,18 +213,18 @@
                 prec:relationshipLabel "appears" ;
                 # We want the destination to be the source and the destination
                 # to be the source so let's write our own model!
-                prec:modelAs [
+                prec:templatedBy [
                   a prec:RelationshipTemplate ;
                   prec:composedOf
                     # Assert the triple
-                    <<    pvar:destination pvar:relationshipIRI pvar:source               >> ,
+                    <<    pvar:destination pvar:edgeIRI pvar:source               >> ,
                     # Keep the provenance
-                    << << pvar:destination pvar:relationshipIRI pvar:source >> a pgo:Edge >> ,
+                    << << pvar:destination pvar:edgeIRI pvar:source >> a pgo:Edge >> ,
                     # Keep the properties
-                    << << pvar:destination pvar:relationshipIRI pvar:source >> pvar:propertyPredicate pvar:propertyObject >> 
+                    << << pvar:destination pvar:edgeIRI pvar:source >> pvar:propertyPredicate pvar:propertyObject >> 
                 ] ;
-                # prec:relationshipIRI will actually replace pvar:relationship with schema:character
-                prec:relationshipIRI <http://schema.org/character> .
+                # prec:edgeIRI will actually replace pvar:relationship with schema:character
+                prec:edgeIRI <http://schema.org/character> .
             -->
           </pre>
 
@@ -237,7 +247,7 @@
             
             _:adventures_of_tintin a pgo:Node, <http://dbpedia.org/class/yago/Series108457976>;
                 <http://schema.org/name> "The Adventures of Tintin";
-                # The relationship have been properly inverted
+                # The edge have been properly inverted
                 <http://schema.org/character> _:haddock, _:snowy.     
 
             _:haddock <http://schema.org/knowsAbout> _:snowy.
@@ -421,10 +431,13 @@
           <br>In PREC, we call a *model* the format wanted by the user.</p>
 
           <section>
-            <h4><dfn data-lt="prec:modelAs">http://bruy.at/prec#modelAs</dfn></h4>
+            <h4><dfn data-lt="prec:templatedBy">http://bruy.at/prec#templatedBy</dfn></h4>
 
-            <p>Predicate used to state that the subject must be modelled in the
-              format described in the object.</p>
+            <p>
+              Predicate used to state that the components affected by the
+              subject rule must be modelled in the format described in the
+              object.
+            </p>
 
               <aside class="example">
                 <p>
@@ -437,7 +450,7 @@
                 >
                   <!--
                   PREFIX prec: <http://bruy.at/prec#>
-                  prec:Relationships prec:modelAs prec:SingletonProperty .
+                  prec:Relationships prec:templatedBy prec:SingletonProperty .
                   -->
                 </pre>
               </aside>
@@ -445,36 +458,39 @@
           </section>
 
         <section>
-          <h4>Relationship models</h4>
+          <h4>Relationship templates</h4>
 
-          <p>[= PREC-Context =] uses a special IRI for the set of every
-            relationships and defines some base models that are implcitely
-            defined in every context.</p>
+          <p>
+            [= PREC-Context =] uses a special IRI for the set of every
+            edges and defines some base templates that are implcitely
+            defined in every context.
+          </p>
 
-          <p>Thanks to these IRIs and [= prec:modelAs =], it is possible to
-            tranform the model used for every relationship from the standard
-            RDF Reification to any model.
+          <p>Thanks to these IRIs and [= prec:templatedBy =], it is possible to
+            tranform the representation used for every edge from the standard
+            RDF Reification to any template.
           </p>
           
           <section>
-            <h5><dfn data-lt="prec:Relationships">http://bruy.at/prec#Relationships</dfn></h5>
+            <h5><dfn data-lt="prec:Edges">http://bruy.at/prec#Edges</dfn></h5>
 
-            <p>[= prec:Relationships =] is the domain of every relationship. A
-              model that is applied to this IRI will be applied to every
-              relationship.</p>
+            <p>
+              [= prec:Edges =] is the domain of every edge. A template that is
+              applied to this IRI will be applied to every edge.
+            </p>
           </section>
 
           <section>
             <h5><dfn data-lt="prec:RDFReification">http://bruy.at/prec#RDFReification</dfn></h5>
             <p>
-              `prec:Relationships prec:modelAs prec:RDFReification .`
-              <br>Relationships must be modeled as a standard RDF Reification.
-              This is the default behaviour.
+              `prec:Edges prec:templatedBy prec:RDFReification .`
+              <br />Edges must be represented by using the standard RDF
+              Reification. This is the default behaviour.
             </p>
           </section>
           <section>
             <h5><dfn data-lt="prec:RDFStarUnique">http://bruy.at/prec#RdfStarUnique</dfn></h5>
-            <p>`prec:Relationships prec:modelAs prec:RdfStarUnique .`
+            <p>`prec:Edges prec:templatedBy prec:RdfStarUnique .`
               <br>Relationships are modeled as a triple that is added to th
                graph, and meta properties are added using RDF-star. This model
                will cause information loss if there are two edges with the same
@@ -483,8 +499,8 @@
           <section>
             <h5><dfn data-lt="prec:RDFStarOccurrence">http://bruy.at/prec#RDFStarOccurrence</dfn></h5>
             <p>
-              `prec:Relationships prec:modelAs prec:RDFStarOccurrence .`
-              <br>Relationships are modeled as an RDF-star occurence: a blank
+              `prec:Edges prec:templatedBy prec:RDFStarOccurrence .`
+              <br>Edges are modeled as an RDF-star occurence: a blank
               node represents the occurrence and [= prec:occurrenceOf =] is used
               to link the node to the triple it is an occurence of.
             </p>
@@ -560,7 +576,7 @@
           <section>
             <h5><dfn data-lt="prec:SingletonProperty">http://bruy.at/prec#SingletonProperty</dfn></h5>
             <p>
-              `prec:Relationships prec:modelAs prec:SingletonProperty .`
+              `prec:Relationships prec:templatedBy prec:SingletonProperty .`
               <br>Relationships must be modeled using singleton properties.
             </p>
           </section>
@@ -884,7 +900,7 @@
                 prec:relationshipIRI ex:like ;
                 # Modelize this relationship by using the prec:RDFStarUnique
                 # model instead of a standard RDF Reification
-                prec:modelAs prec:RDFStarUnique .
+                prec:templatedBy prec:RDFStarUnique .
               -->
             </pre>
           </aside>
@@ -952,7 +968,7 @@
                  class="nohighlight"
               >
                 <!--
-                prec:Relationships prec:modelAs prec:RDFStarUnique .
+                prec:Relationships prec:templatedBy prec:RDFStarUnique .
 
                 # Matches (a)
                 :firstRule a prec:RelationshipRule ;
@@ -1033,7 +1049,7 @@
 
             <p>
               Like [= prec:Relationships =], it is possible to define a target
-              model for relationship rules by using the [= prec:modelAs =]
+              model for relationship rules by using the [= prec:templatedBy =]
               predicate. It is also possible to apply any
               [= prec:SubstitutionTerm =]s, and not only
               [= prec:relationshipIRI =].
@@ -1080,7 +1096,7 @@
               class="nohighlight"
             >
               <!--
-              prec:Properties    prec:modelAs prec:DirectTriples .
+              prec:Properties    prec:templatedBy prec:DirectTriples .
 
               # A rule for the name property of nodes of type Person
               :humanNameRule a prec:PropertyRule ;
@@ -1245,7 +1261,7 @@
             <p>
               Like [= prec:Properties =], [= prec:NodeProperties =] and
               [= prec:RelationshipProperties =], it is possible to specify a
-              model for a specific property rule thanks to [= prec:modelAs =]
+              model for a specific property rule thanks to [= prec:templatedBy =]
               and to use [= prec:SubstitutionTerms =] other than
               [= prec:propertyIRI =].
             </p>
@@ -1540,7 +1556,7 @@
             >
               <!--
               # Context
-              prec:Relationships prec:modelAs prec:RDFReificaiton ;
+              prec:Relationships prec:templatedBy prec:RDFReificaiton ;
                 prec:subject <https://example.org/user> ;
                 prec:predicate rdf:type ;
                 prec:object <https://example.org/influencer> .

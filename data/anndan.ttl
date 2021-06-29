@@ -2,13 +2,13 @@ PREFIX prec: <http://bruy.at/prec#>
 PREFIX ex:   <http://example.org/>
 PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-prec:Properties prec:modelAs prec:DirectTriples .
+prec:Properties prec:templatedBy prec:DirectTriples .
 prec:KeepProvenance        prec:flagState false .
 
 # (default)
 # prec:Relationships prec:useRdfStar prec:RDFReification .
 
-prec:Relationships prec:modelAs prec:RDFStarOccurrence .
+prec:Relationships prec:templatedBy prec:RDFStarOccurrence .
 
 <http://dbpedia.org/ontology/Person> prec:IRIOfNodeLabel "Person" .
 
@@ -18,7 +18,7 @@ prec:Relationships prec:modelAs prec:RDFStarOccurrence .
     prec:sourceLabel       "Person" ;
     prec:relationshipLabel "Likes"  ;
     prec:relationshipIRI <https://example.org/likes> ;
-    prec:modelAs prec:RDFReification ;
+    prec:templatedBy prec:RDFReification ;
     prec:subject ex:likedBy ;
     prec:object ex:contentCreator ;
     prec:predicate rdf:type

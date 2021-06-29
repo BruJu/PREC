@@ -3,7 +3,7 @@ PREFIX pgo:  <http://ii.uwb.edu.pl/pgo#>
 
 # Property Graph state
 
-prec:Properties prec:modelAs prec:DirectTriples .
+prec:Properties prec:templatedBy prec:DirectTriples .
 prec:KeepProvenance prec:flagState false .
 
 
