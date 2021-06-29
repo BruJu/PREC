@@ -696,7 +696,7 @@
 
             <p>`RelationshipTemplate`s use the following variable:</p>
             <ul>
-              <li>`pvar:self`: The RDF node that was created to identify the relationship.</li>
+              <li>`pvar:edge`: The RDF node that was created to identify the relationship.</li>
               <li>`pvar:source`: The RDF node that represents the PG source node of the relationship.</li>
               <li>`pvar:destination`: The RDF node that represents the PG destination relationship.</li>
               <li>`pvar:relationshipIRI`: The RDF node that represents the label of the edge.</li>
@@ -716,11 +716,11 @@
                 <!--
                 prec:RDFReification a prec:RelationshipTemplate ;
                   prec:composedOf
-                    << pvar:self a pgo:Edge >> ,
-                    << pvar:self rdf:subject      pvar:source          >> ,
-                    << pvar:self rdf:predicate    pvar:relationshipIRI >> ,
-                    << pvar:self rdf:object       pvar:destination     >> ,
-                    << pvar:self pvar:propertyPredicate pvar:propertyObject >>
+                    << pvar:edge a pgo:Edge >> ,
+                    << pvar:edge rdf:subject      pvar:source          >> ,
+                    << pvar:edge rdf:predicate    pvar:relationshipIRI >> ,
+                    << pvar:edge rdf:object       pvar:destination     >> ,
+                    << pvar:edge pvar:propertyPredicate pvar:propertyObject >>
                 .
                 -->
               </pre>
@@ -771,7 +771,7 @@
 
               <table>
                 <tr><th>Variable name</th>                 <th>Value</th>               </tr>
-                <tr><td> `pvar:self`                  </td><td> `_:edge1`          </td></tr>
+                <tr><td> `pvar:edge`                  </td><td> `_:edge1`          </td></tr>
                 <tr><td> `pvar:source`                </td><td> `_:src`            </td></tr>
                 <tr><td> `pvar:destination`           </td><td> `_:dest`           </td></tr>
                 <tr><td> `pvar:relationshipIRI`       </td><td> `_:label`          </td></tr>

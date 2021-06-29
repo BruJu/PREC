@@ -23,7 +23,7 @@ const prec = namespace("http://bruy.at/prec#"                       , N3.DataFac
  * - A PG node is an RDF node
  * - An RDF node is created for each property value and a label name. These
  * nodes have a rdfs:label property to retrieve the value or the label.
- * - A relationship is materialized using RDF reification
+ * - An edge is materialized by using RDF reification
  * - New IRIs are forged
  *
  * The produced RDF graph is not expected to be used by an end user: it should
@@ -39,10 +39,10 @@ class RDFGraphBuilder {
         this.quads = [];
 
         this.namespaces = {
-            nodeLabel        : namespace(vocab + "node/label/"),
-            nodeProperty     : namespace(vocab + "node/property/"),
-            relationshipLabel: namespace(vocab + "relation/label/"),
-            relationProperty : namespace(vocab + "relation/property/")
+            nodeLabel   : namespace(vocab + "node/label/"),
+            nodeProperty: namespace(vocab + "node/property/"),
+            edgeLabel   : namespace(vocab + "edge/label/"),
+            edgeProperty: namespace(vocab + "edge/property/")
         };
         
         this.counters = {
@@ -223,10 +223,10 @@ class RDFGraphBuilder {
     }
 
     /**
-     * Adds to the builder the given relationship. Relationships are expected
-     * to be directed and have one and only one label.
+     * Adds to the builder the given edge. Edges are expected to be directed and
+     * have one and only one label.
      * 
-     * Relationships are materialized using standard RDF reification.
+     * Edges are materialized using standard RDF reification.
      * 
      * The reltionship triple is not asserted.
      * 
@@ -236,28 +236,27 @@ class RDFGraphBuilder {
      * provides a mapping that always works and is always the same so it can't
      * use RDF-star.
      * 
-     * @param {*} relId The relationship id in the Property Graph. Have to be
-     * unique.
-     * @param {*} start The starting node id of the relationship.
-     * @param {*} end The ending node id of the relationship.
-     * @param {*} label The relationship label
-     * @param {*} properties The list of properties on the relationship.
+     * @param {*} relId The edge id in the Property Graph. Have to be unique.
+     * @param {*} start The starting node id of the edge.
+     * @param {*} end The ending node id of the edge.
+     * @param {*} label The edge label
+     * @param {*} properties The list of properties on the edge.
      */
-    addRelationshipRDFReification(relId, start, end, label, properties) {
-        let relation = N3.DataFactory.blankNode("edge" + relId);
-        this._addQuad(relation, rdf.type, pgo.Edge);
-        this._addQuad(relation, rdf.subject, N3.DataFactory.blankNode("node" + start));
-        this._addQuad(relation, rdf.object, N3.DataFactory.blankNode("node" + end));
+    addEdge(relId, start, end, label, properties) {
+        let edge = N3.DataFactory.blankNode("edge" + relId);
+        this._addQuad(edge, rdf.type, pgo.Edge);
+        this._addQuad(edge, rdf.subject, N3.DataFactory.blankNode("node" + start));
+        this._addQuad(edge, rdf.object, N3.DataFactory.blankNode("node" + end));
 
-        let labelNode = this.namespaces.relationshipLabel[label];
-        this._addQuad(relation, rdf.predicate, labelNode);
+        let labelNode = this.namespaces.edgeLabel[label];
+        this._addQuad(edge, rdf.predicate, labelNode);
         
         this._addQuad(labelNode, rdf.type, prec.CreatedEdgeLabel);
         this._addQuad(prec.CreatedEdgeLabel, rdfs.subClassOf, prec.CreatedVocabulary);
 
         this._labelize(labelNode, label);
 
-        this._addProperties(relation, properties, [label], this.namespaces.relationProperty);
+        this._addProperties(edge, properties, [label], this.namespaces.edgeProperty);
     }
 
     /** Returns a dictionary with every prefixes used by this object. */
@@ -277,21 +276,20 @@ class RDFGraphBuilder {
     }
 
     /**
-     * Converts a list of nodes and relationships from a Neo4J property graph
-     * into an expanded RDF store.
+     * Converts a list of nodes and edges from a Neo4J property graph into an
+     * RDF/JS dataset that contains the PREC-0 RDF Graph.
      * 
      * @param {*} neo4jJavascriptArray The list of Json objects exported from
      * Neo4J APOC plugin.
      */
     static neo4jJsToStore(neo4jJavascriptArray) {
         let builder = new RDFGraphBuilder("http://www.example.org/vocab/");
-        builder.addRelationship = builder.addRelationshipRDFReification;
     
         neo4jJavascriptArray.filter (object => object.type === 'node')
             .forEach(object => builder.addNode(object.id, object.labels || [], object.properties || []));
     
         neo4jJavascriptArray.filter(object => object.type == 'relationship')
-            .forEach(object => builder.addRelationship(
+            .forEach(object => builder.addEdge(
                     object.id, object.start.id, object.end.id, object.label,
                     object.properties || {}
                 )
@@ -344,7 +342,7 @@ class RDFGraphBuilder {
         for (let edgeId in edges) {
             let edge = edges[edgeId];
 
-            builder.addRelationshipRDFReification(
+            builder.addEdge(
                 edge.identity,
                 edge.start, edge.end,
                 edge.type,
@@ -373,7 +371,7 @@ class RDFGraphBuilder {
         for (let edgeId in edges) {
             let edge = edges[edgeId];
 
-            builder.addRelationshipRDFReification(
+            builder.addEdge(
                 edge.identity,
                 edge.start, edge.end,
                 edge.type,

@@ -347,14 +347,13 @@ function extractAndDeletePropertyValue(dataset, value) {
 }
 
 /**
- * For a given node in the RDF graph that was an export from PREC, return the
+ * For a given edge in the RDF graph that was an export from PREC, return the
  * subject node, the object node and the label.
  * 
  * The rdf:subject, rdf:predicate and rdf:object must be unique.
  *
  * The type of the subject and the object are checked to be as type pgo:Node.
- * For the predicate, both the node and its label are retrieved. Some checks
- * are applied if is a relationship label.
+ * For the predicate, both the node and its label are retrieved.
  * 
  * Returns null on error.
  * @returns [subject node, object node, [ predicate node, predicate label ]]
@@ -565,7 +564,7 @@ class PseudoPGBuilder {
 
             // Edges should be:
             // - this rdf:subject s, s is a pgo.Node
-            // - this rdf:predicate y, y is a (relationship) label
+            // - this rdf:predicate y, y is an (edge) label
             // - this rdf:object o, o is a pgo.Node
             // Edges may have some other things that are properties
             for (let rdfEdge of dataset.getNodesOfType(pgo.Edge)) {

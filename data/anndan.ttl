@@ -6,21 +6,21 @@ prec:Properties prec:templatedBy prec:DirectTriples .
 prec:KeepProvenance        prec:flagState false .
 
 # (default)
-# prec:Relationships prec:useRdfStar prec:RDFReification .
+# prec:Edges prec:useRdfStar prec:RDFReification .
 
-prec:Relationships prec:templatedBy prec:RDFStarOccurrence .
+prec:Edges prec:templatedBy prec:RDFStarOccurrence .
 
 <http://dbpedia.org/ontology/Person> prec:IRIOfNodeLabel "Person" .
 
-# <https://example.org/likes> prec:IRIOfRelationship "Likes" .
+# <https://example.org/likes> prec:IRIOfEdge "Likes" .
 
-[] a prec:RelationshipRule ;
-    prec:sourceLabel       "Person" ;
-    prec:relationshipLabel "Likes"  ;
-    prec:relationshipIRI <https://example.org/likes> ;
+[] a prec:EdgeRule ;
+    prec:sourceLabel "Person" ;
+    prec:edgeLabel   "Likes"  ;
+    prec:edgeIRI     <https://example.org/likes> ;
     prec:templatedBy prec:RDFReification ;
-    prec:subject ex:likedBy ;
-    prec:object ex:contentCreator ;
+    prec:subject   ex:likedBy ;
+    prec:object    ex:contentCreator ;
     prec:predicate rdf:type
 .
 

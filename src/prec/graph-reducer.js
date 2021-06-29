@@ -8,6 +8,8 @@ const Context       = require("./context-loader.js");
 const precUtils     = require("./utils.js")
 const quadStar      = require('./quad-star.js');
 
+const RulesForEdges = require('./rules-for-edges');
+
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , N3.DataFactory);
 const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , N3.DataFactory);
@@ -39,7 +41,7 @@ function applyContext(dataset, contextQuads) {
 
     // -- Map generated IRI to existing IRIs
     transformProperties   (dataset, context);
-    transformRelationships(dataset, context);
+    RulesForEdges.transformDataset(dataset, context);
     transformNodeLabels   (dataset, context);
 
     // -- Remove the info that generated IRI were generated if there don't
@@ -102,270 +104,9 @@ function removeUnusedCreatedVocabulary(dataset, type, expectedSubject, expectedP
     }
 }
 
-function transformRelationships(dataset, context) {
-    // To transform the relationship, we first identify the rule to apply to
-    // each relationship.
-    // We do the identification process first to avoid conflicts between rules.
-
-    // Mark every relationship with a "neutral" rule
-    {
-        const q = dataset.getQuads(null, rdf.type, pgo.Edge)
-            .map(quad => quad.subject)
-            .map(term => N3.DataFactory.quad(term, prec.__appliedEdgeRule, prec.Relationships));
-
-        dataset.addAll(q);
-    }
-
-    // Find the proper rule
-    context.forEachRelation(
-        relationship => {
-            const { source, conditions, destination } = relationship.getFilter();
-            dataset.findFilterReplace(source, conditions, destination);
-        }
-    );
-
-    // Do the transformations
-    modifyRelationships(dataset, context);
-}
-
-/**
- * Process every `prec:__appliedEdgeRule` request registered in the
- * store.
- * 
- * In other words, this function will map the PREC-0 representation of a
- * property graph edge to the representation requested by the user, through the
- * specified model for the rule.
- * 
- * @param {DStar} dataset The store that contains the quads to process
- * @param {Context} context The `Context` that contains the information about
- * the context given by the user
- */
-function modifyRelationships(dataset, context) {
-    const relations = dataset.matchAndBind(
-        [
-            $quad(variable("relation"), rdf.type, pgo.Edge),
-            $quad(variable("relation"), prec.__appliedEdgeRule, variable("ruleNode")),
-            $quad(variable("relation"), rdf.subject       , variable("subject")  ),
-            $quad(variable("relation"), rdf.predicate     , variable("predicate")),
-            $quad(variable("relation"), rdf.object        , variable("object")   )
-        ]
-    );
-
-    let candidateLabelForDeletion = new precUtils.TermDict();
-
-    for (const relation of relations) {
-        const label = dataset.getQuads(relation.predicate, rdfs.label, null, defaultGraph());
-        if (label.length !== 0) {
-            relation.label = label[0].object;
-        }
-
-        const appliedTheModel = RelationshipModelApplier.transformTheModel(dataset, context, relation);
-        if (appliedTheModel) {
-            candidateLabelForDeletion.set(relation.predicate, true);
-        }
-    }
-
-    let l = [];
-    candidateLabelForDeletion.forEach((node, _True) => l.push(node));
-    filterOutDeletedEdgeLabel(dataset, l);
-
-    // Remove target model to prec:Relationships if its definition was not explicit
-    dataset.deleteMatches(null, prec.__appliedEdgeRule, prec.Relationships, defaultGraph());
-}
-
-const RelationshipModelApplier = {
-    transformTheModel: function(dataset, context, relation) {
-        const behaviour = context.findRelationshipModel(relation.ruleNode);
-    
-        if (!Array.isArray(behaviour)) {
-            return false;
-        }
-    
-        // Build the patterns to map to
-        const r = behaviour.map(term => quadStar.remapPatternWithVariables(
-            term,
-            [
-                [variable('relation')         , pvar.self             ],
-                [variable('subject')          , pvar.source           ],
-                [variable('predicate')        , pvar.relationshipIRI  ],
-                [variable('label')            , pvar.label            ],
-                [variable('object')           , pvar.destination      ],
-                [variable('propertyPredicate'), pvar.propertyPredicate],
-                [variable('propertyObject')   , pvar.propertyObject   ]
-            ]
-        ));
-    
-        // Split the pattern
-        const pattern = r.reduce(
-            (previous, quad) => {
-                if (quadStar.containsTerm(quad, variable('propertyPredicate'))
-                    || quadStar.containsTerm(quad, variable('propertyObject'))) {
-                    previous.properties.push(quad);
-                } else {
-                    previous.unique.push(quad);
-                }
-                
-                return previous;
-            },
-            { unique: [], properties: [] }
-        );
-    
-        // Find every properties to map them later
-        let propertyQuads = dataset.getQuads(relation.relation, null, null, defaultGraph())
-            .filter(
-                quad => !precUtils.termIsIn(quad.predicate, [
-                    rdf.type, prec.__appliedEdgeRule, rdf.subject, rdf.predicate, rdf.object
-                ])
-            );
-    
-        // Replace non property dependant quads
-        dataset.replaceOneBinding(relation, pattern.unique);
-    
-        // Replace property dependants quads
-        RelationshipModelApplier.transformProperties(dataset, relation, propertyQuads, pattern.properties);
-    
-        return true;
-    },
-
-    transformProperties: function(dataset, relation, propertyQuads, pattern) {        
-        if (propertyQuads.length === 0) {
-            return;
-        }
-
-        dataset.removeQuads(propertyQuads);
-        relation['@quads'] = []; // No more quad to delete during replaceOneBinding
-
-        const quadsToDelete = [];
-        const quadsToAdd    = [];
-
-        // Asserted properties
-        for (const propertyQuad of propertyQuads) {
-            relation.propertyPredicate = propertyQuad.predicate;
-            relation.propertyObject    = propertyQuad.object;
-
-            quadsToAdd.push(...DStar.bindVariables(relation, pattern));
-        }
-
-        // Embedded properties
-        for (const quadInTheDataset of dataset.getRDFStarQuads()) {
-            // - We are looking for nested quads in the form
-            // ?entity ?propertyPredicate ?propertyObject
-            // - But a property model can only have ?entity in subject-star
-            // position
-            // - It means that the ?entity ?propertyPredicate ?propertyObject
-            // nested quads are only in subject position.
-
-            const searchResult = RelationshipModelApplier.searchInSubjectStarPlus(quadInTheDataset, propertyQuads);
-            if (searchResult === null) {
-                continue;
-            }
-
-            const { nestedMatchedQuad, depth } = searchResult;
-
-            quadsToDelete.push(quadInTheDataset);
-
-            relation.propertyPredicate = nestedMatchedQuad.predicate;
-            relation.propertyObject    = nestedMatchedQuad.object;
-
-            // DStar.bindVariables
-            let newNestedMatchedQuads = [...DStar.bindVariables(relation, pattern)];
-
-            newNestedMatchedQuads = newNestedMatchedQuads.map(newNested =>
-                RelationshipModelApplier.remake(newNested, depth, quadInTheDataset)
-            );
-
-            quadsToAdd.push(...newNestedMatchedQuads);
-        }
-
-        // Modify the dataset
-        dataset.removeQuads(quadsToDelete);
-        dataset.addAll(quadsToAdd);
-    },
-
-    remake: function(newNested, depth, quadInTheDataset) {
-        if (depth === -1) return newNested;
-        return N3.DataFactory.quad(
-            RelationshipModelApplier.remake(newNested, depth - 1, quadInTheDataset.subject),
-            quadInTheDataset.predicate,
-            quadInTheDataset.object,
-            quadInTheDataset.graph
-        );
-    },
-
-    searchInSubjectStarPlus: function(quad, searchedQuads) {
-        let depth = 0;
-        
-        while (quad.subject.termType === 'Quad') {
-            let found = searchedQuads.find(q => q.equals(quad.subject));
-            if (found !== undefined) {
-                return {
-                    nestedMatchedQuad: found,
-                    depth: depth
-                };
-            }
-
-            quad = quad.subject;
-            ++depth;
-        }
-
-        return null;
-    }
-
-};
-
-/**
- * Remove from store every node in `nodesToDelete` that only have one occurence,
- * and for which the occurence is in the form
- * `?theNode rdfs:label ?_anything`
- */
-function filterOutDeletedEdgeLabel(dataset, nodesToDelete) {
-    let components = [];
-    function addIfComposed(term) {
-        if (term.termType === 'Quad') {
-            components.push(term);
-        }
-    }
-
-    function isDeletable(term) {
-        // Find as P O G
-        let inOtherPositions = dataset.getQuads(null, term).length !== 0
-            || dataset.getQuads(null, null, term).length !== 0
-            || dataset.getQuads(null, null, null, term).length !== 0;
-
-        if (inOtherPositions) return null;
-        
-        // Find as S
-        let asSubject = dataset.getQuads(term);
-        if (asSubject.length !== 1) return null;
-
-        // Is label quad?
-        let labelQuad = asSubject[0];
-        if (!rdfs.label.equals(labelQuad.predicate) || !defaultGraph().equals(labelQuad.graph)) return null;
-
-        // Is part of a component?
-        const inComponent = components.find(q => quadStar.containsTerm(q, term));
-        if (inComponent !== undefined) return null;
-
-        return labelQuad;
-    }
-
-    for (let quad of dataset.getQuads()) {
-        addIfComposed(quad.subject);
-        addIfComposed(quad.predicate);
-        addIfComposed(quad.object);
-        addIfComposed(quad.graph);
-    }
-
-    for (let nodeToDelete of nodesToDelete) {
-        let deletable = isDeletable(nodeToDelete);
-        if (deletable !== null) {
-            dataset.delete(deletable);
-        }
-    }
-}
 
 function filterOutDeletedNodeLabel(dataset, nodesToDelete) {
-    filterOutDeletedEdgeLabel(dataset, nodesToDelete);
+    RulesForEdges.filterOutDeletedEdgeLabel(dataset, nodesToDelete);
 }
 
 /**
@@ -394,12 +135,7 @@ function transformNodeLabels(dataset, context) {
     }
 
     // Look for more refined rules
-    context.forEachNodeLabel(
-        edgeLabelManager => {
-            const { source, conditions, destination } = edgeLabelManager.getFilter();
-            dataset.findFilterReplace(source, conditions, destination);
-        }
-    );
+    context.refineNodeLabelRules(dataset);
 
     // Boom
     {
@@ -465,12 +201,7 @@ function transformProperties(dataset, context) {
     }
 
     // Find the proper rule to apply
-    context.forEachProperty(
-        propertyManager => {
-            const { source, conditions, destination } = propertyManager.getFilter();
-            dataset.findFilterReplace(source, conditions, destination);
-        }
-    );
+    context.refinePropertyRules(dataset);
 
     // apply the new model
     PropertyModelApplier.applyPropertyModels(dataset, context);
@@ -485,7 +216,7 @@ const PropertyModelApplier = {
         }
 
         if (dataset.has($quad(entity, rdf.type, pgo.Edge))) {
-            return prec.RelationshipProperties;
+            return prec.EdgeProperties;
         }
 
         // Probably a meta property
@@ -779,7 +510,7 @@ const PropertyModelApplier = {
 
     remake: function(foundBinding, destinationPattern) {
         return destinationPattern.map(modelQuad =>
-            RelationshipModelApplier.remake(
+            RulesForEdges.remake(
                 DStar.bindVariables(foundBinding, modelQuad),
                 foundBinding['@depth'] - 1, foundBinding['@quad']
             )

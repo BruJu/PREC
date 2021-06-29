@@ -6,7 +6,7 @@
 
 ## https//bruy.at/prec-trans#destination
 
-## https//bruy.at/prec-trans#relationshipIRI
+## https//bruy.at/prec-trans#edgeIRI
 
 ## https//bruy.at/prec-trans#propertyKey
 

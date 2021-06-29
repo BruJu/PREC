@@ -273,7 +273,7 @@ describe('DStar', function() {
                 }
             })
             
-            it("should work on rdf star datasets for which the evil part is used properly (composed source and model)", function() {
+            it("should work on rdf star datasets for which the evil part is used properly (composed source and template)", function() {
                 const dstar = new DStar();
                 dstar.addFromTurtleStar(
                     `

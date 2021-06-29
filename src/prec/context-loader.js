@@ -7,6 +7,7 @@ const fs = require('fs');
 const QuadStar         = require('./quad-star.js');
 const MultiNestedStore = require('./quad-star-multinested-store.js');
 const PrecUtils        = require('./utils.js');
+const RulesForEdges = require('./rules-for-edges');
 
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , N3.DataFactory);
@@ -22,6 +23,8 @@ const $quad         = N3.DataFactory.quad;
 
 /**
  * @typedef { import("rdf-js").Term } Term
+ * @typedef { import("rdf-js").Quad } Quad
+ * @typedef { import("../dataset") } DStar
  */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -97,13 +100,13 @@ class PropertyRule {
     // definition
 
     static RuleType           = prec.PropertyRule;
-    static DefaultModel       = prec.Prec0Property;
+    static DefaultTemplate    = prec.Prec0Property;
     static MainLabel          = prec.propertyName;
-    static PossibleConditions = [prec.nodeLabel, prec.relationshipLabel]
-    static ModelBases = [
-        [prec.NodeProperties        , [prec.relationshipLabel]                ],
-        [prec.RelationshipProperties, [                        prec.nodeLabel]],
-        [prec.MetaProperties        , [prec.relationshipLabel, prec.nodeLabel]]
+    static PossibleConditions = [prec.nodeLabel, prec.edgeLabel]
+    static TemplateBases = [
+        [prec.NodeProperties, [prec.edgeLabel]                ],
+        [prec.EdgeProperties, [                prec.nodeLabel]],
+        [prec.MetaProperties, [prec.edgeLabel, prec.nodeLabel]]
     ];
     static ShortcutIRI        = prec.IRIOfProperty;
     static SubstitutionTerm   = prec.propertyIRI;
@@ -142,19 +145,19 @@ class PropertyRule {
             );
         }
 
-        // prec:nodeLabel, prec:relationshipLabel
+        // prec:nodeLabel, prec:edgeLabel
         let reservedFor = 'None';
         for (const [key, value] of conditions.other) {
             if (prec.nodeLabel.equals(key)) {
                 if (reservedFor == 'Edge') {
-                    throwError(p, "Found a node as object but this property is reserved for relationships by previous rule");
+                    throwError(p, "Found a node as object but this property rule is reserved for edges by previous rule");
                 }
 
                 PropertyRule._processRestrictionOnEntity(value, this.conditions, pgo.Node, rdf.type, mess => throwError(e, mess));
                 reservedFor = 'Node';
-            } else if (prec.relationshipLabel.equals(key)) {
+            } else if (prec.edgeLabel.equals(key)) {
                 if (reservedFor == 'Node') {
-                    throwError(p, "Found a relationship as object but this property is reserved for nodes by previous rule");
+                    throwError(p, "Found an edge as object but this property rule is reserved for nodes by previous rule");
                 }
 
                 PropertyRule._processRestrictionOnEntity(value, this.conditions, pgo.Edge, rdf.predicate, mess => throwError(e, mess));
@@ -168,7 +171,7 @@ class PropertyRule {
         }
     }
 
-    /** Adds the condition for a prec:nodeLabel / prec:relationshipLabel restriction */
+    /** Adds the condition for a prec:nodeLabel / prec:edgeLabel restriction */
     static _processRestrictionOnEntity(object, conditions, type_, labelType, throwError) {
         if (prec.any.equals(object)) {
             conditions.push([
@@ -299,109 +302,6 @@ function _throwIfInvalidPropertyModels(models) {
     });
 }
 
-function _throwIfInvalidRelationshipModels(models) {
-    const pvarKey = pvar.propertyPredicate;
-    const pvarVal = pvar.propertyObject;
-
-    models.forEach((_, targetModels) => {
-        targetModels.forEach((modelName, targetModel) => {
-            for (const quad of targetModel) {
-                // TODO: refine the verification and refactor with predicate
-                // this check
-                const pkeyAsPredicate = pvarKey.equals(quad.predicate);
-                const pvalAsObject    = pvarVal.equals(quad.object);
-                if (pkeyAsPredicate !== pvalAsObject) {
-                    throw Error(`Relationship model checker: ${modelName.value}`
-                    + ` triples must conform to either ?s pvar:propertyPredicate pvar:propertyObject `
-                    + ` or have neither pvar:propertyPredicate and pvar:propertyObject.`);
-                }
-            }
-        });
-    });
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//--- RELATIONSHIPS  --- RELATIONSHIPS  --- RELATIONSHIPS  --- RELATIONSHIPS ---
-//--- RELATIONSHIPS  --- RELATIONSHIPS  --- RELATIONSHIPS  --- RELATIONSHIPS ---
-
-/** An individual relationship rule */
-class RelationshipRule {
-    // ==== IRIs related to relationship
-
-    static RuleType           = prec.RelationshipRule;
-    static DefaultModel       = prec.RDFReification;
-    static MainLabel          = prec.relationshipLabel;
-    static PossibleConditions = [prec.sourceLabel, prec.destinationLabel]
-    static ModelBases         = [[prec.Relationships, []]];
-    static ShortcutIRI        = prec.IRIOfRelationship;
-    static SubstitutionTerm   = prec.relationshipIRI;
-
-    // ==== One rule
-
-    /** Build a relationship rule from its definition */
-    constructor(conditions, hash, ruleNode) {
-        this.conditions = [];
-        this.ruleNode = ruleNode;
-
-        // prec:relationshipLabel
-        if (conditions.label !== undefined) {
-            this.conditions.push(
-                [
-                    $quad(variable("edge")     , rdf.predicate, variable("edgeLabel")),
-                    $quad(variable("edgeLabel"), rdfs.label   , conditions.label     )
-                ]
-            );
-        }
-
-        // prec:priority
-        if (conditions.explicitPriority !== undefined) {
-            this.priority = [conditions.explicitPriority, hash];
-        } else {
-            this.priority = [undefined, hash];
-        }
-
-        // prec:sourceLabel, prec:destinationLabel
-        for (const [key, value] of conditions.other) {
-            let predicate;
-
-            if (prec.sourceLabel.equals(key)) {
-                predicate = rdf.subject;
-            } else if (prec.destinationLabel.equals(key)) {
-                predicate = rdf.object;
-            } else {
-                throw Error(
-                    "Invalid state: found a condition of type "
-                    + key.value + " but it should already have been filtered out"
-                );
-            }
-
-            this.conditions.push(
-                [
-                    $quad(variable("edge") , predicate , variable("node") ),
-                    $quad(variable("node") , rdf.type  , variable("label")),
-                    $quad(variable("label"), rdfs.label, value            )
-                ]
-            );
-        }
-    }
-
-    /**
-     * Return the arguments to pass to `StoreAlterer::findFilterReplace` to tag
-     * the relationship that match this manager with its rule node.
-     */
-    getFilter() {
-        return {
-            source: [
-                $quad(variable("edge"), prec.__appliedEdgeRule, prec.Relationships)
-            ],
-            conditions: this.conditions,
-            destination: [
-                $quad(variable("edge"), prec.__appliedEdgeRule, this.ruleNode)
-            ]
-        };
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 //  --- ENTITIES MANAGER  ---  ENTITIES MANAGER  ---    ENTITIES MANAGER  ---  
 //  --- ENTITIES MANAGER  ---  ENTITIES MANAGER  ---    ENTITIES MANAGER  ---  
@@ -414,8 +314,8 @@ class SplitNamespace {
      * Reads all the quads about a rule and builds a JS object from it
      * @param {N3.Store} contextStore The store
      * @param {*} ruleNode The node that represents the rule
-     * @param {*} Cls Either `RelationshipRule` or `PropertyRule`. Its
-     * static data are used to get the IRIs that should be considered valid
+     * @param {*} Cls A dict that contains the IRI related to the kind of rules
+     * to manage.
      * @param {SubstitutionTerms} substitutionTerms The list of substitution
      * terms known in the context graph.
      * @returns An object with the data about the node. Throws if the rule is
@@ -556,15 +456,15 @@ class SplitNamespace {
 }
 
 /**
- * Build the model from a list of materializations
+ * Build the concrete template from a list of materializations
  * @param {N3.Store} store The context store
  * @param {*} materializations The list of materializations that applies
- * @param {*} defaultModel The IRI of the default model if no model have been
- * specified
- * @returns The model (= destination pattern in find-filter-replace)
+ * @param {Term} defaultTemplate The IRI of the default template if no template
+ * have been specified
+ * @returns {Quad[]} The template (= destination pattern in find-filter-replace)
  */
-function _buildModel(store, materializations, defaultModel) {
-    let model = defaultModel;
+function _buildTemplate(store, materializations, defaultTemplate) {
+    let template = defaultTemplate;
     let substitutionRequests = new PrecUtils.TermDict();
 
     for (const materialization of materializations) {
@@ -575,15 +475,15 @@ function _buildModel(store, materializations, defaultModel) {
             }
         }
 
-        // Is the model there?
+        // Is the template there?
         if (materialization.templatedBy !== undefined) {
-            model = materialization.templatedBy;
+            template = materialization.templatedBy;
             break;
         }
     }
 
-    // Load the model
-    let composedOf = store.getQuads(model, prec.composedOf, null, $defaultGraph())
+    // Load the abstract template
+    let composedOf = store.getQuads(template, prec.composedOf, null, $defaultGraph())
         .map(quad => quad.object)
         .map(term => MultiNestedStore.remakeMultiNesting(store, term));
     
@@ -619,24 +519,27 @@ class EntitiesManager {
         // List of known (and computed) models
         this.models = new PrecUtils.TermDict();
 
+        // TODO: what is a materialization?
+        // TODO: what happens here?
+
         let computeModel = materializations =>
-            _buildModel(contextStore, materializations, Cls.DefaultModel)
+            _buildTemplate(contextStore, materializations, Cls.DefaultTemplate)
         ;
 
-        // Load the base models (prec:Relationships or prec:(Node|Relationships)Properties)
+        // Load the base templates
         let baseModels = new PrecUtils.TermDict();
 
-        for (let [modelName, _] of Cls.ModelBases) {
-            // Read the node, ensure it just have a model
-            const splitted = SplitNamespace.splitDefinition(contextStore, modelName, Cls, substitutionTerms);
-            SplitNamespace.throwIfNotMaterializationOnly(splitted, modelName);
+        for (let [templateName, _] of Cls.TemplateBases) {
+            // Read the node, ensure it just have a template
+            const splitted = SplitNamespace.splitDefinition(contextStore, templateName, Cls, substitutionTerms);
+            SplitNamespace.throwIfNotMaterializationOnly(splitted, templateName);
 
-            // The model can be used to compute other models
-            baseModels.set(modelName, splitted.materialization);
-            // Also a model that can be used
+            // The template can be used to compute other templates
+            baseModels.set(templateName, splitted.materialization);
+            // Also a tempalte that can be used
             let tm = new PrecUtils.TermDict();
-            tm.set(modelName, computeModel([splitted.materialization]));
-            this.models.set(modelName, tm);
+            tm.set(templateName, computeModel([splitted.materialization]));
+            this.models.set(templateName, tm);
         }
 
         // Load the models for user defined rules
@@ -658,8 +561,8 @@ class EntitiesManager {
             // Read remapping=
             this.iriRemapper.push(new Cls(splitted.conditions, conditions, quad.subject));
 
-            for (const [modelName, forbiddenPredicates] of Cls.ModelBases) {
-                // Check if this model x the current base model are compatible
+            for (const [templateName, forbiddenPredicates] of Cls.TemplateBases) {
+                // Check if this template x the current base template are compatible
                 let forbidden = forbiddenPredicates.find(forbiddenPredicate =>
                     splitted.conditions.other.find(c => c[0].equals(forbiddenPredicate)) !== undefined
                 ) !== undefined;
@@ -667,8 +570,8 @@ class EntitiesManager {
                 if (forbidden) continue;
 
                 // Add the pair
-                const model = computeModel([splitted.materialization, baseModels.get(modelName)])
-                this.models.get(modelName).set(quad.subject, model);
+                const model = computeModel([splitted.materialization, baseModels.get(templateName)])
+                this.models.get(templateName).set(quad.subject, model);
             }
         }
         
@@ -691,11 +594,14 @@ class EntitiesManager {
     }
 
     /**
-     * Apply `consumer` on every known managed rule
-     * @param {*} consumer The function to apply
+     * Refine the rules to apply depending on the kind of rule of this manager
+     * @param {DStar} dataset The marked dataset
      */
-    forEachRule(consumer) {
-        this.iriRemapper.forEach(consumer);
+    refineRules(dataset) {
+        this.iriRemapper.forEach(rule => {
+            const { source, conditions, destination } = rule.getFilter();
+            dataset.findFilterReplace(source, conditions, destination);
+        });
     }
 }
 
@@ -705,13 +611,13 @@ class EntitiesManager {
 
 /** An individual node label rule */
 class NodeLabelRule {
-    // ==== IRIs related to relationship
+    // ==== IRIs related to nodes
 
     static RuleType           = prec.NodeLabelRule;
-    static DefaultModel       = prec.NodeLabelsTypeOfLabelIRI;
+    static DefaultTemplate    = prec.NodeLabelsTypeOfLabelIRI;
     static MainLabel          = prec.nodeLabel;
     static PossibleConditions = [];
-    static ModelBases         = [[prec.NodeLabels, []]];
+    static TemplateBases      = [[prec.NodeLabels, []]];
     static ShortcutIRI        = prec.IRIOfNodeLabel;
     static SubstitutionTerm   = prec.nodeLabelIRI;
 
@@ -844,19 +750,21 @@ function addBuiltIn(store, file) {
 }
 
 /**
- * Replaces every edge related term with its relationship related counterpart.
+ * Replaces every relationship related term with its edge related counterpart.
  * @param {N3.Store} store The store to modify
  */
 function replaceSynonyms(store) {
     function makeSynonymsDict() {
         let dict = new PrecUtils.TermDict();
-        dict.set(prec.EdgeRule         , prec.RelationshipRule);
-        dict.set(prec.EdgeTemplate     , prec.RelationshipTemplate);
-        dict.set(prec.edgeLabel        , prec.relationshipLabel);
-        dict.set(prec.Edges            , prec.Relationships);
-        dict.set(prec.IRIOfEdge        , prec.IRIOfRelationship);
-        dict.set(prec.edgeIRI          , prec.relationshipIRI);
-        dict.set(pvar.edgeIRI          , pvar.relationshipIRI);
+        dict.set(prec.RelationshipRule      , prec.EdgeRule);
+        dict.set(prec.RelationshipTemplate  , prec.EdgeTemplate);
+        dict.set(prec.relationshipLabel     , prec.edgeLabel);
+        dict.set(prec.Relationships         , prec.Edges);
+        dict.set(prec.RelationshipProperties, prec.EdgeProperties);
+        dict.set(prec.IRIOfRelationship     , prec.IRIOfEdge);
+        dict.set(prec.relationshipIRI       , prec.edgeIRI);
+        dict.set(pvar.relationshipIRI       , pvar.edgeIRI);
+        dict.set(pvar.relationship          , pvar.edge);
         return dict;
     }
 
@@ -927,8 +835,9 @@ function _removeSugarForRules(store, IRIs) {
 /**
  * Replace every quad in the form `prec:Properties ?p ?o ?g` with the quads :
  * ```
- * prec:NodeProperties         ?p ?o ?g .
- * prec:RelationshipProperties ?p ?o ?g .
+ * prec:NodeProperties ?p ?o ?g .
+ * prec:EdgeProperties ?p ?o ?g .
+ * prec:MetaProperties ?p ?o ?g .
  * ```
  * @param {N3.Store} context The store that contains the context quads
  */
@@ -936,9 +845,9 @@ function _copyPropertiesValuesToSpecificProperties(context) {
     let quads = context.getQuads(prec.Properties, null, null, null);
 
     for (const quad of quads) {
-        context.addQuad(prec.NodeProperties        , quad.predicate, quad.object, quad.graph);
-        context.addQuad(prec.RelationshipProperties, quad.predicate, quad.object, quad.graph);
-        context.addQuad(prec.MetaProperties        , quad.predicate, quad.object, quad.graph);
+        context.addQuad(prec.NodeProperties, quad.predicate, quad.object, quad.graph);
+        context.addQuad(prec.EdgeProperties, quad.predicate, quad.object, quad.graph);
+        context.addQuad(prec.MetaProperties, quad.predicate, quad.object, quad.graph);
     }
 
     context.removeQuads(quads);
@@ -958,15 +867,15 @@ class Context {
         replaceSynonyms(store);
         this.store = store;
 
-        _removeSugarForRules(store, RelationshipRule);
-        _removeSugarForRules(store, PropertyRule    );
+        _removeSugarForRules(store, RulesForEdges.Rule);
         _removeSugarForRules(store, NodeLabelRule   );
+        _removeSugarForRules(store, PropertyRule    );
         _copyPropertiesValuesToSpecificProperties(store);
 
         const substitutionTerms = new SubstitutionTerms(store);
 
-        this.relations  = new EntitiesManager(store, substitutionTerms, RelationshipRule);
-        _throwIfInvalidRelationshipModels(this.relations.models)
+        this.edges  = new EntitiesManager(store, substitutionTerms, RulesForEdges.Rule);
+        RulesForEdges.throwIfHasInvalidTemplate(this.edges.models)
         this.properties = new EntitiesManager(store, substitutionTerms, PropertyRule    );
         _throwIfInvalidPropertyModels(this.properties.models)
 
@@ -978,48 +887,59 @@ class Context {
         this.blankNodeMapping = readBlankNodeMapping(store);
     }
 
-    forEachRelation(callback) {
-        return this.relations.forEachRule(callback);
-    }
-    
-    forEachProperty(callback) {
-        return this.properties.forEachRule(callback);
-    }
+    /**
+     * Refine the rule to apply for RDF nodes that has been marked with 
+     * `?node prec:__appliedEdgeRule, prec:Edges`
+     * @param {DStar} dataset The dataset 
+     */
+    refineEdgeRules(dataset) { this.edges.refineRules(dataset); }
 
-    forEachNodeLabel(callback) {
-        return this.nodeLabels.forEachRule(callback);
-    }
+    /**
+     * Refine the rule to apply for RDF nodes that has been marked with 
+     * `?node prec:XXXX, prec:XXX`
+     * @param {DStar} dataset The dataset 
+     */
+    refinePropertyRules(dataset) { this.properties.refineRules(dataset); }
+
+    /**
+     * Refine the rule to apply for RDF nodes that has been marked with 
+     * `?node prec:XXX, prec:XXX`
+     * @param {DStar} dataset The dataset 
+     */
+    refineNodeLabelRules(dataset) { this.nodeLabels.refineRules(dataset); }
+
 
     getStateOf(flag) {
         return this.flags[flag];
     }
 
     /**
-     * Fetch the model corresponding to the given `ruleNode`.
+     * Fetches the template corresponding to the given `ruleNode`.
      * 
      * The source pattern is expected to be something like
      * 
      * ```javascript
      *  [
-     *     [variable("relation"), rdf.type     , pgo.Edge             ],
-     *     [variable("relation"), rdf.subject  , variable("subject")  ],
-     *     [variable("relation"), rdf.predicate, variable("predicate")],
-     *     [variable("relation"), rdf.object   , variable("object")   ]
+     *     [variable("edge"), rdf.type     , pgo.Edge             ],
+     *     [variable("edge"), rdf.subject  , variable("subject")  ],
+     *     [variable("edge"), rdf.predicate, variable("predicate")],
+     *     [variable("edge"), rdf.object   , variable("object")   ]
      *  ]
      * ```
      * 
-     * @param {*} ruleNode The rule node
-     * @returns The pattern to give to the `storeAlterer.findFilterReplace`
-     * function as the destination pattern.
+     * @param {Term} ruleNode The rule node
+     * @returns {Quad[]} The template to give to the
+     * `storeAlterer.findFilterReplace` function as the destination pattern
+     * after replacing the variables with actual terms.
      */
-    findRelationshipModel(ruleNode) {
-        return this.relations.getModelRelatedTo(ruleNode, prec.Relationships);
+    findEdgeTemplate(ruleNode) {
+        return this.edges.getModelRelatedTo(ruleNode, prec.Edges);
     }
 
     /**
-     * Same as `findRelationshipModel` but for properties.
+     * Same as `findEdgeTemplate` but for properties.
      * `type` should be either
-     * `prec:NodeProperties` or `prec:RelationshipProperties`
+     * `prec:NodeProperties` or `prec:EdgeProperties`
      */
     findPropertyModel(ruleNode, type) {
         return this.properties.getModelRelatedTo(ruleNode, type);

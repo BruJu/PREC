@@ -37,7 +37,7 @@ PREC with its default model into a more user friendly graph.
 operations that the user have to do.
 - `neo4j-to-rdf.js` translates Property Graphs from Neo4J to RDF. Unlike
 `prec.js`, this tool connects itself to the Neo4J instance to extract the nodes
-and relationships.
+and relationships (named edges in the rest of PREC).
 - `gremlin-to-rdf.js` translates "Tinkerpop enabled" property graphs to RDF. It
 works by connecting to the Gremlin API and making requests to extract the graph.
 

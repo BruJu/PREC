@@ -11,9 +11,9 @@ prec:KeepProvenance        prec:flagState false .
 
 # -- PGO model
 
-prec:NodeProperties         prec:templatedBy prec:pgoNodeProperty .
-prec:RelationshipProperties prec:templatedBy prec:pgoEdgeProperty .
-prec:Relationships          prec:templatedBy prec:pgoEdgeRepresentation .
+prec:NodeProperties prec:templatedBy prec:pgoNodeProperty .
+prec:EdgeProperties prec:templatedBy prec:pgoEdgeProperty .
+prec:Edges          prec:templatedBy prec:pgoEdgeRepresentation .
 
 prec:pgoNodeProperty prec:composedOf
     << pvar:entity pgo:hasNodeProperty pvar:property >> ,
@@ -28,15 +28,15 @@ prec:pgoEdgeProperty prec:composedOf
     << pvar:property rdf:type pgo:Property >> .
 
 prec:pgoEdgeRepresentation prec:composedOf
-    << pvar:self pgo:startNode          pvar:source          >> ,
-    << pvar:self pgo:endNode            pvar:destination     >> ,
-    << pvar:self pgo:label              pvar:relationshipIRI >> ,
-    << pvar:self rdf:type               pgo:Edge             >> ,
-    << pvar:self pvar:propertyPredicate pvar:propertyObject  >> .
+    << pvar:edge pgo:startNode          pvar:source         >> ,
+    << pvar:edge pgo:endNode            pvar:destination    >> ,
+    << pvar:edge pgo:label              pvar:edgeIRI        >> ,
+    << pvar:edge rdf:type               pgo:Edge            >> ,
+    << pvar:edge pvar:propertyPredicate pvar:propertyObject >> .
 
 # -- Some IRIs
 
 <http://dbpedia.org/ontology/Person> prec:IRIOfNodeLabel "Person" .
 <https://schema.org/name>            prec:IRIOfProperty  "name"   .
-ex:like  prec:IRIOfRelationship "Likes" .
-ex:since prec:IRIOfProperty     "since" .
+ex:like  prec:IRIOfEdge     "Likes" .
+ex:since prec:IRIOfProperty "since" .
