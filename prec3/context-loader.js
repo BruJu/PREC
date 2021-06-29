@@ -851,7 +851,7 @@ function replaceSynonyms(store) {
     function makeSynonymsDict() {
         let dict = new PrecUtils.TermDict();
         dict.set(prec.EdgeRule         , prec.RelationshipRule);
-        dict.set(prec.EdgeTemplate     , prec.RelationshipModel);
+        dict.set(prec.EdgeTemplate     , prec.RelationshipTemplate);
         dict.set(prec.edgeLabel        , prec.relationshipLabel);
         dict.set(prec.Edges            , prec.Relationships);
         dict.set(prec.IRIOfEdge        , prec.IRIOfRelationship);

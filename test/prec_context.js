@@ -837,7 +837,7 @@ describe("Relationship and Property convertion", function() {
             prec:Properties     prec:modelAs prec:CartesianProduct .
             prec:KeepProvenance prec:flagState false .
         
-            prec:CartesianProduct a prec:PropertyModel ;
+            prec:CartesianProduct a prec:PropertyTemplate ;
                 prec:composedOf
                        << pvar:entity pvar:propertyKey pvar:individualValue >> ,
                     << << pvar:entity pvar:propertyKey pvar:individualValue >> pvar:metaPropertyPredicate pvar:metaPropertyObject >> .
