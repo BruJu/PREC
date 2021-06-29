@@ -20,6 +20,10 @@ const $blankNode    = N3.DataFactory.blankNode;
 const $defaultGraph = N3.DataFactory.defaultGraph;
 const $quad         = N3.DataFactory.quad;
 
+/**
+ * @typedef { import("rdf-js").Term } Term
+ */
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -840,6 +844,52 @@ function addBuiltIn(store, file) {
 }
 
 /**
+ * Replaces every edge related term with its relationship related counterpart.
+ * @param {N3.Store} store The store to modify
+ */
+function replaceSynonyms(store) {
+    function makeSynonymsDict() {
+        let dict = new PrecUtils.TermDict();
+        dict.set(prec.EdgeRule         , prec.RelationshipRule);
+        dict.set(prec.EdgeTemplate     , prec.RelationshipModel);
+        dict.set(prec.edgeLabel        , prec.relationshipLabel);
+        dict.set(prec.Edges            , prec.Relationships);
+        dict.set(prec.IRIOfEdge        , prec.IRIOfRelationship);
+        dict.set(prec.edgeIRI          , prec.relationshipIRI);
+        dict.set(pvar.edgeIRI          , pvar.relationshipIRI);
+        return dict;
+    }
+
+    /**
+     * Transform the store by replacing the terms found in the dict to the one
+     * it maps to
+     * @param {N3.Store} store 
+     * @param {PrecUtils.TermDict<Term, Term>} dict A Term to term dict
+     */
+    function transformStore(store, dict) {
+        const toDelete = [];
+        const toAdd = [];
+
+        for (const quad of store.getQuads()) {
+
+            const newQuad = QuadStar.eventuallyRebuildQuad(quad,
+                term => dict.get(term) || term
+            );
+
+            if (quad !== newQuad) {
+                toDelete.push(quad);
+                toAdd.push(newQuad);
+            }
+        }
+
+        store.removeQuads(toDelete);
+        store.addQuads(toAdd);
+    }
+
+    transformStore(store, makeSynonymsDict());
+}
+
+/**
  * Replace the triples in the form `iri prec:IRIOfThing label .` in the store
  * with a fully developed rule.
  * 
@@ -905,6 +955,7 @@ class Context {
         const store = new N3.Store();
         MultiNestedStore.addQuadsWithoutMultiNesting(store, contextQuads);
         addBuiltIn(store, __dirname + "/builtin_rules.ttl");
+        replaceSynonyms(store);
         this.store = store;
 
         _removeSugarForRules(store, RelationshipRule);

@@ -132,6 +132,11 @@ function approximateIsomorphism(quads1, quads2) {
 /**
  * A map that uses object.value as a key and the equal function to check if
  * two keys are actually equals.
+ * 
+ * Note: Keys are currently searched by performing a linear search
+ * 
+ * @template Key The type of the keys
+ * @template Value The type of the values
  */
 class TermDict {
     /** Build an empty `TermDict` */
@@ -139,6 +144,12 @@ class TermDict {
         this.map = {};
     }
 
+    /**
+     * Returns the value associated to the given key.
+     * @param {Key} key The key
+     * @returns {Value?} The associated value or undefined if none were
+     * associated to the given key
+     */
     /** Return the value stored for key */
     get(key) {
         let list = this.map[key.value];
@@ -153,7 +164,11 @@ class TermDict {
         return undefined;
     }
 
-    /** Set the given value for the given key */
+    /**
+     * Sets the given value for the given key
+     * @param {Key} key The key
+     * @param {Value} value The value
+     */
     set(key, value) {
         let list = this.map[key.value];
         if (list === undefined) {
@@ -171,10 +186,18 @@ class TermDict {
         list.push([key, value]);
     }
 
+    /**
+     * Checks if the term dict is empty
+     * @returns {boolean} True if this Term dict is empty
+     */
     isEmpty() {
         return Object.keys(this.map).length === 0;
     }
 
+    /**
+     * Calls a function for every (key, value) pair stored in this term dict.
+     * @param {function(Key, Value)} callback A consumer of a key and a value
+     */
     forEach(callback) {
         for (const kvPairWithSameHash of Object.values(this.map)) {
             for (const [key, value] of kvPairWithSameHash) {

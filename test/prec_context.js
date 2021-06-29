@@ -950,3 +950,58 @@ describe('Node label rules', function () {
         );
     });
 });
+
+describe('Synonyms', function () {
+    test('should properly map edge to relationships', 
+    `
+        :edge1 a pgo:Edge ;
+          rdf:subject :nodes ;
+          rdf:object  :node1o ;
+          rdf:predicate :knows .
+    
+        :edge2 a pgo:Edge ;
+          rdf:subject :nodes ;
+          rdf:object  :node2o ;
+          rdf:predicate :ignores .
+        
+        :nodes a pgo:Node .
+        :node1o a pgo:Node .
+        :node2o a pgo:Node .
+
+        :knows   a prec:CreatedRelationshipLabel ; rdfs:label "WhoKnows" .
+        :ignores a prec:CreatedRelationshipLabel ; rdfs:label "DoesntKnow" .
+    `,
+    `
+        :worstTemplate a prec:EdgeTemplate ;
+          prec:composedOf
+            << pvar:source  :startArrow pvar:self        >> ,
+            << pvar:self    :endArrow   pvar:destination >> ,
+            << pvar:edgeIRI :labels     pvar:self >> .
+        
+        prec:Edges prec:modelAs :worstTemplate .
+
+        :whoKnows prec:IRIOfEdge "WhoKnows" .
+
+        :doesntRule a prec:EdgeRule ;
+          prec:edgeLabel "DoesntKnow" ;
+          prec:edgeIRI :imlost ;
+          prec:modelAs prec:RdfStarUnique .
+    `,
+    `
+        :nodes a pgo:Node .
+        :node1o a pgo:Node .
+        :node2o a pgo:Node .
+
+        # First edge
+        :nodes :startArrow :edge1 .
+        :edge1 :endArrow :node1o .
+        :whoKnows :labels :edge1 .
+
+        # Second edge
+        :nodes :imlost :node2o .
+        << :nodes :imlost :node2o >> rdf:type pgo:Edge .
+    `
+    );
+
+
+})
