@@ -517,9 +517,9 @@ describe("Property convertion", function() {
         contextPGOProperty: `
             prec:Properties prec:modelAs [
                 prec:composedOf
-                    << pvar:entity   pgo:hasProperty pvar:property         >> ,
-                    << pvar:property pgo:key         pvar:propertyKeyLabel >> ,
-                    << pvar:property pgo:value       pvar:propertyValue    >>
+                    << pvar:entity   pgo:hasProperty pvar:property      >> ,
+                    << pvar:property pgo:key         pvar:label         >> ,
+                    << pvar:property pgo:value       pvar:propertyValue >>
             ] .
         `
     };

@@ -515,7 +515,7 @@ const PropertyModelApplier = {
         for (const [property, typeOfHolder] of properties) {
             const label = dataset.getQuads(property.propertyKey, rdfs.label, null, defaultGraph());
             if (label.length !== 0) {
-                property.propertyKeyLabel = label[0].object;
+                property.label = label[0].object;
             }
 
             PropertyModelApplier.transformProperty(dataset, context, property, typeOfHolder);
@@ -560,7 +560,7 @@ const PropertyModelApplier = {
             [
                 [variable("entity")           , pvar.entity           ],
                 [variable("propertyKey")      , pvar.propertyKey      ],
-                [variable("propertyKeyLabel") , pvar.propertyKeyLabel ],
+                [variable("label")            , pvar.label            ],
                 [variable("property")         , pvar.property         ],
                 [variable("propertyValue")    , pvar.propertyValue    ],
                 [variable("individualValue")  , pvar.individualValue  ],
