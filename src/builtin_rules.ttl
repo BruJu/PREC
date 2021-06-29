@@ -110,7 +110,7 @@ prec:DirectTriples a prec:PropertyTemplate ;
     << << pvar:entity pvar:propertyKey pvar:propertyValue >> pvar:metaPropertyPredicate pvar:metaPropertyObject >> ;
   rdfs:comment
     """
-    This model shold not be used if a node or an edge has a multi valued
+    This template shold not be used if a node or an edge has a multi valued
     property with at least twice the same value.
     """@en
     .

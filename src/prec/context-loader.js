@@ -207,17 +207,17 @@ class PropertyRule {
     }
 }
 
-const ModelChecker = {
+const TemplateChecker = {
     /**
-     * Return true if every embedded triple used in the model is asserted.
-     * @param {*} model An array of quads that constitute the model
+     * Return true if every embedded triple used in the template is asserted.
+     * @param {Quad[]} template An array of quads that constitute the template
      */
-    embeddedTriplesAreAsserted: function(model) {
-        const invalidTriple = model.find(triple => {
+    embeddedTriplesAreAsserted: function(template) {
+        const invalidTriple = template.find(triple => {
             return undefined !== ["subject", "predicate", "object", "graph"].find(role => {
                 const embedded = triple[role];
                 if (embedded.termType !== 'Quad') return false;
-                return undefined === model.find(assertedTriple => assertedTriple.equals(embedded));
+                return undefined === template.find(assertedTriple => assertedTriple.equals(embedded));
             });
         });
 
@@ -231,35 +231,35 @@ const ModelChecker = {
      * of the embedded triple in subject (subject-subject), ...
      * In other words, in a N-Triple-star document, it is the first pure RDF
      * term that appears in the triple.
-     * @param {*} model An array of quads that constitute the model
-     * @param {*} onlyAsSubject The term that must only appear in subject-star
+     * @param {Quad[]} template An array of quads that constitute the template
+     * @param {Term} onlyAsSubject The term that must only appear in subject-star
      * position
      */
-    termMustBeInSubjectStarPosition: function(model, onlyAsSubject) {
+    termMustBeInSubjectStarPosition: function(template, onlyAsSubject) {
         function _isInvalidTerm(term) {
             if (term.termType !== 'Quad') {
                 return false;
             }
             
-            if (QuadStar.containsTerm(term.predicate, onlyAsSubject)) return true;
-            if (QuadStar.containsTerm(term.object   , onlyAsSubject)) return true;
-            if (QuadStar.containsTerm(term.graph    , onlyAsSubject)) return true;
+            if (QuadStar.containsTerm(term.predicate, [onlyAsSubject])) return true;
+            if (QuadStar.containsTerm(term.object   , [onlyAsSubject])) return true;
+            if (QuadStar.containsTerm(term.graph    , [onlyAsSubject])) return true;
     
             return _isInvalidTerm(term.subject);
         }
 
-        return undefined === model.find(quad => _isInvalidTerm(quad));
+        return undefined === template.find(quad => _isInvalidTerm(quad));
     }
 };
 
 /**
- * Check if there are no model that have pvar:entity at another place than
+ * Check if there are no template that have pvar:entity at another place than
  * subject.
  * 
  * Throws if there is one
- * @param {PrecUtils.TermDict} models A map of map of models
+ * @param {PrecUtils.TermDict} templatess A map of map of templates
  */
-function _throwIfInvalidPropertyModels(models) {
+function _throwIfInvalidPropertyTemplates(templatess) {
     const pvarEntity = pvar.entity;
 
     function _hasInvalidMetaPropertyUsage(term) {
@@ -269,33 +269,34 @@ function _throwIfInvalidPropertyModels(models) {
         return mpkey !== mpvalue;
     }
 
-    models.forEach((classModel, targetModels) => {
-        targetModels.forEach((modelName, targetModel) => {
+    templatess.forEach((classRule, templates) => {
+        templates.forEach((templateName, template) => {
             // pvar:entity in subject-star position
-            if (!ModelChecker.termMustBeInSubjectStarPosition(targetModel, pvarEntity)) {
+            if (!TemplateChecker.termMustBeInSubjectStarPosition(template, pvarEntity)) {
                 throw Error(
-                    "Propriety Model checker: found pvar:entity somewhere" +
-                    " else as subjet in model " + classModel.value + " x " +
-                    modelName.value
+                    "Propriety Template checker: found pvar:entity somewhere" +
+                    " else as subjet in template " + classRule.value + " x " +
+                    templateName.value
                 );
             }
 
-            for (const quad of targetModel) {
+            for (const quad of template) {
                 // ?s pvar:metaPropertyPredicate pvar:metaPropertyObject
                 if (_hasInvalidMetaPropertyUsage(quad)) {
                     throw Error(
-                        "Propriety Model checker: pvar:metaPropertyPredicate and pvar:metaPropertyObject" +
+                        "Propriety Template checker: pvar:metaPropertyPredicate and pvar:metaPropertyObject" +
                         " may only be used in triples of form << ?s pvar:metaPropertyPredicate pvar:metaPropertyObject >>"
-                        + " but the model { " + classModel.value + " x " + modelName.value + " } "
+                        + " but the template { " + classRule.value + " x " + templateName.value + " } "
                         + " violates this restriction"
                     );
                 }
             }
 
             // Used Embedded triples must be asserted
-            if (!ModelChecker.embeddedTriplesAreAsserted(targetModel)) {
-                throw Error("Property Model checker: the model " + modelName.value
-                + " is used as a property model but contains an"
+            if (!TemplateChecker.embeddedTriplesAreAsserted(template)) {
+                throw Error("Property Template checker: the template "
+                + templateName.value
+                + " is used as a property template but contains an"
                 + " embedded triple that is not asserted.");
             }
         });
@@ -419,7 +420,7 @@ class SplitNamespace {
 
     /**
      * Throw if other fields than the one in materialization have been filled
-     * = this rule have been filled with other things than a model and
+     * = this rule have been filled with other things than a template name and
      * substitution terms.
      */
     static throwIfNotMaterializationOnly(splitDefinition, rule) {
@@ -516,18 +517,18 @@ class EntitiesManager {
     constructor(contextStore, substitutionTerms, Cls) {
         // List of rules to apply
         this.iriRemapper = [];
-        // List of known (and computed) models
-        this.models = new PrecUtils.TermDict();
+        // List of known (and computed) templates
+        this.templatess = new PrecUtils.TermDict();
 
         // TODO: what is a materialization?
         // TODO: what happens here?
 
-        let computeModel = materializations =>
+        let makeTemplate = materializations =>
             _buildTemplate(contextStore, materializations, Cls.DefaultTemplate)
         ;
 
         // Load the base templates
-        let baseModels = new PrecUtils.TermDict();
+        let baseTemplates = new PrecUtils.TermDict();
 
         for (let [templateName, _] of Cls.TemplateBases) {
             // Read the node, ensure it just have a template
@@ -535,14 +536,14 @@ class EntitiesManager {
             SplitNamespace.throwIfNotMaterializationOnly(splitted, templateName);
 
             // The template can be used to compute other templates
-            baseModels.set(templateName, splitted.materialization);
+            baseTemplates.set(templateName, splitted.materialization);
             // Also a tempalte that can be used
             let tm = new PrecUtils.TermDict();
-            tm.set(templateName, computeModel([splitted.materialization]));
-            this.models.set(templateName, tm);
+            tm.set(templateName, makeTemplate([splitted.materialization]));
+            this.templatess.set(templateName, tm);
         }
 
-        // Load the models for user defined rules
+        // Load the templates for user defined rules
         let existingNodes = {};
         for (let quad of contextStore.getQuads(null, rdf.type, Cls.RuleType, $defaultGraph())) {
             const splitted = SplitNamespace.splitDefinition(contextStore, quad.subject, Cls, substitutionTerms);
@@ -570,8 +571,8 @@ class EntitiesManager {
                 if (forbidden) continue;
 
                 // Add the pair
-                const model = computeModel([splitted.materialization, baseModels.get(templateName)])
-                this.models.get(templateName).set(quad.subject, model);
+                const template = makeTemplate([splitted.materialization, baseTemplates.get(templateName)])
+                this.templatess.get(templateName).set(quad.subject, template);
             }
         }
         
@@ -579,18 +580,15 @@ class EntitiesManager {
     }
 
     /**
-     * Return the model contained in the given description node
-     * @param {*} descriptionNode The description node
-     * @returns The model, or undefined if not specified by the user
+     * Return the template contained in the given description node
+     * @param {Term} descriptionNode The description node
+     * @returns The template, or undefined if not specified by the user
      */
-    getModelRelatedTo(ruleNode, type) {
-        let modelsOfType = this.models.get(type);
-        let model = modelsOfType.get(ruleNode);
-        if (model !== undefined) {
-            return model;
-        } else {
-            return modelsOfType.get(type);
-        }
+    getTemplateFor(ruleNode, type) {
+        let templatesOfType = this.templatess.get(type);
+        return templatesOfType.get(ruleNode)
+            // If not found, use to the one used for the whole type instead
+            || templatesOfType.get(type);
     }
 
     /**
@@ -857,7 +855,7 @@ function _copyPropertiesValuesToSpecificProperties(context) {
  * A `Context` is an object that stores every data that is stored in a context
  * file in a way to make it possible to transform a store that contains a PREC0
  * RDF graph into a graph that is more suitable for the end user need = that
- * uses proper IRIs and easier to user reification models.
+ * uses proper IRIs and easier to use reification representations.
  */
 class Context {
     constructor(contextQuads) {
@@ -867,20 +865,21 @@ class Context {
         replaceSynonyms(store);
         this.store = store;
 
-        _removeSugarForRules(store, RulesForEdges.Rule);
-        _removeSugarForRules(store, NodeLabelRule   );
-        _removeSugarForRules(store, PropertyRule    );
-        _copyPropertiesValuesToSpecificProperties(store);
 
         const substitutionTerms = new SubstitutionTerms(store);
 
+        _removeSugarForRules(store, RulesForEdges.Rule);
         this.edges  = new EntitiesManager(store, substitutionTerms, RulesForEdges.Rule);
-        RulesForEdges.throwIfHasInvalidTemplate(this.edges.models)
-        this.properties = new EntitiesManager(store, substitutionTerms, PropertyRule    );
-        _throwIfInvalidPropertyModels(this.properties.models)
+        RulesForEdges.throwIfHasInvalidTemplate(this.edges.templatess)
+        
+        _removeSugarForRules(store, PropertyRule    );
+        _copyPropertiesValuesToSpecificProperties(store);
+        this.properties = new EntitiesManager(store, substitutionTerms, PropertyRule );
+        _throwIfInvalidPropertyTemplates(this.properties.templatess)
 
-        this.nodeLabels = new EntitiesManager(store, substitutionTerms, NodeLabelRule   );
-        // TODO: throw if invalid node label model
+        _removeSugarForRules(store, NodeLabelRule   );
+        this.nodeLabels = new EntitiesManager(store, substitutionTerms, NodeLabelRule);
+        // TODO: throw if there are invalid node label template
 
         this.flags = readFlags(store);
 
@@ -933,20 +932,19 @@ class Context {
      * after replacing the variables with actual terms.
      */
     findEdgeTemplate(ruleNode) {
-        return this.edges.getModelRelatedTo(ruleNode, prec.Edges);
+        return this.edges.getTemplateFor(ruleNode, prec.Edges);
     }
 
     /**
      * Same as `findEdgeTemplate` but for properties.
-     * `type` should be either
-     * `prec:NodeProperties` or `prec:EdgeProperties`
+     * `type` should be `prec:(Node|Edge|Meta)Properties`
      */
-    findPropertyModel(ruleNode, type) {
-        return this.properties.getModelRelatedTo(ruleNode, type);
+    findPropertyTemplate(ruleNode, type) {
+        return this.properties.getTemplateFor(ruleNode, type);
     }
 
-    findNodeLabelModel(ruleNode) {
-        return this.nodeLabels.getModelRelatedTo(ruleNode, prec.NodeLabels);
+    findNodeLabelTemplate(ruleNode) {
+        return this.nodeLabels.getTemplateFor(ruleNode, prec.NodeLabels);
     }
 }
 

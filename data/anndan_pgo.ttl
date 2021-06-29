@@ -4,12 +4,12 @@ PREFIX ex:   <http://example.org/>
 PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX pgo:  <http://ii.wb.edu.pl/pgo#>
 
-# In this file, we try to reproduce this model:
+# In this file, we try to reproduce this modelization:
 # https://ieeexplore.ieee.org/document/9115617
 
 prec:KeepProvenance        prec:flagState false .
 
-# -- PGO model
+# -- PGO modelization
 
 prec:NodeProperties prec:templatedBy prec:pgoNodeProperty .
 prec:EdgeProperties prec:templatedBy prec:pgoEdgeProperty .

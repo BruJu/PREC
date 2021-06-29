@@ -158,12 +158,12 @@ function transformNodeLabels(dataset, context) {
                 nodeToLabel.label = label[0].object;
             }
     
-            const model = context.findNodeLabelModel(nodeToLabel.ruleNode)
-            if (!Array.isArray(model)) {
+            const template = context.findNodeLabelTemplate(nodeToLabel.ruleNode)
+            if (!Array.isArray(template)) {
                 continue;
             }
 
-            const target = model.map(term => quadStar.remapPatternWithVariables(
+            const target = template.map(term => quadStar.remapPatternWithVariables(
                 term,
                 [
                     [variable('node'), pvar.node],
@@ -203,12 +203,12 @@ function transformProperties(dataset, context) {
     // Find the proper rule to apply
     context.refinePropertyRules(dataset);
 
-    // apply the new model
-    PropertyModelApplier.applyPropertyModels(dataset, context);
+    // apply the new modelization
+    PropertyTemplateApplier.applyPropertyTemplates(dataset, context);
 }
 
-/* Namespace for the funtions used to transform a property model */
-const PropertyModelApplier = {
+/* Namespace for the functions used to transform a property modelization */
+const PropertyTemplateApplier = {
     /* Return the inherited property rules for the entity */
     findTypeInDataset: function(dataset, entity) {
         if (dataset.has($quad(entity, rdf.type, pgo.Node))) {
@@ -224,14 +224,14 @@ const PropertyModelApplier = {
     },
 
     /**
-     * Transform the properties models to the required models.
+     * Applies the desired template to the properties
      * 
-     * The required model is noted with the quad
+     * The required template name is noted with the quad
      * `?propertyBlankNode prec:__appliedPropertyRule ?ruleNode`.
      * @param {DStar} dataset The dataset that contains the quads
      * @param {Context} context The context to apply
      */
-    applyPropertyModels: function(dataset, context) {
+    applyPropertyTemplates: function(dataset, context) {
         const properties = dataset.matchAndBind(
             [
                 $quad(variable("property"), prec.__appliedPropertyRule, variable("ruleNode")),
@@ -240,7 +240,7 @@ const PropertyModelApplier = {
                 $quad(variable("property"), rdf.type, prec.PropertyValue)
             ]
         )
-            .map(bindings => [bindings, PropertyModelApplier.findTypeInDataset(dataset, bindings.entity)])
+            .map(bindings => [bindings, PropertyTemplateApplier.findTypeInDataset(dataset, bindings.entity)])
             .filter(bindings => bindings[1] !== undefined);
 
         for (const [property, typeOfHolder] of properties) {
@@ -249,7 +249,7 @@ const PropertyModelApplier = {
                 property.label = label[0].object;
             }
 
-            PropertyModelApplier.transformProperty(dataset, context, property, typeOfHolder);
+            PropertyTemplateApplier.transformProperty(dataset, context, property, typeOfHolder);
         }
 
         dataset.deleteMatches(null, prec.__appliedPropertyRule, null, defaultGraph());
@@ -275,19 +275,19 @@ const PropertyModelApplier = {
         for (const property of properties) {
             property.entity = node;
             const t = prec.MetaProperties;
-            PropertyModelApplier.transformProperty(dataset, context, property, t);
+            PropertyTemplateApplier.transformProperty(dataset, context, property, t);
         }
     },
 
     transformProperty: function(dataset, context, bindings, typeOfHolder) {
-        const model = context.findPropertyModel(bindings.ruleNode, typeOfHolder);
-        if (!Array.isArray(model)) {
+        const template = context.findPropertyTemplate(bindings.ruleNode, typeOfHolder);
+        if (!Array.isArray(template)) {
             dataset.delete($quad(bindings.property, prec.__appliedPropertyRule, bindings.ruleNode));
             return;
         }
     
         // Build the patterns to map to
-        const r = model.map(term => quadStar.remapPatternWithVariables(term,
+        const r = template.map(term => quadStar.remapPatternWithVariables(term,
             [
                 [variable("entity")               , pvar.entity               ],
                 [variable("propertyKey")          , pvar.propertyKey          ],
@@ -335,7 +335,7 @@ const PropertyModelApplier = {
         addedQuads.push(...DStar.bindVariables(bindings, pattern.mandatory));
         deletedQuads.push(...bindings['@quads']);
 
-        const { individualValues, track } = PropertyModelApplier.extractIndividualValues(
+        const { individualValues, track } = PropertyTemplateApplier.extractIndividualValues(
             dataset,
             bindings.propertyValue,
             pattern.mandatoryIndividual.length === 0
@@ -347,7 +347,7 @@ const PropertyModelApplier = {
         addedQuads.push(...individualValues.flatMap(value => DStar.bindVariables({ "individualValue": value }, indiv)));
 
 
-        const metaProperties = PropertyModelApplier.findAndEraseMetaProperties(
+        const metaProperties = PropertyTemplateApplier.findAndEraseMetaProperties(
             dataset, context,
             bindings.property,
             pattern.optional.length === 0
@@ -359,7 +359,7 @@ const PropertyModelApplier = {
         if (metaProperties !== null) {
             deletedQuads.push(metaProperties.optionalPart['@quad']);
 
-            let [opt1, metaValues1, optN, metaValuesN] = PropertyModelApplier.bindMultipleVariableSets(
+            let [opt1, metaValues1, optN, metaValuesN] = PropertyTemplateApplier.bindMultipleVariableSets(
                 [bindings, { metaPropertyNode: metaProperties.optionalPart.metaPropertyNode }],
                 [
                     pattern.optional,
@@ -375,7 +375,7 @@ const PropertyModelApplier = {
             metaProperties.metaValues.forEach(metaValue => {
                 deletedQuads.push(metaValue['@quad']);
 
-                let x = pattern => PropertyModelApplier.remake(metaValue, pattern);
+                let x = pattern => PropertyTemplateApplier.remake(metaValue, pattern);
                 addedQuads.push(...x(metaValues1));
                 addedQuads.push(...x(individualValues.flatMap(value => DStar.bindVariables({ "individualValue": value }, metaValuesN))));
             });
@@ -447,11 +447,11 @@ const PropertyModelApplier = {
             metaValues: []
         };
 
-        // Apply the meta property model to the meta property
+        // Apply the meta property template to the meta property
         // = setup the definitive
         // (?metaPropertyNode, ?metaPropertyPredicate, ?metaPropertyObjet)
         // triples
-        PropertyModelApplier.transformMetaProperty(dataset, context, metaNode);
+        PropertyTemplateApplier.transformMetaProperty(dataset, context, metaNode);
 
         // Extract the ?mPN ?mPK ?mPV values
         const mPNmPKmPV = dataset.getQuads(
@@ -508,10 +508,11 @@ const PropertyModelApplier = {
         return pattern;
     },
 
+    // TODO: rename this function
     remake: function(foundBinding, destinationPattern) {
-        return destinationPattern.map(modelQuad =>
+        return destinationPattern.map(templateQuad =>
             RulesForEdges.remake(
-                DStar.bindVariables(foundBinding, modelQuad),
+                DStar.bindVariables(foundBinding, templateQuad),
                 foundBinding['@depth'] - 1, foundBinding['@quad']
             )
         );

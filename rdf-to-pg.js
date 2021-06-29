@@ -1,7 +1,7 @@
 "use strict";
 
 // RDF -> Property Graph Experimental Converter
-// Or more like PREC-1
+// Or more like PREC-0-1
 
 // This file extensively uses the concept of "(simple) path following".
 // Following a path is a cute way of saying that we know the subject, and:
@@ -631,7 +631,6 @@ class PseudoPGBuilder {
             );
 
             // Remove axioms and meta data
-            dataset.deleteMatches(prec.MetaData, prec.GenerationModel);
             dataset.deleteMatches(prec.CreatedNodeLabel, rdfs.subClassOf, prec.CreatedVocabulary);
             dataset.deleteMatches(prec.CreatedEdgeLabel, rdfs.subClassOf, prec.CreatedVocabulary);
             dataset.deleteMatches(prec.CreatedProperty, rdfs.subClassOf, prec.CreatedVocabulary);
