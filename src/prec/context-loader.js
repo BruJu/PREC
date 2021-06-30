@@ -117,7 +117,7 @@ class PropertyRule {
     constructor(conditions, hash, ruleNode) {
         this.conditions = [
             [
-                $quad(variable('propertyKey'), rdf.type, prec.Property)
+                $quad(variable('propertyKey'), rdf.type, prec.PropertyLabel)
             ]
         ];
         this.ruleNode = ruleNode;
@@ -705,7 +705,7 @@ function readFlags(store) {
 
 /**
  * Read the
- * `(pgo:Node | pgo:Edge | prec:Property) prec:mapBlankNodesToPrefix ?o`
+ * `(pgo:Node | pgo:Edge | prec:PropertyLabel) prec:mapBlankNodesToPrefix ?o`
  * triples and return the map `[s.value] = ?o`.
  * 
  * This extracts the prefix to map each type of elements from the property graph
@@ -718,7 +718,7 @@ function readBlankNodeMapping(store) {
 
         if (!target.equals(pgo.Node)
             && !target.equals(pgo.Edge)
-            && !target.equals(prec.Property)) {
+            && !target.equals(prec.PropertyLabel)) {
             console.error("Unknown subject of mapTo " + target.value);
             continue;
         }
@@ -759,7 +759,7 @@ function replaceSynonyms(store) {
         dict.set(prec.relationshipLabel     , prec.edgeLabel);
         dict.set(prec.Relationships         , prec.Edges);
         dict.set(prec.RelationshipProperties, prec.EdgeProperties);
-        dict.set(prec.IRIOfRelationship     , prec.IRIOfEdge);
+        dict.set(prec.IRIOfRelationshipLabel, prec.IRIOfEdgeLabel);
         dict.set(prec.relationshipIRI       , prec.edgeIRI);
         dict.set(pvar.relationshipIRI       , pvar.edgeIRI);
         dict.set(pvar.relationship          , pvar.edge);

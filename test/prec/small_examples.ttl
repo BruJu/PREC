@@ -41,7 +41,7 @@ prec:testMetaData prec:kind "SmallExamples" .
         prec:edgeLabel "Knows" ;
         prec:destinationLabel  "Person" .
 
-    :knowsAbout prec:IRIOfEdge "Knows" .
+    :knowsAbout prec:IRIOfEdgeLabel "Knows" .
 }
 
 :edgeOutput {

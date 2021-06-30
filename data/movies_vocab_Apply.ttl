@@ -5,7 +5,7 @@ prec:Edges      prec:templatedBy prec:RdfStarUnique .
 prec:Properties prec:templatedBy prec:DirectTriples .
 prec:KeepProvenance prec:flagState false .
 
-<http://schema.org/actor> prec:IRIOfEdge "ACTED_IN" .
+<http://schema.org/actor> prec:IRIOfEdgeLabel "ACTED_IN" .
 
 [] a prec:PropertyRule ;
   prec:propertyName "roles" ;

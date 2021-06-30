@@ -50,7 +50,7 @@ function applyContext(dataset, contextQuads) {
     // Property: ?p a createdProp, ?p a Property, ?p rdfs.label Thing
     // Edge label: ?p a CreatedEdgeLabel, ?p rdfs.label Thing
     // Node label : same
-    removeUnusedCreatedVocabulary(dataset, prec.CreatedProperty, 3, 0, 0);
+    removeUnusedCreatedVocabulary(dataset, prec.CreatedPropertyLabel, 3, 0, 0);
     removeUnusedCreatedVocabulary(dataset, prec.CreatedEdgeLabel, 2, 0, 0);
     removeUnusedCreatedVocabulary(dataset, prec.CreatedNodeLabel, 2, 0, 0);
 
@@ -64,7 +64,7 @@ function applyContext(dataset, contextQuads) {
 // =============================================================================
 
 /**
- * Deletes every occurrence of pgo:Edge pgo:Node, prec:Property and prec:PropertyValue.
+ * Deletes every occurrence of pgo:Edge pgo:Node, prec:PropertyLabel and prec:PropertyValue.
  * 
  * While the PGO ontology is usefull to describe the PG structure, and to
  * specify the provenance of the 
@@ -72,7 +72,7 @@ function applyContext(dataset, contextQuads) {
 function removePGO(dataset) {
     dataset.deleteMatches(null, rdf.type, pgo.Edge);
     dataset.deleteMatches(null, rdf.type, pgo.Node);
-    dataset.deleteMatches(null, rdf.type, prec.Property);
+    dataset.deleteMatches(null, rdf.type, prec.PropertyLabel);
     dataset.deleteMatches(null, rdf.type, prec.PropertyValue);
 }
 
@@ -191,7 +191,7 @@ function transformNodeLabels(dataset, context) {
 function transformProperties(dataset, context) {
     // Mark every property value node
     {
-        const q = dataset.getQuads(null, rdf.type, prec.Property, defaultGraph())
+        const q = dataset.getQuads(null, rdf.type, prec.PropertyLabel, defaultGraph())
             .map(quad => quad.subject)
             .flatMap(propertyType => dataset.getQuads(null, propertyType, null, defaultGraph()))
             .map(quad => quad.object)
@@ -292,7 +292,7 @@ const PropertyTemplateApplier = {
                 [variable("entity")               , pvar.entity               ],
                 [variable("propertyKey")          , pvar.propertyKey          ],
                 [variable("label")                , pvar.label                ],
-                [variable("property")             , pvar.property             ],
+                [variable("property")             , pvar.propertyNode         ],
                 [variable("propertyValue")        , pvar.propertyValue        ],
                 [variable("individualValue")      , pvar.individualValue      ],
                 [variable("metaPropertyNode")     , pvar.metaPropertyNode     ],

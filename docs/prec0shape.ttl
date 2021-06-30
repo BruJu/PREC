@@ -37,6 +37,6 @@ prec:PropertyValueShape a sh:NodeShape ;
 .
 
 # TODO:
-# All predicates of type prec:Property must have :
+# All predicates of type prec:PropertyLabel must have :
 # - either a pgo:Node or a pgo:Edge as subject
 # - a prec:PropertyValue as object.

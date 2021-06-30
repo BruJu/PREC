@@ -109,9 +109,9 @@ class RDFGraphBuilder {
             // Predicate
             let propertyNode = propMaker[property + tag];
             this._labelize(propertyNode, property);
-            this._addQuad(propertyNode, rdf.type, prec.Property);
-            this._addQuad(propertyNode, rdf.type, prec.CreatedProperty);
-            this._addQuad(prec.CreatedProperty, rdfs.subClassOf, prec.CreatedVocabulary);
+            this._addQuad(propertyNode, rdf.type, prec.PropertyLabel);
+            this._addQuad(propertyNode, rdf.type, prec.CreatedPropertyLabel);
+            this._addQuad(prec.CreatedPropertyLabel, rdfs.subClassOf, prec.CreatedVocabulary);
 
             // Object
             if (!Array.isArray(properties[property])) {
@@ -138,9 +138,9 @@ class RDFGraphBuilder {
             // Predicate
             let propertyNode = propMaker[propertyName + tag];
             this._labelize(propertyNode, propertyName);
-            this._addQuad(propertyNode, rdf.type, prec.Property);
-            this._addQuad(propertyNode, rdf.type, prec.CreatedProperty);
-            this._addQuad(prec.CreatedProperty, rdfs.subClassOf, prec.CreatedVocabulary);
+            this._addQuad(propertyNode, rdf.type, prec.PropertyLabel);
+            this._addQuad(propertyNode, rdf.type, prec.CreatedPropertyLabel);
+            this._addQuad(prec.CreatedPropertyLabel, rdfs.subClassOf, prec.CreatedVocabulary);
 
             // Object
             let self = this;
@@ -168,9 +168,9 @@ class RDFGraphBuilder {
 
                     let propertyNode = propMaker[metaKey + tag];
                     this._labelize(propertyNode, metaKey);
-                    this._addQuad(propertyNode, rdf.type, prec.Property);
-                    this._addQuad(propertyNode, rdf.type, prec.CreatedProperty);
-                    this._addQuad(prec.CreatedProperty, rdfs.subClassOf, prec.CreatedVocabulary);
+                    this._addQuad(propertyNode, rdf.type, prec.PropertyLabel);
+                    this._addQuad(propertyNode, rdf.type, prec.CreatedPropertyLabel);
+                    this._addQuad(prec.CreatedPropertyLabel, rdfs.subClassOf, prec.CreatedVocabulary);
 
                     let target = buildPropertyValue(metaValue);
 

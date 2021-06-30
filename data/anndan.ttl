@@ -12,7 +12,7 @@ prec:Edges prec:templatedBy prec:RDFStarOccurrence .
 
 <http://dbpedia.org/ontology/Person> prec:IRIOfNodeLabel "Person" .
 
-# <https://example.org/likes> prec:IRIOfEdge "Likes" .
+# <https://example.org/likes> prec:IRIOfEdgeLabel "Likes" .
 
 [] a prec:EdgeRule ;
     prec:sourceLabel "Person" ;

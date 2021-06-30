@@ -78,10 +78,10 @@ prec:propertyValue a prec:SubstitutionTerm ; prec:substitutionTarget pvar:proper
 # ==== Properties
 
 # - These rules match the pattern
-# pvar:entity           pvar:propertyKey       pvar:property
-# pvar:property         rdf:value              pvar:propertyValue
-# pvar:property         a prec:PropertyValue .
-# pvar:property         prec:hasMetaProperties     pvar:MetaPropertyNode   # optional
+# pvar:entity           pvar:propertyKey       pvar:propertyNode
+# pvar:propertyNode     rdf:value              pvar:propertyValue
+# pvar:propertyNode     a prec:PropertyValue .
+# pvar:propertyNode     prec:hasMetaProperties     pvar:MetaPropertyNode   # optional
 # pvar:metaPropertyNode pvar:metaPropertyPredicate pvar:metaPropertyObject # 0...n
 #
 # For meta properties, the property rule is applied recursively.
@@ -98,10 +98,10 @@ prec:propertyValue a prec:SubstitutionTerm ; prec:substitutionTarget pvar:proper
 
 prec:Prec0Property a prec:PropertyTemplate ;
   prec:composedOf
-    << pvar:entity           pvar:propertyKey           pvar:property          >> ,
-    << pvar:property         rdf:value                  pvar:propertyValue     >> ,
-    << pvar:property         rdf:type                   prec:PropertyValue     >> ,
-    << pvar:property         prec:hasMetaProperties     pvar:metaPropertyNode  >> ,
+    << pvar:entity           pvar:propertyKey           pvar:propertyNode      >> ,
+    << pvar:propertyNode     rdf:value                  pvar:propertyValue     >> ,
+    << pvar:propertyNode     rdf:type                   prec:PropertyValue     >> ,
+    << pvar:propertyNode     prec:hasMetaProperties     pvar:metaPropertyNode  >> ,
     << pvar:metaPropertyNode pvar:metaPropertyPredicate pvar:metaPropertyObject >> .
 
 prec:DirectTriples a prec:PropertyTemplate ;
@@ -117,10 +117,10 @@ prec:DirectTriples a prec:PropertyTemplate ;
 
 prec:CombinedBlankNodes a prec:PropertyTemplate ;
   prec:composedOf
-    << pvar:entity   pvar:propertyKey     pvar:property          >> ,
-    << pvar:property rdf:value            pvar:propertyValue     >> ,
-    << pvar:property rdf:type             prec:PropertyValue     >> ,
-    << pvar:property pvar:metaPropertyPredicate pvar:metaPropertyObject >> .
+    << pvar:entity       pvar:propertyKey     pvar:propertyNode          >> ,
+    << pvar:propertyNode rdf:value            pvar:propertyValue     >> ,
+    << pvar:propertyNode rdf:type             prec:PropertyValue     >> ,
+    << pvar:propertyNode pvar:metaPropertyPredicate pvar:metaPropertyObject >> .
 
 
 ##################

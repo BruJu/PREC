@@ -39,7 +39,7 @@ class EdgeRule {
     static MainLabel          = prec.edgeLabel;
     static PossibleConditions = [prec.sourceLabel, prec.destinationLabel]
     static TemplateBases      = [[prec.Edges, []]];
-    static ShortcutIRI        = prec.IRIOfEdge;
+    static ShortcutIRI        = prec.IRIOfEdgeLabel;
     static SubstitutionTerm   = prec.edgeIRI;
 
     // ==== One rule

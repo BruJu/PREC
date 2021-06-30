@@ -16,16 +16,16 @@ prec:EdgeProperties prec:templatedBy prec:pgoEdgeProperty .
 prec:Edges          prec:templatedBy prec:pgoEdgeRepresentation .
 
 prec:pgoNodeProperty prec:composedOf
-    << pvar:entity pgo:hasNodeProperty pvar:property >> ,
-    << pvar:property pgo:key pvar:label >> ,
-    << pvar:property pgo:value pvar:propertyValue >> ,
-    << pvar:property rdf:type pgo:Property >> .
+    << pvar:entity pgo:hasNodeProperty pvar:propertyNode >> ,
+    << pvar:propertyNode pgo:key pvar:label >> ,
+    << pvar:propertyNode pgo:value pvar:propertyValue >> ,
+    << pvar:propertyNode rdf:type pgo:Property >> .
 
 prec:pgoEdgeProperty prec:composedOf
-    << pvar:entity pgo:hasEdgeProperty pvar:property >> ,
-    << pvar:property pgo:key pvar:label >> ,
-    << pvar:property pgo:value pvar:propertyValue >> ,
-    << pvar:property rdf:type pgo:Property >> .
+    << pvar:entity pgo:hasEdgeProperty pvar:propertyNode >> ,
+    << pvar:propertyNode pgo:key pvar:label >> ,
+    << pvar:propertyNode pgo:value pvar:propertyValue >> ,
+    << pvar:propertyNode rdf:type pgo:Property >> .
 
 prec:pgoEdgeRepresentation prec:composedOf
     << pvar:edge pgo:startNode          pvar:source         >> ,
@@ -38,5 +38,5 @@ prec:pgoEdgeRepresentation prec:composedOf
 
 <http://dbpedia.org/ontology/Person> prec:IRIOfNodeLabel "Person" .
 <https://schema.org/name>            prec:IRIOfProperty  "name"   .
-ex:like  prec:IRIOfEdge     "Likes" .
+ex:like  prec:IRIOfEdgeLabel "Likes" .
 ex:since prec:IRIOfProperty "since" .

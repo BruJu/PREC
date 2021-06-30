@@ -271,8 +271,8 @@ function extendDataset_RWPRECGenerated(datasetInstance) {
     datasetInstance.readPropertyName = function(property) {
         return this.readLabelOf(
             property,
-            [[rdf.type, prec.Property       ]],
-            [[rdf.type, prec.CreatedProperty]]
+            [[rdf.type, prec.PropertyLabel  ]],
+            [[rdf.type, prec.CreatedPropertyLabel]]
         );
     };
 
@@ -501,15 +501,15 @@ class PseudoPGBuilder {
                 throw "Found embedded quad but PREC only generates RDF non star";
             }
 
-            if (!dataset.areDisjointTypes([pgo.Node, pgo.Edge, prec.Property, prec.PropertyValue])) {
-                throw "pgo:Node, pgo:Edge, prec:Property and prec:PropertyValue should be disjoint types.";
+            if (!dataset.areDisjointTypes([pgo.Node, pgo.Edge, prec.PropertyLabel, prec.PropertyValue])) {
+                throw "pgo:Node, pgo:Edge, prec:PropertyLabel and prec:PropertyValue should be disjoint types.";
             }
 
             let builder = new PseudoPGBuilder();
 
             // A property is:
             // - _e prop propBN - propBN rdf:value a_literal
-            // - prop rdf:type prec:Property
+            // - prop rdf:type prec:PropertyLabel
             // - propBN rdf:type propBN
             // - propBN is only used here
             // => We currently don't support meta properties
@@ -621,11 +621,11 @@ class PseudoPGBuilder {
 
             remvoeSubjectIfMatchPaths(dataset,
                 [
-                    [rdf.type, prec.Property],
+                    [rdf.type, prec.PropertyLabel],
                     [rdfs.label, null]
                 ],
                 [
-                    [rdf.type, prec.CreatedProperty]
+                    [rdf.type, prec.CreatedPropertyLabel]
                 ],
                 noMoreInContext
             );
@@ -633,7 +633,7 @@ class PseudoPGBuilder {
             // Remove axioms and meta data
             dataset.deleteMatches(prec.CreatedNodeLabel, rdfs.subClassOf, prec.CreatedVocabulary);
             dataset.deleteMatches(prec.CreatedEdgeLabel, rdfs.subClassOf, prec.CreatedVocabulary);
-            dataset.deleteMatches(prec.CreatedProperty, rdfs.subClassOf, prec.CreatedVocabulary);
+            dataset.deleteMatches(prec.CreatedPropertyLabel, rdfs.subClassOf, prec.CreatedVocabulary);
 
             // End
             if (dataset.size === 0 && dataset.free !== undefined) {
