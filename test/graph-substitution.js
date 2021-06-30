@@ -4,7 +4,7 @@ const N3 = require('n3');
 const namespace = require('@rdfjs/namespace');
 const ex = namespace("http://ex.org/", N3.DataFactory);
 
-const { isSubstituableGraph, rebuildBlankNodes, findBlankNodes } = require("../graph-substitution.js");
+const { isSubstituableGraph, rebuildBlankNodes, findBlankNodes } = require("../src/graph-substitution");
 
 function equalsArrayOfQuads(a, b) {
     if (a.length != b.length) return false;

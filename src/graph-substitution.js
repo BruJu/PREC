@@ -1,33 +1,41 @@
 const N3 = require('n3');
 
-/** Returns true if the quad has a blank node */
-function hasBlankNode(quad) {
-    function m(term) {
-        if (term.termType === "BlankNode") return true;
-        if (term.termType === "Quad") return hasBlankNode(term);
-        return false;
-    }
+/** 
+ * This file contains a (slow) graph substitution implementation. It is used for
+ * PREC unit tests
+ * 
+ * @see proxyIsSubstituableGraph for a definition of a valid graph substitution
+ */
 
-    return m(quad.subject) || m(quad.predicate) || m(quad.object) || m(quad.graph);
+/**
+ * @typedef { import("rdf-js").Term } Term
+ * @typedef { import("rdf-js").Quad } Quad
+ */
+
+/**
+ * Checks if the given term-star is or contains a blank node.
+ * @param {Term} term The term-star to explore
+ * @returns {boolean} True if the term is or contains a blank node
+ */
+function hasBlankNode(term) {
+    if (term.termType === "BlankNode") return true;
+    if (term.termType !== "Quad") return false;
+
+    return hasBlankNode(term.subject)
+        || hasBlankNode(term.predicate)
+        || hasBlankNode(term.object)
+        || hasBlankNode(term.graph);
 }
 
-/** Return node if it doesn't contain a blank node, null if it contains a blank node */
-function bNodeLess(node) {
-    if (node.termType === "BlankNode") {
-        return null;
-    } else if (node.termType === "Quad") {
-        if (bNodeLess(node.subject) !== null
-        && bNodeLess(node.predicate) !== null
-        && bNodeLess(node.object) !== null
-        && bNodeLess(node.graph) !== null) {
-            return node;
-        } else {
-            return null;
-        }
-
-    } else {
-        return node;
-    }
+/**
+ * Returns the given node if it doesn't contain a blank node, null if it
+ * contains any
+ * @param {Term} term The term
+ * @returns {Term|null} The term if it doesn't contain any blank node, null if
+ * it does.
+ */
+function bNodeLess(term) {
+    return hasBlankNode(term) ? null : term;
 }
 
 /**
@@ -377,8 +385,9 @@ function _renameBlankNodesOfQuad(quad, mapping) {
  * 
  * Returns [the list of remapped quads, the next number of blank node that would have been
  * attributed].
- * @param {*} listOfQuads The list of quads
+ * @param {Quad[]} listOfQuads The list of quads
  * @param {Number} nextBlankNodeId The first number of blank node, default is 1
+ * @returns {[Quad[], Number]}
  */
 function rebuildBlankNodes(listOfQuads, nextBlankNodeId) {
     if (nextBlankNodeId === undefined) {
