@@ -1,5 +1,5 @@
 const N3 = require("n3");
-const DStar = require('../dataset/index.js');
+const DStar = require('../src/dataset/index.js');
 
 function readQuads(turtleContent) {
     const prefixes =

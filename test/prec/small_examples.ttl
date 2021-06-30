@@ -6,7 +6,7 @@
 prec:testMetaData prec:kind "SmallExamples" .
 
 ###############################################################################
-# Relationship test
+# Edge test
 
 [] a prec:unitTest ;
    :usedCypherQuery
@@ -18,8 +18,8 @@ prec:testMetaData prec:kind "SmallExamples" .
        (alice)-[:Knows]->(charlie),
        (alice)-[:Knows]->(apple)
    ''' ;
-   prec:context :relationContext ;
-   prec:output  :relationOutput ;
+   prec:context :edgeContext ;
+   prec:output  :edgeOutput ;
    prec:propertyGraph
    '''
         {"type":"node","id":"3","labels":["Person"]}
@@ -30,21 +30,21 @@ prec:testMetaData prec:kind "SmallExamples" .
    '''
    .
 
-:relationContext {
-    prec:Relationships prec:modelAs prec:RdfStarUnique .
+:edgeContext {
+    prec:Edges prec:templatedBy prec:RdfStarUnique .
     prec:KeepProvenance prec:flagState false .
 
     :Person prec:IRIOfNodeLabel "Person" .
 
-    :LongRule a prec:RelationshipRule ;
-        prec:relationshipIRI :knows ;
-        prec:relationshipLabel "Knows" ;
+    :LongRule a prec:EdgeRule ;
+        prec:edgeIRI :knows ;
+        prec:edgeLabel "Knows" ;
         prec:destinationLabel  "Person" .
 
-    :knowsAbout prec:IRIOfRelationship "Knows" .
+    :knowsAbout prec:IRIOfEdgeLabel "Knows" .
 }
 
-:relationOutput {
+:edgeOutput {
     _:alice :knows _:charlie .
     _:alice a :Person . 
     _:charlie a :Person .
@@ -80,7 +80,7 @@ prec:testMetaData prec:kind "SmallExamples" .
 
 
 :priorityGraphBase {
-    prec:Properties prec:modelAs prec:DirectTriples .
+    prec:Properties prec:templatedBy prec:DirectTriples .
     prec:KeepProvenance prec:flagState false .
     
     :Food   prec:IRIOfNodeLabel "Food" .
@@ -147,4 +147,4 @@ prec:testMetaData prec:kind "SmallExamples" .
 
 :listTestInput {
     _:node :elements [ rdf:value ( "a" "b" ) ] .
- }
+}

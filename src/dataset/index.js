@@ -1,5 +1,5 @@
 const N3 = require('n3');
-const QuadStar = require('../prec3/quad-star.js');
+const QuadStar = require('../prec/quad-star.js');
 
 /**
  * @typedef { import("rdf-js").Term } Term

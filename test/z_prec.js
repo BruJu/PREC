@@ -110,7 +110,7 @@ function smallExample(store) {
             const r = isSubstituableGraph(aaa.getQuads(), expectedGraph.getQuads());
 
             if (!r) {
-                const precUtils = require('../prec3/utils.js')
+                const precUtils = require('../src/prec/utils.js')
 
                 console.error("• Result:");
                 console.error(precUtils.badToString(aaa.getQuads(), 7));

@@ -1,9 +1,9 @@
 
 const utility = require("./utility.js");
-const graphReducer = require("../prec3/graph-reducer.js");
+const graphReducer = require("../src/prec/graph-reducer.js");
 const assert = require('assert');
 const { isomorphic } = require("rdf-isomorphic");
-const precUtils = require('../prec3/utils.js')
+const precUtils = require('../src/prec/utils.js')
 
 
 const basicGraphs = {
@@ -51,80 +51,80 @@ const basicGraphs = {
 
 const contexts = {
     emptyContext  : ``,
-    allUnique     : `prec:Relationships prec:modelAs prec:RdfStarUnique . `,
-    allOccurences : `prec:Relationships prec:modelAs prec:RdfStarOccurrence . `,
+    allUnique     : `prec:Edges prec:templatedBy prec:RdfStarUnique . `,
+    allOccurences : `prec:Edges prec:templatedBy prec:RdfStarOccurrence . `,
     type1specialization: `
-        prec:Relationships prec:modelAs prec:RdfStarUnique .
-        :type1 prec:IRIOfRelationship "type1" .
+        prec:Edges prec:templatedBy prec:RdfStarUnique .
+        :type1 prec:IRIOfEdgeLabel "type1" .
     `,
     type1specializationBN: `
-        prec:Relationships prec:modelAs prec:RdfStarUnique .
-        [] a prec:RelationshipRule ;
-            prec:relationshipIRI   :type1 ;
-            prec:relationshipLabel "type1" .
+        prec:Edges prec:templatedBy prec:RdfStarUnique .
+        [] a prec:EdgeRule ;
+            prec:edgeIRI   :type1 ;
+            prec:edgeLabel "type1" .
     `,
-    type1modelAs: `
-        prec:Relationships prec:modelAs prec:RdfStarOccurrence .
-        [] a prec:RelationshipRule ;
-            prec:relationshipIRI   :type1 ;
-            prec:relationshipLabel "type1" ;
-            prec:modelAs prec:RdfStarUnique .
+    type1templatedBy: `
+        prec:Edges prec:templatedBy prec:RdfStarOccurrence .
+        [] a prec:EdgeRule ;
+            prec:edgeIRI   :type1 ;
+            prec:edgeLabel "type1" ;
+            prec:templatedBy prec:RdfStarUnique .
     `,
     predicateOnPerson: `
-        prec:Relationships prec:modelAs prec:RdfStarOccurrence .
-        [] a prec:RelationshipRule ;
-            prec:relationshipIRI :NewPredicate ;
-            prec:modelAs prec:RdfStarUnique ;
-            prec:relationshipLabel "Predicate" ;
+        prec:Edges prec:templatedBy prec:RdfStarOccurrence .
+        [] a prec:EdgeRule ;
+            prec:edgeIRI :NewPredicate ;
+            prec:templatedBy prec:RdfStarUnique ;
+            prec:edgeLabel "Predicate" ;
             prec:sourceLabel "Person"
         .
     `,
     bothSpecialization: `
-        [] a prec:RelationshipRule ;
-            prec:relationshipIRI :type1 ;
-            prec:relationshipLabel "type1" ;
-            prec:modelAs prec:RdfStarUnique
+        [] a prec:EdgeRule ;
+            prec:edgeIRI :type1 ;
+            prec:edgeLabel "type1" ;
+            prec:templatedBy prec:RdfStarUnique
         .
         
-        [] a prec:RelationshipRule ;
-            prec:relationshipIRI :type2 ;
-            prec:relationshipLabel "type2" ;
-            prec:modelAs prec:RdfStarUnique
+        [] a prec:EdgeRule ;
+            prec:edgeIRI :type2 ;
+            prec:edgeLabel "type2" ;
+            prec:templatedBy prec:RdfStarUnique
         .
     `,
 
 
     useRdfStarrenameTermsImplicit: `
-        prec:Relationships prec:subject :source ;
+        prec:Edges prec:subject :source ;
             prec:predicate :label ;
             prec:object :target .
     `,
-    modelAsPG: `
-        prec:Relationships prec:modelAs prec:RDFReification ;
+    templatedByPG: `
+        prec:Edges prec:templatedBy prec:RDFReification ;
             prec:subject :source ;
             prec:predicate :label ;
             prec:object :target .
     `,
-    modelAsCustom: `
-        prec:Relationships prec:modelAs [
+    templatedByCustom: `
+        prec:Edges prec:templatedBy [
             prec:composedOf << rdf:subject rdf:predicate rdf:object >> ,
-                << pvar:destination pvar:relationshipIRI pvar:source >>
+                << pvar:destination pvar:edgeIRI pvar:source >>
         ] .
     `,
-    modelAsCustomWithRenaming: `
-        prec:Relationships prec:modelAs [
+    templatedByCustomWithRenaming: `
+        prec:Edges prec:templatedBy [
             prec:composedOf << rdf:subject rdf:predicate rdf:object >> ,
-                << pvar:destination pvar:relationshipIRI pvar:source >>
+                << pvar:destination pvar:edgeIRI pvar:source >>
         ] ;
             prec:subject :source ;
             prec:predicate :label ;
             prec:object :target .
     `,
-    modelSwapSO: `
-        prec:Relationships prec:subject rdf:object ; prec:object rdf:subject .
+    swapSO: `
+        prec:Edges prec:subject rdf:object ; prec:object rdf:subject .
     `,
-    modelWithLabel: `
-        prec:Relationships prec:modelAs [
+    templateWithLabel: `
+        prec:Edges prec:templatedBy [
             prec:composedOf << :anEdge :holdsTheLabel pvar:label  >>
         ] .
     `
@@ -219,7 +219,7 @@ function test(name, source, context, expected) {
     });
 }
 
-describe("Relationship convertion", function () {
+describe("Edge convertion", function () {
     describe('Lack of context', function() {
         runATest("oneEdge", "emptyContext", basicGraphs['oneEdge']);
         runATest("twoEdges", "emptyContext", basicGraphs['twoEdges']);
@@ -228,7 +228,7 @@ describe("Relationship convertion", function () {
         runATest("differentSourceLabel", "emptyContext", basicGraphs['differentSourceLabel']);
     })
 
-    describe("Simple graphs modelAs", function() {
+    describe("Simple graphs templatedBy", function() {
         runATest("oneEdge", "allUnique",
             `
                 << :s :p :o  >> a pgo:Edge .
@@ -259,7 +259,7 @@ describe("Relationship convertion", function () {
             `
         );
 
-        runATest("oneEdgeType", "type1modelAs",
+        runATest("oneEdgeType", "type1templatedBy",
             `
                 << :s :type1 :o >> a pgo:Edge .
                 :s :type1 :o .
@@ -288,7 +288,7 @@ describe("Relationship convertion", function () {
             `
         );
     
-        runATest("edgeDiff", "type1modelAs",
+        runATest("edgeDiff", "type1templatedBy",
             `
                 << :s1 :type1 :o1  >> a pgo:Edge .
                 :s1 :type1 :o1 .
@@ -323,7 +323,7 @@ describe("Relationship convertion", function () {
             `
         );
         
-        runATest("oneEdge", "modelAsPG",
+        runATest("oneEdge", "templatedByPG",
             `
             :edge a pgo:Edge ;
             :source :s ;
@@ -332,14 +332,14 @@ describe("Relationship convertion", function () {
             `
         );
         
-        runATest("oneEdge", "modelAsCustom",
+        runATest("oneEdge", "templatedByCustom",
             `
                 rdf:subject rdf:predicate rdf:object .
                 :o :p :s .
             `
         );
         
-        runATest("oneEdge", "modelAsCustomWithRenaming",
+        runATest("oneEdge", "templatedByCustomWithRenaming",
             `
                 :source :label :target .
                 :o :p :s .
@@ -357,14 +357,14 @@ describe("Relationship convertion", function () {
 
         // Subsitutions should be operated at the same time
         // - In a real application, this test checks if it is possible to revert the direction of every edge.
-        runATest("oneEdge", "modelSwapSO",
+        runATest("oneEdge", "swapSO",
             `
                 :edge  a pgo:Edge ; rdf:object :s  ; rdf:predicate :p  ; rdf:subject :o  .
             `
         );
         
         // Labels
-        runATest("edgeDiff", "modelWithLabel",
+        runATest("edgeDiff", "templateWithLabel",
         `
             :anEdge :holdsTheLabel "type1" .
             :anEdge :holdsTheLabel "type2" .
@@ -416,22 +416,22 @@ describe("Property convertion", function() {
               rdf:object :o .
         `,
         oneNodeWithProperty: `
-            :node a pgo:Node ; :p [ rdf:value "v1" ; a prec:PropertyValue ] .
-            :p a prec:Property, prec:CreatedProperty ; rdfs:label "P1" .
+            :node a pgo:Node ; :p [ rdf:value "v1" ; a prec:PropertyKeyValue ] .
+            :p a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "P1" .
         `,
         oneNodeWithTwoProperties: `
             :node a pgo:Node ;
-                :p1 [ rdf:value "v1" ; a prec:PropertyValue ] ;
-                :p2 [ rdf:value "v2" ; a prec:PropertyValue ] .
+                :p1 [ rdf:value "v1" ; a prec:PropertyKeyValue ] ;
+                :p2 [ rdf:value "v2" ; a prec:PropertyKeyValue ] .
             
-            :p1 a prec:Property, prec:CreatedProperty ; rdfs:label "P1" .
-            :p2 a prec:Property, prec:CreatedProperty ; rdfs:label "P2" .
+            :p1 a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "P1" .
+            :p2 a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "P2" .
         `,
         oneNodeWithMultiValuedProperty: `
             :node a pgo:Node ;
-                :p [ rdf:value "v1" ; a prec:PropertyValue ] ;
-                :p [ rdf:value "v2" ; a prec:PropertyValue ] .
-            :p a prec:Property, prec:CreatedProperty ; rdfs:label "P1" .
+                :p [ rdf:value "v1" ; a prec:PropertyKeyValue ] ;
+                :p [ rdf:value "v2" ; a prec:PropertyKeyValue ] .
+            :p a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "P1" .
         `,
         oneSimpleGraph: `
             :edge a pgo:Edge ;
@@ -439,48 +439,48 @@ describe("Property convertion", function() {
               rdf:predicate :p ;
               rdf:object :o .
             
-            :s a pgo:Node ; :propertyA [ rdf:value "VANode" ; a prec:PropertyValue ] ; a [ rdfs:label "Subject" ] .
-            :o a pgo:Node ; :propertyB [ rdf:value "VBNode" ; a prec:PropertyValue ] ; a [ rdfs:label "Object"  ] .
+            :s a pgo:Node ; :propertyA [ rdf:value "VANode" ; a prec:PropertyKeyValue ] ; a [ rdfs:label "Subject" ] .
+            :o a pgo:Node ; :propertyB [ rdf:value "VBNode" ; a prec:PropertyKeyValue ] ; a [ rdfs:label "Object"  ] .
             :p rdfs:label "LabelOfEdge" .
-            :edge :propertyA [ rdf:value "VAEdge" ; a prec:PropertyValue ] .
-            :edge :propertyB [ rdf:value "VBEdge" ; a prec:PropertyValue ] .
-            :propertyA a prec:Property, prec:CreatedProperty ; rdfs:label "PropertyA" .
-            :propertyB a prec:Property, prec:CreatedProperty ; rdfs:label "PropertyB" .
+            :edge :propertyA [ rdf:value "VAEdge" ; a prec:PropertyKeyValue ] .
+            :edge :propertyB [ rdf:value "VBEdge" ; a prec:PropertyKeyValue ] .
+            :propertyA a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "PropertyA" .
+            :propertyB a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "PropertyB" .
         `,
         oneNodeWithMetaProperty: `    
-            :name a prec:Property, prec:CreatedProperty ; rdfs:label "NAME" .
-            :town a prec:Property, prec:CreatedProperty ; rdfs:label "TOWN" .
-            :description a prec:Property, prec:CreatedProperty ; rdfs:label "DESCRIPTION" .
+            :name a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "NAME" .
+            :town a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "TOWN" .
+            :description a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "DESCRIPTION" .
 
             :node a pgo:Node ;
                 :name :name_value_1 ;
                 :name :name_value_2 ;
                 :town :town_value   .
             
-            :name_value_1 a prec:PropertyValue ;
+            :name_value_1 a prec:PropertyKeyValue ;
                 rdf:value "NAME VALUE 1" .
             
-            :name_value_2 a prec:PropertyValue ;
+            :name_value_2 a prec:PropertyKeyValue ;
                 rdf:value "NAME VALUE 2" ;
                 prec:hasMetaProperties :name_value_2_meta_properties .
             
-            :town_value a prec:PropertyValue ;
+            :town_value a prec:PropertyKeyValue ;
                 rdf:value "LYON" ;
                 prec:hasMetaProperties :town_value_meta_properties .
             
             :name_value_2_meta_properties :description :name_value_2_meta_properties_description .
 
-            :name_value_2_meta_properties_description a prec:PropertyValue ;
+            :name_value_2_meta_properties_description a prec:PropertyKeyValue ;
                 rdf:value "NAME VALUE 2: Meta Property" .
             
             :town_value_meta_properties
                 :description :town_value_meta_properties_description ;
                 :name :town_value_meta_properties_name .
             
-            :town_value_meta_properties_description a prec:PropertyValue ;
+            :town_value_meta_properties_description a prec:PropertyKeyValue ;
                 rdf:value "Not like the animal" .
 
-            :town_value_meta_properties_name a prec:PropertyValue ;
+            :town_value_meta_properties_name a prec:PropertyKeyValue ;
                 rdf:value "Capital of Lights" .
         `,
         contextForP1: ` :knows prec:IRIOfProperty "P1" . `,
@@ -506,20 +506,20 @@ describe("Property convertion", function() {
         `,
         contextForPAOnLabelOfEdge: `
             [] a prec:PropertyRule ;
-                prec:propertyIRI       :mappedA ;
-                prec:propertyName      "PropertyA" ;
-                prec:relationshipLabel "LabelOfEdge"
+                prec:propertyIRI  :mappedA ;
+                prec:propertyName "PropertyA" ;
+                prec:edgeLabel    "LabelOfEdge"
             .
         `,
         contextCollapseMetaProperties: `
-            prec:MetaProperties prec:modelAs prec:DirectTriples .
+            prec:MetaProperties prec:templatedBy prec:DirectTriples .
         `,
         contextPGOProperty: `
-            prec:Properties prec:modelAs [
+            prec:Properties prec:templatedBy [
                 prec:composedOf
-                    << pvar:entity   pgo:hasProperty pvar:property         >> ,
-                    << pvar:property pgo:key         pvar:propertyKeyLabel >> ,
-                    << pvar:property pgo:value       pvar:propertyValue    >>
+                    << pvar:entity       pgo:hasProperty pvar:propertyNode  >> ,
+                    << pvar:propertyNode pgo:key         pvar:label         >> ,
+                    << pvar:propertyNode pgo:value       pvar:propertyValue >>
             ] .
         `
     };
@@ -540,41 +540,41 @@ describe("Property convertion", function() {
 
         runATest_(graphs, 'oneNodeWithProperty', 'contextForP1',
         `
-            :node a pgo:Node ; :knows [ rdf:value "v1" ; a prec:PropertyValue ] .
+            :node a pgo:Node ; :knows [ rdf:value "v1" ; a prec:PropertyKeyValue ] .
         `
         );
 
         runATest_(graphs, 'oneNodeWithTwoProperties', 'contextForP1',
         `
             :node a pgo:Node ;
-                :knows [ rdf:value "v1" ; a prec:PropertyValue ] ;
-                :p2    [ rdf:value "v2" ; a prec:PropertyValue ] .
-            :p2 a prec:Property, prec:CreatedProperty ; rdfs:label "P2" .
+                :knows [ rdf:value "v1" ; a prec:PropertyKeyValue ] ;
+                :p2    [ rdf:value "v2" ; a prec:PropertyKeyValue ] .
+            :p2 a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "P2" .
         `
         );
 
         runATest_(graphs, 'oneNodeWithMultiValuedProperty', 'contextForP1',
         `
             :node a pgo:Node ;
-                :knows [ rdf:value "v1" ; a prec:PropertyValue ] ;
-                :knows [ rdf:value "v2" ; a prec:PropertyValue ] .
+                :knows [ rdf:value "v1" ; a prec:PropertyKeyValue ] ;
+                :knows [ rdf:value "v2" ; a prec:PropertyKeyValue ] .
         `
         );
 
         runATest_(graphs, 'oneNodeWithTwoProperties', 'contextForP1bis',
         `
             :node a pgo:Node ;
-                :knows [ rdf:value "v1" ; a prec:PropertyValue ] ;
-                :p2    [ rdf:value "v2" ; a prec:PropertyValue ] .
-            :p2 a prec:Property, prec:CreatedProperty ; rdfs:label "P2" .
+                :knows [ rdf:value "v1" ; a prec:PropertyKeyValue ] ;
+                :p2    [ rdf:value "v2" ; a prec:PropertyKeyValue ] .
+            :p2 a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "P2" .
         `
         );
 
         runATest_(graphs, 'oneNodeWithMultiValuedProperty', 'contextForP1bis',
         `
             :node a pgo:Node ;
-                :knows [ rdf:value "v1" ; a prec:PropertyValue ] ;
-                :knows [ rdf:value "v2" ; a prec:PropertyValue ] .
+                :knows [ rdf:value "v1" ; a prec:PropertyKeyValue ] ;
+                :knows [ rdf:value "v2" ; a prec:PropertyKeyValue ] .
         `
         );
 
@@ -585,12 +585,12 @@ describe("Property convertion", function() {
               rdf:predicate :p ;
               rdf:object :o .
 
-            :s a pgo:Node ; :propertyA [ rdf:value "VANode" ; a prec:PropertyValue ] ; a [ rdfs:label "Subject" ] .
-            :o a pgo:Node ; :knows     [ rdf:value "VBNode" ; a prec:PropertyValue ] ; a [ rdfs:label "Object"  ] .
+            :s a pgo:Node ; :propertyA [ rdf:value "VANode" ; a prec:PropertyKeyValue ] ; a [ rdfs:label "Subject" ] .
+            :o a pgo:Node ; :knows     [ rdf:value "VBNode" ; a prec:PropertyKeyValue ] ; a [ rdfs:label "Object"  ] .
             :p rdfs:label "LabelOfEdge" .
-            :edge :propertyA [ rdf:value "VAEdge" ; a prec:PropertyValue ] .
-            :edge :knows     [ rdf:value "VBEdge" ; a prec:PropertyValue ] .
-            :propertyA a prec:Property, prec:CreatedProperty ; rdfs:label "PropertyA" .
+            :edge :propertyA [ rdf:value "VAEdge" ; a prec:PropertyKeyValue ] .
+            :edge :knows     [ rdf:value "VBEdge" ; a prec:PropertyKeyValue ] .
+            :propertyA a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "PropertyA" .
         `
         );
 
@@ -601,13 +601,13 @@ describe("Property convertion", function() {
               rdf:predicate :p ;
               rdf:object :o .
 
-            :s a pgo:Node ; :knows     [ rdf:value "VANode" ; a prec:PropertyValue ] ; a [ rdfs:label "Subject" ] .
-            :o a pgo:Node ; :propertyB [ rdf:value "VBNode" ; a prec:PropertyValue ] ; a [ rdfs:label "Object"  ] .
+            :s a pgo:Node ; :knows     [ rdf:value "VANode" ; a prec:PropertyKeyValue ] ; a [ rdfs:label "Subject" ] .
+            :o a pgo:Node ; :propertyB [ rdf:value "VBNode" ; a prec:PropertyKeyValue ] ; a [ rdfs:label "Object"  ] .
             :p rdfs:label "LabelOfEdge" .
-            :edge :propertyA [ rdf:value "VAEdge" ; a prec:PropertyValue ] .
-            :edge :propertyB [ rdf:value "VBEdge" ; a prec:PropertyValue ] .
-            :propertyA a prec:Property, prec:CreatedProperty ; rdfs:label "PropertyA" .
-            :propertyB a prec:Property, prec:CreatedProperty ; rdfs:label "PropertyB" .
+            :edge :propertyA [ rdf:value "VAEdge" ; a prec:PropertyKeyValue ] .
+            :edge :propertyB [ rdf:value "VBEdge" ; a prec:PropertyKeyValue ] .
+            :propertyA a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "PropertyA" .
+            :propertyB a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "PropertyB" .
         `
         );
     
@@ -618,13 +618,13 @@ describe("Property convertion", function() {
             rdf:predicate :p ;
             rdf:object :o .
             
-            :s a pgo:Node ; :mappedA   [ rdf:value "VANode" ; a prec:PropertyValue ] ; a [ rdfs:label "Subject" ] .
-            :o a pgo:Node ; :propertyB [ rdf:value "VBNode" ; a prec:PropertyValue ] ; a [ rdfs:label "Object"  ] .
+            :s a pgo:Node ; :mappedA   [ rdf:value "VANode" ; a prec:PropertyKeyValue ] ; a [ rdfs:label "Subject" ] .
+            :o a pgo:Node ; :propertyB [ rdf:value "VBNode" ; a prec:PropertyKeyValue ] ; a [ rdfs:label "Object"  ] .
             :p rdfs:label "LabelOfEdge" .
-            :edge :propertyA [ rdf:value "VAEdge" ; a prec:PropertyValue ] .
-            :edge :propertyB [ rdf:value "VBEdge" ; a prec:PropertyValue ] .
-            :propertyA a prec:Property, prec:CreatedProperty ; rdfs:label "PropertyA" .
-            :propertyB a prec:Property, prec:CreatedProperty ; rdfs:label "PropertyB" .
+            :edge :propertyA [ rdf:value "VAEdge" ; a prec:PropertyKeyValue ] .
+            :edge :propertyB [ rdf:value "VBEdge" ; a prec:PropertyKeyValue ] .
+            :propertyA a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "PropertyA" .
+            :propertyB a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "PropertyB" .
 
         `
         );
@@ -636,13 +636,13 @@ describe("Property convertion", function() {
             rdf:predicate :p ;
             rdf:object :o .
             
-            :s a pgo:Node ; :propertyA [ rdf:value "VANode" ; a prec:PropertyValue ] ; a [ rdfs:label "Subject" ] .
-            :o a pgo:Node ; :propertyB [ rdf:value "VBNode" ; a prec:PropertyValue ] ; a [ rdfs:label "Object"  ] .
+            :s a pgo:Node ; :propertyA [ rdf:value "VANode" ; a prec:PropertyKeyValue ] ; a [ rdfs:label "Subject" ] .
+            :o a pgo:Node ; :propertyB [ rdf:value "VBNode" ; a prec:PropertyKeyValue ] ; a [ rdfs:label "Object"  ] .
             :p rdfs:label "LabelOfEdge" .
-            :edge :mappedA   [ rdf:value "VAEdge" ; a prec:PropertyValue ] .
-            :edge :propertyB [ rdf:value "VBEdge" ; a prec:PropertyValue ] .
-            :propertyA a prec:Property, prec:CreatedProperty ; rdfs:label "PropertyA" .
-            :propertyB a prec:Property, prec:CreatedProperty ; rdfs:label "PropertyB" .
+            :edge :mappedA   [ rdf:value "VAEdge" ; a prec:PropertyKeyValue ] .
+            :edge :propertyB [ rdf:value "VBEdge" ; a prec:PropertyKeyValue ] .
+            :propertyA a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "PropertyA" .
+            :propertyB a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "PropertyB" .
         `
         );
 
@@ -674,23 +674,23 @@ describe("Property convertion", function() {
 
         runATest_(graphs, 'oneNodeWithMetaProperty', 'contextCollapseMetaProperties',
         `
-        :name a prec:Property, prec:CreatedProperty ; rdfs:label "NAME" .
-        :town a prec:Property, prec:CreatedProperty ; rdfs:label "TOWN" .
-        :description a prec:Property, prec:CreatedProperty ; rdfs:label "DESCRIPTION" .
+        :name a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "NAME" .
+        :town a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "TOWN" .
+        :description a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "DESCRIPTION" .
 
         :node a pgo:Node ;
             :name :name_value_1 ;
             :name :name_value_2 ;
             :town :town_value   .
         
-        :name_value_1 a prec:PropertyValue ;
+        :name_value_1 a prec:PropertyKeyValue ;
             rdf:value "NAME VALUE 1" .
         
-        :name_value_2 a prec:PropertyValue ;
+        :name_value_2 a prec:PropertyKeyValue ;
             rdf:value "NAME VALUE 2" ;
             prec:hasMetaProperties :name_value_2_meta_properties .
         
-        :town_value a prec:PropertyValue ;
+        :town_value a prec:PropertyKeyValue ;
             rdf:value "LYON" ;
             prec:hasMetaProperties :town_value_meta_properties .
         
@@ -708,13 +708,13 @@ describe("Property convertion", function() {
         const simpleProperty = `
             :node a pgo:Node .
             :node :pName :pBlankNode .
-            :pBlankNode rdf:value ( "a" "b" "c" ) ; a prec:PropertyValue .
-            :pName rdfs:label "key" ; a prec:Property, prec:CreatedProperty .
+            :pBlankNode rdf:value ( "a" "b" "c" ) ; a prec:PropertyKeyValue .
+            :pName rdfs:label "key" ; a prec:PropertyKey, prec:CreatedPropertyKey .
         `;
 
-        const modelAs = function (model) {
+        const templatedBy = function (template) {
             return `
-                prec:Properties prec:modelAs [ prec:composedOf ${model} ] .
+                prec:Properties prec:templatedBy [ prec:composedOf ${template} ] .
                 [] a prec:PropertyRule ;
                     prec:propertyName "key" ;
                     prec:propertyIRI :k .
@@ -724,7 +724,7 @@ describe("Property convertion", function() {
         test(
             "Regular property conversion",
             simpleProperty,
-            modelAs("<< pvar:entity pvar:propertyKey pvar:propertyValue >>"),
+            templatedBy("<< pvar:entity pvar:propertyKey pvar:propertyValue >>"),
             `
             :node a pgo:Node .
             :node :k ( "a" "b" "c" ) .
@@ -734,14 +734,14 @@ describe("Property convertion", function() {
         test(
             "Only keep individual values",
             simpleProperty,
-            modelAs("<< pvar:entity pvar:propertyKey pvar:individualValue >>"),
+            templatedBy("<< pvar:entity pvar:propertyKey pvar:individualValue >>"),
             ` :node a pgo:Node ; :k "a", "b", "c" . `
         );
 
         test(
             "Keep both",
             simpleProperty,
-            modelAs("<< pvar:entity pvar:propertyKey pvar:individualValue >> ,"
+            templatedBy("<< pvar:entity pvar:propertyKey pvar:individualValue >> ,"
                 + "\n << pvar:entity :usedList pvar:propertyValue >>"),
             ` :node a pgo:Node ; :k "a", "b", "c" ; :usedList ( "a" "b" "c" ).`
         );
@@ -751,18 +751,7 @@ describe("Property convertion", function() {
 })
 
 
-describe("Relationship and Property convertion", function() {
-    const anEdge =
-    `
-        :source      a pgo:Node .
-        :destination a pgo:Node .
-
-        :edge rdf:subject   :source       ;
-              rdf:predicate :predicate    ;
-              rdf:object    :destination  ;
-              rdf:type      pgo:Edge      ;
-    `;
-
+describe("Edge and Property convertion", function() {
     const graphs = {
         edgeWithMetaProperty: `
             :source      a pgo:Node .
@@ -777,20 +766,20 @@ describe("Relationship and Property convertion", function() {
 
             :predicate rdfs:label "The Predicate Label" .
 
-            :property1 a prec:Property, prec:CreatedProperty ; rdfs:label "Property 1" .
-            :property2 a prec:Property, prec:CreatedProperty ; rdfs:label "Property 2" .
+            :property1 a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "Property 1" .
+            :property2 a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "Property 2" .
 
-            :property1_bn a prec:PropertyValue ; rdf:value "Value 1" .
-            :property2_bn a prec:PropertyValue ; rdf:value "Value 2" .
+            :property1_bn a prec:PropertyKeyValue ; rdf:value "Value 1" .
+            :property2_bn a prec:PropertyKeyValue ; rdf:value "Value 2" .
             
             :property2_bn prec:hasMetaProperties :meta_property .
 
             :meta_property :property1 :meta_property_bn .
-            :meta_property_bn a prec:PropertyValue ; rdf:value "TheMetaProperty" .
+            :meta_property_bn a prec:PropertyKeyValue ; rdf:value "TheMetaProperty" .
         `,
 
         contextSPOPartial: `
-            prec:Properties     prec:modelAs prec:DirectTriples .
+            prec:Properties     prec:templatedBy prec:DirectTriples .
             prec:KeepProvenance prec:flagState false .
 
             [] a prec:PropertyRule ;
@@ -803,13 +792,13 @@ describe("Relationship and Property convertion", function() {
         `,
 
         contextSPO: `
-            prec:Properties     prec:modelAs prec:DirectTriples .
-            prec:Relationships  prec:modelAs prec:RdfStarUnique .
+            prec:Properties     prec:templatedBy prec:DirectTriples .
+            prec:Edges          prec:templatedBy prec:RdfStarUnique .
             prec:KeepProvenance prec:flagState false .
 
-            [] a prec:RelationshipRule ;
-                prec:relationshipLabel "The Predicate Label" ;
-                prec:relationshipIRI :Z_PREDICATE .
+            [] a prec:EdgeRule ;
+                prec:edgeLabel "The Predicate Label" ;
+                prec:edgeIRI :Z_PREDICATE .
                 
             [] a prec:PropertyRule ;
                 prec:propertyName "Property 1" ;
@@ -824,23 +813,23 @@ describe("Relationship and Property convertion", function() {
             //anEdge +
         `
             :node a pgo:Node ; :property :property_bn .
-            :property a prec:Property, prec:CreatedProperty ; rdfs:label "Property" .
-            :property_bn a prec:PropertyValue ; rdf:value ( "A" "B" "C" "D" "E" ) .
+            :property a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "Property" .
+            :property_bn a prec:PropertyKeyValue ; rdf:value ( "A" "B" "C" "D" "E" ) .
 
             :property_bn prec:hasMetaProperties :meta_property_bn .
 
             :meta_property_bn :property :numbers_bn .
-            :numbers_bn a prec:PropertyValue ; rdf:value ( 1 2 3 ) .
+            :numbers_bn a prec:PropertyKeyValue ; rdf:value ( 1 2 3 ) .
         `,
         cartesianProductOfMetaLists:
         `
-            prec:Properties     prec:modelAs prec:CartesianProduct .
+            prec:Properties     prec:templatedBy prec:CartesianProduct .
             prec:KeepProvenance prec:flagState false .
         
-            prec:CartesianProduct a prec:PropertyModel ;
+            prec:CartesianProduct a prec:PropertyTemplate ;
                 prec:composedOf
                        << pvar:entity pvar:propertyKey pvar:individualValue >> ,
-                    << << pvar:entity pvar:propertyKey pvar:individualValue >> pvar:metaPropertyKey pvar:metaPropertyValue >> .
+                    << << pvar:entity pvar:propertyKey pvar:individualValue >> pvar:metaPropertyPredicate pvar:metaPropertyObject >> .
                 
             [] a prec:PropertyRule ;
                 prec:propertyName "Property" ;
@@ -904,14 +893,14 @@ describe("Relationship and Property convertion", function() {
 
 
 describe('Node label rules', function () {
-    describe('Remodeliation', function () {
+    describe('Template redefinition', function () {
         test('should let the user defined how node labels are defined',
         `
             :alice rdf:type pgo:Node, _:person .
             _:person a prec:CreatedNodeLabel ; rdfs:label "Person" .
         `,
         `
-            prec:NodeLabels prec:modelAs [
+            prec:NodeLabels prec:templatedBy [
                 prec:composedOf
                     << pvar:node :somePGsaysThatTheyAreA pvar:nodeLabelIRI >> ,
                     << pvar:nodeLabelIRI :labelsTheNode pvar:node  >> ,
@@ -939,7 +928,7 @@ describe('Node label rules', function () {
             pgo:myOtherLabel a prec:CreatedNodeLabel ; rdfs:label "Kitten" .
         `,
         `
-            prec:NodeLabels prec:modelAs [
+            prec:NodeLabels prec:templatedBy [
                 prec:composedOf << pvar:node :isLabeled pvar:label >>
             ] .
         `,
@@ -950,3 +939,58 @@ describe('Node label rules', function () {
         );
     });
 });
+
+describe('Synonyms', function () {
+    test('should properly map relationship to edge', 
+    `
+        :edge1 a pgo:Edge ;
+          rdf:subject :nodes ;
+          rdf:object  :node1o ;
+          rdf:predicate :knows .
+    
+        :edge2 a pgo:Edge ;
+          rdf:subject :nodes ;
+          rdf:object  :node2o ;
+          rdf:predicate :ignores .
+        
+        :nodes a pgo:Node .
+        :node1o a pgo:Node .
+        :node2o a pgo:Node .
+
+        :knows   a prec:CreatedEdgeLabel ; rdfs:label "WhoKnows" .
+        :ignores a prec:CreatedEdgeLabel ; rdfs:label "DoesntKnow" .
+    `,
+    `
+        :worstTemplate a prec:RelationshipTemplate ;
+          prec:composedOf
+            << pvar:source          :startArrow pvar:relationship >> ,
+            << pvar:relationship    :endArrow   pvar:destination  >> ,
+            << pvar:relationshipIRI :labels     pvar:relationship >> .
+        
+        prec:Relationships prec:templatedBy :worstTemplate .
+
+        :whoKnows prec:IRIOfRelationshipLabel "WhoKnows" .
+
+        :doesntRule a prec:RelationshipRule ;
+          prec:relationshipLabel "DoesntKnow" ;
+          prec:relationshipIRI :imlost ;
+          prec:templatedBy prec:RdfStarUnique .
+    `,
+    `
+        :nodes a pgo:Node .
+        :node1o a pgo:Node .
+        :node2o a pgo:Node .
+
+        # First edge
+        :nodes :startArrow :edge1 .
+        :edge1 :endArrow :node1o .
+        :whoKnows :labels :edge1 .
+
+        # Second edge
+        :nodes :imlost :node2o .
+        << :nodes :imlost :node2o >> rdf:type pgo:Edge .
+    `
+    );
+
+
+})

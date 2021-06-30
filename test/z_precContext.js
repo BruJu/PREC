@@ -1,7 +1,7 @@
 
 const N3 = require("n3");
 const utility = require("./utility.js");
-const graphReducer = require("../prec3/graph-reducer.js");
+const graphReducer = require("../src/prec/graph-reducer.js");
 const assert = require('assert');
 
 

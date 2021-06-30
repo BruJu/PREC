@@ -18,7 +18,7 @@ prec:EdgeShape a sh:NodeShape ;
   sh:property [ sh:path rdf:predicate                     ; sh:minCount 1 ; sh:maxCount 1 ] .
 
 prec:PropertyValueShape a sh:NodeShape ;
-  sh:targetClass prec:PropertyValue ;
+  sh:targetClass prec:PropertyKeyValue ;
   sh:or (
     # The value must be either a literal
     [
@@ -37,6 +37,6 @@ prec:PropertyValueShape a sh:NodeShape ;
 .
 
 # TODO:
-# All predicates of type prec:Property must have :
+# All predicates of type prec:PropertyKey must have :
 # - either a pgo:Node or a pgo:Edge as subject
-# - a prec:PropertyValue as object.
+# - a prec:PropertyKeyValue as object.

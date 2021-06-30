@@ -4,39 +4,39 @@ PREFIX ex:   <http://example.org/>
 PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX pgo:  <http://ii.wb.edu.pl/pgo#>
 
-# In this file, we try to reproduce this model:
+# In this file, we try to reproduce this modelization:
 # https://ieeexplore.ieee.org/document/9115617
 
 prec:KeepProvenance        prec:flagState false .
 
-# -- PGO model
+# -- PGO modelization
 
-prec:NodeProperties         prec:modelAs prec:pgoNodeProperty .
-prec:RelationshipProperties prec:modelAs prec:pgoEdgeProperty .
-prec:Relationships          prec:modelAs prec:pgoEdgeRepresentation .
+prec:NodeProperties prec:templatedBy prec:pgoNodeProperty .
+prec:EdgeProperties prec:templatedBy prec:pgoEdgeProperty .
+prec:Edges          prec:templatedBy prec:pgoEdgeRepresentation .
 
 prec:pgoNodeProperty prec:composedOf
-    << pvar:entity pgo:hasNodeProperty pvar:property >> ,
-    << pvar:property pgo:key pvar:propertyKey >> ,
-    << pvar:property pgo:value pvar:propertyValue >> ,
-    << pvar:property rdf:type pgo:Property >> .
+    << pvar:entity pgo:hasNodeProperty pvar:propertyNode >> ,
+    << pvar:propertyNode pgo:key pvar:label >> ,
+    << pvar:propertyNode pgo:value pvar:propertyValue >> ,
+    << pvar:propertyNode rdf:type pgo:Property >> .
 
 prec:pgoEdgeProperty prec:composedOf
-    << pvar:entity pgo:hasEdgeProperty pvar:property >> ,
-    << pvar:property pgo:key pvar:propertyKey >> ,
-    << pvar:property pgo:value pvar:propertyValue >> ,
-    << pvar:property rdf:type pgo:Property >> .
+    << pvar:entity pgo:hasEdgeProperty pvar:propertyNode >> ,
+    << pvar:propertyNode pgo:key pvar:label >> ,
+    << pvar:propertyNode pgo:value pvar:propertyValue >> ,
+    << pvar:propertyNode rdf:type pgo:Property >> .
 
 prec:pgoEdgeRepresentation prec:composedOf
-    << pvar:self pgo:startNode    pvar:source          >> ,
-    << pvar:self pgo:endNode      pvar:destination     >> ,
-    << pvar:self pgo:label        pvar:relationshipIRI >> ,
-    << pvar:self rdf:type         pgo:Edge             >> ,
-    << pvar:self pvar:propertyKey pvar:propertyValue   >> .
+    << pvar:edge pgo:startNode          pvar:source         >> ,
+    << pvar:edge pgo:endNode            pvar:destination    >> ,
+    << pvar:edge pgo:label              pvar:edgeIRI        >> ,
+    << pvar:edge rdf:type               pgo:Edge            >> ,
+    << pvar:edge pvar:propertyPredicate pvar:propertyObject >> .
 
 # -- Some IRIs
 
 <http://dbpedia.org/ontology/Person> prec:IRIOfNodeLabel "Person" .
 <https://schema.org/name>            prec:IRIOfProperty  "name"   .
-ex:like  prec:IRIOfRelationship "Likes" .
-ex:since prec:IRIOfProperty     "since" .
+ex:like  prec:IRIOfEdgeLabel "Likes" .
+ex:since prec:IRIOfProperty "since" .

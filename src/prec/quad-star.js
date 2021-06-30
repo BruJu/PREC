@@ -21,10 +21,11 @@ const N3 = require('n3');
  * Compared to a naive approach, in some cases this quad returns the passed quad
  * if it would be equal.
  * 
- * @param {*} quad Quad to rebuild. Must be of type quad
- * @param {*} unaryFunction Function to call to convert an inner term
+ * @param {Quad} quad Quad to rebuild. Must be of type quad
+ * @param {function(Quad): Quad} unaryFunction Function to call to convert an
+ * inner term
  */
- function eventuallyRebuildQuad(quad, unaryFunction) {
+function eventuallyRebuildQuad(quad, unaryFunction) {
     let elements = [quad.subject, quad.predicate, quad.object, quad.graph];
 
     let conversion = elements.map(
@@ -46,10 +47,12 @@ const N3 = require('n3');
 }
 
 /**
+ * Modify the term by replacing its content.
  * 
- * @param {*} term 
- * @param {*} mapping A list of [termReplacement, termToReplace]
- * @returns 
+ * @param {Term} term The term to modify
+ * @param {[Term, Term][]} mapping A list of [termReplacement, termToReplace]
+ * @returns {Term} the term where the term to replace have been replaced with
+ * their counterpart
  */
 function remapPatternWithVariables(term, mapping) {
     function remapTerm(t) {
@@ -73,9 +76,9 @@ function remapPatternWithVariables(term, mapping) {
 }
 
 /**
- * 
- * @param {*} term A RDF/JS term
- * @param {*} searched A list of RDF/JS terms
+ * Returns true if the term contains one of the terms in the `searched` list.
+ * @param {Term} term A RDF/JS term
+ * @param {Term[]} searched A list of RDF/JS terms
  * @returns True if term is or contains a term in `searched`
  */
 function containsTerm(term, searched) {

@@ -2,9 +2,18 @@ const N3 = require('n3');
 const namespace = require('@rdfjs/namespace');
 const xsd = namespace("http://www.w3.org/2001/XMLSchema#", N3.DataFactory);
 
+
+/**
+ * @typedef { import("rdf-js").Term } Term
+ * @typedef { import("rdf-js").Quad } Quad
+ */
+
 /**
  * Converts an RDF/JS literal to its value. If its type represents a number,
  * it returns a number. Else it returns a literal.
+ * @param {Term} literal The literal to parse
+ * @returns {number|string|undefined} The value contained in the literal.
+ * Returns undefined if the term is not a literal.
  */
 function rdfLiteralToValue(literal) {
     if (literal.termType !== "Literal") return undefined;
@@ -18,7 +27,13 @@ function rdfLiteralToValue(literal) {
     }
 }
 
-/** Convert term into its boolean value. Return undefined if it's not a valid boolean */
+/**
+ * Converts the term into its boolean value. Return undefined if it's not a
+ * valid boolean
+ * @param {Term} term The term to convert to the boolean
+ * @returns {boolean|undefined} The value of the boolean, or undefined if not
+ * a valid boolean
+ */
 function xsdBoolToBool(term) {
     if (term.termType !== "Literal" || !xsd.boolean.equals(term.datatype)) {
         return undefined;
@@ -35,7 +50,8 @@ function xsdBoolToBool(term) {
 
 /**
  * (Badly) convert a list of quads into a string
- * @param {*} quads 
+ * @param {Quad[]} quads 
+ * @param {number} indent
  */
 function badToString(quads, indent) {
     let s = "";
@@ -89,7 +105,7 @@ function badToString(quads, indent) {
 
 /**
  * Return true if `term` is in `listOfTerms`
- * @param {*} term 
+ * @param {Term} term 
  * @param {Array} listOfTerms 
  * @returns True if the term is in the list of tems
  */
@@ -99,8 +115,8 @@ function termIsIn(term, listOfTerms) {
 
 /**
  * 
- * @param {Array} quads1 
- * @param {Array} quads2 
+ * @param {Quad[]} quads1 
+ * @param {Quad[]} quads2 
  * @returns 
  */
 function approximateIsomorphism(quads1, quads2) {
@@ -132,6 +148,11 @@ function approximateIsomorphism(quads1, quads2) {
 /**
  * A map that uses object.value as a key and the equal function to check if
  * two keys are actually equals.
+ * 
+ * Note: Keys are currently searched by performing a linear search
+ * 
+ * @template Key The type of the keys
+ * @template Value The type of the values
  */
 class TermDict {
     /** Build an empty `TermDict` */
@@ -139,6 +160,12 @@ class TermDict {
         this.map = {};
     }
 
+    /**
+     * Returns the value associated to the given key.
+     * @param {Key} key The key
+     * @returns {Value?} The associated value or undefined if none were
+     * associated to the given key
+     */
     /** Return the value stored for key */
     get(key) {
         let list = this.map[key.value];
@@ -153,7 +180,11 @@ class TermDict {
         return undefined;
     }
 
-    /** Set the given value for the given key */
+    /**
+     * Sets the given value for the given key
+     * @param {Key} key The key
+     * @param {Value} value The value
+     */
     set(key, value) {
         let list = this.map[key.value];
         if (list === undefined) {
@@ -171,10 +202,18 @@ class TermDict {
         list.push([key, value]);
     }
 
+    /**
+     * Checks if the term dict is empty
+     * @returns {boolean} True if this Term dict is empty
+     */
     isEmpty() {
         return Object.keys(this.map).length === 0;
     }
 
+    /**
+     * Calls a function for every (key, value) pair stored in this term dict.
+     * @param {function(Key, Value)} callback A consumer of a key and a value
+     */
     forEach(callback) {
         for (const kvPairWithSameHash of Object.values(this.map)) {
             for (const [key, value] of kvPairWithSameHash) {

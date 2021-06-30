@@ -1,17 +1,14 @@
 PREFIX prec: <http://bruy.at/prec#>
 PREFIX pgo:  <http://ii.uwb.edu.pl/pgo#>
 
-prec:Properties prec:modelAs prec:DirectTriples .
-prec:KeepProvenance        prec:flagState false .
+prec:Edges      prec:templatedBy prec:RdfStarUnique .
+prec:Properties prec:templatedBy prec:DirectTriples .
+prec:KeepProvenance prec:flagState false .
 
-prec:Relationships prec:modelAs prec:RdfStarUnique .
+<http://schema.org/actor> prec:IRIOfEdgeLabel "ACTED_IN" .
 
-<http://schema.org/actor> prec:IRIOfRelationship "ACTED_IN" .
+[] a prec:PropertyRule ;
+  prec:propertyName "roles" ;
+  prec:propertyIRI <http://example.org/role> .
 
-<http://example.org/role> prec:IRIOfProperty [
-    prec:propertyName "roles"
-    # ; prec:multiValue prec:asSet
-] .
-
-
-
+# TODO: a context where a template that uses pvar:individualValue is used

@@ -1,7 +1,7 @@
 const assert = require('assert');
 const N3 = require('n3');
 
-const DStar = require("../dataset/index.js");
+const DStar = require("../src/dataset/index.js");
 
 const namespace = require('@rdfjs/namespace');
 const ex = namespace("http://example.org/", N3.DataFactory);
@@ -15,7 +15,7 @@ require("./dataset/DatasetCore.test.js")(
     quad: N3.DataFactory.quad,
     literal: N3.DataFactory.literal,
     blankNode: N3.DataFactory.blankNode,
-    dataset: t => new (require('../dataset/index.js'))(t)
+    dataset: t => new (require('../src/dataset/index.js'))(t)
 });
 
 describe('DStar', function() {
@@ -273,7 +273,7 @@ describe('DStar', function() {
                 }
             })
             
-            it("should work on rdf star datasets for which the evil part is used properly (composed source and model)", function() {
+            it("should work on rdf star datasets for which the evil part is used properly (composed source and template)", function() {
                 const dstar = new DStar();
                 dstar.addFromTurtleStar(
                     `

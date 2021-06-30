@@ -4,7 +4,7 @@ PREFIX schema: <http:/schema.org/>
 PREFIX ex:     <http://example.org/>
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 
-prec:Properties prec:modelAs prec:DirectTriples .
+prec:Properties prec:templatedBy prec:DirectTriples .
 prec:KeepProvenance        prec:flagState false .
 
 

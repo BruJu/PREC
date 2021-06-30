@@ -5,7 +5,7 @@ const namespace = require('@rdfjs/namespace');
 const ex = namespace("http://ex.org/", N3.DataFactory);
 const $Quad = N3.DataFactory.quad;
 
-const QuadStar = require('../prec3/quad-star');
+const QuadStar = require('../src/prec/quad-star');
 
 
 describe('QuadStar', function () {
