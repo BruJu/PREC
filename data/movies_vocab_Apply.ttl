@@ -9,6 +9,6 @@ prec:KeepProvenance prec:flagState false .
 
 [] a prec:PropertyRule ;
   prec:propertyName "roles" ;
-  prec:propertyIRI  <http://example.org/role> .
+  prec:propertyIRI <http://example.org/role> .
 
 # TODO: a context where a template that uses pvar:individualValue is used

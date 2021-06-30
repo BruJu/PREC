@@ -80,7 +80,7 @@ const TOOL_PrecGeneratedIsomorphism = {
                 precm1.extendDataset_PathTravelling(wtdataset);
                 let nodes = wtdataset.getNodesOfType(pgo.Node, N3.DataFactory.defaultGraph());
                 let edges = wtdataset.getNodesOfType(pgo.Edge, N3.DataFactory.defaultGraph());
-                let propertyValue = wtdataset.getNodesOfType(prec.PropertyValue, N3.DataFactory.defaultGraph());
+                let propertyValue = wtdataset.getNodesOfType(prec.PropertyKeyValue, N3.DataFactory.defaultGraph());
                 wtdataset.free();
                 return [...nodes, ...edges, ...propertyValue];
             }(quads);

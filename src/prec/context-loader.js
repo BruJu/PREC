@@ -117,12 +117,12 @@ class PropertyRule {
     constructor(conditions, hash, ruleNode) {
         this.conditions = [
             [
-                $quad(variable('propertyKey'), rdf.type, prec.PropertyLabel)
+                $quad(variable('propertyKey'), rdf.type, prec.PropertyKey)
             ]
         ];
         this.ruleNode = ruleNode;
 
-        // prec:propertyName
+        // prec:propertyKey
         if (conditions.label !== undefined) {
             this.conditions.push(
                 [
@@ -705,7 +705,7 @@ function readFlags(store) {
 
 /**
  * Read the
- * `(pgo:Node | pgo:Edge | prec:PropertyLabel) prec:mapBlankNodesToPrefix ?o`
+ * `(pgo:Node | pgo:Edge | prec:PropertyKey) prec:mapBlankNodesToPrefix ?o`
  * triples and return the map `[s.value] = ?o`.
  * 
  * This extracts the prefix to map each type of elements from the property graph
@@ -718,7 +718,7 @@ function readBlankNodeMapping(store) {
 
         if (!target.equals(pgo.Node)
             && !target.equals(pgo.Edge)
-            && !target.equals(prec.PropertyLabel)) {
+            && !target.equals(prec.PropertyKey)) {
             console.error("Unknown subject of mapTo " + target.value);
             continue;
         }

@@ -41,12 +41,12 @@ prec:KeepProvenance        prec:flagState false .
 [] a prec:PropertyRule ;
     prec:propertyIRI <http://schema.org/familyName> ;
     prec:propertyName "name" ;
-    prec:nodeLabel    "PERSON" .
+    prec:nodeLabel   "PERSON" .
 
 [] a prec:PropertyRule ;
     prec:propertyIRI <http://schema.org/name> ;
     prec:propertyName "name" ;
-    prec:nodeLabel    "COMPANY" .
+    prec:nodeLabel   "COMPANY" .
 
 # TODO: target: transform to date
 schema:startDate prec:IRIOfProperty "since" .

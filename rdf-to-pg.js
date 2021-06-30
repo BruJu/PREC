@@ -271,8 +271,8 @@ function extendDataset_RWPRECGenerated(datasetInstance) {
     datasetInstance.readPropertyName = function(property) {
         return this.readLabelOf(
             property,
-            [[rdf.type, prec.PropertyLabel  ]],
-            [[rdf.type, prec.CreatedPropertyLabel]]
+            [[rdf.type, prec.PropertyKey  ]],
+            [[rdf.type, prec.CreatedPropertyKey]]
         );
     };
 
@@ -332,8 +332,8 @@ function extractAndDeletePropertyValue(dataset, value) {
     if (dataset.has(QUAD(value, rdf.type, rdf.List))) {
         let r = _extractAndDeleteRdfList(dataset, value);
         return r.map(quad => extractAndDeletePropertyValue(dataset, quad));
-    } else if (dataset.has(QUAD(value, rdf.type, prec.PropertyValue))) {
-        dataset.delete(QUAD(value, rdf.type, prec.PropertyValue));
+    } else if (dataset.has(QUAD(value, rdf.type, prec.PropertyKeyValue))) {
+        dataset.delete(QUAD(value, rdf.type, prec.PropertyKeyValue));
 
         let v = dataset.checkAndFollow(value, rdf.value, [], []);
         if (v == null) throw "Invalid RDF Graph - " + value.value + " has meta properties (not yet supported)";
@@ -501,15 +501,15 @@ class PseudoPGBuilder {
                 throw "Found embedded quad but PREC only generates RDF non star";
             }
 
-            if (!dataset.areDisjointTypes([pgo.Node, pgo.Edge, prec.PropertyLabel, prec.PropertyValue])) {
-                throw "pgo:Node, pgo:Edge, prec:PropertyLabel and prec:PropertyValue should be disjoint types.";
+            if (!dataset.areDisjointTypes([pgo.Node, pgo.Edge, prec.PropertyKey, prec.PropertyKeyValue])) {
+                throw "pgo:Node, pgo:Edge, prec:PropertyKey and prec:PropertyKeyValue should be disjoint types.";
             }
 
             let builder = new PseudoPGBuilder();
 
             // A property is:
             // - _e prop propBN - propBN rdf:value a_literal
-            // - prop rdf:type prec:PropertyLabel
+            // - prop rdf:type prec:PropertyKey
             // - propBN rdf:type propBN
             // - propBN is only used here
             // => We currently don't support meta properties
@@ -528,8 +528,8 @@ class PseudoPGBuilder {
                 let properties = {};
 
                 for (const path of pathsFrom) {
-                    const propertyName = dataset.readPropertyName(path.predicate);
-                    if (propertyName === null) throw "Invalid RDF Graph - readPropertyName";
+                    const propertyKey = dataset.readPropertyName(path.predicate);
+                    if (propertyKey === null) throw "Invalid RDF Graph - readPropertyName";
 
                     dataset.delete(path);
 
@@ -537,15 +537,15 @@ class PseudoPGBuilder {
                     if (propertyValue === null || propertyValue === undefined)
                         throw "Invalid RDF Graph - Invalid Property Value - " + path.object.value;
 
-                    if (properties[propertyName] !== undefined) {
+                    if (properties[propertyKey] !== undefined) {
                         // Note : we could relax this so several times the same
                         // predicate name means it was a list.
                         // But this wouldn't catch the case of empty and one
                         // element lists.
-                        throw "Invalid RDF graph: several times the same property " + propertyName;
+                        throw "Invalid RDF graph: several times the same property " + propertyKey;
                     }
 
-                    properties[propertyName] = propertyValue;
+                    properties[propertyKey] = propertyValue;
                 }
 
                 return properties;
@@ -621,11 +621,11 @@ class PseudoPGBuilder {
 
             remvoeSubjectIfMatchPaths(dataset,
                 [
-                    [rdf.type, prec.PropertyLabel],
+                    [rdf.type, prec.PropertyKey],
                     [rdfs.label, null]
                 ],
                 [
-                    [rdf.type, prec.CreatedPropertyLabel]
+                    [rdf.type, prec.CreatedPropertyKey]
                 ],
                 noMoreInContext
             );
@@ -633,7 +633,7 @@ class PseudoPGBuilder {
             // Remove axioms and meta data
             dataset.deleteMatches(prec.CreatedNodeLabel, rdfs.subClassOf, prec.CreatedVocabulary);
             dataset.deleteMatches(prec.CreatedEdgeLabel, rdfs.subClassOf, prec.CreatedVocabulary);
-            dataset.deleteMatches(prec.CreatedPropertyLabel, rdfs.subClassOf, prec.CreatedVocabulary);
+            dataset.deleteMatches(prec.CreatedPropertyKey, rdfs.subClassOf, prec.CreatedVocabulary);
 
             // End
             if (dataset.size === 0 && dataset.free !== undefined) {

@@ -50,7 +50,7 @@ function applyContext(dataset, contextQuads) {
     // Property: ?p a createdProp, ?p a Property, ?p rdfs.label Thing
     // Edge label: ?p a CreatedEdgeLabel, ?p rdfs.label Thing
     // Node label : same
-    removeUnusedCreatedVocabulary(dataset, prec.CreatedPropertyLabel, 3, 0, 0);
+    removeUnusedCreatedVocabulary(dataset, prec.CreatedPropertyKey, 3, 0, 0);
     removeUnusedCreatedVocabulary(dataset, prec.CreatedEdgeLabel, 2, 0, 0);
     removeUnusedCreatedVocabulary(dataset, prec.CreatedNodeLabel, 2, 0, 0);
 
@@ -64,7 +64,7 @@ function applyContext(dataset, contextQuads) {
 // =============================================================================
 
 /**
- * Deletes every occurrence of pgo:Edge pgo:Node, prec:PropertyLabel and prec:PropertyValue.
+ * Deletes every occurrence of pgo:Edge pgo:Node, prec:PropertyKey and prec:PropertyKeyValue.
  * 
  * While the PGO ontology is usefull to describe the PG structure, and to
  * specify the provenance of the 
@@ -72,8 +72,8 @@ function applyContext(dataset, contextQuads) {
 function removePGO(dataset) {
     dataset.deleteMatches(null, rdf.type, pgo.Edge);
     dataset.deleteMatches(null, rdf.type, pgo.Node);
-    dataset.deleteMatches(null, rdf.type, prec.PropertyLabel);
-    dataset.deleteMatches(null, rdf.type, prec.PropertyValue);
+    dataset.deleteMatches(null, rdf.type, prec.PropertyKey);
+    dataset.deleteMatches(null, rdf.type, prec.PropertyKeyValue);
 }
 
 /**
@@ -191,7 +191,7 @@ function transformNodeLabels(dataset, context) {
 function transformProperties(dataset, context) {
     // Mark every property value node
     {
-        const q = dataset.getQuads(null, rdf.type, prec.PropertyLabel, defaultGraph())
+        const q = dataset.getQuads(null, rdf.type, prec.PropertyKey, defaultGraph())
             .map(quad => quad.subject)
             .flatMap(propertyType => dataset.getQuads(null, propertyType, null, defaultGraph()))
             .map(quad => quad.object)
@@ -237,7 +237,7 @@ const PropertyTemplateApplier = {
                 $quad(variable("property"), prec.__appliedPropertyRule, variable("ruleNode")),
                 $quad(variable("entity")  , variable("propertyKey")   , variable("property")),
                 $quad(variable("property"), rdf.value                 , variable("propertyValue")),
-                $quad(variable("property"), rdf.type, prec.PropertyValue)
+                $quad(variable("property"), rdf.type, prec.PropertyKeyValue)
             ]
         )
             .map(bindings => [bindings, PropertyTemplateApplier.findTypeInDataset(dataset, bindings.entity)])
@@ -268,7 +268,7 @@ const PropertyTemplateApplier = {
                 $quad(node                , variable("propertyKey")   , variable("property")),
                 $quad(variable("property"), prec.__appliedPropertyRule, variable("ruleNode")),
                 $quad(variable("property"), rdf.value                 , variable("propertyValue")),
-                $quad(variable("property"), rdf.type, prec.PropertyValue)
+                $quad(variable("property"), rdf.type, prec.PropertyKeyValue)
             ]
         );
     

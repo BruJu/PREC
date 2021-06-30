@@ -80,7 +80,7 @@ prec:propertyValue a prec:SubstitutionTerm ; prec:substitutionTarget pvar:proper
 # - These rules match the pattern
 # pvar:entity           pvar:propertyKey       pvar:propertyNode
 # pvar:propertyNode     rdf:value              pvar:propertyValue
-# pvar:propertyNode     a prec:PropertyValue .
+# pvar:propertyNode     a prec:PropertyKeyValue .
 # pvar:propertyNode     prec:hasMetaProperties     pvar:MetaPropertyNode   # optional
 # pvar:metaPropertyNode pvar:metaPropertyPredicate pvar:metaPropertyObject # 0...n
 #
@@ -100,7 +100,7 @@ prec:Prec0Property a prec:PropertyTemplate ;
   prec:composedOf
     << pvar:entity           pvar:propertyKey           pvar:propertyNode      >> ,
     << pvar:propertyNode     rdf:value                  pvar:propertyValue     >> ,
-    << pvar:propertyNode     rdf:type                   prec:PropertyValue     >> ,
+    << pvar:propertyNode     rdf:type                   prec:PropertyKeyValue     >> ,
     << pvar:propertyNode     prec:hasMetaProperties     pvar:metaPropertyNode  >> ,
     << pvar:metaPropertyNode pvar:metaPropertyPredicate pvar:metaPropertyObject >> .
 
@@ -119,7 +119,7 @@ prec:CombinedBlankNodes a prec:PropertyTemplate ;
   prec:composedOf
     << pvar:entity       pvar:propertyKey     pvar:propertyNode          >> ,
     << pvar:propertyNode rdf:value            pvar:propertyValue     >> ,
-    << pvar:propertyNode rdf:type             prec:PropertyValue     >> ,
+    << pvar:propertyNode rdf:type             prec:PropertyKeyValue     >> ,
     << pvar:propertyNode pvar:metaPropertyPredicate pvar:metaPropertyObject >> .
 
 

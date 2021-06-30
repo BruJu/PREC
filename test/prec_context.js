@@ -416,22 +416,22 @@ describe("Property convertion", function() {
               rdf:object :o .
         `,
         oneNodeWithProperty: `
-            :node a pgo:Node ; :p [ rdf:value "v1" ; a prec:PropertyValue ] .
-            :p a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "P1" .
+            :node a pgo:Node ; :p [ rdf:value "v1" ; a prec:PropertyKeyValue ] .
+            :p a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "P1" .
         `,
         oneNodeWithTwoProperties: `
             :node a pgo:Node ;
-                :p1 [ rdf:value "v1" ; a prec:PropertyValue ] ;
-                :p2 [ rdf:value "v2" ; a prec:PropertyValue ] .
+                :p1 [ rdf:value "v1" ; a prec:PropertyKeyValue ] ;
+                :p2 [ rdf:value "v2" ; a prec:PropertyKeyValue ] .
             
-            :p1 a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "P1" .
-            :p2 a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "P2" .
+            :p1 a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "P1" .
+            :p2 a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "P2" .
         `,
         oneNodeWithMultiValuedProperty: `
             :node a pgo:Node ;
-                :p [ rdf:value "v1" ; a prec:PropertyValue ] ;
-                :p [ rdf:value "v2" ; a prec:PropertyValue ] .
-            :p a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "P1" .
+                :p [ rdf:value "v1" ; a prec:PropertyKeyValue ] ;
+                :p [ rdf:value "v2" ; a prec:PropertyKeyValue ] .
+            :p a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "P1" .
         `,
         oneSimpleGraph: `
             :edge a pgo:Edge ;
@@ -439,48 +439,48 @@ describe("Property convertion", function() {
               rdf:predicate :p ;
               rdf:object :o .
             
-            :s a pgo:Node ; :propertyA [ rdf:value "VANode" ; a prec:PropertyValue ] ; a [ rdfs:label "Subject" ] .
-            :o a pgo:Node ; :propertyB [ rdf:value "VBNode" ; a prec:PropertyValue ] ; a [ rdfs:label "Object"  ] .
+            :s a pgo:Node ; :propertyA [ rdf:value "VANode" ; a prec:PropertyKeyValue ] ; a [ rdfs:label "Subject" ] .
+            :o a pgo:Node ; :propertyB [ rdf:value "VBNode" ; a prec:PropertyKeyValue ] ; a [ rdfs:label "Object"  ] .
             :p rdfs:label "LabelOfEdge" .
-            :edge :propertyA [ rdf:value "VAEdge" ; a prec:PropertyValue ] .
-            :edge :propertyB [ rdf:value "VBEdge" ; a prec:PropertyValue ] .
-            :propertyA a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "PropertyA" .
-            :propertyB a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "PropertyB" .
+            :edge :propertyA [ rdf:value "VAEdge" ; a prec:PropertyKeyValue ] .
+            :edge :propertyB [ rdf:value "VBEdge" ; a prec:PropertyKeyValue ] .
+            :propertyA a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "PropertyA" .
+            :propertyB a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "PropertyB" .
         `,
         oneNodeWithMetaProperty: `    
-            :name a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "NAME" .
-            :town a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "TOWN" .
-            :description a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "DESCRIPTION" .
+            :name a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "NAME" .
+            :town a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "TOWN" .
+            :description a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "DESCRIPTION" .
 
             :node a pgo:Node ;
                 :name :name_value_1 ;
                 :name :name_value_2 ;
                 :town :town_value   .
             
-            :name_value_1 a prec:PropertyValue ;
+            :name_value_1 a prec:PropertyKeyValue ;
                 rdf:value "NAME VALUE 1" .
             
-            :name_value_2 a prec:PropertyValue ;
+            :name_value_2 a prec:PropertyKeyValue ;
                 rdf:value "NAME VALUE 2" ;
                 prec:hasMetaProperties :name_value_2_meta_properties .
             
-            :town_value a prec:PropertyValue ;
+            :town_value a prec:PropertyKeyValue ;
                 rdf:value "LYON" ;
                 prec:hasMetaProperties :town_value_meta_properties .
             
             :name_value_2_meta_properties :description :name_value_2_meta_properties_description .
 
-            :name_value_2_meta_properties_description a prec:PropertyValue ;
+            :name_value_2_meta_properties_description a prec:PropertyKeyValue ;
                 rdf:value "NAME VALUE 2: Meta Property" .
             
             :town_value_meta_properties
                 :description :town_value_meta_properties_description ;
                 :name :town_value_meta_properties_name .
             
-            :town_value_meta_properties_description a prec:PropertyValue ;
+            :town_value_meta_properties_description a prec:PropertyKeyValue ;
                 rdf:value "Not like the animal" .
 
-            :town_value_meta_properties_name a prec:PropertyValue ;
+            :town_value_meta_properties_name a prec:PropertyKeyValue ;
                 rdf:value "Capital of Lights" .
         `,
         contextForP1: ` :knows prec:IRIOfProperty "P1" . `,
@@ -540,41 +540,41 @@ describe("Property convertion", function() {
 
         runATest_(graphs, 'oneNodeWithProperty', 'contextForP1',
         `
-            :node a pgo:Node ; :knows [ rdf:value "v1" ; a prec:PropertyValue ] .
+            :node a pgo:Node ; :knows [ rdf:value "v1" ; a prec:PropertyKeyValue ] .
         `
         );
 
         runATest_(graphs, 'oneNodeWithTwoProperties', 'contextForP1',
         `
             :node a pgo:Node ;
-                :knows [ rdf:value "v1" ; a prec:PropertyValue ] ;
-                :p2    [ rdf:value "v2" ; a prec:PropertyValue ] .
-            :p2 a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "P2" .
+                :knows [ rdf:value "v1" ; a prec:PropertyKeyValue ] ;
+                :p2    [ rdf:value "v2" ; a prec:PropertyKeyValue ] .
+            :p2 a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "P2" .
         `
         );
 
         runATest_(graphs, 'oneNodeWithMultiValuedProperty', 'contextForP1',
         `
             :node a pgo:Node ;
-                :knows [ rdf:value "v1" ; a prec:PropertyValue ] ;
-                :knows [ rdf:value "v2" ; a prec:PropertyValue ] .
+                :knows [ rdf:value "v1" ; a prec:PropertyKeyValue ] ;
+                :knows [ rdf:value "v2" ; a prec:PropertyKeyValue ] .
         `
         );
 
         runATest_(graphs, 'oneNodeWithTwoProperties', 'contextForP1bis',
         `
             :node a pgo:Node ;
-                :knows [ rdf:value "v1" ; a prec:PropertyValue ] ;
-                :p2    [ rdf:value "v2" ; a prec:PropertyValue ] .
-            :p2 a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "P2" .
+                :knows [ rdf:value "v1" ; a prec:PropertyKeyValue ] ;
+                :p2    [ rdf:value "v2" ; a prec:PropertyKeyValue ] .
+            :p2 a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "P2" .
         `
         );
 
         runATest_(graphs, 'oneNodeWithMultiValuedProperty', 'contextForP1bis',
         `
             :node a pgo:Node ;
-                :knows [ rdf:value "v1" ; a prec:PropertyValue ] ;
-                :knows [ rdf:value "v2" ; a prec:PropertyValue ] .
+                :knows [ rdf:value "v1" ; a prec:PropertyKeyValue ] ;
+                :knows [ rdf:value "v2" ; a prec:PropertyKeyValue ] .
         `
         );
 
@@ -585,12 +585,12 @@ describe("Property convertion", function() {
               rdf:predicate :p ;
               rdf:object :o .
 
-            :s a pgo:Node ; :propertyA [ rdf:value "VANode" ; a prec:PropertyValue ] ; a [ rdfs:label "Subject" ] .
-            :o a pgo:Node ; :knows     [ rdf:value "VBNode" ; a prec:PropertyValue ] ; a [ rdfs:label "Object"  ] .
+            :s a pgo:Node ; :propertyA [ rdf:value "VANode" ; a prec:PropertyKeyValue ] ; a [ rdfs:label "Subject" ] .
+            :o a pgo:Node ; :knows     [ rdf:value "VBNode" ; a prec:PropertyKeyValue ] ; a [ rdfs:label "Object"  ] .
             :p rdfs:label "LabelOfEdge" .
-            :edge :propertyA [ rdf:value "VAEdge" ; a prec:PropertyValue ] .
-            :edge :knows     [ rdf:value "VBEdge" ; a prec:PropertyValue ] .
-            :propertyA a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "PropertyA" .
+            :edge :propertyA [ rdf:value "VAEdge" ; a prec:PropertyKeyValue ] .
+            :edge :knows     [ rdf:value "VBEdge" ; a prec:PropertyKeyValue ] .
+            :propertyA a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "PropertyA" .
         `
         );
 
@@ -601,13 +601,13 @@ describe("Property convertion", function() {
               rdf:predicate :p ;
               rdf:object :o .
 
-            :s a pgo:Node ; :knows     [ rdf:value "VANode" ; a prec:PropertyValue ] ; a [ rdfs:label "Subject" ] .
-            :o a pgo:Node ; :propertyB [ rdf:value "VBNode" ; a prec:PropertyValue ] ; a [ rdfs:label "Object"  ] .
+            :s a pgo:Node ; :knows     [ rdf:value "VANode" ; a prec:PropertyKeyValue ] ; a [ rdfs:label "Subject" ] .
+            :o a pgo:Node ; :propertyB [ rdf:value "VBNode" ; a prec:PropertyKeyValue ] ; a [ rdfs:label "Object"  ] .
             :p rdfs:label "LabelOfEdge" .
-            :edge :propertyA [ rdf:value "VAEdge" ; a prec:PropertyValue ] .
-            :edge :propertyB [ rdf:value "VBEdge" ; a prec:PropertyValue ] .
-            :propertyA a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "PropertyA" .
-            :propertyB a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "PropertyB" .
+            :edge :propertyA [ rdf:value "VAEdge" ; a prec:PropertyKeyValue ] .
+            :edge :propertyB [ rdf:value "VBEdge" ; a prec:PropertyKeyValue ] .
+            :propertyA a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "PropertyA" .
+            :propertyB a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "PropertyB" .
         `
         );
     
@@ -618,13 +618,13 @@ describe("Property convertion", function() {
             rdf:predicate :p ;
             rdf:object :o .
             
-            :s a pgo:Node ; :mappedA   [ rdf:value "VANode" ; a prec:PropertyValue ] ; a [ rdfs:label "Subject" ] .
-            :o a pgo:Node ; :propertyB [ rdf:value "VBNode" ; a prec:PropertyValue ] ; a [ rdfs:label "Object"  ] .
+            :s a pgo:Node ; :mappedA   [ rdf:value "VANode" ; a prec:PropertyKeyValue ] ; a [ rdfs:label "Subject" ] .
+            :o a pgo:Node ; :propertyB [ rdf:value "VBNode" ; a prec:PropertyKeyValue ] ; a [ rdfs:label "Object"  ] .
             :p rdfs:label "LabelOfEdge" .
-            :edge :propertyA [ rdf:value "VAEdge" ; a prec:PropertyValue ] .
-            :edge :propertyB [ rdf:value "VBEdge" ; a prec:PropertyValue ] .
-            :propertyA a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "PropertyA" .
-            :propertyB a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "PropertyB" .
+            :edge :propertyA [ rdf:value "VAEdge" ; a prec:PropertyKeyValue ] .
+            :edge :propertyB [ rdf:value "VBEdge" ; a prec:PropertyKeyValue ] .
+            :propertyA a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "PropertyA" .
+            :propertyB a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "PropertyB" .
 
         `
         );
@@ -636,13 +636,13 @@ describe("Property convertion", function() {
             rdf:predicate :p ;
             rdf:object :o .
             
-            :s a pgo:Node ; :propertyA [ rdf:value "VANode" ; a prec:PropertyValue ] ; a [ rdfs:label "Subject" ] .
-            :o a pgo:Node ; :propertyB [ rdf:value "VBNode" ; a prec:PropertyValue ] ; a [ rdfs:label "Object"  ] .
+            :s a pgo:Node ; :propertyA [ rdf:value "VANode" ; a prec:PropertyKeyValue ] ; a [ rdfs:label "Subject" ] .
+            :o a pgo:Node ; :propertyB [ rdf:value "VBNode" ; a prec:PropertyKeyValue ] ; a [ rdfs:label "Object"  ] .
             :p rdfs:label "LabelOfEdge" .
-            :edge :mappedA   [ rdf:value "VAEdge" ; a prec:PropertyValue ] .
-            :edge :propertyB [ rdf:value "VBEdge" ; a prec:PropertyValue ] .
-            :propertyA a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "PropertyA" .
-            :propertyB a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "PropertyB" .
+            :edge :mappedA   [ rdf:value "VAEdge" ; a prec:PropertyKeyValue ] .
+            :edge :propertyB [ rdf:value "VBEdge" ; a prec:PropertyKeyValue ] .
+            :propertyA a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "PropertyA" .
+            :propertyB a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "PropertyB" .
         `
         );
 
@@ -674,23 +674,23 @@ describe("Property convertion", function() {
 
         runATest_(graphs, 'oneNodeWithMetaProperty', 'contextCollapseMetaProperties',
         `
-        :name a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "NAME" .
-        :town a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "TOWN" .
-        :description a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "DESCRIPTION" .
+        :name a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "NAME" .
+        :town a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "TOWN" .
+        :description a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "DESCRIPTION" .
 
         :node a pgo:Node ;
             :name :name_value_1 ;
             :name :name_value_2 ;
             :town :town_value   .
         
-        :name_value_1 a prec:PropertyValue ;
+        :name_value_1 a prec:PropertyKeyValue ;
             rdf:value "NAME VALUE 1" .
         
-        :name_value_2 a prec:PropertyValue ;
+        :name_value_2 a prec:PropertyKeyValue ;
             rdf:value "NAME VALUE 2" ;
             prec:hasMetaProperties :name_value_2_meta_properties .
         
-        :town_value a prec:PropertyValue ;
+        :town_value a prec:PropertyKeyValue ;
             rdf:value "LYON" ;
             prec:hasMetaProperties :town_value_meta_properties .
         
@@ -708,8 +708,8 @@ describe("Property convertion", function() {
         const simpleProperty = `
             :node a pgo:Node .
             :node :pName :pBlankNode .
-            :pBlankNode rdf:value ( "a" "b" "c" ) ; a prec:PropertyValue .
-            :pName rdfs:label "key" ; a prec:PropertyLabel, prec:CreatedPropertyLabel .
+            :pBlankNode rdf:value ( "a" "b" "c" ) ; a prec:PropertyKeyValue .
+            :pName rdfs:label "key" ; a prec:PropertyKey, prec:CreatedPropertyKey .
         `;
 
         const templatedBy = function (template) {
@@ -766,16 +766,16 @@ describe("Edge and Property convertion", function() {
 
             :predicate rdfs:label "The Predicate Label" .
 
-            :property1 a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "Property 1" .
-            :property2 a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "Property 2" .
+            :property1 a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "Property 1" .
+            :property2 a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "Property 2" .
 
-            :property1_bn a prec:PropertyValue ; rdf:value "Value 1" .
-            :property2_bn a prec:PropertyValue ; rdf:value "Value 2" .
+            :property1_bn a prec:PropertyKeyValue ; rdf:value "Value 1" .
+            :property2_bn a prec:PropertyKeyValue ; rdf:value "Value 2" .
             
             :property2_bn prec:hasMetaProperties :meta_property .
 
             :meta_property :property1 :meta_property_bn .
-            :meta_property_bn a prec:PropertyValue ; rdf:value "TheMetaProperty" .
+            :meta_property_bn a prec:PropertyKeyValue ; rdf:value "TheMetaProperty" .
         `,
 
         contextSPOPartial: `
@@ -813,13 +813,13 @@ describe("Edge and Property convertion", function() {
             //anEdge +
         `
             :node a pgo:Node ; :property :property_bn .
-            :property a prec:PropertyLabel, prec:CreatedPropertyLabel ; rdfs:label "Property" .
-            :property_bn a prec:PropertyValue ; rdf:value ( "A" "B" "C" "D" "E" ) .
+            :property a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "Property" .
+            :property_bn a prec:PropertyKeyValue ; rdf:value ( "A" "B" "C" "D" "E" ) .
 
             :property_bn prec:hasMetaProperties :meta_property_bn .
 
             :meta_property_bn :property :numbers_bn .
-            :numbers_bn a prec:PropertyValue ; rdf:value ( 1 2 3 ) .
+            :numbers_bn a prec:PropertyKeyValue ; rdf:value ( 1 2 3 ) .
         `,
         cartesianProductOfMetaLists:
         `

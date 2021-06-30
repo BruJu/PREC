@@ -298,7 +298,7 @@
 
           <p>Types that are subtypes of [= prec:CreatedVocabulary =] are:
             <ul>
-              <li><dfn data-lt="prec:CreatedPropertyLabel">http://bruy.at/prec#CreatedPropertyLabel</dfn></li>
+              <li><dfn data-lt="prec:CreatedPropertyKey">http://bruy.at/prec#CreatedPropertyKey</dfn></li>
               <li><dfn data-lt="prec:CreatedNodeLabel">http://bruy.at/prec#CreatedNodeLabel</dfn></li>
               <li><dfn data-lt="prec:CreatedEdgeLabel">http://bruy.at/prec#CreatedEdgeLabel</dfn></li>
             </ul>
@@ -308,13 +308,13 @@
         </section>
 
         <section>
-          <h4><dfn data-lt="prec:PropertyLabel">http://bruy.at/prec#PropertyLabel</dfn></h4>
+          <h4><dfn data-lt="prec:PropertyKey">http://bruy.at/prec#PropertyKey</dfn></h4>
 
-          <p>Type of property keys / labels.</p>
+          <p>Type of property keys.</p>
         </section>
 
         <section>
-          <h4>http://bruy.at/prec#PropertyValue</h4>
+          <h4>http://bruy.at/prec#PropertyKeyValue</h4>
 
           <p>Type of property values. Can be seed as the counterpart of
           <a href="http://ii.uwb.edu.pl/pgo#Property">pgo:Property</a> in the
@@ -336,15 +336,15 @@
               >
                 <!--
                 _:bob :live_in [
-                    rdf:type prec:PropertyValue ;
+                    rdf:type prec:PropertyKeyValue ;
                     rdf:value "Paris" ;
                     prec:hasMetaProperties [
-                        :status [ rdf:value "Tenant" ; rdf:type prec:PropertyValue ]
+                        :status [ rdf:value "Tenant" ; rdf:type prec:PropertyKeyValue ]
                     ]
                 ] .
                 
-                :live_in a prec:PropertyLabel .
-                :status  a prec:PropertyLabel .
+                :live_in a prec:PropertyKey .
+                :status  a prec:PropertyKey .
                 -->
               </pre>
             </aside>
@@ -439,8 +439,8 @@
             _:aBlankNode rdf:value "The value of the property" .
             _:aBlankNode prec:hasMetaProperties _:aNodeWithTheMetaPropertiesIfAny .
             
-            :propertyKey a prec:PropertyLabel ; rdfs:label "The name of the property" .
-            _:aBlankNode a prec:PropertyValue .
+            :propertyKey a prec:PropertyKey ; rdfs:label "The name of the property" .
+            _:aBlankNode a prec:PropertyKeyValue .
             -->
           </pre>
         </ul>
@@ -829,7 +829,7 @@
             <ul>
               <li>`pvar:entity`: The RDF node that was created to identify the edge of the node.</li>
               <li>`pvar:propertyKey`: The node that represents the edge label.</li>
-              <li>`pvar:label`: The label of the edge, as a string literal.</li>
+              <li>`pvar:label`: The label of the property key, as a string literal.</li>
               <li>`pvar:property`: The blank node that represents the property.</li>
               <li>`pvar:propertyValue`: The literal that contains the property value.</li>
               <li>`pvar:individualValue`: Most of the time equals to `propertyValue`. If `propertyValue` is an rdf list, `individualValue` will match each individual literal contained in the list instead of the list itself.</li>
@@ -1189,7 +1189,7 @@
             <h5><dfn data-lt="prec:propertyName">http://bruy.at/prec#propertyName</dfn></h5>
 
             <p>
-              The name / the key of the matched properties. The value must be a
+              The key / the name of the matched properties. The value must be a
               literal.
             </p>
           </section>
@@ -1336,10 +1336,9 @@
           <p><em>Usage</em>: ` :IRIToMapTo prec:IRIOfNodeLabel "Label" .`</p>
 
           <p>
-            The last kind of nodes that can be remapped are node labels. Unlike
-            property labels, the only way to map an IRI to them is to use
-            the [= prec:IRIOfNodeLabel =], in a similar fashion as
-            [= prec:IRIOfEdgeLabel =].
+            The last kind of labels that can be remapped are node labels. Node
+            labels IRIs can be mapped with [= prec:IRIOfNodeLabel =], in a
+            similar fashion as [= prec:IRIOfEdgeLabel =].
           </p>
 
           <p>
@@ -1404,9 +1403,50 @@
               -->
             </pre>
           </aside>
+
+          <section>
+            <h5>Complete node rules</h5>
+
+            <p>
+              Rules can also be written for node labels. Here is the vocabulary
+              related to node labels:
+            </p>
+
+            <ul>
+              <li><dfn data-lt="prec:NodeLabelTemplate">http://bruy.at/prec#NodeLabelTemplate</dfn>:
+                Type of node  templates. The variables that can be used are the
+                following:
+                <ul>
+                  <li>`pvar:node`: The blank node or the IRI that represents PG node</li>
+                  <li>`pvar:nodeLabelIRI`: The blank node or the IRI that represents node label</li>
+                  <li>`pvar:label`: The label as a string literal</li>
+                </ul>
+              </li>
+              <li>
+                <dfn data-lt="prec:nodeLabelIRI">http://bruy.at/prec#nodeLabelIRI</dfn>:
+                The [= prec:SubstitutionTerm =] for `pvar:nodeLabelIRI`
+              </li>
+              <li>
+                <dfn data-lt="prec:NodeLabelsTypeOfLabelIRI">http://bruy.at/prec#NodeLabelsTypeOfLabelIRI</dfn>:
+                The PREC-0 representation of node labels. Composed of the
+                triple `pvar:node rdf:type pvar:nodeLabelIRI`
+              </li>
+              <li>
+                <dfn data-lt="prec:NodeLabelRule">http://bruy.at/prec#NodeLabelRule</dfn>:
+                The type of rules that applies to node / node label pairs.
+              </li>
+              <li>
+                <dfn data-lt="prec:nodeLabel (node label rule)">http://bruy.at/prec#nodeLabel (in node label rules)</dfn>:
+                Condition on the label of the node. Mandatory.
+              </li>
+              <li>
+                <dfn data-lt="prec:NodeLabels">http://bruy.at/prec#NodeLabels</dfn>:
+                The domain of every node labels, to modify the template used.
+              </li>
+            </ul>
+          </section>
         </section>
 
-        
         <section>
           <h4><dfn data-lt="prec:mapBlankNodesToPrefix">http://bruy.at/prec#mapBlankNodesToPrefix</dfn></h4>
           
@@ -1423,7 +1463,7 @@
             <ul>
               <li>every node label if the subject is pgo:Node</li>
               <li>every edge label if the subject is pgo:Edge</li>
-              <li>every property name if the subject is [= prec:PropertyLabel =]</li>
+              <li>every property name if the subject is [= prec:PropertyKey =]</li>
             </ul>
             to IRis that starts with the prefix specfied in object position.
           </p>

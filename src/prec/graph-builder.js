@@ -77,7 +77,7 @@ class RDFGraphBuilder {
     _makeNodeForPropertyValue(literal) {
         const propertyValueNode = N3.DataFactory.blankNode("propertyValue" + (++this.counters.properties));
         this._addQuad(propertyValueNode, rdf.value, N3.DataFactory.literal(literal));
-        this._addQuad(propertyValueNode, rdf.type, prec.PropertyValue);
+        this._addQuad(propertyValueNode, rdf.type, prec.PropertyKeyValue);
         return propertyValueNode;
     }
 
@@ -88,7 +88,7 @@ class RDFGraphBuilder {
 
         const propertyValueNode = N3.DataFactory.blankNode("propertyValue" + (++this.counters.properties));
         this._addQuad(propertyValueNode, rdf.value, head);
-        this._addQuad(propertyValueNode, rdf.type, prec.PropertyValue);
+        this._addQuad(propertyValueNode, rdf.type, prec.PropertyKeyValue);
         return propertyValueNode;
     }
 
@@ -109,9 +109,9 @@ class RDFGraphBuilder {
             // Predicate
             let propertyNode = propMaker[property + tag];
             this._labelize(propertyNode, property);
-            this._addQuad(propertyNode, rdf.type, prec.PropertyLabel);
-            this._addQuad(propertyNode, rdf.type, prec.CreatedPropertyLabel);
-            this._addQuad(prec.CreatedPropertyLabel, rdfs.subClassOf, prec.CreatedVocabulary);
+            this._addQuad(propertyNode, rdf.type, prec.PropertyKey);
+            this._addQuad(propertyNode, rdf.type, prec.CreatedPropertyKey);
+            this._addQuad(prec.CreatedPropertyKey, rdfs.subClassOf, prec.CreatedVocabulary);
 
             // Object
             if (!Array.isArray(properties[property])) {
@@ -132,15 +132,15 @@ class RDFGraphBuilder {
         }
 
         for (let propertyObject of properties) {
-            let propertyName = propertyObject.key;
+            let propertyKey = propertyObject.key;
             let propertyValue = propertyObject.value;
 
             // Predicate
-            let propertyNode = propMaker[propertyName + tag];
-            this._labelize(propertyNode, propertyName);
-            this._addQuad(propertyNode, rdf.type, prec.PropertyLabel);
-            this._addQuad(propertyNode, rdf.type, prec.CreatedPropertyLabel);
-            this._addQuad(prec.CreatedPropertyLabel, rdfs.subClassOf, prec.CreatedVocabulary);
+            let propertyNode = propMaker[propertyKey + tag];
+            this._labelize(propertyNode, propertyKey);
+            this._addQuad(propertyNode, rdf.type, prec.PropertyKey);
+            this._addQuad(propertyNode, rdf.type, prec.CreatedPropertyKey);
+            this._addQuad(prec.CreatedPropertyKey, rdfs.subClassOf, prec.CreatedVocabulary);
 
             // Object
             let self = this;
@@ -168,9 +168,9 @@ class RDFGraphBuilder {
 
                     let propertyNode = propMaker[metaKey + tag];
                     this._labelize(propertyNode, metaKey);
-                    this._addQuad(propertyNode, rdf.type, prec.PropertyLabel);
-                    this._addQuad(propertyNode, rdf.type, prec.CreatedPropertyLabel);
-                    this._addQuad(prec.CreatedPropertyLabel, rdfs.subClassOf, prec.CreatedVocabulary);
+                    this._addQuad(propertyNode, rdf.type, prec.PropertyKey);
+                    this._addQuad(propertyNode, rdf.type, prec.CreatedPropertyKey);
+                    this._addQuad(prec.CreatedPropertyKey, rdfs.subClassOf, prec.CreatedVocabulary);
 
                     let target = buildPropertyValue(metaValue);
 
