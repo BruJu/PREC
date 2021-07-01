@@ -1,11 +1,11 @@
 "use strict";
 
 const N3 = require('n3');
+const DStar = require('../dataset');
 const namespace = require('@rdfjs/namespace');
 const fs = require('fs');
 
 const QuadStar         = require('./quad-star.js');
-const MultiNestedStore = require('./quad-star-multinested-store.js');
 const PrecUtils        = require('./utils.js');
 const RulesForEdges = require('./rules-for-edges');
 
@@ -24,6 +24,7 @@ const $quad         = N3.DataFactory.quad;
 /**
  * @typedef { import("rdf-js").Term } Term
  * @typedef { import("rdf-js").Quad } Quad
+ * @typedef { import("rdf-js").Dataset } Dataset
  * @typedef { import("../dataset") } DStar
  */
 
@@ -60,11 +61,12 @@ const $quad         = N3.DataFactory.quad;
 class SubstitutionTerms {
     /**
      * Build a `SubstitutionTerms` with the subsitution terms described in the
-     * context store.
-     * @param {N3.Store} store A store that contains all the quads of the context
+     * context dataset.
+     * @param {DStar} dataset A dataset that contains all the quads of the
+     * context
      */
-    constructor(store) {
-        this.data = store.getQuads(null, prec.substitutionTarget, null, $defaultGraph())
+    constructor(dataset) {
+        this.data = dataset.getQuads(null, prec.substitutionTarget, null, $defaultGraph())
             .map(quad => [quad.subject, quad.object]);
 
         this.keys = this.data.map(t => t[0]);
@@ -313,7 +315,7 @@ function _throwIfInvalidPropertyTemplates(templatess) {
 class SplitNamespace {
     /**
      * Reads all the quads about a rule and builds a JS object from it
-     * @param {N3.Store} contextStore The store
+     * @param {DStar} contextDataset The store
      * @param {*} ruleNode The node that represents the rule
      * @param {*} Cls A dict that contains the IRI related to the kind of rules
      * to manage.
@@ -344,7 +346,7 @@ class SplitNamespace {
      * }
      * ```
      */
-    static splitDefinition(contextStore, ruleNode, Cls, substitutionTerms) {
+    static splitDefinition(contextDataset, ruleNode, Cls, substitutionTerms) {
         let r = {
             type: undefined,
     
@@ -370,7 +372,7 @@ class SplitNamespace {
                 throw errorMalformedRule(`${predicate.value} value (${term.value}) is not a literal.`)
         }
         
-        for (const quad of contextStore.getQuads(ruleNode, null, null, $defaultGraph())) {
+        for (const quad of contextDataset.getQuads(ruleNode, null, null, $defaultGraph())) {
             if (rdf.type.equals(quad.predicate)) {
                 r.type = quad.object;
             } else if (Cls.MainLabel.equals(quad.predicate)) {
@@ -458,13 +460,13 @@ class SplitNamespace {
 
 /**
  * Build the concrete template from a list of materializations
- * @param {N3.Store} store The context store
+ * @param {DStar} dataset The context store
  * @param {*} materializations The list of materializations that applies
  * @param {Term} defaultTemplate The IRI of the default template if no template
  * have been specified
  * @returns {Quad[]} The template (= destination pattern in find-filter-replace)
  */
-function _buildTemplate(store, materializations, defaultTemplate) {
+function _buildTemplate(dataset, materializations, defaultTemplate) {
     let template = defaultTemplate;
     let substitutionRequests = new PrecUtils.TermDict();
 
@@ -484,9 +486,8 @@ function _buildTemplate(store, materializations, defaultTemplate) {
     }
 
     // Load the abstract template
-    let composedOf = store.getQuads(template, prec.composedOf, null, $defaultGraph())
+    let composedOf = dataset.getQuads(template, prec.composedOf, null, $defaultGraph())
         .map(quad => quad.object)
-        .map(term => MultiNestedStore.remakeMultiNesting(store, term));
     
     // Apply the substitutions if any
     if (substitutionRequests.isEmpty()) {
@@ -508,13 +509,13 @@ function _buildTemplate(store, materializations, defaultTemplate) {
  */
 class EntitiesManager {
     /**
-     * Build an `EntitiesManager` from the `contextStore`.
-     * @param {N3.Store} contextStore The store that contains the context
+     * Build an `EntitiesManager` from the `contextDataset`.
+     * @param {DStar} contextDataset The store that contains the context
      * @param {SubstitutionTerms} substitutionTerms The list of term substitutions
      * @param {*} Cls The class that manages an individual rule. It must also
      * contain as static data the list of IRIs related to this rule.
      */
-    constructor(contextStore, substitutionTerms, Cls) {
+    constructor(contextDataset, substitutionTerms, Cls) {
         // List of rules to apply
         this.iriRemapper = [];
         // List of known (and computed) templates
@@ -524,7 +525,7 @@ class EntitiesManager {
         // TODO: what happens here?
 
         let makeTemplate = materializations =>
-            _buildTemplate(contextStore, materializations, Cls.DefaultTemplate)
+            _buildTemplate(contextDataset, materializations, Cls.DefaultTemplate)
         ;
 
         // Load the base templates
@@ -532,7 +533,7 @@ class EntitiesManager {
 
         for (let [templateName, _] of Cls.TemplateBases) {
             // Read the node, ensure it just have a template
-            const splitted = SplitNamespace.splitDefinition(contextStore, templateName, Cls, substitutionTerms);
+            const splitted = SplitNamespace.splitDefinition(contextDataset, templateName, Cls, substitutionTerms);
             SplitNamespace.throwIfNotMaterializationOnly(splitted, templateName);
 
             // The template can be used to compute other templates
@@ -545,8 +546,8 @@ class EntitiesManager {
 
         // Load the templates for user defined rules
         let existingNodes = {};
-        for (let quad of contextStore.getQuads(null, rdf.type, Cls.RuleType, $defaultGraph())) {
-            const splitted = SplitNamespace.splitDefinition(contextStore, quad.subject, Cls, substitutionTerms);
+        for (let quad of contextDataset.getQuads(null, rdf.type, Cls.RuleType, $defaultGraph())) {
+            const splitted = SplitNamespace.splitDefinition(contextDataset, quad.subject, Cls, substitutionTerms);
             SplitNamespace.throwIfHaveNoCondition(splitted, quad.subject, Cls);
 
             let conditions = JSON.stringify(splitted.conditions);
@@ -668,6 +669,7 @@ class NodeLabelRule {
 /**
  * Read the `prec:?s prec:flagState true|false` triples
  * and return a map of `?s -> true|false`
+ * @param {N3.Store|DStar} store 
  */
 function readFlags(store) {
     let s = {
@@ -709,7 +711,7 @@ function readFlags(store) {
  * triples and return the map `[s.value] = ?o`.
  * 
  * This extracts the prefix to map each type of elements from the property graph
- * @param {N3.Store} store The context store
+ * @param {N3.Store|DStar} store The context store
  */
 function readBlankNodeMapping(store) {
     let s = {};
@@ -735,23 +737,20 @@ function readBlankNodeMapping(store) {
 }
 
 /**
- * Read the quads from a Turtle-star file and add them to the store.
- * 
- * This function enables to store multi nested quads by using `prec:_` as a
- * special `owl:sameAs` predicate.
- * @param {N3.Store} store The store to populate
+ * Read the quads from a Turtle-star file and add them to the dataset.
+ * @param {Dataset} dataset The dataset to populate
  * @param {String} file The path to the Turtle-star file
  */
-function addBuiltIn(store, file) {
+function addBuiltIn(dataset, file) {
     const trig = fs.readFileSync(file, 'utf-8');
-    MultiNestedStore.addQuadsWithoutMultiNesting(store, (new N3.Parser()).parse(trig));
+    dataset.addAll((new N3.Parser()).parse(trig));
 }
 
 /**
  * Replaces every relationship related term with its edge related counterpart.
- * @param {N3.Store} store The store to modify
+ * @param {Dataset} dataset The store to modify
  */
-function replaceSynonyms(store) {
+function replaceSynonyms(dataset) {
     function makeSynonymsDict() {
         let dict = new PrecUtils.TermDict();
         dict.set(prec.RelationshipRule      , prec.EdgeRule);
@@ -767,17 +766,16 @@ function replaceSynonyms(store) {
     }
 
     /**
-     * Transform the store by replacing the terms found in the dict to the one
+     * Transform the dataset by replacing the terms found in the dict to the one
      * it maps to
-     * @param {N3.Store} store 
+     * @param {Dataset} dataset 
      * @param {PrecUtils.TermDict<Term, Term>} dict A Term to term dict
      */
-    function transformStore(store, dict) {
+    function transformStore(dataset, dict) {
         const toDelete = [];
         const toAdd = [];
 
-        for (const quad of store.getQuads()) {
-
+        for (const quad of dataset) {
             const newQuad = QuadStar.eventuallyRebuildQuad(quad,
                 term => dict.get(term) || term
             );
@@ -788,11 +786,11 @@ function replaceSynonyms(store) {
             }
         }
 
-        store.removeQuads(toDelete);
-        store.addQuads(toAdd);
+        toDelete.forEach(quad => dataset.delete(quad));
+        dataset.addAll(toAdd);
     }
 
-    transformStore(store, makeSynonymsDict());
+    transformStore(dataset, makeSynonymsDict());
 }
 
 /**
@@ -805,11 +803,11 @@ function replaceSynonyms(store) {
  * ```
  * with prec:IRIOfThing = `IRIs.ShortcutIRI`
  * 
- * @param {N3.Store} store The context
+ * @param {DStar} dstar The context
  * @param {*} IRIs An object that contains the different IRIs
  */
-function _removeSugarForRules(store, IRIs) {
-    let sugared = store.getQuads(null, IRIs.ShortcutIRI, null, $defaultGraph());
+function _removeSugarForRules(dstar, IRIs) {
+    let sugared = dstar.getQuads(null, IRIs.ShortcutIRI, null, $defaultGraph());
 
     for (let quad of sugared) {
         const iri = quad.subject;
@@ -822,12 +820,12 @@ function _removeSugarForRules(store, IRIs) {
             );
         }
         const ruleNode = $blankNode("SugarRule[" + label.value + "=>" + iri.value + "]");
-        store.addQuad($quad(ruleNode, rdf.type             , IRIs.RuleType));
-        store.addQuad($quad(ruleNode, IRIs.MainLabel       , label));
-        store.addQuad($quad(ruleNode, IRIs.SubstitutionTerm, iri));
+        dstar.add($quad(ruleNode, rdf.type             , IRIs.RuleType));
+        dstar.add($quad(ruleNode, IRIs.MainLabel       , label));
+        dstar.add($quad(ruleNode, IRIs.SubstitutionTerm, iri));
     }
 
-    store.removeQuads(sugared);
+    dstar.removeQuads(sugared);
 }
 
 /**
@@ -837,18 +835,17 @@ function _removeSugarForRules(store, IRIs) {
  * prec:EdgeProperties ?p ?o ?g .
  * prec:MetaProperties ?p ?o ?g .
  * ```
- * @param {N3.Store} context The store that contains the context quads
+ * @param {DStar} context The dataset that contains the context quads
  */
 function _copyPropertiesValuesToSpecificProperties(context) {
-    let quads = context.getQuads(prec.Properties, null, null, null);
-
-    for (const quad of quads) {
-        context.addQuad(prec.NodeProperties, quad.predicate, quad.object, quad.graph);
-        context.addQuad(prec.EdgeProperties, quad.predicate, quad.object, quad.graph);
-        context.addQuad(prec.MetaProperties, quad.predicate, quad.object, quad.graph);
-    }
-
-    context.removeQuads(quads);
+    context.findFilterReplace([
+            $quad(prec.Properties    , variable('p'), variable('o'), variable('g'))
+        ], [], [
+            $quad(prec.NodeProperties, variable('p'), variable('o'), variable('g')),
+            $quad(prec.EdgeProperties, variable('p'), variable('o'), variable('g')),
+            $quad(prec.MetaProperties, variable('p'), variable('o'), variable('g')),
+        ]
+    )
 }
 
 /**
@@ -859,31 +856,27 @@ function _copyPropertiesValuesToSpecificProperties(context) {
  */
 class Context {
     constructor(contextQuads) {
-        const store = new N3.Store();
-        MultiNestedStore.addQuadsWithoutMultiNesting(store, contextQuads);
-        addBuiltIn(store, __dirname + "/../builtin_rules.ttl");
-        replaceSynonyms(store);
-        this.store = store;
+        const dataset = new DStar(contextQuads);
+        addBuiltIn(dataset, __dirname + "/../builtin_rules.ttl");
+        replaceSynonyms(dataset);
 
+        const substitutionTerms = new SubstitutionTerms(dataset);
 
-        const substitutionTerms = new SubstitutionTerms(store);
-
-        _removeSugarForRules(store, RulesForEdges.Rule);
-        this.edges  = new EntitiesManager(store, substitutionTerms, RulesForEdges.Rule);
+        _removeSugarForRules(dataset, RulesForEdges.Rule);
+        this.edges  = new EntitiesManager(dataset, substitutionTerms, RulesForEdges.Rule);
         RulesForEdges.throwIfHasInvalidTemplate(this.edges.templatess)
         
-        _removeSugarForRules(store, PropertyRule    );
-        _copyPropertiesValuesToSpecificProperties(store);
-        this.properties = new EntitiesManager(store, substitutionTerms, PropertyRule );
+        _removeSugarForRules(dataset, PropertyRule    );
+        _copyPropertiesValuesToSpecificProperties(dataset);
+        this.properties = new EntitiesManager(dataset, substitutionTerms, PropertyRule );
         _throwIfInvalidPropertyTemplates(this.properties.templatess)
 
-        _removeSugarForRules(store, NodeLabelRule   );
-        this.nodeLabels = new EntitiesManager(store, substitutionTerms, NodeLabelRule);
+        _removeSugarForRules(dataset, NodeLabelRule   );
+        this.nodeLabels = new EntitiesManager(dataset, substitutionTerms, NodeLabelRule);
         // TODO: throw if there are invalid node label template
 
-        this.flags = readFlags(store);
-
-        this.blankNodeMapping = readBlankNodeMapping(store);
+        this.flags = readFlags(dataset);
+        this.blankNodeMapping = readBlankNodeMapping(dataset);
     }
 
     /**
