@@ -3,7 +3,7 @@ const utility = require("./utility.js");
 const graphReducer = require("../src/prec/graph-reducer.js");
 const assert = require('assert');
 const { isomorphic } = require("rdf-isomorphic");
-const precUtils = require('../src/prec/utils.js')
+const precUtils = require('../src/rdf/utils')
 
 
 const basicGraphs = {

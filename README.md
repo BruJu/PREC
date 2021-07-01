@@ -127,4 +127,7 @@ Default URI is the URI of a local TinkerPop Server.
 
 ## License
 
-TBD
+[PREC is licensied under the MIT License by Julian Bruyat / INSA Lyon](LICENSE)
+
+This repository includes code from other authors, also licensied under the MIT
+License. See [test/dataset/DatasetCore.test.js](test/dataset/DatasetCore.test.js).

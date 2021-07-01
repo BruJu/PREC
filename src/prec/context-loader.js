@@ -5,9 +5,10 @@ const DStar = require('../dataset');
 const namespace = require('@rdfjs/namespace');
 const fs = require('fs');
 
-const QuadStar         = require('./quad-star.js');
-const PrecUtils        = require('./utils.js');
+const QuadStar         = require('../rdf/quad-star');
+const PrecUtils        = require('../rdf/utils');
 const RulesForEdges = require('./rules-for-edges');
+const TermDict = require('../TermDict');
 
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , N3.DataFactory);
@@ -259,7 +260,7 @@ const TemplateChecker = {
  * subject.
  * 
  * Throws if there is one
- * @param {PrecUtils.TermDict} templatess A map of map of templates
+ * @param {TermDict} templatess A map of map of templates
  */
 function _throwIfInvalidPropertyTemplates(templatess) {
     const pvarEntity = pvar.entity;
@@ -468,7 +469,7 @@ class SplitNamespace {
  */
 function _buildTemplate(dataset, materializations, defaultTemplate) {
     let template = defaultTemplate;
-    let substitutionRequests = new PrecUtils.TermDict();
+    let substitutionRequests = new TermDict();
 
     for (const materialization of materializations) {
         // Copy all substitution
@@ -519,7 +520,7 @@ class EntitiesManager {
         // List of rules to apply
         this.iriRemapper = [];
         // List of known (and computed) templates
-        this.templatess = new PrecUtils.TermDict();
+        this.templatess = new TermDict();
 
         // TODO: what is a materialization?
         // TODO: what happens here?
@@ -529,7 +530,7 @@ class EntitiesManager {
         ;
 
         // Load the base templates
-        let baseTemplates = new PrecUtils.TermDict();
+        let baseTemplates = new TermDict();
 
         for (let [templateName, _] of Cls.TemplateBases) {
             // Read the node, ensure it just have a template
@@ -539,7 +540,7 @@ class EntitiesManager {
             // The template can be used to compute other templates
             baseTemplates.set(templateName, splitted.materialization);
             // Also a tempalte that can be used
-            let tm = new PrecUtils.TermDict();
+            let tm = new TermDict();
             tm.set(templateName, makeTemplate([splitted.materialization]));
             this.templatess.set(templateName, tm);
         }
@@ -752,7 +753,7 @@ function addBuiltIn(dataset, file) {
  */
 function replaceSynonyms(dataset) {
     function makeSynonymsDict() {
-        let dict = new PrecUtils.TermDict();
+        let dict = new TermDict();
         dict.set(prec.RelationshipRule      , prec.EdgeRule);
         dict.set(prec.RelationshipTemplate  , prec.EdgeTemplate);
         dict.set(prec.relationshipLabel     , prec.edgeLabel);
@@ -769,7 +770,7 @@ function replaceSynonyms(dataset) {
      * Transform the dataset by replacing the terms found in the dict to the one
      * it maps to
      * @param {Dataset} dataset 
-     * @param {PrecUtils.TermDict<Term, Term>} dict A Term to term dict
+     * @param {TermDict<Term, Term>} dict A Term to term dict
      */
     function transformStore(dataset, dict) {
         const toDelete = [];

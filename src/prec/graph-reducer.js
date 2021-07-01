@@ -5,8 +5,8 @@ const DStar         = require('../dataset/index.js');
 const namespace     = require('@rdfjs/namespace');
 
 const Context       = require("./context-loader.js");
-const precUtils     = require("./utils.js")
-const quadStar      = require('./quad-star.js');
+const TermDict      = require('../TermDict');
+const quadStar      = require('../rdf/quad-star');
 
 const RulesForEdges = require('./rules-for-edges');
 
@@ -150,7 +150,7 @@ function transformNodeLabels(dataset, context) {
             ]
         );
     
-        let candidateLabelForDeletion = new precUtils.TermDict();
+        let candidateLabelForDeletion = new TermDict();
     
         for (const nodeToLabel of nodesToLabels) {
             const label = dataset.getQuads(nodeToLabel.labelIRI, rdfs.label, null, defaultGraph());

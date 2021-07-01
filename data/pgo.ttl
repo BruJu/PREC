@@ -1,0 +1,87 @@
+PREFIX prec: <http://bruy.at/prec#>
+PREFIX pvar: <http://bruy.at/prec-trans#>
+PREFIX pgo:  <http://ii.uwb.edu.pl/pgo#>
+PREFIX ex:   <http://example.org/>
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+# A PREC Context to produce RDF graphs similar to the one produced by graphConv
+# PREC: https://github.com/BruJu/PREC
+# graphConv: https://github.com/domel/graphConv
+
+# Usage:
+# node prec.js data/movies_cypher_all.json path/to/this/pgoContext.ttl -f Neo4JCypher
+# Tested on commit 2da9f5dd4a16ec5bac69905569d032ae5266ccc4
+
+# Differences with the graphs produced by graphConv in our experiment:
+# - Numeric values (year for example) are xsd:integer with PREC, xsd:string with
+# graphConv. We think an xsd:integer representation is more accurate.
+# - Labels are described with pgo:label with this PREC context, are exported as
+# properties with graphConv. The "PGO: Describing Property Graphs in RDF"
+# article, by Tomaszuk et al. gives an example where label are actually
+# represented with pgo:label (in the same way as PREC does)
+# We think these differences are due to our Neo4j to GraphML export
+
+# -- Property Graph Ontology replication
+
+ex:pgoNodeLabel a prec:NodeLabelModel ;
+  prec:composedOf << pvar:node pgo:label pvar:label >> .
+
+ex:pgoEdge a prec:EdgeModel ;
+  prec:composedOf
+    << pvar:edge pgo:startNode pvar:source        >> ,
+    << pvar:edge pgo:endNode   pvar:destination   >> ,
+    << pvar:edge pgo:label     pvar:label         >> ,
+    << pvar:edge pvar:propertyPredicate pvar:propertyObject >> .
+
+prec:Relationships prec:templatedBy ex:pgoEdge .
+prec:NodeLabels    prec:templatedBy ex:pgoNodeLabel .
+
+# -- Properties
+
+prec:NodeProperties    prec:templatedBy ex:pgoNodeProperty .
+ex:pgoNodeProperty a prec:PropertyModel ;
+  prec:composedOf
+    << pvar:entity       pgo:hasNodeProperty  pvar:propertyNode     >> ,
+    << pvar:propertyNode pgo:key              pvar:label             >> ,
+    << pvar:propertyNode pgo:value            pvar:propertyValue     >> ,
+    << pvar:propertyNode a pgo:Property >> ,
+    << pvar:propertyNode pvar:metaPropertyPredicate pvar:metaPropertyObject >> .
+
+
+prec:RelationshipProperties    prec:templatedBy ex:pgoEdgeProperty .
+ex:pgoEdgeProperty a prec:PropertyModel ;
+  prec:composedOf
+    << pvar:entity       pgo:hasEdgeProperty  pvar:propertyNode     >> ,
+    << pvar:propertyNode pgo:key              pvar:label             >> ,
+    << pvar:propertyNode pgo:value            pvar:propertyValue     >> ,
+    << pvar:propertyNode a pgo:Property >> ,
+    << pvar:propertyNode pvar:metaPropertyPredicate pvar:metaPropertyObject >> .
+
+
+prec:MetaProperties    prec:templatedBy ex:pgoMetaProperty .
+ex:pgoMetaProperty a prec:PropertyModel ;
+  prec:composedOf
+    << pvar:entity      pgo:hasProperty      pvar:propertyNode     >> ,
+    << pvar:propertyNode pgo:key              pvar:label             >> ,
+    << pvar:propertyNode pgo:value            pvar:propertyValue     >> ,
+    << pvar:propertyNode a pgo:Property >> ,
+    << pvar:propertyNode pvar:metaPropertyPredicate pvar:metaPropertyObject >> .
+
+# ---- Produce the property graph node
+# We extend the pgoEdge and pgoNodeLabel templates to add a triple between
+# the pg instance and the node
+
+# PREC is unable to apply a rule on unlabeled nodes, neither it can target
+# isolated nodes only. In the current state, we produce a triple between the
+# PG and the node for node that is either labeled or is connected to another
+# node (or both).
+
+ex:pgoEdge      prec:composedOf
+  << _:thisPG pgo:hasEdge pvar:edge        >> ,
+  << _:thisPG pgo:hasNode pvar:source      >> ,
+  << _:thisPG pgo:hasNode pvar:destination >> ,
+  << _:thisPG rdf:type pgo:PropertyGraph   >> .
+
+ex:pgoNodeLabel prec:composedOf
+  << _:thisPG pgo:hasNode pvar:node >> ,
+  << _:thisPG rdf:type pgo:PropertyGraph >> .

@@ -2,8 +2,9 @@ const N3 = require('n3');
 const namespace = require('@rdfjs/namespace');
 
 const DStar = require('../dataset');
-const PrecUtils = require('./utils');
-const QuadStar  = require('./quad-star.js');
+const TermDict = require('../TermDict');
+const PrecUtils = require('../rdf/utils');
+const QuadStar  = require('../rdf/quad-star.js');
 
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , N3.DataFactory);
@@ -27,7 +28,7 @@ const $defaultGraph = N3.DataFactory.defaultGraph;
 
 /**
  * @template Key, Value
- * @typedef { import("./utils").TermDict<Key, Value> } TermDict<Key, Value>
+ * @typedef { import("../TermDict")<Key, Value> } TermDict<Key, Value>
  */
 
 /** An individual edge rule */
@@ -192,7 +193,7 @@ function modifyEdgeRepresentation(dataset, context) {
         ]
     );
 
-    let candidateLabelForDeletion = new PrecUtils.TermDict();
+    let candidateLabelForDeletion = new TermDict();
 
     for (const edge of edges) {
         const label = dataset.getQuads(edge.predicate, rdfs.label, null, $defaultGraph());

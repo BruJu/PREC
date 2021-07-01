@@ -1,10 +1,7 @@
-const precUtils = require("../src/prec/utils.js");
+const TermDict = require("../src/TermDict");
 const assert = require('assert');
 
-
 describe("TermDict", function() {
-    const TermDict = precUtils.TermDict;
-
     class TwoInts {
         constructor(value, other) {
             this.value = value;
@@ -34,6 +31,7 @@ describe("TermDict", function() {
         assert.strictEqual(d.get(E(1, 1)), "One-One");
         assert.strictEqual(d.get(E(1, 2)), "One-Two");
         assert.strictEqual(d.get(E(2, 1)), "Two-One");
+        assert.strictEqual(d.get(E(1, 3)), undefined);
     });
 
     it("should be able to replace a value", function() {
@@ -44,6 +42,4 @@ describe("TermDict", function() {
         assert.strictEqual(d.get(E(10, 10)), "new");
         assert.strictEqual(d.get(E(10, 11)), "untouched");
     });
-
-
 });

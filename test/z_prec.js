@@ -4,7 +4,7 @@ const N3 = require('n3');
 
 const namespace = require('@rdfjs/namespace');
 const prec = require('../prec.js')
-const { isSubstituableGraph } = require('../src/graph-substitution.js');
+const { isSubstituableGraph } = require('../src/rdf/graph-substitution.js');
 const assert = require('assert');
 
 const rdf = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
@@ -110,7 +110,7 @@ function smallExample(store) {
             const r = isSubstituableGraph(aaa.getQuads(), expectedGraph.getQuads());
 
             if (!r) {
-                const precUtils = require('../src/prec/utils.js')
+                const precUtils = require('../src/rdf/utils.js')
 
                 console.error("• Result:");
                 console.error(precUtils.badToString(aaa.getQuads(), 7));

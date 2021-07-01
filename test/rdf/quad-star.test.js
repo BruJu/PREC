@@ -5,8 +5,7 @@ const namespace = require('@rdfjs/namespace');
 const ex = namespace("http://ex.org/", N3.DataFactory);
 const $Quad = N3.DataFactory.quad;
 
-const QuadStar = require('../src/prec/quad-star');
-
+const QuadStar = require('../../src/rdf/quad-star');
 
 describe('QuadStar', function () {
 	describe('matches', function () {
@@ -71,9 +70,4 @@ describe('QuadStar', function () {
 			);
 		})
 	});
-
-
-
 })
-
-

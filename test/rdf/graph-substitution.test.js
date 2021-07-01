@@ -4,44 +4,23 @@ const N3 = require('n3');
 const namespace = require('@rdfjs/namespace');
 const ex = namespace("http://ex.org/", N3.DataFactory);
 
-const { isSubstituableGraph, rebuildBlankNodes, findBlankNodes } = require("../src/graph-substitution");
+const {
+    isSubstituableGraph,
+    rebuildBlankNodes,
+    findBlankNodes
+} = require("../../src/rdf/graph-substitution");
 
 function equalsArrayOfQuads(a, b) {
     if (a.length != b.length) return false;
 
     for (let quad of a) {
-        if (b.every(qb => !quad.equals(qb))) {
+        if (b.find(qb => quad.equals(qb)) === undefined) {
             return false;
         }
     }
 
     return true;
 }
-
-// Test equals array of quads
-() => {
-    assert(equalsArrayOfQuads([], []));
-    assert(equalsArrayOfQuads([
-        N3.DataFactory.quad(ex.a, ex.b, ex.c)
-    ], [
-        N3.DataFactory.quad(ex.a, ex.b, ex.c)
-    ]));
-    assert(equalsArrayOfQuads([
-        N3.DataFactory.quad(ex.a, ex.b, ex.c),
-        N3.DataFactory.quad(ex.a, ex.b, ex.d)
-    ], [
-        N3.DataFactory.quad(ex.a, ex.b, ex.d),
-        N3.DataFactory.quad(ex.a, ex.b, ex.c)
-    ]));
-    assert(!equalsArrayOfQuads([
-        N3.DataFactory.quad(ex.a, ex.b, ex.c),
-        N3.DataFactory.quad(ex.a, ex.b, ex.d)
-    ], [
-        N3.DataFactory.quad(ex.a, ex.b, ex.e),
-        N3.DataFactory.quad(ex.a, ex.b, ex.c)
-    ]));
-}
-
 
 describe("findBlankNodes", function() {
     const quad = N3.DataFactory.quad;
@@ -189,7 +168,6 @@ describe("rebuildBlankNodes", function() {
     })
 });
 
-
 describe("Graph Substitution", function() {
     function eq(a, b, shouldBe) {
         if (shouldBe === undefined) {
@@ -264,8 +242,6 @@ describe("Graph Substitution", function() {
         );
     });
     
-
-
     it("should exist", function() {
         assert(typeof isSubstituableGraph === 'function');
     });
@@ -302,10 +278,4 @@ describe("Graph Substitution", function() {
         assert(!isSubstituableGraph(poney, kitten));
         assert(!isSubstituableGraph(poney, frenchPoney));
     });
-
-
-
 });
-
-
-

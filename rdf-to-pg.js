@@ -16,7 +16,7 @@
 const { ArgumentParser } = require('argparse');
 const fs = require('fs');
 const precMain  = require('./prec.js');
-const precUtils = require('./src/prec/utils.js');
+const precUtils = require('./src/rdf/utils');
 
 // -- RDF
 const graphyFactory = require('@graphy/core.data.factory');
