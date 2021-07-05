@@ -1,8 +1,6 @@
 const N3 = require('n3');
 const namespace = require('@rdfjs/namespace');
 
-const TermDict = require('../TermDict');
-const RulesForEdges = require('./rules-for-edges');
 const QuadStar  = require('../rdf/quad-star.js');
 
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
@@ -91,16 +89,12 @@ class NodeLabelRule {
 // =============================================================================
 //            ==== CONTEXT APPLICATION ==== CONTEXT APPLICATION ==== 
 
-/**
- * Transforms every node label specified in the context with its proper IRI
- * @param {DStar} dataset The data dataset
- * @param {Context} context The context
- */
-function transformDataset(dataset, context) {
+
+function produceMarks(dataset, context) {
     addMark(dataset);
     context.refineNodeLabelRules(dataset);
-    applyTheMarkedRules(dataset, context);
 }
+
 
 /**
  * Mark every (node, node label) pair
@@ -124,63 +118,45 @@ function addMark(dataset) {
     });
 }
 
+
 /**
- * Transforms the mared pairs of (node, node labels) by using the corresponding
- * template in the context.
- * @param {DStar} dataset The dataset
- * @param {Context} context The context
+ * 
+ * @param {DStar} destination 
+ * @param {Quad} mark 
+ * @param {DStar} input 
+ * @param {Context} context 
  */
-function applyTheMarkedRules(dataset, context) {
-    const nodesToLabels = dataset.matchAndBind(
-        [
-            $quad(
-                $quad($variable('node'), rdf.type, $variable('labelIRI')),
-                prec.__appliedNodeRule,
-                $variable("ruleNode"),
-            ),
-            $quad($variable('node'), rdf.type, $variable('labelIRI'))
-        ]
-    );
+function applyMark(destination, mark, input, context) {
+    const variableValues = {
+        node: mark.subject.subject,
+        labelIRI: mark.subject.object,
+        ruleNode: mark.object
+    };
 
-    let candidateLabelForDeletion = new TermDict();
-
-    for (const nodeToLabel of nodesToLabels) {
-        const label = dataset.getQuads(nodeToLabel.labelIRI, rdfs.label, null, $defaultGraph());
-        if (label.length !== 0) {
-            nodeToLabel.label = label[0].object;
-        }
-
-        const template = context.findNodeLabelTemplate(nodeToLabel.ruleNode)
-        if (!Array.isArray(template)) {
-            continue;
-        }
-
-        const target = template.map(term => QuadStar.remapPatternWithVariables(
-            term,
-            [
-                [$variable('node'), pvar.node],
-                // labelIRI, captured by the pattern of nodesToLabels
-                [$variable("labelIRI"), pvar.nodeLabelIRI],
-                // label as a string, captured at the beginning of this loop
-                [$variable("label")   , pvar.label]
-            ]
-        ));
-
-        dataset.replaceOneBinding(nodeToLabel, target);
-        
-        candidateLabelForDeletion.set(nodeToLabel.labelIRI, true);
+    const label = input.getQuads(variableValues.labelIRI, rdfs.label, null, $defaultGraph());
+    if (label.length !== 0) {
+        variableValues.label = label[0].object;
     }
 
-    // Cleanup
-    let l = [];
-    candidateLabelForDeletion.forEach((node, _True) => l.push(node));
-    filterOutDeletedNodeLabel(dataset, l);
+    const template = context.findNodeLabelTemplate(variableValues.ruleNode);
+    if (!Array.isArray(template)) return undefined;
 
-    dataset.deleteMatches(null, prec.__appliedNodeRule, prec.NodeLabels, $defaultGraph());
-}
+    const target = template.map(term => QuadStar.remapPatternWithVariables(
+        term,
+        [
+            [$variable('node'), pvar.node],
+            // labelIRI, captured by the pattern of nodesToLabels
+            [$variable("labelIRI"), pvar.nodeLabelIRI],
+            // label as a string, captured at the beginning of this loop
+            [$variable("label")   , pvar.label]
+        ]
+    ));
 
-function filterOutDeletedNodeLabel(dataset, nodesToDelete) {
-    RulesForEdges.filterOutDeletedEdgeLabel(dataset, nodesToDelete);
+    variableValues['@quads'] = [];
+    destination.replaceOneBinding(variableValues, target);
+
+    const woot = target.find(t => QuadStar.containsTerm(t, [variableValues.labelIRI]));
+    return woot !== undefined ? variableValues.labelIRI : undefined;
 }
 
 // =============================================================================
@@ -190,5 +166,5 @@ module.exports = {
     // Context loading
     Rule: NodeLabelRule,
     // Context application
-    transformDataset: transformDataset
+    produceMarks, applyMark
 }

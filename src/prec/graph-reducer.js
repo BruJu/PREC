@@ -10,6 +10,7 @@ const quadStar      = require('../rdf/quad-star');
 const RulesForProperties = require('./rules-for-properties');
 const RulesForEdges      = require('./rules-for-edges');
 const RulesForNodeLabels = require('./rules-for-nodelabels');
+const TermDict = require('../TermDict.js');
 
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , N3.DataFactory);
@@ -18,6 +19,13 @@ const prec = namespace("http://bruy.at/prec#"                       , N3.DataFac
 const variable = N3.DataFactory.variable;
 const defaultGraph = N3.DataFactory.defaultGraph;
 const $quad = N3.DataFactory.quad;
+
+/**
+ * @typedef { import("rdf-js").Term } Term
+ * @typedef { import("rdf-js").Quad } Quad
+ * @typedef { import('../dataset') } DStar
+ * @typedef { import("./context-loader") } Context
+ */
 
 // =============================================================================
 
@@ -39,24 +47,55 @@ function applyContext(dataset, contextQuads) {
     }
 
     // -- Map generated IRI to existing IRIs
-    RulesForProperties.transformDataset(dataset, context);
-    RulesForEdges.transformDataset(dataset, context);
-    RulesForNodeLabels.transformDataset(dataset, context);
-
-    // -- Remove the info that generated IRI were generated if there don't
-    // appear anymore
-    
-    // Property: ?p a createdProp, ?p a Property, ?p rdfs.label Thing
-    // Edge label: ?p a CreatedEdgeLabel, ?p rdfs.label Thing
-    // Node label : same
-    removeUnusedCreatedVocabulary(dataset, prec.CreatedPropertyKey, 3, 0, 0);
-    removeUnusedCreatedVocabulary(dataset, prec.CreatedEdgeLabel, 2, 0, 0);
-    removeUnusedCreatedVocabulary(dataset, prec.CreatedNodeLabel, 2, 0, 0);
+    buildMarks(dataset, context);
+    const newDataset = producePRECCDataset(dataset, context);
+    dataset.deleteMatches();
+    dataset.addAll(newDataset.getQuads());
 
     // -- Remove provenance information if they are not required by the user
     if (context.getStateOf("KeepProvenance") === false) {
-        removePGO(dataset);
+        removePGO(newDataset);
     }
+}
+
+function buildMarks(dataset, context) {
+    try {RulesForEdges.produceMarks(dataset, context);      } catch (er) {}
+    try {RulesForProperties.produceMarks(dataset, context); } catch (er) {}
+    RulesForNodeLabels.produceMarks(dataset, context);
+}
+
+/**
+ * 
+ * @param {DStar} dataset 
+ * @param {Context} context 
+ * @returns 
+ */
+function producePRECCDataset(dataset, context) {
+    const newDataset = new DStar();
+
+    const termDict = new TermDict();
+    
+    for (const [markKind, functionToCall] of [
+        [prec.__appliedNodeRule    , RulesForNodeLabels.applyMark],
+        //[prec.__appliedEdgeRule    , RulesForEdges.applyMark     ],
+        //[prec.__appliedPropertyRule, RulesForProperties.applyMark]
+    ]) {
+        for (const mark of dataset.getQuads(null, markKind, null, defaultGraph())) {
+            let t = functionToCall(newDataset, mark, dataset, context);
+            if (t !== undefined) {
+                termDict.set(t, true);
+            }
+        }
+    }
+
+    termDict.forEach((label, _) => newDataset.addAll(dataset.getQuads(label)));
+    
+    // dataset.deleteMatches(null, prec.__appliedNodeRule, null, $defaultGraph());
+
+    // As it is impossible to write a rule that catches a node without any label and property, we add back the nodes here
+    newDataset.addAll(dataset.getQuads(null, rdf.type, pgo.Node, defaultGraph()));
+
+    return newDataset;
 }
 
 // =============================================================================

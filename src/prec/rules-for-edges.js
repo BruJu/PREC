@@ -421,5 +421,11 @@ module.exports = {
     transformDataset,
     filterOutDeletedEdgeLabel,
 
-    remake
+    remake,
+
+
+    produceMarks : (dataset, context) => { throw Error("Not yet implemented") },
+    applyMark : (destination, mark, input, context) => { throw Error("Not yet implemented") }
+
+    
 };

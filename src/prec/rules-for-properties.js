@@ -578,5 +578,8 @@ module.exports = {
     throwIfHasInvalidTemplate: throwIfInvalidPropertyTemplates,
     
     // Context application
-    transformDataset: transformDataset
+    transformDataset: transformDataset,
+
+    produceMarks : (dataset, context) => { throw Error("Not yet implemented") },
+    applyMark : (destination, mark, input, context) => { throw Error("Not yet implemented") }
 }
