@@ -26,11 +26,6 @@ const $defaultGraph = N3.DataFactory.defaultGraph;
 // =============================================================================
 //     ==== CONTEXT LOADING ==== CONTEXT LOADING ==== CONTEXT LOADING ==== 
 
-/**
- * @template Key, Value
- * @typedef { import("../TermDict")<Key, Value> } TermDict<Key, Value>
- */
-
 /** An individual edge rule */
 class EdgeRule {
     // ==== IRIs related to edge
@@ -93,7 +88,7 @@ class EdgeRule {
     }
 
     /**
-     * Return the arguments to pass to `StoreAlterer::findFilterReplace` to tag
+     * Return the arguments to pass to `DStar::findFilterReplace` to tag
      * the edges that match this manager with its rule node.
      */
     getFilter() {
