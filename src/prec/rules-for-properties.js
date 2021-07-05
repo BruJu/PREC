@@ -3,7 +3,6 @@ const namespace = require('@rdfjs/namespace');
 
 const DStar    = require('../dataset/index.js');
 const QuadStar = require('../rdf/quad-star.js');
-const RulesForEdges = require('./rules-for-edges');
 
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , N3.DataFactory);
@@ -560,7 +559,7 @@ const PropertyTemplateApplier = {
     // TODO: rename this function
     remake: function(foundBinding, destinationPattern) {
         return destinationPattern.map(templateQuad =>
-            RulesForEdges.remake(
+            remake2(
                 DStar.bindVariables(foundBinding, templateQuad),
                 foundBinding['@depth'] - 1, foundBinding['@quad']
             )
@@ -568,6 +567,25 @@ const PropertyTemplateApplier = {
     }
 
 }
+
+
+/**
+ * 
+ * @param {Term} newNested 
+ * @param {number} depth 
+ * @param {Quad} quadInTheDataset 
+ * @returns {Quad}
+ */
+ function remake2(newNested, depth, quadInTheDataset) {
+    if (depth === -1) return newNested;
+    return N3.DataFactory.quad(
+        remake2(newNested, depth - 1, quadInTheDataset.subject),
+        quadInTheDataset.predicate,
+        quadInTheDataset.object,
+        quadInTheDataset.graph
+    );
+}
+
 
 // =============================================================================
 // =============================================================================

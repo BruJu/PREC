@@ -59,7 +59,7 @@ function applyContext(dataset, contextQuads) {
 }
 
 function buildMarks(dataset, context) {
-    try {RulesForEdges.produceMarks(dataset, context);      } catch (er) {}
+    RulesForEdges.produceMarks(dataset, context);
     try {RulesForProperties.produceMarks(dataset, context); } catch (er) {}
     RulesForNodeLabels.produceMarks(dataset, context);
 }
@@ -77,7 +77,7 @@ function producePRECCDataset(dataset, context) {
     
     for (const [markKind, functionToCall] of [
         [prec.__appliedNodeRule    , RulesForNodeLabels.applyMark],
-        //[prec.__appliedEdgeRule    , RulesForEdges.applyMark     ],
+        [prec.__appliedEdgeRule    , RulesForEdges.applyMark     ],
         //[prec.__appliedPropertyRule, RulesForProperties.applyMark]
     ]) {
         for (const mark of dataset.getQuads(null, markKind, null, defaultGraph())) {
@@ -91,6 +91,7 @@ function producePRECCDataset(dataset, context) {
     termDict.forEach((label, _) => newDataset.addAll(dataset.getQuads(label)));
     
     // dataset.deleteMatches(null, prec.__appliedNodeRule, null, $defaultGraph());
+    // dataset.deleteMatches(null, prec.__appliedEdgeRule, prec.Edges, $defaultGraph());
 
     // As it is impossible to write a rule that catches a node without any label and property, we add back the nodes here
     newDataset.addAll(dataset.getQuads(null, rdf.type, pgo.Node, defaultGraph()));
