@@ -49,7 +49,7 @@ function runATest_(dict, graphName, contextName, expected) {
 
         const expectedStore = utility.turtleToDStar(expected);
         const r = isomorphic(store.getQuads(), expectedStore.getQuads());
-        if (!r) print(store, dict, "a", dict, "b", expectedStore);
+        if (!r) print(store, dict, graphName, dict, contextName, expectedStore);
         assert.ok(r);
     });
 }

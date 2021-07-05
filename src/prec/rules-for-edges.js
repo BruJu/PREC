@@ -217,7 +217,10 @@ function applyMark(destination, mark, input, context) {
     bindings['@quads'] = [];
     destination.replaceOneBinding(bindings, pattern);
 
-    const woot = pattern.find(t => QuadStar.containsTerm(t, $variable('predicate')));
+    const woot = pattern.find(t => 
+        /* Instanciated */ QuadStar.containsTerm(t, $variable('predicate'))
+        /* Hard coded | Substituted */ || QuadStar.containsTerm(t, bindings.predicate)
+    );
     return woot !== undefined ? bindings.predicate : undefined;    
 }
 

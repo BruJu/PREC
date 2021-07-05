@@ -60,7 +60,7 @@ function applyContext(dataset, contextQuads) {
 
 function buildMarks(dataset, context) {
     RulesForEdges.produceMarks(dataset, context);
-    try {RulesForProperties.produceMarks(dataset, context); } catch (er) {}
+    RulesForProperties.produceMarks(dataset, context);
     RulesForNodeLabels.produceMarks(dataset, context);
 }
 
@@ -78,7 +78,7 @@ function producePRECCDataset(dataset, context) {
     for (const [markKind, functionToCall] of [
         [prec.__appliedNodeRule    , RulesForNodeLabels.applyMark],
         [prec.__appliedEdgeRule    , RulesForEdges.applyMark     ],
-        //[prec.__appliedPropertyRule, RulesForProperties.applyMark]
+        [prec.__appliedPropertyRule, RulesForProperties.applyMark]
     ]) {
         for (const mark of dataset.getQuads(null, markKind, null, defaultGraph())) {
             let t = functionToCall(newDataset, mark, dataset, context);

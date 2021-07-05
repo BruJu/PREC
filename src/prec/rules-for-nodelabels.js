@@ -160,7 +160,10 @@ function applyMark(destination, mark, input, context) {
     variableValues['@quads'] = [];
     destination.replaceOneBinding(variableValues, target);
 
-    const woot = target.find(t => QuadStar.containsTerm(t, [variableValues.labelIRI]));
+    const woot = target.find(t => 
+        /* Hard coded or substituted */ QuadStar.containsTerm(t, variableValues.labelIRI)
+        /* Instancied */ || QuadStar.containsTerm(t, $variable('labelIRI'))
+    );
     return woot !== undefined ? variableValues.labelIRI : undefined;
 }
 

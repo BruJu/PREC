@@ -14,6 +14,13 @@ const $quad         = N3.DataFactory.quad;
 const $variable     = N3.DataFactory.variable;
 const $defaultGraph = N3.DataFactory.defaultGraph;
 
+
+/**
+ * @typedef { import("rdf-js").Term } Term
+ * @typedef { import("rdf-js").Quad } Quad
+ * @typedef { import("./context-loader") } Context
+ */
+
 // =============================================================================
 // =============================================================================
 //     ==== CONTEXT LOADING ==== CONTEXT LOADING ==== CONTEXT LOADING ==== 
@@ -234,7 +241,9 @@ function throwIfInvalidPropertyTemplates(templatess) {
 // =============================================================================
 //            ==== CONTEXT APPLICATION ==== CONTEXT APPLICATION ==== 
 
-function transformDataset(dataset, context) {
+// 38
+
+function produceMarks(dataset, context) {
     // Mark every property node
     {
         const q = dataset.getQuads(null, rdf.type, prec.PropertyKey, $defaultGraph())
@@ -248,201 +257,167 @@ function transformDataset(dataset, context) {
 
     // Find the proper rule to apply
     context.refinePropertyRules(dataset);
+}
 
-    // apply the new modelization
-    PropertyTemplateApplier.applyPropertyTemplates(dataset, context);
+/* Return the inherited property rules for the entity */
+
+/**
+ * Return the type of the entity in the dataset, supposing it is either a node,
+ * an edge or a property, and these types are exclusive.
+ * @param {DStar} dataset The dataset
+ * @param {Term} entity The entity
+ * @returns {Term | undefined} The type of the entity if it is
+ * not a property, its PGO type (`pgo.Node` or `pgo.Edge`) if it is one
+ */
+function findTypeOfEntity(dataset, entity) {
+    if (dataset.has($quad(entity, rdf.type, pgo.Node))) {
+        return prec.NodeProperties;
+    }
+
+    if (dataset.has($quad(entity, rdf.type, pgo.Edge))) {
+        return prec.EdgeProperties;
+    }
+
+    // Probably a meta property
+    return prec.MetaProperties;
+}
+
+/**
+ * 
+ * @param {DStar} destination 
+ * @param {Quad} mark 
+ * @param {DStar} input 
+ * @param {Context} context 
+ * @returns 
+ */
+function applyMark(destination, mark, input, context) {
+    const src = [
+        $quad($variable("entity"), $variable("propertyKey"), mark.subject),
+        $quad(mark.subject, rdf.value, $variable("propertyValue")),
+        $quad(mark.subject, rdf.type , prec.PropertyKeyValue)
+    ];
+
+    const bindingss = input.matchAndBind(src);
+
+    if (bindingss.length !== 1) {
+        throw Error(
+            'rules-for-properties.js::applyMark logic error on '
+            + mark.subject.value
+        );
+    }
+
+    const bindings = bindingss[0];
+    const label = input.getQuads(bindings.propertyKey, rdfs.label, null, $defaultGraph());
+    if (label.length !== 0) {
+        bindings.label = label[0].object;
+    }
+    
+    const typeOfHolder = findTypeOfEntity(input, mark.subject);
+    let template = context.findPropertyTemplate(mark.object, typeOfHolder);
+    if (!Array.isArray(template)) {
+        template = src;
+        // I hate the fact that this node is optional
+        template.push($quad(mark.subject, prec.hasMetaProperties, $variable('metaPropertyNode')));
+    }
+
+    // Build the patterns to map to
+    const r = template.map(term => QuadStar.remapPatternWithVariables(term,
+        [
+            [$variable("entity")          , pvar.entity          ],
+            [$variable("propertyKey")     , pvar.propertyKey     ],
+            [$variable("label")           , pvar.label           ],
+            [$variable("property")        , pvar.propertyNode    ],
+            [$variable("propertyValue")   , pvar.propertyValue   ],
+            [$variable("individualValue") , pvar.individualValue ],
+            [$variable("metaPropertyNode"), pvar.metaPropertyNode],
+        ]
+    ))
+        .filter(quad => !(
+            QuadStar.containsTerm(quad, pvar.metaPropertyPredicate)
+            || QuadStar.containsTerm(quad, pvar.metaPropertyObject)
+        ));
+
+    // Split the pattern into 4 parts
+    let pattern = r.reduce(
+        (previous, quad) => {
+            let containerName = "";
+
+            if (QuadStar.containsTerm(quad, $variable("metaPropertyNode"))) {
+                containerName = "optional";
+            } else {
+                containerName = "mandatory";
+            }
+
+            if (QuadStar.containsTerm(quad, $variable("individualValue"))) {
+                containerName += "Individual";
+            }
+
+            previous[containerName].push(quad);
+            
+            return previous;
+        },
+        {
+            mandatory: [], optional: [], mandatoryIndividual: [], optionalIndividual: []
+        }
+    );
+
+    let addedQuads = [];
+
+    
+    addedQuads.push(...DStar.bindVariables(bindings, pattern.mandatory));
+
+    
+    const { individualValues, track } = PropertyTemplateApplier.extractIndividualValues(
+        input,
+        bindings.propertyValue,
+        pattern.mandatoryIndividual.length === 0
+        && pattern.optionalIndividual.length === 0
+    );
+
+    let indiv = DStar.bindVariables(bindings, pattern.mandatoryIndividual)
+    addedQuads.push(...individualValues.flatMap(value => DStar.bindVariables({ "individualValue": value }, indiv)));
+
+
+    const metaProperties = (() => {
+        const theQuads = input.getQuads(mark.subject, prec.hasMetaProperties, null, $defaultGraph());
+        if (theQuads.length === 0) return null;
+        return theQuads[0].object;
+    })();
+    
+
+    if (metaProperties !== null) {
+
+        
+        let [opt1, optN] = PropertyTemplateApplier.bindMultipleVariableSets(
+            [bindings, { metaPropertyNode: metaProperties }],
+            [
+                pattern.optional,
+                pattern.optionalIndividual
+            ]
+        );
+
+        addedQuads.push(...opt1);
+        addedQuads.push(...individualValues.flatMap(value => DStar.bindVariables({ "individualValue": value }, optN)));
+
+    }
+
+    destination.addAll(addedQuads);
+
+    // TODO: if a list was added to destination, add the complete list
+    
+
+    const woot = r.find(t => 
+        QuadStar.containsTerm(t, $variable('propertyKey'))
+        || QuadStar.containsTerm(t, bindings.propertyKey)
+    );
+    return woot !== undefined ? bindings.propertyKey : undefined;
 }
 
 
 
 /* Namespace for the functions used to transform a property modelization */
 const PropertyTemplateApplier = {
-    /* Return the inherited property rules for the entity */
-    findTypeInDataset: function(dataset, entity) {
-        if (dataset.has($quad(entity, rdf.type, pgo.Node))) {
-            return prec.NodeProperties;
-        }
-
-        if (dataset.has($quad(entity, rdf.type, pgo.Edge))) {
-            return prec.EdgeProperties;
-        }
-
-        // Probably a meta property
-        return undefined;
-    },
-
-    /**
-     * Applies the desired template to the properties
-     * 
-     * The required template name is noted with the quad
-     * `?propertyBlankNode prec:__appliedPropertyRule ?ruleNode`.
-     * @param {DStar} dataset The dataset that contains the quads
-     * @param {Context} context The context to apply
-     */
-    applyPropertyTemplates: function(dataset, context) {
-        const properties = dataset.matchAndBind(
-            [
-                $quad($variable("property"), prec.__appliedPropertyRule, $variable("ruleNode")),
-                $quad($variable("entity")  , $variable("propertyKey")   , $variable("property")),
-                $quad($variable("property"), rdf.value                 , $variable("propertyValue")),
-                $quad($variable("property"), rdf.type, prec.PropertyKeyValue)
-            ]
-        )
-            .map(bindings => [bindings, PropertyTemplateApplier.findTypeInDataset(dataset, bindings.entity)])
-            .filter(bindings => bindings[1] !== undefined);
-
-        for (const [property, typeOfHolder] of properties) {
-            const label = dataset.getQuads(property.propertyKey, rdfs.label, null, $defaultGraph());
-            if (label.length !== 0) {
-                property.label = label[0].object;
-            }
-
-            PropertyTemplateApplier.transformProperty(dataset, context, property, typeOfHolder);
-        }
-
-        dataset.deleteMatches(null, prec.__appliedPropertyRule, null, $defaultGraph());
-    },
-
-    /**
-     * Transform the given meta property by applying the given context.
-     * 
-     * @param {DStar} dataset The dataset which contains the dataset
-     * @param {Context} context The context
-     * @param {*} node The node that represents the meta property
-     */
-    transformMetaProperty: function(dataset, context, node) {
-        let properties = dataset.matchAndBind(
-            [
-                $quad(node                , $variable("propertyKey")   , $variable("property")),
-                $quad($variable("property"), prec.__appliedPropertyRule, $variable("ruleNode")),
-                $quad($variable("property"), rdf.value                 , $variable("propertyValue")),
-                $quad($variable("property"), rdf.type, prec.PropertyKeyValue)
-            ]
-        );
     
-        for (const property of properties) {
-            property.entity = node;
-            const t = prec.MetaProperties;
-            PropertyTemplateApplier.transformProperty(dataset, context, property, t);
-        }
-    },
-
-    transformProperty: function(dataset, context, bindings, typeOfHolder) {
-        const template = context.findPropertyTemplate(bindings.ruleNode, typeOfHolder);
-        if (!Array.isArray(template)) {
-            dataset.delete($quad(bindings.property, prec.__appliedPropertyRule, bindings.ruleNode));
-            return;
-        }
-    
-        // Build the patterns to map to
-        const r = template.map(term => QuadStar.remapPatternWithVariables(term,
-            [
-                [$variable("entity")               , pvar.entity               ],
-                [$variable("propertyKey")          , pvar.propertyKey          ],
-                [$variable("label")                , pvar.label                ],
-                [$variable("property")             , pvar.propertyNode         ],
-                [$variable("propertyValue")        , pvar.propertyValue        ],
-                [$variable("individualValue")      , pvar.individualValue      ],
-                [$variable("metaPropertyNode")     , pvar.metaPropertyNode     ],
-                [$variable("metaPropertyPredicate"), pvar.metaPropertyPredicate],
-                [$variable("metaPropertyObject")   , pvar.metaPropertyObject   ],
-            ]
-        ));
-    
-        // Split the pattern in 3 parts
-        let pattern = r.reduce(
-            (previous, quad) => {
-                let containerName = "";
-
-                if (QuadStar.containsTerm(quad, $variable("metaPropertyPredicate"))
-                    || QuadStar.containsTerm(quad, $variable("metaPropertyObject"))) {
-                    containerName = "metaValues";
-                } else if (QuadStar.containsTerm(quad, $variable("metaPropertyNode"))) {
-                    containerName = "optional";
-                } else {
-                    containerName = "mandatory";
-                }
-
-                if (QuadStar.containsTerm(quad, $variable("individualValue"))) {
-                    containerName += "Individual";
-                }
-
-                previous[containerName].push(quad);
-                
-                return previous;
-            },
-            {
-                mandatory: [], optional: [], metaValues: [],
-                mandatoryIndividual: [], optionalIndividual: [], metaValuesIndividual: [],
-            }
-        );
-
-        let addedQuads = [];
-        let deletedQuads = [];
-        
-        addedQuads.push(...DStar.bindVariables(bindings, pattern.mandatory));
-        deletedQuads.push(...bindings['@quads']);
-
-        const { individualValues, track } = PropertyTemplateApplier.extractIndividualValues(
-            dataset,
-            bindings.propertyValue,
-            pattern.mandatoryIndividual.length === 0
-            && pattern.optionalIndividual.length === 0
-            && pattern.metaValuesIndividual.length === 0
-        );
-
-        let indiv = DStar.bindVariables(bindings, pattern.mandatoryIndividual)
-        addedQuads.push(...individualValues.flatMap(value => DStar.bindVariables({ "individualValue": value }, indiv)));
-
-
-        const metaProperties = PropertyTemplateApplier.findAndEraseMetaProperties(
-            dataset, context,
-            bindings.property,
-            pattern.optional.length === 0
-            && pattern.metaValues.length === 0
-            && pattern.optionalIndividual.length === 0
-            && pattern.metaValuesIndividual.length === 0
-        );
-
-        if (metaProperties !== null) {
-            deletedQuads.push(metaProperties.optionalPart['@quad']);
-
-            let [opt1, metaValues1, optN, metaValuesN] = PropertyTemplateApplier.bindMultipleVariableSets(
-                [bindings, { metaPropertyNode: metaProperties.optionalPart.metaPropertyNode }],
-                [
-                    pattern.optional,
-                    pattern.metaValues,
-                    pattern.optionalIndividual,
-                    pattern.metaValuesIndividual
-                ]
-            );
-
-            addedQuads.push(...opt1);
-            addedQuads.push(...individualValues.flatMap(value => DStar.bindVariables({ "individualValue": value }, optN)));
-
-            metaProperties.metaValues.forEach(metaValue => {
-                deletedQuads.push(metaValue['@quad']);
-
-                let x = pattern => PropertyTemplateApplier.remake(metaValue, pattern);
-                addedQuads.push(...x(metaValues1));
-                addedQuads.push(...x(individualValues.flatMap(value => DStar.bindVariables({ "individualValue": value }, metaValuesN))));
-            });
-        }
-
-        dataset.removeQuads(deletedQuads);
-        dataset.addAll(addedQuads);
-
-        for (const term of track) {
-            const r = dataset.allUsageOfAre(term, [
-                $quad(term, rdf.first), $quad(term, rdf.rest)
-            ]);
-
-            if (r !== null) {
-                dataset.removeQuads(r);
-            }
-        }
-    },
-
     extractIndividualValues: function(dataset, propertyValue, ignore) {
         if (ignore === true) return { individualValues: [], track: [] };
 
@@ -475,80 +450,6 @@ const PropertyTemplateApplier = {
         return { individualValues: result, track: track };
     },
 
-    findAndEraseMetaProperties: function(dataset, context, propertyNode, ignore) {
-        if (ignore === true) return null;
-
-        const metaNodeIdentityQuads = dataset.getQuads(propertyNode, prec.hasMetaProperties, null, $defaultGraph());
-
-        if (metaNodeIdentityQuads.length === 0) return null;
-
-        if (metaNodeIdentityQuads.length !== 1)
-            throw Error("Invalid data graph: more than one meta node for " + propertyNode.value);
-
-        const metaNode = metaNodeIdentityQuads[0].object;
-
-        let result = {
-            optionalPart: {
-                "@quad": metaNodeIdentityQuads[0],
-                metaPropertyNode: metaNode
-            },
-            metaValues: []
-        };
-
-        // Apply the meta property template to the meta property
-        // = setup the definitive
-        // (?metaPropertyNode, ?metaPropertyPredicate, ?metaPropertyObjet)
-        // triples
-        PropertyTemplateApplier.transformMetaProperty(dataset, context, metaNode);
-
-        // Extract the ?mPN ?mPK ?mPV values
-        const mPNmPKmPV = dataset.getQuads(
-            /* ?metaPropertyNode      */ metaNode,
-            /* ?metaPropertyPredicate */ null,
-            /* ?metaPropertyObject    */ null,
-            $defaultGraph()
-        );
-
-        let everyRdfStarQuads = dataset.getRDFStarQuads();
-
-        result.metaValues = mPNmPKmPV.map(quad => {
-            return {
-                "@quad": quad,
-                "@depth": 0,
-                metaPropertyPredicate: quad.predicate,
-                metaPropertyObject   : quad.object
-            };
-        })
-
-        for (const rdfStarQuad of everyRdfStarQuads) {
-            let depth = 1;
-
-            let currentTerm = rdfStarQuad.subject;
-
-            while (currentTerm.termType === 'Quad') {
-                let isMine = mPNmPKmPV.find(e => currentTerm.equals(e));
-
-                if (isMine !== undefined) {
-                    result.metaValues.push(
-                        {
-                            "@quad": rdfStarQuad,
-                            "@depth": depth,
-                            metaPropertyPredicate: isMine.predicate,
-                            metaPropertyObject   : isMine.object
-                        }
-                    )
-
-                    break;
-                }
-
-                currentTerm = currentTerm.subject;
-                ++depth;
-            }
-        }
-
-        return result;
-    },
-
     bindMultipleVariableSets: function(listOfBindings, pattern) {
         for (let bindings of listOfBindings) {
             pattern = DStar.bindVariables(bindings, pattern);
@@ -556,36 +457,7 @@ const PropertyTemplateApplier = {
         return pattern;
     },
 
-    // TODO: rename this function
-    remake: function(foundBinding, destinationPattern) {
-        return destinationPattern.map(templateQuad =>
-            remake2(
-                DStar.bindVariables(foundBinding, templateQuad),
-                foundBinding['@depth'] - 1, foundBinding['@quad']
-            )
-        );
-    }
-
 }
-
-
-/**
- * 
- * @param {Term} newNested 
- * @param {number} depth 
- * @param {Quad} quadInTheDataset 
- * @returns {Quad}
- */
- function remake2(newNested, depth, quadInTheDataset) {
-    if (depth === -1) return newNested;
-    return N3.DataFactory.quad(
-        remake2(newNested, depth - 1, quadInTheDataset.subject),
-        quadInTheDataset.predicate,
-        quadInTheDataset.object,
-        quadInTheDataset.graph
-    );
-}
-
 
 // =============================================================================
 // =============================================================================
@@ -596,8 +468,5 @@ module.exports = {
     throwIfHasInvalidTemplate: throwIfInvalidPropertyTemplates,
     
     // Context application
-    transformDataset: transformDataset,
-
-    produceMarks : (dataset, context) => { throw Error("Not yet implemented") },
-    applyMark : (destination, mark, input, context) => { throw Error("Not yet implemented") }
+    produceMarks, applyMark
 }
