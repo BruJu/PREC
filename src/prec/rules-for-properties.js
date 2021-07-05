@@ -307,12 +307,13 @@ function applyMark(destination, mark, input, context) {
     }
 
     const bindings = bindingss[0];
+    bindings.property = mark.subject;
     const label = input.getQuads(bindings.propertyKey, rdfs.label, null, $defaultGraph());
     if (label.length !== 0) {
         bindings.label = label[0].object;
     }
     
-    const typeOfHolder = findTypeOfEntity(input, mark.subject);
+    const typeOfHolder = findTypeOfEntity(input, bindings.entity);
     let template = context.findPropertyTemplate(mark.object, typeOfHolder);
     if (!Array.isArray(template)) {
         template = src;
@@ -403,7 +404,16 @@ function applyMark(destination, mark, input, context) {
 
     destination.addAll(addedQuads);
 
-    // TODO: if a list was added to destination, add the complete list
+    if (r.find(t => QuadStar.containsTerm(t, $variable('propertyValue'))) !== undefined
+        && input.getQuads(bindings.propertyValue, rdf.first).length !== 0) {
+        // Value is an rdf.list and we used it: we need to copy its content
+        
+        let list = bindings.propertyValue;
+        while (!list.equals(rdf.nil)) {
+            destination.addAll(input.getQuads(list));
+            list = input.getQuads(list, rdf.rest)[0].object;
+        }
+    }
     
 
     const woot = r.find(t => 
