@@ -48,7 +48,7 @@ function applyContext(dataset, contextQuads) {
 
     // -- Map generated IRI to existing IRIs
     buildMarks(dataset, context);
-    const newDataset = producePRECCDataset(dataset, context);
+    const newDataset = ruleBasedProduction(dataset, context);
     dataset.deleteMatches();
     dataset.addAll(newDataset.getQuads());
 
@@ -70,7 +70,7 @@ function buildMarks(dataset, context) {
  * @param {Context} context 
  * @returns 
  */
-function producePRECCDataset(dataset, context) {
+function ruleBasedProduction(dataset, context) {
     const newDataset = new DStar();
 
     const termDict = new TermDict();
@@ -81,10 +81,8 @@ function producePRECCDataset(dataset, context) {
         [prec.__appliedPropertyRule, RulesForProperties.applyMark]
     ]) {
         for (const mark of dataset.getQuads(null, markKind, null, defaultGraph())) {
-            let t = functionToCall(newDataset, mark, dataset, context);
-            if (t !== undefined) {
-                termDict.set(t, true);
-            }
+            const ts = functionToCall(newDataset, mark, dataset, context);
+            ts.forEach(t => termDict.set(t, true));
         }
     }
 

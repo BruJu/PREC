@@ -164,7 +164,7 @@ function applyMark(destination, mark, input, context) {
         /* Hard coded or substituted */ QuadStar.containsTerm(t, variableValues.labelIRI)
         /* Instancied */ || QuadStar.containsTerm(t, $variable('labelIRI'))
     );
-    return woot !== undefined ? variableValues.labelIRI : undefined;
+    return woot !== undefined ? [variableValues.labelIRI] : [];
 }
 
 // =============================================================================

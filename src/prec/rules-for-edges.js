@@ -221,7 +221,7 @@ function applyMark(destination, mark, input, context) {
         /* Instanciated */ QuadStar.containsTerm(t, $variable('predicate'))
         /* Hard coded | Substituted */ || QuadStar.containsTerm(t, bindings.predicate)
     );
-    return woot !== undefined ? bindings.predicate : undefined;    
+    return woot !== undefined ? [bindings.predicate] : [];
 }
 
 
