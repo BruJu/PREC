@@ -140,51 +140,6 @@ class PropertyRule {
     }
 }
 
-const TemplateChecker = {
-    /**
-     * Return true if every embedded triple used in the template is asserted.
-     * @param {Quad[]} template An array of quads that constitute the template
-     */
-    embeddedTriplesAreAsserted: function(template) {
-        const invalidTriple = template.find(triple => {
-            return undefined !== ["subject", "predicate", "object", "graph"].find(role => {
-                const embedded = triple[role];
-                if (embedded.termType !== 'Quad') return false;
-                return undefined === template.find(assertedTriple => assertedTriple.equals(embedded));
-            });
-        });
-
-        return invalidTriple === undefined;
-    },
-
-    /**
-     * Return true if the given term only appear in subject-star position.
-     * 
-     * Subject-star means that the term can only be the subject, the subject
-     * of the embedded triple in subject (subject-subject), ...
-     * In other words, in a N-Triple-star document, it is the first pure RDF
-     * term that appears in the triple.
-     * @param {Quad[]} template An array of quads that constitute the template
-     * @param {Term} onlyAsSubject The term that must only appear in subject-star
-     * position
-     */
-    termMustBeInSubjectStarPosition: function(template, onlyAsSubject) {
-        function _isInvalidTerm(term) {
-            if (term.termType !== 'Quad') {
-                return false;
-            }
-            
-            if (QuadStar.containsTerm(term.predicate, [onlyAsSubject])) return true;
-            if (QuadStar.containsTerm(term.object   , [onlyAsSubject])) return true;
-            if (QuadStar.containsTerm(term.graph    , [onlyAsSubject])) return true;
-    
-            return _isInvalidTerm(term.subject);
-        }
-
-        return undefined === template.find(quad => _isInvalidTerm(quad));
-    }
-};
-
 /**
  * Check if there are no template that have pvar:entity at another place than
  * subject.
@@ -193,8 +148,6 @@ const TemplateChecker = {
  * @param {TermDict} templatess A map of map of templates
  */
 function throwIfInvalidPropertyTemplates(templatess) {
-    const pvarEntity = pvar.entity;
-
     function _hasInvalidMetaPropertyUsage(term) {
         // TODO: refine the verification
         const mpkey = term.predicate.equals(pvar.metaPropertyPredicate);
@@ -204,15 +157,6 @@ function throwIfInvalidPropertyTemplates(templatess) {
 
     templatess.forEach((classRule, templates) => {
         templates.forEach((templateName, template) => {
-            // pvar:entity in subject-star position
-            if (!TemplateChecker.termMustBeInSubjectStarPosition(template, pvarEntity)) {
-                throw Error(
-                    "Propriety Template checker: found pvar:entity somewhere" +
-                    " else as subjet in template " + classRule.value + " x " +
-                    templateName.value
-                );
-            }
-
             for (const quad of template) {
                 // ?s pvar:metaPropertyPredicate pvar:metaPropertyObject
                 if (_hasInvalidMetaPropertyUsage(quad)) {
@@ -225,13 +169,6 @@ function throwIfInvalidPropertyTemplates(templatess) {
                 }
             }
 
-            // Used Embedded triples must be asserted
-            if (!TemplateChecker.embeddedTriplesAreAsserted(template)) {
-                throw Error("Property Template checker: the template "
-                + templateName.value
-                + " is used as a property template but contains an"
-                + " embedded triple that is not asserted.");
-            }
         });
     });
 }
