@@ -50,7 +50,7 @@ class Dataset {
      * this function on every member.
      * 
      * @param {*} bindings A mapping of variable names to their value
-     * @param {*} quad The quad to convert, or an `Array` of `quad` (see the
+     * @param {Quad} quad The quad to convert, or an `Array` of `quad` (see the
      * description of the method).
      */
     static bindVariables(bindings, quad) {

@@ -54,7 +54,7 @@ function applyContext(dataset, contextQuads) {
 
     // -- Remove provenance information if they are not required by the user
     if (context.getStateOf("KeepProvenance") === false) {
-        removePGO(newDataset);
+        removePGO(dataset);
     }
 }
 

@@ -321,6 +321,8 @@ function applyMark(destination, mark, input, context) {
         template.push($quad(mark.subject, prec.hasMetaProperties, $variable('metaPropertyNode')));
     }
 
+    bindings.entity = deepResolve(bindings.entity, input, context);
+
     // Build the patterns to map to
     const r = template.map(term => QuadStar.remapPatternWithVariables(term,
         [
@@ -364,11 +366,10 @@ function applyMark(destination, mark, input, context) {
 
     let addedQuads = [];
 
-    
     addedQuads.push(...DStar.bindVariables(bindings, pattern.mandatory));
 
     
-    const { individualValues, track } = PropertyTemplateApplier.extractIndividualValues(
+    const individualValues = PropertyTemplateApplier.extractIndividualValues(
         input,
         bindings.propertyValue,
         pattern.mandatoryIndividual.length === 0
@@ -424,21 +425,132 @@ function applyMark(destination, mark, input, context) {
 }
 
 
+/**
+ * Find the real identity of the term to resolve depending on the input dataset
+ * and the context
+ * @param {Term} termToResolve The term for which the final identity is required
+ * @param {DStar} inputDataset The original PREC-0 dataset
+ * @param {Context} context The context
+ */
+function deepResolve(termToResolve, inputDataset, context) {
+    const myType = findTypeOfEntity(inputDataset, termToResolve);
+
+    if (myType.equals(prec.NodeProperties)) {
+        // No rule can modify the identity of a node
+        return termToResolve;
+    } else if (myType.equals(prec.EdgeProperties)) {
+        const ruleNode = inputDataset.getQuads(termToResolve, prec.__appliedEdgeRule, null, $defaultGraph())[0].object;
+
+        const behaviour = context.findEdgeTemplate(ruleNode);
+        if (!Array.isArray(behaviour)) {
+            // No remapping
+            return termToResolve;
+        }
+
+        const pPpO = behaviour.filter(q => q.predicate.equals(pvar.propertyPredicate) && q.object.equals(pvar.propertyObject));
+
+        if (pPpO.length === 0) {
+            throw Error(termToResolve.value, "has an edge (meta)* property but PREC doesn't know what do to about it");
+        }
+
+        if (pPpO.length >= 2) {
+            throw Error(termToResolve.value, "has an edge (meta)* property but PREC doesn't support yet multiple identities (found", pPpO.length, " values)");
+        }
+
+        const newEntityTemplate = pPpO[0].subject; // <- can contain variables
+
+        const edgeBindingss = inputDataset.matchAndBind([
+            $quad(termToResolve, rdf.type, pgo.Edge),
+            $quad(termToResolve, rdf.subject  , $variable("subject")  ),
+            $quad(termToResolve, rdf.predicate, $variable("predicate")),
+            $quad(termToResolve, rdf.object   , $variable("object")   )
+        ]);
+        const edgeBindings = edgeBindingss[0];
+        edgeBindings.edge = termToResolve;
+
+        const trueEntityTemplate = QuadStar.remapPatternWithVariables(
+            newEntityTemplate,
+            [
+                [$variable('edge')     , pvar.self       ],
+                [$variable('edge')     , pvar.edge       ],
+                [$variable('subject')  , pvar.source     ],
+                [$variable('predicate'), pvar.edgeIRI    ],
+                [$variable('label')    , pvar.label      ],
+                [$variable('object')   , pvar.destination],
+            ]
+        );
+
+        return DStar.bindVariables(edgeBindings, $quad(trueEntityTemplate, prec._, prec._)).subject;
+    } else if (myType.equals(prec.MetaProperties)) {
+        const ruleNode = inputDataset.matchAndBind([
+            $quad($variable('propertyNode'), prec.hasMetaProperties, termToResolve),
+            $quad($variable('propertyNode'), prec.__appliedPropertyRule, $variable('ruleNode'))
+        ])[0].ruleNode;
+        
+        const behaviour = context.findPropertyTemplate(ruleNode,
+            findTypeOfEntity(inputDataset, termToResolve)
+        );
+
+        if (!Array.isArray(behaviour)) {
+            // The parent property has no destination template -> the termToResolve is final
+            return termToResolve;
+        }
+
+        const pPpO = behaviour.filter(q => q.predicate.equals(pvar.metaPropertyPredicate) && q.object.equals(pvar.metaPropertyObject));
+
+        if (pPpO.length === 0) {
+            throw Error(termToResolve.value, "has a (meta)+ property but PREC doesn't know what do to about it");
+        }
+
+        if (pPpO.length >= 2) {
+            throw Error(termToResolve.value, "has a (meta)+ property but PREC doesn't support yet multiple identities (found", pPpO.length, " values)");
+        }
+
+        const newEntityTemplate = pPpO[0].subject;
+        
+        const propBindingss = inputDataset.matchAndBind([
+            $quad($variable("entity"), $variable("propertyKey"), $variable('propertyNode')),
+            $quad($variable('propertyNode'), rdf.value, $variable("propertyValue")),
+            $quad($variable('propertyNode'), rdf.type , prec.PropertyKeyValue),
+            $quad($variable('propertyNode'), prec.hasMetaProperties, termToResolve)
+        ]);
+        const propBindings = propBindingss[0];
+        propBindings.metaPropertyNode = termToResolve;
+        propBindings.entity = deepResolve(propBindings.entity, inputDataset, context);
+
+        const trueTemplate = QuadStar.remapPatternWithVariables(
+            newEntityTemplate,
+            [
+                [$variable("entity")          , pvar.entity          ],
+                [$variable("propertyKey")     , pvar.propertyKey     ],
+                [$variable("label")           , pvar.label           ],
+                [$variable("property")        , pvar.propertyNode    ],
+                [$variable("propertyValue")   , pvar.propertyValue   ],
+                [$variable("individualValue") , pvar.individualValue ],
+                [$variable("metaPropertyNode"), pvar.metaPropertyNode],
+            ]
+        );
+
+        return DStar.bindVariables(propBindings, $quad(trueTemplate, prec._, prec._)).subject;
+    } else {
+        // Should not happen
+        throw Error("logic erroc in deepResolve: unknown type", myType.value , "for", termToResolve.value);
+    }
+}
+
 
 /* Namespace for the functions used to transform a property modelization */
 const PropertyTemplateApplier = {
-    
     extractIndividualValues: function(dataset, propertyValue, ignore) {
-        if (ignore === true) return { individualValues: [], track: [] };
+        if (ignore === true) return [];
 
         // A literal alone
         if (propertyValue.termType === 'Literal') {
-            return { individualValues: [propertyValue], track: [] };
+            return [propertyValue];
         }
 
         // An RDF list
         let result = [];
-        let track = [];
         let currentList = propertyValue;
 
         while (!rdf.nil.equals(currentList)) {
@@ -453,11 +565,10 @@ const PropertyTemplateApplier = {
                 throw Error(`Malformed list ${currentList.value}: ${theRest.length} values for rdf:rest`);
 
             let nextElement = theRest[0].object;
-            track.push(currentList);
             currentList = nextElement;
         }
 
-        return { individualValues: result, track: track };
+        return result;
     },
 
     bindMultipleVariableSets: function(listOfBindings, pattern) {
