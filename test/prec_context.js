@@ -83,37 +83,19 @@ function test(name, source, context, expected) {
 }
 
 describe('Context Applier', function () {
-  require('./prec_impl/rules-for-edges.test')(test);
-  require('./prec_impl/rules-for-properties-with-edges')(test);
+  require('./prec_impl/rules-for-edges.test.js')(test);
+  require('./prec_impl/rules-for-properties-on-nodes.test.js')(test);
+  require('./prec_impl/rules-for-properties-on-edges.test.js')(test);
 });
 
 describe("Property convertion", function() {
     const graphs = {
         empty: ``,
-        oneNode: ` :node a pgo:Node . `,
         oneEdge: `
             :edge a pgo:Edge ;
               rdf:subject :s ;
               rdf:predicate :p ;
               rdf:object :o .
-        `,
-        oneNodeWithProperty: `
-            :node a pgo:Node ; :p [ rdf:value "v1" ; a prec:PropertyKeyValue ] .
-            :p a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "P1" .
-        `,
-        oneNodeWithTwoProperties: `
-            :node a pgo:Node ;
-                :p1 [ rdf:value "v1" ; a prec:PropertyKeyValue ] ;
-                :p2 [ rdf:value "v2" ; a prec:PropertyKeyValue ] .
-            
-            :p1 a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "P1" .
-            :p2 a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "P2" .
-        `,
-        oneNodeWithMultiValuedProperty: `
-            :node a pgo:Node ;
-                :p [ rdf:value "v1" ; a prec:PropertyKeyValue ] ;
-                :p [ rdf:value "v2" ; a prec:PropertyKeyValue ] .
-            :p a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "P1" .
         `,
         oneSimpleGraph: `
             :edge a pgo:Edge ;
@@ -165,12 +147,6 @@ describe("Property convertion", function() {
             :town_value_meta_properties_name a prec:PropertyKeyValue ;
                 rdf:value "Capital of Lights" .
         `,
-        contextForP1: ` :knows prec:IRIOfProperty "P1" . `,
-        contextForP1bis: `
-            [] a prec:PropertyRule ;
-                prec:propertyIRI :knows ;
-                prec:propertyName "P1"  .
-        `,
         contextForPB: ` :knows prec:IRIOfProperty "PropertyB" . `,
         contextForNodes: `
             [] a prec:PropertyRule ;
@@ -195,71 +171,17 @@ describe("Property convertion", function() {
         `,
         contextCollapseMetaProperties: `
             prec:MetaProperties prec:templatedBy prec:DirectTriples .
-        `,
-        contextPGOProperty: `
-            prec:Properties prec:templatedBy [
-                prec:composedOf
-                    << pvar:entity       pgo:hasProperty pvar:propertyNode  >> ,
-                    << pvar:propertyNode pgo:key         pvar:label         >> ,
-                    << pvar:propertyNode pgo:value       pvar:propertyValue >>
-            ] .
         `
     };
 
     describe('Empty context', function() {
         runATest_(graphs, 'empty'                         , 'empty', graphs.empty);
-        runATest_(graphs, 'oneNode'                       , 'empty', graphs.oneNode);
         runATest_(graphs, 'oneEdge'                       , 'empty', graphs.oneEdge);
-        runATest_(graphs, 'oneNodeWithProperty'           , 'empty', graphs.oneNodeWithProperty);
-        runATest_(graphs, 'oneNodeWithTwoProperties'      , 'empty', graphs.oneNodeWithTwoProperties);
-        runATest_(graphs, 'oneNodeWithMultiValuedProperty', 'empty', graphs.oneNodeWithMultiValuedProperty);
         runATest_(graphs, 'oneSimpleGraph'                , 'empty', graphs.oneSimpleGraph);
         runATest_(graphs, 'oneNodeWithMetaProperty'       , 'empty', graphs.oneNodeWithMetaProperty);
     });
 
     describe("Simple properties", function() {
-        runATest_(graphs, 'empty', 'contextForP1', ``);
-
-        runATest_(graphs, 'oneNodeWithProperty', 'contextForP1',
-        `
-            :node a pgo:Node ; :knows [ rdf:value "v1" ; a prec:PropertyKeyValue ] .
-        `
-        );
-
-        runATest_(graphs, 'oneNodeWithTwoProperties', 'contextForP1',
-        `
-            :node a pgo:Node ;
-                :knows [ rdf:value "v1" ; a prec:PropertyKeyValue ] ;
-                :p2    [ rdf:value "v2" ; a prec:PropertyKeyValue ] .
-            :p2 a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "P2" .
-        `
-        );
-
-        runATest_(graphs, 'oneNodeWithMultiValuedProperty', 'contextForP1',
-        `
-            :node a pgo:Node ;
-                :knows [ rdf:value "v1" ; a prec:PropertyKeyValue ] ;
-                :knows [ rdf:value "v2" ; a prec:PropertyKeyValue ] .
-        `
-        );
-
-        runATest_(graphs, 'oneNodeWithTwoProperties', 'contextForP1bis',
-        `
-            :node a pgo:Node ;
-                :knows [ rdf:value "v1" ; a prec:PropertyKeyValue ] ;
-                :p2    [ rdf:value "v2" ; a prec:PropertyKeyValue ] .
-            :p2 a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "P2" .
-        `
-        );
-
-        runATest_(graphs, 'oneNodeWithMultiValuedProperty', 'contextForP1bis',
-        `
-            :node a pgo:Node ;
-                :knows [ rdf:value "v1" ; a prec:PropertyKeyValue ] ;
-                :knows [ rdf:value "v2" ; a prec:PropertyKeyValue ] .
-        `
-        );
-
         runATest_(graphs, 'oneSimpleGraph', 'contextForPB',
         `
             :edge a pgo:Edge ;
@@ -328,28 +250,6 @@ describe("Property convertion", function() {
         `
         );
 
-
-        runATest_(graphs, 'oneNodeWithProperty', 'contextPGOProperty',
-        `
-            :node a pgo:Node .
-            :node pgo:hasProperty _:theProperty .
-            _:theProperty pgo:key "P1" .
-            _:theProperty pgo:value "v1" .
-        `
-        )
-        
-        runATest_(graphs, 'oneNodeWithTwoProperties', 'contextPGOProperty',
-        `
-            :node a pgo:Node .
-            :node pgo:hasProperty _:theProperty1 .
-            _:theProperty1 pgo:key "P1" .
-            _:theProperty1 pgo:value "v1" .
-
-            :node pgo:hasProperty _:theProperty2 .
-            _:theProperty2 pgo:key "P2" .
-            _:theProperty2 pgo:value "v2" .
-        `
-        )
     });
 
     describe("Meta properties", function() {
@@ -492,7 +392,6 @@ describe("Edge and Property convertion", function() {
         `,
 
         edgeWithList:
-            //anEdge +
         `
             :node a pgo:Node ; :property :property_bn .
             :property a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "Property" .
