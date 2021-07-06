@@ -84,7 +84,7 @@ function test(name, source, context, expected) {
 
 describe('Context Applier', function () {
   require('./prec_impl/rules-for-edges.test')(test);
-
+  require('./prec_impl/rules-for-properties-with-edges')(test);
 });
 
 describe("Property convertion", function() {
