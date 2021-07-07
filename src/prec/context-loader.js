@@ -277,10 +277,38 @@ function _buildTemplate(dataset, materializations, defaultTemplate) {
     let composedOf = dataset.getQuads(template, prec.composedOf, null, $defaultGraph())
         .map(quad => quad.object)
     
-    // Apply the substitutions if any
-    if (substitutionRequests.isEmpty()) {
-        return composedOf;
+    const toRemove = [];
+    for (const templateQuad of composedOf) {
+        let po = false;
+
+        if (templateQuad.predicate.equals(pvar.propertyPredicate)) {
+            if (templateQuad.object.equals(pvar.propertyObject)) {
+                po = true;
+            } else {
+                throw Error('Invalid template');
+            }
+        } else if (templateQuad.predicate.equals(pvar.metaPropertyPredicate)) {
+            if (templateQuad.object.equals(pvar.metaPropertyObject)) {
+                po = true;
+            } else {
+                throw Error('Invalid template');
+            }
+        } else {
+            if (QuadStar.containsTerm(pvar.propertyPredicate)
+                || QuadStar.containsTerm(pvar.propertyObject)
+                || QuadStar.containsTerm(pvar.metaPropertyPredicate)
+                || QuadStar.containsTerm(pvar.metaPropertyObject)) {
+                throw Error('Invalid template');
+            }
+        }
+
+        if (po) {
+            toRemove.push(templateQuad);
+        }
     }
+
+    composedOf = composedOf.filter(q => !toRemove.includes(q));
+    toRemove.forEach(q => composedOf.push($quad(q.subject, prec._forPredicate, prec._forPredicate)));
 
     return composedOf.map(term => QuadStar.eventuallyRebuildQuad(
         term,
@@ -594,16 +622,13 @@ class Context {
 
         _removeSugarForRules(dataset, RulesForEdges.Rule);
         this.edges      = new EntitiesManager(dataset, substitutionTerms, RulesForEdges.Rule);
-        RulesForEdges.throwIfHasInvalidTemplate(this.edges.templatess);
         
         _removeSugarForRules(dataset, RulesForProperties.Rule);
         _copyPropertiesValuesToSpecificProperties(dataset);
         this.properties = new EntitiesManager(dataset, substitutionTerms, RulesForProperties.Rule);
-        RulesForProperties.throwIfHasInvalidTemplate(this.properties.templatess);
 
         _removeSugarForRules(dataset, RulesForNodeLabels.Rule   );
         this.nodeLabels = new EntitiesManager(dataset, substitutionTerms, RulesForNodeLabels.Rule);
-        // TODO: throw if there are invalid node label template
 
         this.flags = readFlags(dataset);
         this.blankNodeMapping = readBlankNodeMapping(dataset);

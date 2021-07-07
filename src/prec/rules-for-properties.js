@@ -140,41 +140,6 @@ class PropertyRule {
     }
 }
 
-/**
- * Check if there are no template that have pvar:entity at another place than
- * subject.
- * 
- * Throws if there is one
- * @param {TermDict} templatess A map of map of templates
- */
-function throwIfInvalidPropertyTemplates(templatess) {
-    function _hasInvalidMetaPropertyUsage(term) {
-        // TODO: refine the verification
-        const mpkey = term.predicate.equals(pvar.metaPropertyPredicate);
-        const mpvalue = term.object.equals(pvar.metaPropertyObject);
-        return mpkey !== mpvalue;
-    }
-
-    templatess.forEach((classRule, templates) => {
-        templates.forEach((templateName, template) => {
-            for (const quad of template) {
-                // ?s pvar:metaPropertyPredicate pvar:metaPropertyObject
-                if (_hasInvalidMetaPropertyUsage(quad)) {
-                    throw Error(
-                        "Propriety Template checker: pvar:metaPropertyPredicate and pvar:metaPropertyObject" +
-                        " may only be used in triples of form << ?s pvar:metaPropertyPredicate pvar:metaPropertyObject >>"
-                        + " but the template { " + classRule.value + " x " + templateName.value + " } "
-                        + " violates this restriction"
-                    );
-                }
-            }
-
-        });
-    });
-}
-
-
-
 
 // =============================================================================
 // =============================================================================
@@ -312,10 +277,7 @@ function instanciateProperty(input, propertyNode, srcTemplate, context) {
             [$variable("metaPropertyNode"), pvar.metaPropertyNode],
         ]
     ))
-        .filter(quad => !(
-            QuadStar.containsTerm(quad, pvar.metaPropertyPredicate)
-            || QuadStar.containsTerm(quad, pvar.metaPropertyObject)
-        ));
+        .filter(quad => !quad.predicate.equals(prec._forPredicate));
 
 
     // Split the template into 4 parts
@@ -417,83 +379,46 @@ function deepResolve(termToResolve, inputDataset, context) {
         // No rule can modify the identity of a node
         return [termToResolve];
     } else if (myType.equals(prec.EdgeProperties)) {
-        const ruleNode = inputDataset.getQuads(termToResolve, prec.__appliedEdgeRule, null, $defaultGraph())[0].object;
-
-        const behaviour = context.findEdgeTemplate(ruleNode);
-        if (!Array.isArray(behaviour)) {
-            // No remapping
-            return [termToResolve];
-        }
-
-        const pPpO = behaviour.filter(q => q.predicate.equals(pvar.propertyPredicate) && q.object.equals(pvar.propertyObject));
-
-        if (pPpO.length === 0) {
-            throw Error(termToResolve.value, "has an edge (meta)* property but PREC doesn't know what do to about it");
-        }
-
-        if (pPpO.length >= 2) {
-            throw Error(termToResolve.value, "has an edge (meta)* property but PREC doesn't support yet multiple identities (found", pPpO.length, " values)");
-        }
-
-        const newEntityTemplate = pPpO[0].subject; // <- can contain variables
-
-        const edgeBindingss = inputDataset.matchAndBind([
+        const edgeBindings = inputDataset.matchAndBind([
             $quad(termToResolve, rdf.type, pgo.Edge),
             $quad(termToResolve, rdf.subject  , $variable("subject")  ),
             $quad(termToResolve, rdf.predicate, $variable("predicate")),
             $quad(termToResolve, rdf.object   , $variable("object")   )
-        ]);
-        const edgeBindings = edgeBindingss[0];
+        ])[0];
         edgeBindings.edge = termToResolve;
 
-        const trueEntityTemplate = QuadStar.remapPatternWithVariables(
-            newEntityTemplate,
-            [
-                [$variable('edge')     , pvar.self       ],
-                [$variable('edge')     , pvar.edge       ],
-                [$variable('subject')  , pvar.source     ],
-                [$variable('predicate'), pvar.edgeIRI    ],
-                [$variable('label')    , pvar.label      ],
-                [$variable('object')   , pvar.destination],
-            ]
-        );
-
-        return [DStar.bindVariables(edgeBindings, $quad(trueEntityTemplate, prec._, prec._)).subject];
+        const ruleNode = inputDataset.getQuads(termToResolve, prec.__appliedEdgeRule, null, $defaultGraph())[0].object;
+        return context.findEdgeTemplate(ruleNode).filter(q => QuadStar.containsTerm(q, prec._forPredicate))
+            .map(quad => {
+                const theEntityTemplate = quad.subject;
+                const trueEntityTemplate = QuadStar.remapPatternWithVariables(
+                    theEntityTemplate,
+                    [
+                        [$variable('edge')     , pvar.self       ],
+                        [$variable('edge')     , pvar.edge       ],
+                        [$variable('subject')  , pvar.source     ],
+                        [$variable('predicate'), pvar.edgeIRI    ],
+                        [$variable('label')    , pvar.label      ],
+                        [$variable('object')   , pvar.destination],
+                    ]
+                );
+                return DStar.bindVariables(edgeBindings, $quad(trueEntityTemplate, prec._, prec._)).subject;
+            });
     } else if (myType.equals(prec.MetaProperties)) {
-        const bindings = inputDataset.matchAndBind([
+        const binding = inputDataset.matchAndBind([
             $quad($variable('propertyNode'), prec.hasMetaProperties, termToResolve),
             $quad($variable('propertyNode'), prec.__appliedPropertyRule, $variable('ruleNode')),
             $quad($variable('entity'), $variable('whatever'), $variable('propertyNode'))
-        ])
+        ])[0];
         
-        if (bindings.length !== 1) {
-            console.error(bindings);
-            throw Error("!")
-        }
-        
-        const binding = bindings[0];
         const ruleNode = binding.ruleNode;
         const propertyNode = binding.propertyNode;
 
-        // Who am I?
-        const behaviour = context.findPropertyTemplate(ruleNode, 
-            findTypeOfEntity(inputDataset, binding.entity)
-        );
-
-        if (!Array.isArray(behaviour)) {
-            return [termToResolve];
-        }
-
-        const a = behaviour.filter(quad => quad.predicate.equals(pvar.metaPropertyPredicate)
-            && quad.object.equals(pvar.metaPropertyObject)
-            && quad.graph.equals($defaultGraph()));
-
-        const b = a.map(quad => $quad(quad.subject, prec._, prec._))
-        const c = b.map(me => instanciateProperty(inputDataset, propertyNode, [me], context).produced)
-        const d = c.flatMap(producedQuads => producedQuads.map(quad => quad.subject));
-        
-
-        return d;
+        return context.findPropertyTemplate(ruleNode, findTypeOfEntity(inputDataset, binding.entity))
+            .filter(quad => quad.predicate.equals(prec._forPredicate))
+            .map(quad => $quad(quad.subject, prec._, prec._))
+            .map(me => instanciateProperty(inputDataset, propertyNode, [me], context).produced)
+            .flatMap(producedQuads => producedQuads.map(quad => quad.subject));
     } else {
         // Should not happen
         throw Error("logic erroc in deepResolve: unknown type", myType.value , "for", termToResolve.value);
@@ -548,7 +473,6 @@ const PropertyTemplateApplier = {
 module.exports = {
     // Context loading
     Rule: PropertyRule,
-    throwIfHasInvalidTemplate: throwIfInvalidPropertyTemplates,
     
     // Context application
     produceMarks, applyMark

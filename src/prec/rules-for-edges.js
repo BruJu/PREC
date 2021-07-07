@@ -104,35 +104,6 @@ class EdgeRule {
     }
 }
 
-/**
- * Throws an error if one of the templates is not a valid edge template.
- * 
- * @param {TermDict<Term, TermDict<Term, Quad[]>>} usableTemplatess The list of
- * usable templates
- */
-function throwIfHasInvalidTemplate(usableTemplatess) {
-    const pvarKey = pvar.propertyPredicate;
-    const pvarVal = pvar.propertyObject;
-
-    usableTemplatess.forEach((_, usableTemplates) => {
-        usableTemplates.forEach((templateName, targetTemplate) => {
-            for (const quad of targetTemplate) {
-                // TODO: refine the verification and refactor with predicate
-                // this check
-                const pkeyAsPredicate = pvarKey.equals(quad.predicate);
-                const pvalAsObject    = pvarVal.equals(quad.object);
-                if (pkeyAsPredicate !== pvalAsObject) {
-                    throw Error(`Edge template checker: ${templateName.value}`
-                    + ` triples must conform to either`
-                    + ` ?s pvar:propertyPredicate pvar:propertyObject `
-                    + ` or have neither pvar:propertyPredicate and `
-                    + `pvar:propertyObject.`);
-                }
-            }
-        });
-    });
-}
-
 
 // =============================================================================
 // =============================================================================
@@ -205,13 +176,7 @@ function applyMark(destination, mark, input, context) {
         ]
     ))
         // Remove metadata
-        .filter(quad => ! (
-
-            QuadStar.containsTerm(quad, pvar.propertyPredicate)
-            || QuadStar.containsTerm(quad, pvar.propertyObject)
-            )
-
-        );
+        .filter(quad => !QuadStar.containsTerm(quad, prec._forPredicate));
 
     // Replace non property dependant quads
     bindings['@quads'] = [];
@@ -231,7 +196,6 @@ function applyMark(destination, mark, input, context) {
 module.exports = {
     // Context loading
     Rule: EdgeRule,
-    throwIfHasInvalidTemplate,
     // Context application
 
     produceMarks, applyMark
