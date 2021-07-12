@@ -123,6 +123,7 @@ describe('Context Applier', function () {
   require('./prec_impl/rules-for-edges.test.js')(test);
   require('./prec_impl/rules-for-properties-on-nodes.test.js')(test);
   require('./prec_impl/rules-for-properties-on-edges.test.js')(test);
+  require('./prec_impl/prec-c-map-blank-nodes.test.js')();
 });
 
 describe("Property convertion", function() {
