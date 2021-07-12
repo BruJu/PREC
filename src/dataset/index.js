@@ -50,7 +50,7 @@ class Dataset {
      * this function on every member.
      * 
      * @param {*} bindings A mapping of variable names to their value
-     * @param {*} quad The quad to convert, or an `Array` of `quad` (see the
+     * @param {Quad} quad The quad to convert, or an `Array` of `quad` (see the
      * description of the method).
      */
     static bindVariables(bindings, quad) {
@@ -505,102 +505,6 @@ class Dataset {
         for (const destinationPattern of destinationPatterns) {
             this.add(Dataset.bindVariables(bindings, destinationPattern));
         }
-    }
-
-    /**
-     * 
-     * 
-     * The matched patterns must be independant (the quads that contribute
-     * to a binding must be not contribute to any other biding)
-     * 
-     * It is evil because it break referentially opaque semantic and can throw.
-     * 
-     * @param {*} initialBindings 
-     * @param {*} sourcePattern 
-     * @param {*} destinationPattern 
-     */
-    evilFindAndReplace(initialBindings, sourcePattern, destinationPattern) {
-        // The nice part
-        sourcePattern      = Dataset.bindVariables(initialBindings, sourcePattern     );
-        destinationPattern = Dataset.bindVariables(initialBindings, destinationPattern);
-
-        let newBindings = this.matchAndBind(sourcePattern);
-        this._replaceFromBindings(newBindings, destinationPattern);
-
-        let deletionList = [];
-        let additionList = [];
-
-        // The evil part
-        for (const binding of newBindings) {
-            for (let i = 0 ; i != binding['@quads'].length ; ++i) {
-                const quad = binding['@quads'][i];
-                let matches = this.starQuads.filter(q => QuadStar.containsTerm(q, quad))
-
-                if (matches.length === 0) continue;
-
-                let associated = IntrusiveFindAndReplace.findAssociatedQuad(sourcePattern[i], destinationPattern);
-                if (associated === undefined) {
-                    throw Error(
-                        `Requires the associated quad for ${JSON.stringify(sourcePattern[i])}
-                        but it does not exist in ${JSON.stringify(destinationPattern)}`
-                    );
-                }
-
-                deletionList.push(...matches);
-                additionList.push(...matches.map(match => IntrusiveFindAndReplace.rewriteQuad(match, quad, associated.subject, binding)));
-            }
-        }
-
-        this.removeQuads(deletionList);
-        this.addAll(additionList);
-    }
-};
-
-/* Helper function for an intrusive find and replace */
-const IntrusiveFindAndReplace = {
-    /**
-     * Find the associated quad to source in possibleDestinations.
-     * 
-     * An associated term is a term that shares the same predicate, object
-     * and graph.
-     * @param {*} source An RDF/JS term
-     * @param {any[]} possibleDestinations An array of RDF/JS term
-     * @returns The associated term if it exists, or undefined
-     */
-    findAssociatedQuad: function(source, possibleDestinations) {
-        return possibleDestinations.find(
-            quad => source.predicate.equals(quad.predicate)
-                && source.object.equals(quad.object)
-                && source.graph.equals(quad.graph)
-        );
-    },
-
-    rewriteQuad: function(match, quad, associatedSubject, binding) {
-        if (associatedSubject.termType === 'Variable' && binding[associatedSubject.value] !== undefined) {
-            associatedSubject = binding[associatedSubject.value];
-        }
-
-        function remapTerm(term) {
-            if (term.equals(quad)) {
-                return N3.DataFactory.quad(
-                    associatedSubject,
-                    term.predicate,
-                    term.object,
-                    term.graph,
-                );
-            } else if (term.termType === 'Quad') {
-                return N3.DataFactory.quad(
-                    remapTerm(term.subject),
-                    remapTerm(term.predicate),
-                    remapTerm(term.object),
-                    remapTerm(term.graph),
-                );
-            } else {
-                return term;
-            }
-        }
-
-        return remapTerm(match);
     }
 };
 

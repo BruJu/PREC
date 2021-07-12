@@ -76,10 +76,10 @@ function remapPatternWithVariables(term, mapping) {
 }
 
 /**
- * Returns true if the term contains one of the terms in the `searched` list.
+ * Returns true if the term is or contains the searched term.
  * @param {Term} term A RDF/JS term
- * @param {Term[]} searched A list of RDF/JS terms
- * @returns True if term is or contains a term in `searched`
+ * @param {Term} searched The searched RDF/JS terms
+ * @returns True if term is or contains `searched`
  */
 function containsTerm(term, searched) {
     if (term.equals(searched)) return true;

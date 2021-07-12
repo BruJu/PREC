@@ -25,9 +25,12 @@ module.exports = function (test) {
           :edge2 a pgo:Edge ; rdf:subject :animal ; rdf:predicate :p ; rdf:object :o .
           :p rdfs:label "Predicate" .
 
-          :person a [ rdfs:label "Person" ] .
-          :animal a [ rdfs:label "Animal" ] .
+          :person a [ rdfs:label "Person" ], pgo:Node .
+          :animal a [ rdfs:label "Animal" ], pgo:Node .
       `,
+      // The following original graphs are not relevant anymore as PREC-C is
+      // now more strict on the graphs it takes (it now accepts way less
+      // intermediate results graphs)
       oneEdgeWith1Property: `
           :edge a pgo:Edge ; rdf:subject :s ; rdf:predicate :p ; rdf:object :o ;
               :propKey1 :propValue1 .
@@ -68,9 +71,9 @@ module.exports = function (test) {
         'oneEdgeType',
         'edgeDiff',
         'differentSourceLabel',
-        'oneEdgeWith1Property',
-        'oneEdgeWith2Properties',
-        'edgeWithMetaProperty'
+        //'oneEdgeWith1Property',       // Not relevant anymore
+        //'oneEdgeWith2Properties',     // Not relevant anymore
+        //'edgeWithMetaProperty'        // Not relevant anymore
       ];
 
       for (const graph of graphs) {
@@ -153,8 +156,8 @@ module.exports = function (test) {
           :edge2 prec:occurrenceOf << :animal :p :o  >> .
           :p rdfs:label "Predicate" .
 
-          :person a [ rdfs:label "Person" ] .
-          :animal a [ rdfs:label "Animal" ] .
+          :person a [ rdfs:label "Person" ], pgo:Node .
+          :animal a [ rdfs:label "Animal" ], pgo:Node .
         `
       );
 
@@ -250,6 +253,9 @@ module.exports = function (test) {
     })
 
     describe("PG with properties on edges", function () {
+      // These tests are ok as unit tests, but bad in the whole process
+      // and they are not relevant anymore
+      return;
       test('One edge with one property',
         basicGraphs.oneEdgeWith1Property,
         contexts.allUnique,

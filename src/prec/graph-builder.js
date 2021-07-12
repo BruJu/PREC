@@ -329,27 +329,8 @@ class RDFGraphBuilder {
     static neo4JProtocoleToStore(nodes, edges) {
         let builder = new RDFGraphBuilder("http://www.example.org/vocab/");
 
-        for (let nodeId in nodes) {
-            let node = nodes[nodeId];
+        builder.populate(nodes, edges);
 
-            builder.addNode(
-                node.identity,
-                node.labels || {},
-                node.properties || {}
-            );
-        }
-
-        for (let edgeId in edges) {
-            let edge = edges[edgeId];
-
-            builder.addEdge(
-                edge.identity,
-                edge.start, edge.end,
-                edge.type,
-                edge.properties || {}
-            )
-        }
-        
         return [builder.toStore(), builder.getPrefixes()];
     }
 
@@ -357,29 +338,32 @@ class RDFGraphBuilder {
         let builder = new RDFGraphBuilder("http://www.example.org/vocab/");
 
         builder._addProperties = builder._addMetaProperties;
+        builder.populate(nodes, edges);
 
+        return [builder.toStore(), builder.getPrefixes()];
+    }
+
+    populate(nodes, edges) {
         for (let nodeId in nodes) {
             let node = nodes[nodeId];
 
-            builder.addNode(
+            this.addNode(
                 node.identity,
-                node.labels || {},
-                node.properties || {}
+                node.labels || [],
+                node.properties || []
             );
         }
 
         for (let edgeId in edges) {
             let edge = edges[edgeId];
 
-            builder.addEdge(
+            this.addEdge(
                 edge.identity,
                 edge.start, edge.end,
                 edge.type,
-                edge.properties || {}
+                edge.properties || []
             )
         }
-
-        return [builder.toStore(), builder.getPrefixes()];
     }
 }
 
