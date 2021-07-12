@@ -1,4 +1,5 @@
 const utility = require("./utility.js");
+const graphBuilder = require('../src/prec/graph-builder.js')
 const graphReducer = require("../src/prec/graph-reducer.js");
 const assert = require('assert');
 const { isomorphic } = require("rdf-isomorphic");
@@ -81,6 +82,42 @@ function test(name, source, context, expected) {
         assert.ok(r, msg);
     });
 }
+
+/**
+ * 
+ * @param {string} name 
+ * @param {import('./mock-pg/pg-implem.js').PropertyGraph} source 
+ * @param {*} context 
+ * @param {*} expected 
+ */
+function testFromMockPG(name, source, context, expected) {
+    it(name, () => {
+        const { nodes, edges } = source.convertToProductFromTinkerProp();
+        const store = graphBuilder.fromTinkerPop(nodes, edges)[0];
+        const ctx = utility.turtleToQuads(context);
+        graphReducer(store, ctx);
+
+        const expectedStore = utility.turtleToDStar(expected);
+        const r = isomorphic(store.getQuads(), expectedStore.getQuads());
+        let msg = "";
+        if (!r) {
+            msg = "Error on " + name;
+            msg += '\n' + '\x1b[0m' + "• Context:";
+            msg += '\n' + context;
+        
+            [result, expected] = badToColorizedToStrings(store.getQuads(), expectedStore.getQuads(), 2);
+        
+            msg += '\n' + `• Result (${store.size} quads):`;
+            msg += '\n' + result;
+            msg += '\n' + `• Expected (${expectedStore.size} quads):`;
+            msg += '\n' + expected;
+        }
+
+        assert.ok(r, msg);
+    });
+}
+
+require('./prec_impl/prec-0.test.js')(testFromMockPG);
 
 describe('Context Applier', function () {
   require('./prec_impl/rules-for-edges.test.js')(test);
