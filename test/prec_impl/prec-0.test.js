@@ -49,7 +49,7 @@ module.exports = function (test_) {
       `
     );
 
-    test("AliceWorksForAcme",
+    false && test("AliceWorksForAcme",
       (() => {
         const pg = new PropertyGraph();
         const alice = pg.addNode("Person");

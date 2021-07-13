@@ -43,6 +43,7 @@ class PropertyRule {
     ];
     static ShortcutIRI        = prec.IRIOfProperty;
     static SubstitutionTerm   = prec.propertyIRI;
+    static PropertyHolderSubstitutionTerm = prec.entityIs;
 
     // ==== One rule management
 

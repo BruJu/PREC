@@ -37,6 +37,7 @@ class EdgeRule {
     static TemplateBases      = [[prec.Edges, []]];
     static ShortcutIRI        = prec.IRIOfEdgeLabel;
     static SubstitutionTerm   = prec.edgeIRI;
+    static PropertyHolderSubstitutionTerm = prec.edgeIs;
 
     // ==== One rule
 

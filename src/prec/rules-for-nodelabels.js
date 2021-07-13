@@ -37,6 +37,7 @@ class NodeLabelRule {
     static TemplateBases      = [[prec.NodeLabels, []]];
     static ShortcutIRI        = prec.IRIOfNodeLabel;
     static SubstitutionTerm   = prec.nodeLabelIRI;
+    static PropertyHolderSubstitutionTerm = null;
 
     // ==== One rule
 

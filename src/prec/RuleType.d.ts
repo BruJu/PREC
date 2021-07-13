@@ -21,4 +21,9 @@ export type RuleDomain = {
   readonly ShortcutIRI       : Term;
   /** The substitution term for the label */
   readonly SubstitutionTerm  : Term;
+  
+  /** Property holder substitution term (where are the properties going?) */
+  readonly PropertyHolderSubstitutionTerm: Term | null;
+
+  // TODO: Use real substitutions instead of this
 }

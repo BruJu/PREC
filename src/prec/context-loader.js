@@ -28,6 +28,7 @@ const $quad         = N3.DataFactory.quad;
  * @typedef { import("rdf-js").Quad } Quad
  * @typedef { import("rdf-js").Dataset } Dataset
  * @typedef { import("../dataset") } DStar
+ * @typedef { import("./RuleType").RuleDomain } RuleDomain
  */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -246,6 +247,10 @@ class SplitNamespace {
     }
 }
 
+// Increase this count every time I try to refactor this into a Template class
+// and fail terribly: 3
+// https://stackoverflow.com/a/482129
+
 /**
  * Build the concrete template from a list of materializations
  * @param {DStar} dataset The context store
@@ -254,7 +259,7 @@ class SplitNamespace {
  * have been specified
  * @returns {Quad[]} The template (= destination pattern in find-filter-replace)
  */
-function _buildTemplate(dataset, materializations, defaultTemplate) {
+function _buildTemplate(dataset, materializations, defaultTemplate, substitutionForChildren) {
     let template = defaultTemplate;
     let substitutionRequests = new TermDict();
 
@@ -277,6 +282,7 @@ function _buildTemplate(dataset, materializations, defaultTemplate) {
     let composedOf = dataset.getQuads(template, prec.composedOf, null, $defaultGraph())
         .map(quad => quad.object)
     
+    // We keep backward compatibility until our first paper on PREC is rejected
     const toRemove = [];
     for (const templateQuad of composedOf) {
         let po = false;
@@ -308,7 +314,17 @@ function _buildTemplate(dataset, materializations, defaultTemplate) {
     }
 
     composedOf = composedOf.filter(q => !toRemove.includes(q));
-    toRemove.forEach(q => composedOf.push($quad(q.subject, prec._forPredicate, prec._forPredicate)));
+    
+    composedOf.push(...
+        toRemove.map(q => $quad(q.subject, prec._forPredicate, prec._forPredicate))
+    );
+        
+    if (substitutionForChildren !== null) {
+        composedOf.push(...
+            dataset.getQuads(template, substitutionForChildren, null, $defaultGraph())
+                .map(q => $quad(q.object, prec._forPredicate, prec._forPredicate))
+        );
+    }
 
     return composedOf.map(term => QuadStar.eventuallyRebuildQuad(
         term,
@@ -328,7 +344,7 @@ class EntitiesManager {
      * Build an `EntitiesManager` from the `contextDataset`.
      * @param {DStar} contextDataset The store that contains the context
      * @param {SubstitutionTerms} substitutionTerms The list of term substitutions
-     * @param {*} Cls The class that manages an individual rule. It must also
+     * @param {RuleDomain & any} Cls The class that manages an individual rule. It must also
      * contain as static data the list of IRIs related to this rule.
      */
     constructor(contextDataset, substitutionTerms, Cls) {
@@ -341,7 +357,7 @@ class EntitiesManager {
         // TODO: what happens here?
 
         let makeTemplate = materializations =>
-            _buildTemplate(contextDataset, materializations, Cls.DefaultTemplate)
+            _buildTemplate(contextDataset, materializations, Cls.DefaultTemplate, Cls.PropertyHolderSubstitutionTerm)
         ;
 
         // Load the base templates
