@@ -215,13 +215,6 @@ function applyMark(destination, mark, input, context) {
     
     const typeOfHolder = findTypeOfEntity(input, bindings.entity);
     let template = context.findPropertyTemplate(mark.object, typeOfHolder);
-    if (!Array.isArray(template)) {
-        template = [
-            ...src,
-            // I hate the fact that this triple is optional
-            $quad(mark.subject, prec.hasMetaProperties, $variable('metaPropertyNode'))
-        ]
-    }
 
     const { produced, usedProperties, listsToKeep } = instanciateProperty(input, mark.subject, template, context);
 

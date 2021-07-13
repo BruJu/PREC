@@ -140,12 +140,6 @@ function applyMark(destination, mark, input, context) {
     }
 
     const template = context.findNodeLabelTemplate(variableValues.ruleNode);
-    if (!Array.isArray(template)) {
-        // TODO: always use the loaded template from context
-        template = [
-            $quad($variable('node'), rdf.type, $variable('labelIRI'))
-        ];
-    }
 
     const target = template.map(term => QuadStar.remapPatternWithVariables(
         term,

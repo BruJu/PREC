@@ -248,7 +248,7 @@ class SplitNamespace {
 }
 
 // Increase this count every time I try to refactor this into a Template class
-// and fail terribly: 3
+// and fail terribly: 4
 // https://stackoverflow.com/a/482129
 
 /**

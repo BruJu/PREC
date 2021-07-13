@@ -161,9 +161,6 @@ function applyMark(destination, mark, input, context) {
     }
 
     const behaviour = context.findEdgeTemplate(bindings.ruleNode);
-    if (!Array.isArray(behaviour)) {
-        behaviour = src;
-    }
 
     const pattern = behaviour.map(term => QuadStar.remapPatternWithVariables(
         term,
