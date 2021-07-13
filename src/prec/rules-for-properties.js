@@ -214,8 +214,7 @@ function applyMark(destination, mark, input, context) {
 
     
     const typeOfHolder = findTypeOfEntity(input, bindings.entity);
-    let template = context.findPropertyTemplate(mark.object, typeOfHolder);
-
+    const template = context.findPropertyTemplate(mark.object, typeOfHolder).quads;
     const { produced, usedProperties, listsToKeep } = instanciateProperty(input, mark.subject, template, context);
 
     destination.addAll(produced);
@@ -382,7 +381,7 @@ function deepResolve(termToResolve, inputDataset, context) {
         edgeBindings.edge = termToResolve;
 
         const ruleNode = inputDataset.getQuads(termToResolve, prec.__appliedEdgeRule, null, $defaultGraph())[0].object;
-        return context.findEdgeTemplate(ruleNode).filter(q => QuadStar.containsTerm(q, prec._forPredicate))
+        return context.findEdgeTemplate(ruleNode).entityIs
             .map(quad => {
                 const theEntityTemplate = quad.subject;
                 const trueEntityTemplate = QuadStar.remapPatternWithVariables(
@@ -409,7 +408,7 @@ function deepResolve(termToResolve, inputDataset, context) {
         const propertyNode = binding.propertyNode;
 
         return context.findPropertyTemplate(ruleNode, findTypeOfEntity(inputDataset, binding.entity))
-            .filter(quad => quad.predicate.equals(prec._forPredicate))
+            .entityIs
             .map(quad => $quad(quad.subject, prec._, prec._))
             .map(me => instanciateProperty(inputDataset, propertyNode, [me], context).produced)
             .flatMap(producedQuads => producedQuads.map(quad => quad.subject));

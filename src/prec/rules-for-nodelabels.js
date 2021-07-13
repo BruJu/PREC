@@ -139,7 +139,7 @@ function applyMark(destination, mark, input, context) {
         variableValues.label = label[0].object;
     }
 
-    const template = context.findNodeLabelTemplate(variableValues.ruleNode);
+    const template = context.getNodeLabelTemplateQuads(variableValues.ruleNode);
 
     const target = template.map(term => QuadStar.remapPatternWithVariables(
         term,

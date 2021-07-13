@@ -247,17 +247,13 @@ class SplitNamespace {
     }
 }
 
-// Increase this count every time I try to refactor this into a Template class
-// and fail terribly: 4
-// https://stackoverflow.com/a/482129
-
 /**
  * Build the concrete template from a list of materializations
  * @param {DStar} dataset The context store
  * @param {*} materializations The list of materializations that applies
  * @param {Term} defaultTemplate The IRI of the default template if no template
  * have been specified
- * @returns {Quad[]} The template (= destination pattern in find-filter-replace)
+ * @returns {Template} The template (= destination pattern in find-filter-replace)
  */
 function _buildTemplate(dataset, materializations, defaultTemplate, substitutionForChildren) {
     let template = defaultTemplate;
@@ -315,25 +311,30 @@ function _buildTemplate(dataset, materializations, defaultTemplate, substitution
 
     composedOf = composedOf.filter(q => !toRemove.includes(q));
     
-    composedOf.push(...
-        toRemove.map(q => $quad(q.subject, prec._forPredicate, prec._forPredicate))
-    );
+    const entityIs = toRemove.map(q => $quad(q.subject, prec._forPredicate, prec._forPredicate));
         
     if (substitutionForChildren !== null) {
-        composedOf.push(...
+        entityIs.push(...
             dataset.getQuads(template, substitutionForChildren, null, $defaultGraph())
                 .map(q => $quad(q.object, prec._forPredicate, prec._forPredicate))
         );
     }
 
-    return composedOf.map(term => QuadStar.eventuallyRebuildQuad(
-        term,
-        t => {
-            let r = substitutionRequests.get(t);
-            if (r === undefined) return t;
-            return r;
-        }
-    ));
+    function remapFunc(term) {
+        return QuadStar.eventuallyRebuildQuad(
+            term,
+            t => {
+                let r = substitutionRequests.get(t);
+                if (r === undefined) return t;
+                return r;
+            }
+        )
+    }
+
+    return {
+        quads: composedOf.map(remapFunc),
+        entityIs: entityIs.map(remapFunc)
+    };
 }
 
 /**
@@ -691,7 +692,7 @@ class Context {
      * ```
      * 
      * @param {Term} ruleNode The rule node
-     * @returns {Quad[]} The template to give to the
+     * @returns {Template} The template to give to the
      * `storeAlterer.findFilterReplace` function as the destination pattern
      * after replacing the variables with actual terms.
      */
@@ -707,8 +708,8 @@ class Context {
         return this.properties.getTemplateFor(ruleNode, type);
     }
 
-    findNodeLabelTemplate(ruleNode) {
-        return this.nodeLabels.getTemplateFor(ruleNode, prec.NodeLabels);
+    getNodeLabelTemplateQuads(ruleNode) {
+        return this.nodeLabels.getTemplateFor(ruleNode, prec.NodeLabels).quads;
     }
 }
 

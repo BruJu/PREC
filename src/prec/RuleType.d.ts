@@ -1,4 +1,4 @@
-import { Term } from "rdf-js";
+import { Term, Quad } from "rdf-js";
 
 /**
  * The list of terms that are related to rules of a type.
@@ -26,4 +26,9 @@ export type RuleDomain = {
   readonly PropertyHolderSubstitutionTerm: Term | null;
 
   // TODO: Use real substitutions instead of this
+}
+
+export type Template = {
+  quads: Quad[];
+  entityIs: Term[];
 }

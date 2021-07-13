@@ -160,7 +160,7 @@ function applyMark(destination, mark, input, context) {
         bindings.label = label[0].object;
     }
 
-    const behaviour = context.findEdgeTemplate(bindings.ruleNode);
+    const behaviour = context.findEdgeTemplate(bindings.ruleNode).quads;
 
     const pattern = behaviour.map(term => QuadStar.remapPatternWithVariables(
         term,
