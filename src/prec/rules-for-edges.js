@@ -1,10 +1,8 @@
 const N3 = require('n3');
 const namespace = require('@rdfjs/namespace');
 
-const DStar = require('../dataset');
-const TermDict = require('../TermDict');
-const PrecUtils = require('../rdf/utils');
-const QuadStar  = require('../rdf/quad-star.js');
+const DStar    = require('../dataset');
+const QuadStar = require('../rdf/quad-star.js');
 
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , N3.DataFactory);
@@ -37,7 +35,12 @@ class EdgeRule {
     static TemplateBases      = [[prec.Edges, []]];
     static ShortcutIRI        = prec.IRIOfEdgeLabel;
     static SubstitutionTerm   = prec.edgeIRI;
+
     static PropertyHolderSubstitutionTerm = prec.edgeIs;
+    static EntityIsHeuristic  = [
+        [pvar.edge],
+        [pvar.source, pvar.edgeIRI, pvar.destination]
+    ];
 
     // ==== One rule
 

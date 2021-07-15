@@ -248,32 +248,13 @@ class SplitNamespace {
 }
 
 /**
- * Build the concrete template from a list of materializations
- * @param {DStar} dataset The context store
- * @param {*} materializations The list of materializations that applies
- * @param {Term} defaultTemplate The IRI of the default template if no template
- * have been specified
- * @returns {Template} The template (= destination pattern in find-filter-replace)
+ * 
+ * @param {DStar | N3.Store} dataset 
+ * @param {Term} template 
+ * @param {RuleDomain} ruleDomain 
+ * @returns { { composedOf: Quad[], entityIs: null | Term[]) } }
  */
-function _buildTemplate(dataset, materializations, defaultTemplate, substitutionForChildren) {
-    let template = defaultTemplate;
-    let substitutionRequests = new TermDict();
-
-    for (const materialization of materializations) {
-        // Copy all substitution
-        for (const sub of materialization.substitutions) {
-            if (substitutionRequests.get(sub[0]) === undefined) {
-                substitutionRequests.set(sub[0], sub[1]);
-            }
-        }
-
-        // Is the template there?
-        if (materialization.templatedBy !== undefined) {
-            template = materialization.templatedBy;
-            break;
-        }
-    }
-
+function readRawTemplate(dataset, template, ruleDomain) {
     // Load the abstract template
     let composedOf = dataset.getQuads(template, prec.composedOf, null, $defaultGraph())
         .map(quad => quad.object)
@@ -311,14 +292,51 @@ function _buildTemplate(dataset, materializations, defaultTemplate, substitution
 
     composedOf = composedOf.filter(q => !toRemove.includes(q));
     
-    const entityIs = toRemove.map(q => $quad(q.subject, prec._forPredicate, prec._forPredicate));
+    let entityIs = toRemove.map(q => $quad(q.subject, prec._forPredicate, prec._forPredicate));
         
-    if (substitutionForChildren !== null) {
+    if (ruleDomain.PropertyHolderSubstitutionTerm !== null) {
         entityIs.push(...
-            dataset.getQuads(template, substitutionForChildren, null, $defaultGraph())
+            dataset.getQuads(template, ruleDomain.PropertyHolderSubstitutionTerm, null, $defaultGraph())
                 .map(q => $quad(q.object, prec._forPredicate, prec._forPredicate))
         );
+
+        if (entityIs.length === 0) {
+            entityIs = findImplicitEntity(ruleDomain.EntityIsHeuristic, composedOf)
+                ?.map(t => $quad(t, prec._forPredicate, prec._forPredicate))
+                || null;
+        }
     }
+
+    return { composedOf, entityIs };
+}
+
+/**
+ * Build the concrete template from a list of materializations
+ * @param {DStar} dataset The context store
+ * @param {*} materializations The list of materializations that applies
+ * @param {RuleDomain} ruleDomain The List of IRIs related ot the type of rule
+ * @returns {Template} The template (= destination pattern in find-filter-replace)
+ */
+function _buildTemplate(dataset, materializations, ruleDomain) {
+    let template = ruleDomain.DefaultTemplate;
+    let substitutionRequests = new TermDict();
+
+    for (const materialization of materializations) {
+        // Copy all substitution
+        for (const sub of materialization.substitutions) {
+            if (substitutionRequests.get(sub[0]) === undefined) {
+                substitutionRequests.set(sub[0], sub[1]);
+            }
+        }
+
+        // Is the template there?
+        if (materialization.templatedBy !== undefined) {
+            template = materialization.templatedBy;
+            break;
+        }
+    }
+    
+    const { composedOf, entityIs } = readRawTemplate(dataset, template, ruleDomain);
 
     function remapFunc(term) {
         return QuadStar.eventuallyRebuildQuad(
@@ -333,8 +351,52 @@ function _buildTemplate(dataset, materializations, defaultTemplate, substitution
 
     return {
         quads: composedOf.map(remapFunc),
-        entityIs: entityIs.map(remapFunc)
+        entityIs: entityIs === null ? null : entityIs.map(remapFunc)
     };
+}
+
+/**
+ * Returns true if term is either the subject, the predicate, the object
+ * or the graph of the quad
+ * @param {Term} term The term
+ * @param {Quad} quad The quad
+ * @returns {boolean}
+ */
+function isAMainComponentOf(term, quad) {
+    return quad.subject.equals(term)
+        || quad.predicate.equals(term)
+        || quad.object.equals(term)
+        || quad.graph.equals(term);
+}
+
+/**
+ * 
+ * @param {Term[][]} searchedTermss 
+ * @param {Quad[]} quads 
+ * @returns 
+ */
+function findImplicitEntity(searchedTermss, quads) {
+    for (const searchedTerms of searchedTermss) {
+        const c = quads.filter(q => searchedTerms.every(term => isAMainComponentOf(term, q)));
+
+        if (c.length === 0) continue;
+
+        if (searchedTerms.length === 1) {
+            return searchedTerms;
+        }
+
+        const td = new TermDict();
+        
+        c.forEach(t => td.set(t, true));
+        
+        let l = [];
+        td.forEach(unique => l.push(unique));
+        
+        if (l.length !== 1) return null;
+        return l;
+    }
+
+    return null;
 }
 
 /**
@@ -357,9 +419,7 @@ class EntitiesManager {
         // TODO: what is a materialization?
         // TODO: what happens here?
 
-        let makeTemplate = materializations =>
-            _buildTemplate(contextDataset, materializations, Cls.DefaultTemplate, Cls.PropertyHolderSubstitutionTerm)
-        ;
+        let makeTemplate = materializations => _buildTemplate(contextDataset, materializations, Cls);
 
         // Load the base templates
         let baseTemplates = new TermDict();
@@ -714,3 +774,4 @@ class Context {
 }
 
 module.exports = Context;
+module.exports.readRawTemplate = readRawTemplate;

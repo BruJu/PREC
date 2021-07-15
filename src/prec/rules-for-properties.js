@@ -44,6 +44,12 @@ class PropertyRule {
     static ShortcutIRI        = prec.IRIOfProperty;
     static SubstitutionTerm   = prec.propertyIRI;
     static PropertyHolderSubstitutionTerm = prec.entityIs;
+    static EntityIsHeuristic  = [
+        [pvar.metaPropertyNode],
+        [pvar.propertyNode],
+        [pvar.entity, pvar.propertyKey, pvar.propertyValue  ],
+        [pvar.entity, pvar.propertyKey, pvar.individualValue],
+    ];
 
     // ==== One rule management
 

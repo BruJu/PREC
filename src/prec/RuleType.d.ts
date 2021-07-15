@@ -26,6 +26,8 @@ export type RuleDomain = {
   readonly PropertyHolderSubstitutionTerm: Term | null;
 
   // TODO: Use real substitutions instead of this
+
+  readonly EntityIsHeuristic: Term[][] | null;
 }
 
 export type Template = {
