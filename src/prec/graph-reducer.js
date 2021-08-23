@@ -6,7 +6,7 @@ const namespace     = require('@rdfjs/namespace');
 
 const Context  = require("./context-loader.js");
 const QuadStar = require('../rdf/quad-star');
-const TermDict = require('../TermDict.js');
+const { default: TermDict } = require('../TermDict');
 
 const RulesForProperties = require('./rules-for-properties');
 const RulesForEdges      = require('./rules-for-edges');

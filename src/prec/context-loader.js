@@ -10,7 +10,7 @@ const PrecUtils        = require('../rdf/utils');
 const RulesForEdges      = require('./rules-for-edges');
 const RulesForNodeLabels = require('./rules-for-nodelabels');
 const RulesForProperties = require('./rules-for-properties');
-const TermDict = require('../TermDict');
+const { default: TermDict } = require('../TermDict');
 
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 const xsd  = namespace("http://www.w3.org/2001/XMLSchema#", N3.DataFactory);
