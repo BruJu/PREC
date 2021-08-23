@@ -3,7 +3,7 @@
 const N3 = require('n3');
 const namespace = require('@rdfjs/namespace');
 
-const DStar    = require('../dataset/index.js');
+const { default: DStar, bindVariables }    = require('../dataset/index');
 const QuadStar = require('../rdf/quad-star');
 
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
@@ -319,10 +319,10 @@ function instanciateProperty(input, propertyNode, srcTemplate, context) {
     let addedQuads = [];
     for (const entity of entities) {
         bindings.entity = entity;
-        addedQuads.push(...DStar.bindVariables(bindings, pattern.mandatory));
+        addedQuads.push(...bindVariables(bindings, pattern.mandatory));
 
-        let indiv = DStar.bindVariables(bindings, pattern.mandatoryIndividual)
-        addedQuads.push(...individualValues.flatMap(value => DStar.bindVariables({ "individualValue": value }, indiv)));
+        let indiv = bindVariables(bindings, pattern.mandatoryIndividual)
+        addedQuads.push(...individualValues.flatMap(value => bindVariables({ "individualValue": value }, indiv)));
 
 
         if (metaProperties !== null) {
@@ -335,7 +335,7 @@ function instanciateProperty(input, propertyNode, srcTemplate, context) {
             );
     
             addedQuads.push(...opt1);
-            addedQuads.push(...individualValues.flatMap(value => DStar.bindVariables({ "individualValue": value }, optN)));
+            addedQuads.push(...individualValues.flatMap(value => bindVariables({ "individualValue": value }, optN)));
         }
     }
 
@@ -401,7 +401,7 @@ function deepResolve(termToResolve, inputDataset, context) {
                         [$variable('object')   , pvar.destination],
                     ]
                 );
-                return DStar.bindVariables(edgeBindings, $quad(trueEntityTemplate, prec._, prec._)).subject;
+                return bindVariables(edgeBindings, $quad(trueEntityTemplate, prec._, prec._)).subject;
             });
     } else if (myType.equals(prec.MetaProperties)) {
         const binding = inputDataset.matchAndBind([
@@ -459,7 +459,7 @@ const PropertyTemplateApplier = {
 
     bindMultipleVariableSets: function(listOfBindings, pattern) {
         for (let bindings of listOfBindings) {
-            pattern = DStar.bindVariables(bindings, pattern);
+            pattern = bindVariables(bindings, pattern);
         }
         return pattern;
     },

@@ -1,7 +1,7 @@
 const assert = require('assert');
 const N3 = require('n3');
 
-const DStar = require("../src/dataset/index.js");
+const { default: DStar, bindVariables } = require("../src/dataset/index");
 
 const namespace = require('@rdfjs/namespace');
 const ex = namespace("http://example.org/", N3.DataFactory);
@@ -35,7 +35,7 @@ describe('DStar', function() {
 
         function equalsPattern(bind, source, expected) {
             return _equalsPattern(
-                DStar.bindVariables(bind, source),
+                bindVariables(bind, source),
                 expected
             );
         }

@@ -1,7 +1,7 @@
 const N3 = require('n3');
 const namespace = require('@rdfjs/namespace');
 
-const DStar    = require('../dataset');
+const { default: DStar }    = require('../dataset');
 const QuadStar = require('../rdf/quad-star');
 
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);

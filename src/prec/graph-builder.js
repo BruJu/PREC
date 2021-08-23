@@ -5,7 +5,7 @@
 
 // Libraries
 const N3        = require('n3');
-const DStar     = require('../dataset/index.js');
+const { default: DStar }     = require('../dataset/index');
 const namespace = require('@rdfjs/namespace');
 
 // Namespaces

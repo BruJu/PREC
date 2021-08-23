@@ -1,7 +1,7 @@
 "use strict";
 
 const N3 = require('n3');
-const DStar = require('../dataset');
+const { default: DStar } = require('../dataset');
 const namespace = require('@rdfjs/namespace');
 const fs = require('fs');
 
