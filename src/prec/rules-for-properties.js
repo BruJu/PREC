@@ -20,7 +20,7 @@ const $defaultGraph = N3.DataFactory.defaultGraph;
 /**
  * @typedef { import("rdf-js").Term } Term
  * @typedef { import("rdf-js").Quad } Quad
- * @typedef { import("./context-loader") } Context
+ * @typedef { import("./Context") } Context
  */
 
 // =============================================================================

@@ -4,7 +4,7 @@ const N3            = require('n3');
 const { default: DStar }   = require('../dataset/index');
 const namespace     = require('@rdfjs/namespace');
 
-const Context  = require("./context-loader.js");
+const Context  = require("./Context");
 const QuadStar = require('../rdf/quad-star');
 const { default: TermDict } = require('../TermDict');
 
@@ -21,7 +21,6 @@ const $defaultGraph = N3.DataFactory.defaultGraph;
 /**
  * @typedef { import("rdf-js").Term } Term
  * @typedef { import("rdf-js").Quad } Quad
- * @typedef { import("./context-loader") } Context
  */
 
 // =============================================================================
@@ -49,7 +48,7 @@ function applyContext(dataset, contextQuads) {
     dataset.addAll(newDataset.getQuads());
 
     // -- Remove provenance information if they are not required by the user
-    if (context.getStateOf("KeepProvenance") === false) {
+    if (context.keepProvenance === false) {
         removePGO(dataset);
     }
 }

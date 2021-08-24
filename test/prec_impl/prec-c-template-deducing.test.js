@@ -3,7 +3,7 @@ const { isomorphic } = require("rdf-isomorphic");
 const EdgeRules = require('../../src/prec/rules-for-edges');
 const PropertyRules = require('../../src/prec/rules-for-properties');
 const N3 = require("n3");
-const { readRawTemplate } = require('../../src/prec/context-loader');
+const { readRawTemplate } = require('../../src/prec/Context');
 const { default: DStar } = require('../../src/dataset/index');
 
 const prefixes =
