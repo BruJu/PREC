@@ -126,7 +126,7 @@ export function produceMarks(dataset: DStar, context: Context) {
   context.refineEdgeRules(dataset);
 }
 
-export function applyMark(destination: DStar, mark: Quad, input: DStar, context: Context) {
+export function applyMark(destination: DStar, mark: Quad, input: DStar, context: Context): Term[] {
   const src = [
     $quad(mark.subject, rdf.type, pgo.Edge),
     $quad(mark.subject, rdf.subject  , $variable("subject")  ),
@@ -174,5 +174,5 @@ export function applyMark(destination: DStar, mark: Quad, input: DStar, context:
     /* Instanciated */ QuadStar.containsTerm(t, $variable('predicate'))
     /* Hard coded | Substituted */ || QuadStar.containsTerm(t, bindings.predicate as Term)
   );
-  return woot !== undefined ? [bindings.predicate] : [];
+  return woot !== undefined ? [bindings.predicate as Term] : [];
 }

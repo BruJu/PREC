@@ -5,7 +5,7 @@ import * as QuadStar from '../rdf/quad-star';
 import { FilterProvider, FilterProviderConstructor, RuleDomain } from './RuleType';
 import { Quad_Subject } from 'rdf-js';
 import { SplitDefConditions } from './context-loader';
-import { Quad } from '@rdfjs/types';
+import { Quad, Term } from '@rdfjs/types';
 import DStar from '../dataset/index';
 import Context from './Context';
 
@@ -110,7 +110,7 @@ export function produceMarks(dataset: DStar, context: Context) {
   context.refineNodeLabelRules(dataset);
 }
 
-export function applyMark(destination: DStar, mark: Quad, input: DStar, context: Context) {
+export function applyMark(destination: DStar, mark: Quad, input: DStar, context: Context): Term[] {
   const variableValues: any = {
     node: (mark.subject as Quad).subject,
     labelIRI: (mark.subject as Quad).object,

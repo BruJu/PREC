@@ -1,7 +1,7 @@
 
 const assert = require('assert');
 const utility = require("../utility.js");
-const PREC_C = require("../../src/prec/graph-reducer.js");
+const { default: PREC_C } = require("../../src/prec/graph-reducer");
 
 module.exports = function () {
   describe("Blank node mapping", () => {
