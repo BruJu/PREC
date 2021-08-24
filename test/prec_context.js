@@ -1,5 +1,5 @@
 const utility = require("./utility.js");
-const graphBuilder = require('../src/prec/graph-builder.js')
+const graphBuilder = require('../src/prec/graph-builder')
 const graphReducer = require("../src/prec/graph-reducer.js");
 const assert = require('assert');
 const { isomorphic } = require("rdf-isomorphic");

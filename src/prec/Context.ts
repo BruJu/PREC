@@ -1,17 +1,14 @@
+import DStar from '../dataset';
 
+import * as RulesForEdges from './rules-for-edges';
+import * as RulesForNodeLabels from './rules-for-nodelabels';
+import * as RulesForProperties from './rules-for-properties';
+import * as XX from './context-loader';
 
-const { default: DStar } = require('../dataset');
-
-const RulesForEdges      = require('./rules-for-edges');
-const RulesForNodeLabels = require('./rules-for-nodelabels');
-const RulesForProperties = require('./rules-for-properties');
-const XX = require('./context-loader');
-
-const N3 = require('n3');
-const namespace = require('@rdfjs/namespace');
-const prec = namespace("http://bruy.at/prec#"                       , { factory: N3.DataFactory });
-
-
+import { DataFactory } from 'n3';
+import namespace from '@rdfjs/namespace';
+import { NamedNode, Quad, Quad_Subject } from '@rdfjs/types';
+const prec = namespace("http://bruy.at/prec#", { factory: DataFactory });
 
 /**
  * A `Context` is an object that stores every data that is stored in a context
@@ -19,8 +16,15 @@ const prec = namespace("http://bruy.at/prec#"                       , { factory:
  * RDF graph into a graph that is more suitable for the end user need = that
  * uses proper IRIs and easier to use reification representations.
  */
-class Context {
-  constructor(contextQuads) {
+export default class Context {
+  edges: XX.EntitiesManager;
+  properties: XX.EntitiesManager;
+  nodeLabels: XX.EntitiesManager;
+
+  keepProvenance: boolean;
+  blankNodeMapping: { [domain: string]: string; };
+
+  constructor(contextQuads: Quad[]) {
     const dataset = new DStar(contextQuads);
     XX.addBuiltIn(dataset, __dirname + "/../builtin_rules.ttl");
     XX.replaceSynonyms(dataset);
@@ -37,30 +41,30 @@ class Context {
     XX.removeSugarForRules(dataset, RulesForNodeLabels.Rule   );
     this.nodeLabels = new XX.EntitiesManager(dataset, substitutionTerms, RulesForNodeLabels.Rule);
 
-    this.keepProvenance = XX.keepProvenance(dataset);
+    this.keepProvenance = trueIfUndefined(XX.keepProvenance(dataset));
     this.blankNodeMapping = XX.readBlankNodeMapping(dataset);
   }
 
   /**
    * Refine the rule to apply for RDF nodes that has been marked with 
    * `?node prec:__appliedEdgeRule, prec:Edges`
-   * @param {DStar} dataset The dataset 
+   * @param dataset The dataset 
    */
-  refineEdgeRules(dataset) { this.edges.refineRules(dataset); }
+  refineEdgeRules(dataset: DStar) { this.edges.refineRules(dataset); }
 
   /**
    * Refine the rule to apply for RDF nodes that has been marked with 
    * `?node prec:XXXX, prec:XXX`
-   * @param {DStar} dataset The dataset 
+   * @param dataset The dataset 
    */
-  refinePropertyRules(dataset) { this.properties.refineRules(dataset); }
+  refinePropertyRules(dataset: DStar) { this.properties.refineRules(dataset); }
 
   /**
    * Refine the rule to apply for RDF nodes that has been marked with 
    * `?node prec:XXX, prec:XXX`
-   * @param {DStar} dataset The dataset 
+   * @param dataset The dataset 
    */
-  refineNodeLabelRules(dataset) { this.nodeLabels.refineRules(dataset); }
+  refineNodeLabelRules(dataset: DStar) { this.nodeLabels.refineRules(dataset); }
 
   /**
    * Fetches the template corresponding to the given `ruleNode`.
@@ -81,22 +85,25 @@ class Context {
    * `storeAlterer.findFilterReplace` function as the destination pattern
    * after replacing the variables with actual terms.
    */
-  findEdgeTemplate(ruleNode) {
-    return this.edges.getTemplateFor(ruleNode, prec.Edges);
+  findEdgeTemplate(ruleNode: Quad_Subject) {
+    return this.edges.getTemplateFor(ruleNode, prec.Edges)!;
   }
 
   /**
    * Same as `findEdgeTemplate` but for properties.
    * `type` should be `prec:(Node|Edge|Meta)Properties`
    */
-  findPropertyTemplate(ruleNode, type) {
-    return this.properties.getTemplateFor(ruleNode, type);
+  findPropertyTemplate(ruleNode: Quad_Subject, type: NamedNode) {
+    return this.properties.getTemplateFor(ruleNode, type)!;
   }
 
-  getNodeLabelTemplateQuads(ruleNode) {
-    return this.nodeLabels.getTemplateFor(ruleNode, prec.NodeLabels).quads;
+  getNodeLabelTemplateQuads(ruleNode: Quad_Subject) {
+    return this.nodeLabels.getTemplateFor(ruleNode, prec.NodeLabels)!.quads;
   }
 }
 
-module.exports = Context;
-module.exports.readRawTemplate = XX.readRawTemplate;
+function trueIfUndefined(b: boolean | undefined) {
+  return b === undefined ? true : b;
+}
+
+export const readRawTemplate = XX.readRawTemplate;

@@ -5,7 +5,7 @@
 const neo4j = require('neo4j-driver')
 
 const prec = require('./prec.js');
-const RDFGraphBuilder = require("./src/prec/graph-builder.js");
+const RDFGraphBuilder = require("./src/prec/graph-builder");
 const graphReducer    = require("./src/prec/graph-reducer.js");
 
 const { ArgumentParser } = require('argparse');

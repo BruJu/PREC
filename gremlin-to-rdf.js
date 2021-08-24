@@ -5,7 +5,7 @@ const { ArgumentParser } = require('argparse');
 
 const traversal = gremlin.process.AnonymousTraversalSource.traversal;
 const DriverRemoteConnection = gremlin.driver.DriverRemoteConnection;
-const RDFGraphBuilder = require("./src/prec/graph-builder.js");
+const RDFGraphBuilder = require("./src/prec/graph-builder");
 const graphReducer    = require("./src/prec/graph-reducer.js");
 
 const { EnumValue } = gremlin.process;

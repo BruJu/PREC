@@ -8,7 +8,7 @@
 // Import some libraries
 const N3            = require('n3');
 
-const RDFGraphBuilder = require("./src/prec/graph-builder.js");
+const RDFGraphBuilder = require("./src/prec/graph-builder");
 const graphReducer    = require("./src/prec/graph-reducer.js");
 
 const { ArgumentParser } = require('argparse');

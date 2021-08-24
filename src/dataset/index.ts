@@ -5,7 +5,7 @@ import * as QuadStar from '../rdf/quad-star';
 
 type PathComponent = 'subject' | 'predicate' | 'object' | 'graph';
 
-type Bindings = {[blankNodeName: string]: Term};
+export type Bindings = {[blankNodeName: string]: Term};
 
 /** Return true if the quad contains a nested quad */
 function isRdfStarQuad(quad: Quad) {
@@ -82,7 +82,7 @@ export default class Dataset implements DatasetCore {
   // =========================================================================
 
   /** Build a dataset. If quads are provided, they are added to the dataset. */
-  constructor(quads: Quad[]) {
+  constructor(quads?: Quad[]) {
     // A store that contains the non rdf star quads
     this.store = new N3.Store();
     // A list of RDF-star quads
@@ -488,7 +488,7 @@ export default class Dataset implements DatasetCore {
    * the matched quads.
    */
   _replaceFromBindings(bindings: MatchResult[], destinationPatterns: Quad[]) {
-      bindings.forEach(binding => this.replaceOneBinding(binding, destinationPatterns));
+    bindings.forEach(binding => this.replaceOneBinding(binding, destinationPatterns));
   }
   
   /**

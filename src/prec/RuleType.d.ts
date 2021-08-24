@@ -34,3 +34,15 @@ export type Template = {
   quads: Quad[];
   entityIs: Quad[] | null;
 }
+
+interface Priorisable {
+  get priority(): [number | undefined, string]
+}
+
+interface FilterProviderConstructor {
+  new (conditions: SplitDefConditions, hash: string, ruleNode: Quad_Subject): FilterProvider;
+}
+
+interface FilterProvider extends Priorisable {
+  getFilter(): { source: Quad[], conditions: Quad[][], destination: Quad[]};
+}

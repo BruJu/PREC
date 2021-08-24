@@ -3,11 +3,11 @@ import DStar from '../dataset/index';
 import fs from 'fs';
 import * as N3 from 'n3';
 import namespace from '@rdfjs/namespace';
-import { Quad, NamedNode, Term, Quad_Subject, BlankNode, Literal } from 'rdf-js';
+import { Quad, NamedNode, Term, Quad_Subject, Literal } from 'rdf-js';
 import TermDict from '../TermDict';
 import * as QuadStar from '../rdf/quad-star';
 import * as PrecUtils from '../rdf/utils';
-import { RuleDomain, Template } from './RuleType';
+import { FilterProvider, FilterProviderConstructor, Priorisable, RuleDomain, Template } from './RuleType';
 
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", { factory: N3.DataFactory });
 const xsd  = namespace("http://www.w3.org/2001/XMLSchema#"          , { factory: N3.DataFactory });
@@ -20,14 +20,10 @@ const $blankNode    = N3.DataFactory.blankNode;
 const $defaultGraph = N3.DataFactory.defaultGraph;
 const $quad         = N3.DataFactory.quad;
 
-type NamedOrBlank = Quad_Subject;
+// This file contains utility functions for the Context.ts file
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-
-interface Priorisable {
-  get priority(): [number, string]
-}
 
 /**
  * Sort the elements an array by `element.priority`. The
@@ -40,8 +36,12 @@ function sortArrayByPriority(array: Priorisable[]) {
     let rhs = rhs_.priority;
 
     // User defined priority
-    if (lhs[0] !== rhs[0]) {
-      return rhs[0] - lhs[0]
+    if (lhs[0] === undefined) {
+      if (rhs[0] !== undefined) return -1;
+    } else if (rhs[0] === undefined) {
+      return 1;
+    } else if (lhs[0] !== rhs[0]) {
+      return rhs[0] - lhs[0];
     }
 
     // Our priority
@@ -109,7 +109,7 @@ type SplitDef = {
 };
 
 export type SplitDefConditions = {
-  label: Term | undefined;
+  label: Literal | undefined;
   explicitPriority: number | undefined;
   otherLength: number;
   other: [Term, Term][];
@@ -413,14 +413,6 @@ function findImplicitEntity(searchedTermss: NamedNode[][], quads: Quad[]) {
   return null;
 }
 
-interface FilterProviderConstructor {
-  new (conditions: SplitDefConditions, hash: string, ruleNode: Quad_Subject): FilterProvider;
-}
-
-interface FilterProvider extends Priorisable {
-  getFilter(): { source: Quad[], conditions: Quad[][], destination: Quad[]};
-}
-
 /**
  * A manager manage every rules of a kind
  */
@@ -444,7 +436,7 @@ export class EntitiesManager {
     }
 
     // Load the base templates
-    let baseTemplates = new TermDict<NamedOrBlank, SplitDefMaterialization>();
+    let baseTemplates = new TermDict<Quad_Subject, SplitDefMaterialization>();
 
     for (let [templateName, _] of Cls.TemplateBases) {
       // Read the node, ensure it just have a template
@@ -454,7 +446,7 @@ export class EntitiesManager {
       // The template can be used to compute other templates
       baseTemplates.set(templateName, splitted.materialization);
       // Also a tempalte that can be used
-      let tm = new TermDict<NamedOrBlank, Template>();
+      let tm = new TermDict<Quad_Subject, Template>();
       tm.set(templateName, makeTemplate([splitted.materialization]));
       this.templatess.set(templateName, tm);
     }

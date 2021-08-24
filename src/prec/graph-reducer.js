@@ -4,7 +4,7 @@ const N3            = require('n3');
 const { default: DStar }   = require('../dataset/index');
 const namespace     = require('@rdfjs/namespace');
 
-const Context  = require("./Context");
+const { default: Context }  = require("./Context");
 const QuadStar = require('../rdf/quad-star');
 const { default: TermDict } = require('../TermDict');
 
