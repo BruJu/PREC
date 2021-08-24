@@ -1,4 +1,7 @@
-import { Term, Quad, NamedNode, BlankNode } from "rdf-js";
+import { Term, Quad, NamedNode, BlankNode, Quad_Subject } from "rdf-js";
+import { SplitDefConditions } from "./context-loader";
+import DStar from '../dataset/index';
+import Context from "./Context";
 
 /**
  * The list of terms that are related to rules of a type.
@@ -35,14 +38,30 @@ export type Template = {
   entityIs: Quad[] | null;
 }
 
-interface Priorisable {
+export interface Priorisable {
   get priority(): [number | undefined, string]
 }
 
-interface FilterProviderConstructor {
+export interface FilterProviderConstructor {
   new (conditions: SplitDefConditions, hash: string, ruleNode: Quad_Subject): FilterProvider;
 }
 
-interface FilterProvider extends Priorisable {
+export interface FilterProvider extends Priorisable {
   getFilter(): { source: Quad[], conditions: Quad[][], destination: Quad[]};
+}
+
+export interface RuleType {
+  get domain(): RuleDomain;
+  get mark(): NamedNode;
+
+  makeOneRuleFilter(conditions: SplitDefConditions, hash: string, ruleNode: Quad_Subject): FilterProvider;
+
+  addInitialMarks(dataset: DStar): void;
+
+  applyMark(
+    destination: DStar,
+    mark: Quad,
+    input: DStar,
+    context: Context
+  ): Term[];
 }

@@ -120,7 +120,7 @@ function testFromMockPG(name, source, context, expected) {
 require('./prec_impl/prec-0.test.js')(testFromMockPG);
 
 describe('Context Applier', function () {
-  require('./prec_impl/prec-c-template-deducing.test.js')();
+  require('./prec_impl/prec-c-template-deducing.test')();
   require('./prec_impl/rules-for-edges.test.js')(test);
   require('./prec_impl/rules-for-properties-on-nodes.test.js')(test);
   require('./prec_impl/rules-for-properties-on-edges.test.js')(test);

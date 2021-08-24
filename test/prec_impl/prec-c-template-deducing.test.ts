@@ -1,10 +1,12 @@
-const assert = require('assert');
-const { isomorphic } = require("rdf-isomorphic");
-const EdgeRules = require('../../src/prec/rules-for-edges');
-const PropertyRules = require('../../src/prec/rules-for-properties');
-const N3 = require("n3");
-const { readRawTemplate } = require('../../src/prec/Context');
-const { default: DStar } = require('../../src/dataset/index');
+import assert from 'assert';
+import { isomorphic } from "rdf-isomorphic";
+import * as N3 from "n3";
+
+import DStar from '../../src/dataset/index';
+import EdgeRules from '../../src/prec/rules-for-edges';
+import PropertyRules from '../../src/prec/rules-for-properties';
+import { readRawTemplate } from '../../src/prec/context-loader';
+import { RuleDomain } from '../../src/prec/RuleType';
 
 const prefixes =
 `
@@ -18,7 +20,7 @@ const prefixes =
     :theTestedRule 
 `;
 
-function loadTemplate(rule, domain) {
+function loadTemplate(rule: string, domain: RuleDomain) {
   const ttl = prefixes + rule;
   const parser = (new N3.Parser()).parse(ttl);
   
@@ -29,7 +31,7 @@ function loadTemplate(rule, domain) {
   );
 }
 
-function areEquivalentTemplates(name, domain, rule1, rule2) {
+function areEquivalentTemplates(name: string, domain: RuleDomain, rule1: string, rule2: string) {
   it(name, () => {
     const template1 = loadTemplate(rule1, domain);
     const template2 = loadTemplate(rule2, domain);
@@ -41,14 +43,14 @@ function areEquivalentTemplates(name, domain, rule1, rule2) {
 
     assert.ok(
       (template1.entityIs === null && template2.entityIs === null)
-      || isomorphic(template1.entityIs, template2.entityIs),
+      || isomorphic(template1.entityIs!, template2.entityIs!),
       'terms should be iso'
     );
   });
 }
 
 
-function notEquivalentEntity(name, domain, rule1, rule2) {
+function notEquivalentEntity(name: string, domain: RuleDomain, rule1: string, rule2: string) {
   it(name, () => {
     const template1 = loadTemplate(rule1, domain);
     const template2 = loadTemplate(rule2, domain);
@@ -59,13 +61,13 @@ function notEquivalentEntity(name, domain, rule1, rule2) {
     );
 
     assert.ok(
-      !isomorphic(template1.entityIs, template2.entityIs),
+      !isomorphic(template1.entityIs!, template2.entityIs!),
       'terms should not be iso'
     );
   });
 }
 
-function cantFindEntity(name, domain, rule) {
+function cantFindEntity(name: string, domain: RuleDomain, rule: string) {
   it (name, () => {
     const template = loadTemplate(rule, domain);
 
@@ -107,7 +109,7 @@ module.exports = () => {
     
     areEquivalentTemplates(
       "The same template is itself", // testing the test
-      EdgeRules.Rule,      
+      EdgeRules.domain,      
       `
         prec:edgeIs pvar:edge ;
         prec:composedOf ${PrecRDFReification} .
@@ -120,7 +122,7 @@ module.exports = () => {
 
     areEquivalentTemplates(
       "Can deduce edge",
-      EdgeRules.Rule,
+      EdgeRules.domain,
       ` prec:composedOf ${PrecRDFReification} .`,
       `
         prec:edgeIs pvar:edge ;
@@ -130,7 +132,7 @@ module.exports = () => {
 
     notEquivalentEntity(
       "Can override",
-      EdgeRules.Rule,
+      EdgeRules.domain,
       ` prec:composedOf ${PrecRDFReification} .`,
       `
         prec:edgeIs :toto ;
@@ -140,7 +142,7 @@ module.exports = () => {
 
     areEquivalentTemplates(
       "Can deduce edge",
-      EdgeRules.Rule,
+      EdgeRules.domain,
       ` prec:composedOf << pvar:source pvar:edgeIRI pvar:destination >> .`,
       `
         prec:edgeIs     << pvar:source pvar:edgeIRI pvar:destination >> ;
@@ -150,7 +152,7 @@ module.exports = () => {
 
     areEquivalentTemplates(
       "Can deduce edge from old syntax",
-      EdgeRules.Rule,
+      EdgeRules.domain,
       ` prec:composedOf << pvar:source pvar:edgeIRI pvar:destination >> .`,
       `
         prec:composedOf << pvar:source pvar:edgeIRI pvar:destination >> ,
@@ -160,7 +162,7 @@ module.exports = () => {
 
     areEquivalentTemplates(
       "Can deduce in prec:Prec0Property",
-      PropertyRules.Rule,
+      PropertyRules.domain,
       ` prec:composedOf ${PrecZeroProperty} .`,
       `
         prec:composedOf ${PrecZeroProperty} ;
@@ -170,7 +172,7 @@ module.exports = () => {
 
     areEquivalentTemplates(
       "Can deduce in prec:DirectTriples ",
-      PropertyRules.Rule,
+      PropertyRules.domain,
       ` prec:composedOf ${PrecDirectTriples} .`,
       `
         prec:composedOf ${PrecDirectTriples} ;
@@ -180,7 +182,7 @@ module.exports = () => {
 
     areEquivalentTemplates(
       "Can deduce in prec:CombinedTriples",
-      PropertyRules.Rule,
+      PropertyRules.domain,
       ` prec:composedOf ${PrecCombined} .`,
       `
         prec:composedOf ${PrecCombined} ;
@@ -189,12 +191,12 @@ module.exports = () => {
     );
 
     cantFindEntity("Should not be able to find any entity in an empty rule",
-      PropertyRules.Rule,
+      PropertyRules.domain,
       ` prec:_ prec:_ . `
     );
 
     cantFindEntity("should not be able to find any entity if edge is broken",
-      EdgeRules.Rule,
+      EdgeRules.domain,
       `
       prec:composedOf << :myGraph :hasNode        pvar:source      >> ;
       prec:composedOf << :myGraph :hasNode        pvar:destination >> ;

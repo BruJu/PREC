@@ -3,7 +3,7 @@ import namespace from '@rdfjs/namespace';
 
 import DStar, { Bindings, bindVariables } from '../dataset/index';
 import * as QuadStar from '../rdf/quad-star';
-import { FilterProvider, FilterProviderConstructor, RuleDomain } from './RuleType';
+import { FilterProvider, RuleDomain, RuleType } from './RuleType';
 import { SplitDefConditions } from './context-loader';
 import { Quad, Quad_Object, Quad_Predicate, Quad_Subject } from '@rdfjs/types';
 import { NamedNode } from '@rdfjs/types';
@@ -20,38 +20,55 @@ const $quad         = DataFactory.quad;
 const $variable     = DataFactory.variable;
 const $defaultGraph = DataFactory.defaultGraph;
 
+class PropertiesRuleClass implements RuleType {
+  readonly domain: RuleDomain = {
+    RuleType          : prec.PropertyRule,
+    DefaultTemplate   : prec.Prec0Property,
+    MainLabel         : prec.propertyName,
+    PossibleConditions: [prec.nodeLabel, prec.edgeLabel],
+    TemplateBases: [
+      [prec.NodeProperties, [prec.edgeLabel]                ],
+      [prec.EdgeProperties, [                prec.nodeLabel]],
+      [prec.MetaProperties, [prec.edgeLabel, prec.nodeLabel]]
+    ],
+    ShortcutIRI       : prec.IRIOfProperty,
+    SubstitutionTerm  : prec.propertyIRI,
+    
+    PropertyHolderSubstitutionTerm: prec.entityIs,
+    EntityIsHeuristic: [
+      [pvar.metaPropertyNode],
+      [pvar.propertyNode],
+      [pvar.entity, pvar.propertyKey, pvar.propertyValue  ],
+      [pvar.entity, pvar.propertyKey, pvar.individualValue],
+    ]
+  };
 
-// =============================================================================
-// =============================================================================
-//     ==== CONTEXT LOADING ==== CONTEXT LOADING ==== CONTEXT LOADING ==== 
+  readonly mark = prec.__appliedPropertyRule;
+
+  makeOneRuleFilter(conditions: SplitDefConditions, hash: string, ruleNode: Quad_Subject) {
+    return new PropertyRule(conditions, hash, ruleNode);
+  }
+
+  addInitialMarks(dataset: DStar): void {
+    const q = dataset.getQuads(null, rdf.type, prec.PropertyKey, $defaultGraph())
+    .map(quad => quad.subject)
+    .flatMap(propertyType => dataset.getQuads(null, propertyType, null, $defaultGraph()))
+    .map(quad => quad.object)
+    .map(propertyBlankNode => $quad(propertyBlankNode as Quad_Subject, this.mark, prec._NoPropertyRuleFound));
+
+    dataset.addAll(q);
+  }
+
+  applyMark(destination: DStar, mark: Quad, input: DStar, context: Context): Term[] {
+    return applyMark(destination, mark, input, context);
+  }
+}
+
+const instance = new PropertiesRuleClass();
+export default instance;
 
 /** An individual property rule */
-const PropertyRule: RuleDomain & FilterProviderConstructor =
 class PropertyRule implements FilterProvider {
-  // ==== IRIs related to property rules, to discover the rules and build the
-  // definition
-
-  static RuleType           = prec.PropertyRule;
-  static DefaultTemplate    = prec.Prec0Property;
-  static MainLabel          = prec.propertyName;
-  static PossibleConditions = [prec.nodeLabel, prec.edgeLabel]
-  static TemplateBases = [
-    [prec.NodeProperties, [prec.edgeLabel]                ],
-    [prec.EdgeProperties, [                prec.nodeLabel]],
-    [prec.MetaProperties, [prec.edgeLabel, prec.nodeLabel]]
-  ];
-  static ShortcutIRI        = prec.IRIOfProperty;
-  static SubstitutionTerm   = prec.propertyIRI;
-  static PropertyHolderSubstitutionTerm = prec.entityIs;
-  static EntityIsHeuristic  = [
-    [pvar.metaPropertyNode],
-    [pvar.propertyNode],
-    [pvar.entity, pvar.propertyKey, pvar.propertyValue  ],
-    [pvar.entity, pvar.propertyKey, pvar.individualValue],
-  ];
-
-  // ==== One rule management
-
   conditions: Quad[][];
   ruleNode: Quad_Subject;
   priority: [number | undefined, string];
@@ -138,25 +155,10 @@ class PropertyRule implements FilterProvider {
     };
   }
 }
-export { PropertyRule as Rule };
 
 // =============================================================================
 // =============================================================================
 //            ==== CONTEXT APPLICATION ==== CONTEXT APPLICATION ==== 
-
-export function produceMarks(dataset: DStar, context: Context) {
-  // Mark every property node
-  const q = dataset.getQuads(null, rdf.type, prec.PropertyKey, $defaultGraph())
-    .map(quad => quad.subject)
-    .flatMap(propertyType => dataset.getQuads(null, propertyType, null, $defaultGraph()))
-    .map(quad => quad.object)
-    .map(propertyBlankNode => $quad(propertyBlankNode as Quad_Subject, prec.__appliedPropertyRule, prec._NoPropertyRuleFound));
-
-  dataset.addAll(q);
-
-  // Find the proper rule to apply
-  context.refinePropertyRules(dataset);
-}
 
 /**
  * Return the type of the entity in the dataset, supposing it is either a node,
@@ -179,7 +181,7 @@ function findTypeOfEntity(dataset: DStar, entity: Quad_Subject): NamedNode {
   return prec.MetaProperties;
 }
 
-export function applyMark(destination: DStar, mark: Quad, input: DStar, context: Context) {
+function applyMark(destination: DStar, mark: Quad, input: DStar, context: Context) {
   const src = [
     $quad($variable("entity"), $variable("propertyKey"), mark.subject),
     $quad(mark.subject, rdf.value, $variable("propertyValue")),

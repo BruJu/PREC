@@ -7,7 +7,7 @@ import { Quad, NamedNode, Term, Quad_Subject, Literal } from 'rdf-js';
 import TermDict from '../TermDict';
 import * as QuadStar from '../rdf/quad-star';
 import * as PrecUtils from '../rdf/utils';
-import { FilterProvider, FilterProviderConstructor, Priorisable, RuleDomain, Template } from './RuleType';
+import { FilterProvider, Priorisable, RuleDomain, RuleType, Template } from './RuleType';
 
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", { factory: N3.DataFactory });
 const xsd  = namespace("http://www.w3.org/2001/XMLSchema#"          , { factory: N3.DataFactory });
@@ -422,6 +422,8 @@ export class EntitiesManager {
 
   // List of known (and computed) templates
   templatess = new TermDict<Quad_Subject, TermDict<Quad_Subject, Template>>();
+  
+  ruleset: RuleType;
 
   /**
    * Build an `EntitiesManager` from the `contextDataset`.
@@ -430,17 +432,20 @@ export class EntitiesManager {
    * @param Cls The class that manages an individual rule. It must also
    * contain as static data the list of IRIs related to this rule.
    */
-  constructor(contextDataset: DStar, substitutionTerms: SubstitutionTerms, Cls: RuleDomain & FilterProviderConstructor) {
+  constructor(contextDataset: DStar, substitutionTerms: SubstitutionTerms, Cls: RuleType) {
+    this.ruleset = Cls;
+    const domain = Cls.domain;
+
     function makeTemplate(materializations: SplitDefMaterialization[]) {
-      return _buildTemplate(contextDataset, materializations, Cls);
+      return _buildTemplate(contextDataset, materializations, domain);
     }
 
     // Load the base templates
     let baseTemplates = new TermDict<Quad_Subject, SplitDefMaterialization>();
 
-    for (let [templateName, _] of Cls.TemplateBases) {
+    for (let [templateName, _] of domain.TemplateBases) {
       // Read the node, ensure it just have a template
-      const splitted = SplitNamespace.splitDefinition(contextDataset, templateName, Cls, substitutionTerms);
+      const splitted = SplitNamespace.splitDefinition(contextDataset, templateName, domain, substitutionTerms);
       SplitNamespace.throwIfNotMaterializationOnly(splitted, templateName);
 
       // The template can be used to compute other templates
@@ -454,9 +459,9 @@ export class EntitiesManager {
     // Load the templates for user defined rules
     let existingNodes: {[k: string]: Quad_Subject} = {};
 
-    for (let quad of contextDataset.getQuads(null, rdf.type, Cls.RuleType, $defaultGraph())) {
-      const splitted = SplitNamespace.splitDefinition(contextDataset, quad.subject, Cls, substitutionTerms);
-      SplitNamespace.throwIfHaveNoCondition(splitted, quad.subject, Cls);
+    for (let quad of contextDataset.getQuads(null, rdf.type, domain.RuleType, $defaultGraph())) {
+      const splitted = SplitNamespace.splitDefinition(contextDataset, quad.subject, domain, substitutionTerms);
+      SplitNamespace.throwIfHaveNoCondition(splitted, quad.subject, domain);
 
       let conditions = JSON.stringify(splitted.conditions);
       if (existingNodes[conditions] !== undefined) {
@@ -468,9 +473,9 @@ export class EntitiesManager {
       existingNodes[conditions] = quad.subject;
 
       // Read remapping=
-      this.iriRemapper.push(new Cls(splitted.conditions, conditions, quad.subject));
+      this.iriRemapper.push(Cls.makeOneRuleFilter(splitted.conditions, conditions, quad.subject));
 
-      for (const [templateName, forbiddenPredicates] of Cls.TemplateBases) {
+      for (const [templateName, forbiddenPredicates] of domain.TemplateBases) {
         // Check if this template x the current base template are compatible
         let forbidden = forbiddenPredicates.find(forbiddenPredicate =>
           splitted.conditions.other.find(c => c[0].equals(forbiddenPredicate)) !== undefined

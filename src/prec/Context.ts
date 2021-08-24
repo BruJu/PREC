@@ -1,13 +1,14 @@
 import DStar from '../dataset';
 
-import * as RulesForEdges from './rules-for-edges';
-import * as RulesForNodeLabels from './rules-for-nodelabels';
-import * as RulesForProperties from './rules-for-properties';
+import RulesForEdges from './rules-for-edges';
+import RulesForNodeLabels from './rules-for-nodelabels';
+import RulesForProperties from './rules-for-properties';
 import * as XX from './context-loader';
 
 import { DataFactory } from 'n3';
 import namespace from '@rdfjs/namespace';
 import { NamedNode, Quad, Quad_Subject } from '@rdfjs/types';
+import { Template } from './RuleType';
 const prec = namespace("http://bruy.at/prec#", { factory: DataFactory });
 
 /**
@@ -21,6 +22,8 @@ export default class Context {
   properties: XX.EntitiesManager;
   nodeLabels: XX.EntitiesManager;
 
+  entityManagers: XX.EntitiesManager[];
+
   keepProvenance: boolean;
   blankNodeMapping: { [domain: string]: string; };
 
@@ -31,40 +34,28 @@ export default class Context {
 
     const substitutionTerms = new XX.SubstitutionTerms(dataset);
 
-    XX.removeSugarForRules(dataset, RulesForEdges.Rule);
-    this.edges      = new XX.EntitiesManager(dataset, substitutionTerms, RulesForEdges.Rule);
+    XX.removeSugarForRules(dataset, RulesForEdges.domain);
+    this.edges      = new XX.EntitiesManager(dataset, substitutionTerms, RulesForEdges);
     
-    XX.removeSugarForRules(dataset, RulesForProperties.Rule);
+    XX.removeSugarForRules(dataset, RulesForProperties.domain);
     XX.copyPropertiesValuesToSpecificProperties(dataset);
-    this.properties = new XX.EntitiesManager(dataset, substitutionTerms, RulesForProperties.Rule);
+    this.properties = new XX.EntitiesManager(dataset, substitutionTerms, RulesForProperties);
 
-    XX.removeSugarForRules(dataset, RulesForNodeLabels.Rule   );
-    this.nodeLabels = new XX.EntitiesManager(dataset, substitutionTerms, RulesForNodeLabels.Rule);
+    XX.removeSugarForRules(dataset, RulesForNodeLabels.domain   );
+    this.nodeLabels = new XX.EntitiesManager(dataset, substitutionTerms, RulesForNodeLabels);
+
+    this.entityManagers = [this.edges, this.properties, this.nodeLabels];
 
     this.keepProvenance = trueIfUndefined(XX.keepProvenance(dataset));
     this.blankNodeMapping = XX.readBlankNodeMapping(dataset);
   }
 
-  /**
-   * Refine the rule to apply for RDF nodes that has been marked with 
-   * `?node prec:__appliedEdgeRule, prec:Edges`
-   * @param dataset The dataset 
-   */
-  refineEdgeRules(dataset: DStar) { this.edges.refineRules(dataset); }
-
-  /**
-   * Refine the rule to apply for RDF nodes that has been marked with 
-   * `?node prec:XXXX, prec:XXX`
-   * @param dataset The dataset 
-   */
-  refinePropertyRules(dataset: DStar) { this.properties.refineRules(dataset); }
-
-  /**
-   * Refine the rule to apply for RDF nodes that has been marked with 
-   * `?node prec:XXX, prec:XXX`
-   * @param dataset The dataset 
-   */
-  refineNodeLabelRules(dataset: DStar) { this.nodeLabels.refineRules(dataset); }
+  produceMarks(dataset: DStar) {
+    for (const entityManager of this.entityManagers) {
+      entityManager.ruleset.addInitialMarks(dataset);
+      entityManager.refineRules(dataset);
+    }
+  }
 
   /**
    * Fetches the template corresponding to the given `ruleNode`.
@@ -80,12 +71,12 @@ export default class Context {
    *  ]
    * ```
    * 
-   * @param {Term} ruleNode The rule node
-   * @returns {Template} The template to give to the
+   * @param ruleNode The rule node
+   * @returns The template to give to the
    * `storeAlterer.findFilterReplace` function as the destination pattern
    * after replacing the variables with actual terms.
    */
-  findEdgeTemplate(ruleNode: Quad_Subject) {
+  findEdgeTemplate(ruleNode: Quad_Subject): Template {
     return this.edges.getTemplateFor(ruleNode, prec.Edges)!;
   }
 
@@ -93,7 +84,7 @@ export default class Context {
    * Same as `findEdgeTemplate` but for properties.
    * `type` should be `prec:(Node|Edge|Meta)Properties`
    */
-  findPropertyTemplate(ruleNode: Quad_Subject, type: NamedNode) {
+  findPropertyTemplate(ruleNode: Quad_Subject, type: NamedNode): Template {
     return this.properties.getTemplateFor(ruleNode, type)!;
   }
 
@@ -105,5 +96,3 @@ export default class Context {
 function trueIfUndefined(b: boolean | undefined) {
   return b === undefined ? true : b;
 }
-
-export const readRawTemplate = XX.readRawTemplate;

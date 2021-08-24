@@ -3,7 +3,7 @@ import namespace from '@rdfjs/namespace';
 
 import DStar from '../dataset';
 import * as QuadStar from '../rdf/quad-star';
-import { FilterProvider, FilterProviderConstructor, RuleDomain } from './RuleType';
+import { FilterProvider, RuleDomain, RuleType } from './RuleType';
 import { SplitDefConditions } from './context-loader';
 import { Quad, Quad_Subject } from '@rdfjs/types';
 import { Quad_Object } from '@rdfjs/types';
@@ -20,31 +20,96 @@ const $quad         = DataFactory.quad;
 const $variable     = DataFactory.variable;
 const $defaultGraph = DataFactory.defaultGraph;
 
-// =============================================================================
-// =============================================================================
-//     ==== CONTEXT LOADING ==== CONTEXT LOADING ==== CONTEXT LOADING ==== 
+class EdgesRuleClass implements RuleType {
+  readonly domain: RuleDomain = {
+    RuleType          : prec.EdgeRule,
+    DefaultTemplate   : prec.RDFReification,
+    MainLabel         : prec.edgeLabel,
+    PossibleConditions: [prec.sourceLabel, prec.destinationLabel],
+    TemplateBases     : [[prec.Edges, []]],
+    ShortcutIRI       : prec.IRIOfEdgeLabel,
+    SubstitutionTerm  : prec.edgeIRI,
+  
+    PropertyHolderSubstitutionTerm: prec.edgeIs,
+    EntityIsHeuristic: [
+      [pvar.edge],
+      [pvar.source, pvar.edgeIRI, pvar.destination]
+    ]
+  }
+
+  readonly mark = prec.__appliedEdgeRule;
+
+  makeOneRuleFilter(conditions: SplitDefConditions, hash: string, ruleNode: Quad_Subject): FilterProvider {
+    return new EdgeRule(conditions, hash, ruleNode);
+  }
+
+  addInitialMarks(dataset: DStar): void {
+    // To transform the edge, we first identify the rule to apply to
+    // each edge.
+    // We do the identification process first to avoid conflicts between rules.
+
+    // Mark every edge with the prec:Edges rule
+    const q = dataset.getQuads(null, rdf.type, pgo.Edge)
+        .map(quad => quad.subject)
+        .map(term => DataFactory.quad(term, this.mark, prec.Edges));
+
+    dataset.addAll(q);
+  }
+
+  applyMark(destination: DStar, mark: Quad, input: DStar, context: Context): Term[] {
+    const src = [
+      $quad(mark.subject, rdf.type, pgo.Edge),
+      $quad(mark.subject, rdf.subject  , $variable("subject")  ),
+      $quad(mark.subject, rdf.predicate, $variable("predicate")),
+      $quad(mark.subject, rdf.object   , $variable("object")   )
+    ]
+  
+    const bindingss = input.matchAndBind(src);
+  
+    if (bindingss.length !== 1) {
+      throw Error("logic erroc in rules-for-edges.ts::applyMark");
+    }
+  
+    const bindings = bindingss[0];
+  
+    bindings.edge = mark.subject;
+    bindings.ruleNode = mark.object;
+  
+    const label = input.getQuads(bindings.predicate as Term, rdfs.label, null, $defaultGraph());
+    if (label.length !== 0) {
+      bindings.label = label[0].object;
+    }
+  
+    const behaviour = context.findEdgeTemplate(bindings.ruleNode as Quad_Subject).quads;
+  
+    const pattern = behaviour.map(term => QuadStar.remapPatternWithVariables(
+      term,
+      [
+        [$variable('edge')     , pvar.self       ],
+        [$variable('edge')     , pvar.edge       ],
+        [$variable('subject')  , pvar.source     ],
+        [$variable('predicate'), pvar.edgeIRI    ],
+        [$variable('label')    , pvar.label      ],
+        [$variable('object')   , pvar.destination],
+      ]
+    ))
+    // Remove metadata
+    .filter(quad => !QuadStar.containsTerm(quad, prec._forPredicate)) as Quad[];
+  
+    // Replace non property dependant quads
+    bindings['@quads'] = [];
+    destination.replaceOneBinding(bindings, pattern);
+  
+    const woot = pattern.find(t => 
+      /* Instanciated */ QuadStar.containsTerm(t, $variable('predicate'))
+      /* Hard coded | Substituted */ || QuadStar.containsTerm(t, bindings.predicate as Term)
+    );
+    return woot !== undefined ? [bindings.predicate as Term] : [];
+  }
+}
 
 /** An individual edge rule */
-const EdgeRule: RuleDomain & FilterProviderConstructor =
 class EdgeRule implements FilterProvider {
-  // ==== IRIs related to edge
-
-  static RuleType           = prec.EdgeRule;
-  static DefaultTemplate    = prec.RDFReification;
-  static MainLabel          = prec.edgeLabel;
-  static PossibleConditions = [prec.sourceLabel, prec.destinationLabel]
-  static TemplateBases      = [[prec.Edges, []]];
-  static ShortcutIRI        = prec.IRIOfEdgeLabel;
-  static SubstitutionTerm   = prec.edgeIRI;
-
-  static PropertyHolderSubstitutionTerm = prec.edgeIs;
-  static EntityIsHeuristic  = [
-    [pvar.edge],
-    [pvar.source, pvar.edgeIRI, pvar.destination]
-  ];
-
-  // ==== One rule
-
   conditions: Quad[][];
   ruleNode: Quad_Subject;
   priority: [number | undefined, string];
@@ -104,75 +169,6 @@ class EdgeRule implements FilterProvider {
     };
   }
 }
-export { EdgeRule as Rule };
 
-// =============================================================================
-// =============================================================================
-//            ==== CONTEXT APPLICATION ==== CONTEXT APPLICATION ==== 
-
-export function produceMarks(dataset: DStar, context: Context) {
-  // To transform the edge, we first identify the rule to apply to
-  // each edge.
-  // We do the identification process first to avoid conflicts between rules.
-
-  // Mark every edge with the prec:Edges rule
-  const q = dataset.getQuads(null, rdf.type, pgo.Edge)
-      .map(quad => quad.subject)
-      .map(term => DataFactory.quad(term, prec.__appliedEdgeRule, prec.Edges));
-
-  dataset.addAll(q);
-
-  // Find the proper rules
-  context.refineEdgeRules(dataset);
-}
-
-export function applyMark(destination: DStar, mark: Quad, input: DStar, context: Context): Term[] {
-  const src = [
-    $quad(mark.subject, rdf.type, pgo.Edge),
-    $quad(mark.subject, rdf.subject  , $variable("subject")  ),
-    $quad(mark.subject, rdf.predicate, $variable("predicate")),
-    $quad(mark.subject, rdf.object   , $variable("object")   )
-  ]
-
-  const bindingss = input.matchAndBind(src);
-
-  if (bindingss.length !== 1) {
-    throw Error("logic erroc in rules-for-edges.ts::applyMark");
-  }
-
-  const bindings = bindingss[0];
-
-  bindings.edge = mark.subject;
-  bindings.ruleNode = mark.object;
-
-  const label = input.getQuads(bindings.predicate as Term, rdfs.label, null, $defaultGraph());
-  if (label.length !== 0) {
-    bindings.label = label[0].object;
-  }
-
-  const behaviour = context.findEdgeTemplate(bindings.ruleNode as Quad_Subject).quads;
-
-  const pattern = behaviour.map(term => QuadStar.remapPatternWithVariables(
-    term,
-    [
-      [$variable('edge')     , pvar.self       ],
-      [$variable('edge')     , pvar.edge       ],
-      [$variable('subject')  , pvar.source     ],
-      [$variable('predicate'), pvar.edgeIRI    ],
-      [$variable('label')    , pvar.label      ],
-      [$variable('object')   , pvar.destination],
-    ]
-  ))
-  // Remove metadata
-  .filter(quad => !QuadStar.containsTerm(quad, prec._forPredicate)) as Quad[];
-
-  // Replace non property dependant quads
-  bindings['@quads'] = [];
-  destination.replaceOneBinding(bindings, pattern);
-
-  const woot = pattern.find(t => 
-    /* Instanciated */ QuadStar.containsTerm(t, $variable('predicate'))
-    /* Hard coded | Substituted */ || QuadStar.containsTerm(t, bindings.predicate as Term)
-  );
-  return woot !== undefined ? [bindings.predicate as Term] : [];
-}
+const instance = new EdgesRuleClass();
+export default instance;

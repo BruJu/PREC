@@ -2,7 +2,7 @@ import { DataFactory } from 'n3';
 import namespace from '@rdfjs/namespace';
 
 import * as QuadStar from '../rdf/quad-star';
-import { FilterProvider, FilterProviderConstructor, RuleDomain } from './RuleType';
+import { FilterProvider, RuleDomain, RuleType } from './RuleType';
 import { Quad_Subject } from 'rdf-js';
 import { SplitDefConditions } from './context-loader';
 import { Quad, Term } from '@rdfjs/types';
@@ -19,29 +19,84 @@ const $quad         = DataFactory.quad;
 const $variable     = DataFactory.variable;
 const $defaultGraph = DataFactory.defaultGraph;
 
+class NLRuleClass implements RuleType {
+  readonly domain: RuleDomain = {
+    RuleType          : prec.NodeLabelRule,
+    DefaultTemplate   : prec.NodeLabelsTypeOfLabelIRI,
+    MainLabel         : prec.nodeLabel,
+    PossibleConditions: [],
+    TemplateBases     : [[prec.NodeLabels, []]],
+    ShortcutIRI       : prec.IRIOfNodeLabel,
+    SubstitutionTerm  : prec.nodeLabelIRI,
+  
+    PropertyHolderSubstitutionTerm: null,
+    EntityIsHeuristic: null,
+  };
 
-// =============================================================================
-// =============================================================================
-//     ==== CONTEXT LOADING ==== CONTEXT LOADING ==== CONTEXT LOADING ==== 
+  readonly mark = prec.__appliedNodeRule;
+
+  makeOneRuleFilter(conditions: SplitDefConditions, hash: string, ruleNode: Quad_Subject) {
+    return new NodeLabelRule(conditions, hash, ruleNode);
+  }
+
+  addInitialMarks(dataset: DStar): void {
+    const bindings = dataset.matchAndBind([
+      $quad($variable('node'), rdf.type, pgo.Node),
+      $quad($variable('node'), rdf.type, $variable('pgLabeliri')),
+      $quad($variable('pgLabeliri'), rdfs.label, $variable('trueLabel'))
+    ]);
+  
+    bindings.forEach(binding => {
+      if (Array.isArray(binding.node)) return;
+  
+      dataset.add(
+        $quad(
+          $quad(binding.node as Quad_Subject, rdf.type, binding.pgLabeliri as Quad_Subject),
+          prec.__appliedNodeRule,
+          prec.NodeLabels
+        )
+      );
+    });
+  }
+
+  applyMark(destination: DStar, mark: Quad, input: DStar, context: Context): Term[] {
+    const variableValues: any = {
+      node: (mark.subject as Quad).subject,
+      labelIRI: (mark.subject as Quad).object,
+      ruleNode: mark.object
+    };
+  
+    const label = input.getQuads(variableValues.labelIRI, rdfs.label, null, $defaultGraph());
+    if (label.length !== 0) {
+      variableValues.label = label[0].object;
+    }
+  
+    const template = context.getNodeLabelTemplateQuads(variableValues.ruleNode);
+  
+    const target = template.map(term => QuadStar.remapPatternWithVariables(
+      term,
+      [
+        [$variable('node'), pvar.node],
+        // labelIRI, captured by the pattern of nodesToLabels
+        [$variable("labelIRI"), pvar.nodeLabelIRI],
+        // label as a string, captured at the beginning of this loop
+        [$variable("label")   , pvar.label]
+      ]
+    )) as Quad[];
+  
+    variableValues['@quads'] = [];
+    destination.replaceOneBinding(variableValues, target);
+  
+    const woot = target.find(t => 
+      /* Hard coded or substituted */ QuadStar.containsTerm(t, variableValues.labelIRI)
+      /* Instancied */ || QuadStar.containsTerm(t, $variable('labelIRI'))
+    );
+    return woot !== undefined ? [variableValues.labelIRI] : [];
+  }
+}
 
 /** An individual node label rule */
-const NodeLabelRule: RuleDomain & FilterProviderConstructor =
 class NodeLabelRule implements FilterProvider {
-  // ==== IRIs related to node labels
-
-  static RuleType           = prec.NodeLabelRule;
-  static DefaultTemplate    = prec.NodeLabelsTypeOfLabelIRI;
-  static MainLabel          = prec.nodeLabel;
-  static PossibleConditions = [];
-  static TemplateBases      = [[prec.NodeLabels, []]];
-  static ShortcutIRI        = prec.IRIOfNodeLabel;
-  static SubstitutionTerm   = prec.nodeLabelIRI;
-  
-  static PropertyHolderSubstitutionTerm = null;
-  static EntityIsHeuristic = null;
-
-  // ==== One rule
-
   conditions: Quad[][] = [];
   ruleNode: Quad_Subject;
   priority: [number | undefined, string];
@@ -82,65 +137,5 @@ class NodeLabelRule implements FilterProvider {
   }
 }
 
-export { NodeLabelRule as Rule };
-
-// =============================================================================
-// =============================================================================
-//            ==== CONTEXT APPLICATION ==== CONTEXT APPLICATION ==== 
-
-export function produceMarks(dataset: DStar, context: Context) {
-  const bindings = dataset.matchAndBind([
-    $quad($variable('node'), rdf.type, pgo.Node),
-    $quad($variable('node'), rdf.type, $variable('pgLabeliri')),
-    $quad($variable('pgLabeliri'), rdfs.label, $variable('trueLabel'))
-  ]);
-
-  bindings.forEach(binding => {
-    if (Array.isArray(binding.node)) return;
-
-    dataset.add(
-      $quad(
-        $quad(binding.node as Quad_Subject, rdf.type, binding.pgLabeliri as Quad_Subject),
-        prec.__appliedNodeRule,
-        prec.NodeLabels
-      )
-    );
-  });
-
-  context.refineNodeLabelRules(dataset);
-}
-
-export function applyMark(destination: DStar, mark: Quad, input: DStar, context: Context): Term[] {
-  const variableValues: any = {
-    node: (mark.subject as Quad).subject,
-    labelIRI: (mark.subject as Quad).object,
-    ruleNode: mark.object
-  };
-
-  const label = input.getQuads(variableValues.labelIRI, rdfs.label, null, $defaultGraph());
-  if (label.length !== 0) {
-    variableValues.label = label[0].object;
-  }
-
-  const template = context.getNodeLabelTemplateQuads(variableValues.ruleNode);
-
-  const target = template.map(term => QuadStar.remapPatternWithVariables(
-    term,
-    [
-      [$variable('node'), pvar.node],
-      // labelIRI, captured by the pattern of nodesToLabels
-      [$variable("labelIRI"), pvar.nodeLabelIRI],
-      // label as a string, captured at the beginning of this loop
-      [$variable("label")   , pvar.label]
-    ]
-  )) as Quad[];
-
-  variableValues['@quads'] = [];
-  destination.replaceOneBinding(variableValues, target);
-
-  const woot = target.find(t => 
-    /* Hard coded or substituted */ QuadStar.containsTerm(t, variableValues.labelIRI)
-    /* Instancied */ || QuadStar.containsTerm(t, $variable('labelIRI'))
-  );
-  return woot !== undefined ? [variableValues.labelIRI] : [];
-}
+const instance = new NLRuleClass();
+export default instance;

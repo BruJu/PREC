@@ -8,9 +8,6 @@ import Context from "./Context";
 import * as QuadStar from '../rdf/quad-star';
 import TermDict from '../TermDict';
 
-import * as RulesForProperties from './rules-for-properties';
-import * as RulesForEdges from './rules-for-edges';
-import * as RulesForNodeLabels from './rules-for-nodelabels';
 import { Quad } from '@rdfjs/types';
 import { Term } from '@rdfjs/types';
 
@@ -56,26 +53,17 @@ export default function applyContext(dataset: DStar, contextQuads: Quad[]) {
  * @returns The new dataset 
  */
 function ruleBasedProduction(dataset: DStar, context: Context): DStar {
-  RulesForEdges.produceMarks(dataset, context);
-  RulesForProperties.produceMarks(dataset, context);
-  RulesForNodeLabels.produceMarks(dataset, context);
+  context.produceMarks(dataset);
   
   const newDataset = new DStar();
 
   const preservedLabels = new TermDict<Term, true>();
   
-  type ElementOfList = [
-    NamedNode,
-    (destination: DStar, mark: Quad, input: DStar, context: Context) => Term[]
-  ];
+  for (const entityManager of context.entityManagers) {
+    const ruleType = entityManager.ruleset;
 
-  for (const [markKind, functionToCall] of [
-      [prec.__appliedNodeRule    , RulesForNodeLabels.applyMark],
-      [prec.__appliedEdgeRule    , RulesForEdges.applyMark     ],
-      [prec.__appliedPropertyRule, RulesForProperties.applyMark]
-  ] as ElementOfList[]) {
-    for (const mark of dataset.getQuads(null, markKind, null, $defaultGraph())) {
-      const ts = functionToCall(newDataset, mark, dataset, context);
+    for (const mark of dataset.getQuads(null, ruleType.mark, null, $defaultGraph())) {
+      const ts = ruleType.applyMark(newDataset, mark, dataset, context);
       ts.forEach(t => preservedLabels.set(t, true));
     }
   }
