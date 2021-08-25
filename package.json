@@ -4,7 +4,7 @@
     "description": "A Property Graph to RDF converter",
     "main": "prec.js",
     "scripts": {
-        "test": "npx ts-mocha"
+        "test": "npx mocha -r ts-node/register test/*.ts test/*.js"
     },
     "repository": {
         "type": "git",
@@ -39,7 +39,6 @@
         "@types/n3": "^1.10.3",
         "@types/rdfjs__namespace": "^1.1.5",
         "mocha": "^8.3.2",
-        "ts-mocha": "^8.0.0",
         "ts-node": "^10.2.1",
         "typescript": "^4.3.5"
     }
