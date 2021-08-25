@@ -15,8 +15,8 @@
 
 const { ArgumentParser } = require('argparse');
 const fs = require('fs');
-const precMain  = require('./prec.js');
 const precUtils = require('./src/rdf/utils');
+const { outputTheStore } = require('./src/rdf/parsing');
 
 // -- RDF
 const graphyFactory = require('@graphy/core.data.factory');
@@ -832,7 +832,7 @@ async function main() {
         console.error("Error: " + result.error);
     } else if (result["Remaining Quads"].size !== 0) {
         console.error(dataset.size + " remaining quads");
-        precMain.outputTheStore(new N3.Store([...dataset]));
+        outputTheStore(new N3.Store([...dataset]));
     } else {
         if (args.OutputFormat === "Cypher") {
             console.log(makeCypherQuery(result.PropertyGraph));

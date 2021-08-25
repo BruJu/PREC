@@ -7,9 +7,9 @@ const traversal = gremlin.process.AnonymousTraversalSource.traversal;
 const DriverRemoteConnection = gremlin.driver.DriverRemoteConnection;
 const RDFGraphBuilder = require("./src/prec/graph-builder");
 const { default: graphReducer } = require("./src/prec/graph-reducer");
+const { filenameToArrayOfQuads, outputTheStore } = require('./src/rdf/parsing');
 
 const { EnumValue } = gremlin.process;
-const precMain = require('./prec.js');
 
 
 /**
@@ -331,10 +331,10 @@ async function main() {
     let [store, prefixes] = RDFGraphBuilder.fromTinkerPop(result.nodes, result.edges);
 
     if (args.context !== "") {
-        graphReducer(store, precMain.filenameToArrayOfQuads(args.context));
+        graphReducer(store, filenameToArrayOfQuads(args.context));
     }
 
-    precMain.outputTheStore(store, prefixes);
+    outputTheStore(store, prefixes);
 }
 
 

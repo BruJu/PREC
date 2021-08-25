@@ -22,7 +22,7 @@ const { isomorphic } = require("rdf-isomorphic");
 // PREC
 const precm1            = require('./rdf-to-pg.js');
 const { default: graphReducer } = require("./src/prec/graph-reducer");
-const precMain          = require("./prec.js");
+const { outputTheStore } = require('./src/rdf/parsing');
 
 // Namespace
 const pgo  = namespace("http://ii.uwb.edu.pl/pgo#", N3.DataFactory);
@@ -93,7 +93,7 @@ const TOOL_PrecGeneratedIsomorphism = {
                 }
             }
 
-            precMain.outputTheStore(new N3.Store(quads));
+            outputTheStore(new N3.Store(quads));
 
             return quads;
         }
@@ -123,7 +123,7 @@ const TOOL_Contextualize = {
         const store = new N3.Store(loadRDFGraph(args.PRECRDFGraph));
         const context = loadRDFGraph(args.Context);
         graphReducer(store, context);
-        precMain.outputTheStore(store);
+        outputTheStore(store);
     }
 };
 

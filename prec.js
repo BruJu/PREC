@@ -6,12 +6,11 @@
 // RDF-star is used in SA mode (annotated quads are not affirmed).
 
 // Import some libraries
-const N3            = require('n3');
-
 const RDFGraphBuilder = require("./src/prec/graph-builder");
 const { default: graphReducer } = require("./src/prec/graph-reducer");
 
 const { ArgumentParser } = require('argparse');
+const { filenameToArrayOfQuads, outputTheStore } = require('./src/rdf/parsing');
 
 const fs = require('fs');
 
@@ -40,27 +39,6 @@ const fileReader = {
     "fromNeo4j": filename => stringsToJsObjects(fileToString(filename)),
     "fromNeo4jString": content => stringsToJsObjects(content.split(/\r?\n/))
 };
-
-
-function filenameToArrayOfQuads(filename) {
-    const trig = fs.readFileSync(filename, 'utf-8');
-    return trigToArrayOfQuads(trig);
-}
-
-function trigToArrayOfQuads(trig) {
-    const parser = new N3.Parser();
-    return parser.parse(trig);
-}
-
-
-
-function outputTheStore(store, prefixes) {
-    const writer = new N3.Writer({ prefixes: prefixes });
-    store.forEach(quad => writer.addQuad(quad.subject, quad.predicate, quad.object, quad.graph));
-    writer.end((_error, result) => console.log(result));
-    
-    console.error(store.size + " triples");
-}
 
 function precOnNeo4J(filename, context) {
     const propertyGraphStructure = fileReader.fromNeo4j(filename);
@@ -136,7 +114,5 @@ if (require.main === module) {
 
 module.exports = {
     precOnNeo4J: precOnNeo4J,
-    precOnNeo4JString: precOnNeo4JString,
-    outputTheStore: outputTheStore,
-    filenameToArrayOfQuads: filenameToArrayOfQuads
+    precOnNeo4JString: precOnNeo4JString
 };

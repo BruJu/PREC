@@ -4,11 +4,11 @@
 
 const neo4j = require('neo4j-driver')
 
-const prec = require('./prec.js');
 const RDFGraphBuilder = require("./src/prec/graph-builder");
 const { default: graphReducer } = require("./src/prec/graph-reducer");
 
 const { ArgumentParser } = require('argparse');
+const { filenameToArrayOfQuads, outputTheStore } = require('./src/rdf/parsing');
 
 async function extract_from_neo4j_protocol(uri, user, password) {
     let result = {
@@ -118,10 +118,10 @@ async function main() {
     let [store, prefixes] = RDFGraphBuilder.neo4JProtocoleToStore(result.nodes, result.edges);
 
     if (args.context !== "") {
-        graphReducer(store, prec.filenameToArrayOfQuads(args.context));
+        graphReducer(store, filenameToArrayOfQuads(args.context));
     }
 
-    prec.outputTheStore(store, prefixes);
+    outputTheStore(store, prefixes);
 }
 
 if (require.main === module) {
