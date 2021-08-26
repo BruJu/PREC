@@ -20,9 +20,9 @@ const { isomorphic } = require("rdf-isomorphic");
 
 
 // PREC
-const precm1            = require('./rdf-to-pg.js');
 const { default: graphReducer } = require("./src/prec/graph-reducer");
 const { outputTheStore } = require('./src/rdf/parsing');
+const { getNodesOfType } = require('./src/rdf/path-travelling');
 
 // Namespace
 const pgo  = namespace("http://ii.uwb.edu.pl/pgo#", N3.DataFactory);
@@ -77,10 +77,10 @@ const TOOL_PrecGeneratedIsomorphism = {
                 // TODO: Support RDF-star (which probably implies using N3 instead of WT / Graphy)
                 const wtdataset = new WT.Dataset();
                 wtdataset.addAll(quads);
-                precm1.extendDataset_PathTravelling(wtdataset);
-                let nodes = wtdataset.getNodesOfType(pgo.Node, N3.DataFactory.defaultGraph());
-                let edges = wtdataset.getNodesOfType(pgo.Edge, N3.DataFactory.defaultGraph());
-                let propertyValue = wtdataset.getNodesOfType(prec.PropertyKeyValue, N3.DataFactory.defaultGraph());
+
+                let nodes = getNodesOfType(wtdataset, pgo.Node, N3.DataFactory.defaultGraph());
+                let edges = getNodesOfType(wtdataset, pgo.Edge, N3.DataFactory.defaultGraph());
+                let propertyValue = getNodesOfType(wtdataset, prec.PropertyKeyValue, N3.DataFactory.defaultGraph());
                 wtdataset.free();
                 return [...nodes, ...edges, ...propertyValue];
             }(quads);

@@ -12,7 +12,7 @@ export function trigToArrayOfQuads(trig: string) {
   return parser.parse(trig);
 }
 
-export function outputTheStore(store: Store, prefixes: Prefixes<NamedNode | string>) {
+export function outputTheStore(store: Store, prefixes?: Prefixes<NamedNode | string>) {
   const writer = new Writer({ prefixes: prefixes });
   store.forEach(
     quad => writer.addQuad(quad.subject, quad.predicate, quad.object, quad.graph),

@@ -2,6 +2,7 @@ const N3 = require('n3');
 
 require('./rdf/graph-substitution.test');
 require('./rdf/quad-star.test');
+require('./rdf/path-travelling.test');
 
 require("./dataset/DatasetCore.test.js")({
     quad: N3.DataFactory.quad,

@@ -21,7 +21,7 @@
     },
     "homepage": "https://github.com/BruJu/PREC#readme",
     "dependencies": {
-        "@bruju/wasm-tree": "^0.2.1",
+        "@bruju/wasm-tree": "^0.3.0",
         "@graphy/content.ttl.write": "^4.3.3",
         "@graphy/core.data.factory": "^4.3.3",
         "@graphy/memory.dataset.fast": "^4.3.3",
@@ -35,6 +35,8 @@
     },
     "devDependencies": {
         "@rdfjs/types": "^1.0.1",
+        "@types/argparse": "^2.0.10",
+        "@types/gremlin": "^3.4.6",
         "@types/mocha": "^9.0.0",
         "@types/n3": "^1.10.3",
         "@types/rdfjs__namespace": "^1.1.5",

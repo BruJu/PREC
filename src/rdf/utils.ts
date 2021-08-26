@@ -106,7 +106,7 @@ export function badToString(quads: Quad[], indent: number = 0): string {
  * @returns True if the term is in the list of tems
  */
 export function termIsIn(term: Term, listOfTerms: Term[]) {
-    return listOfTerms.find(t => t.equals(term));
+  return listOfTerms.find(t => t.equals(term)) !== undefined;
 }
 
 /**
