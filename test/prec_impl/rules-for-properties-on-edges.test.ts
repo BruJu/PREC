@@ -1,7 +1,7 @@
+import { PrecCApplicationTester } from "./test-function";
 
-module.exports = function (test) {
+module.exports = function (test: PrecCApplicationTester) {
   describe("Edge property convertion", function () {
-
 
     describe("Corner cases", function () {
       test('Property is mapped to rdf:subject',

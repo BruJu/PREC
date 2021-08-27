@@ -1,4 +1,4 @@
-const { PropertyGraph } = require('../mock-pg/pg-implem.js');
+import { PropertyGraph } from '../mock-pg/pg-implem';
 
 const PREFIX_NODE_LABEL = 'PREFIX nl: <http://www.example.org/vocab/node/label/> \n';
 const PREFIX_NODE_PROP  = 'PREFIX np: <http://www.example.org/vocab/node/property/> \n';
@@ -7,8 +7,8 @@ const PREFIX_EDGE_PROP  = 'PREFIX ep: <http://www.example.org/vocab/edge/propert
 const PREFIXES = PREFIX_NODE_LABEL + PREFIX_NODE_PROP + PREFIX_EDGE_LABEL + PREFIX_EDGE_PROP;
 
 
-module.exports = function (test_) {
-  const test = (name, pg, rdf) => test_(name, pg, '', rdf);
+module.exports = (test_: (name: string, pg: PropertyGraph, _: string, rdf: string) => void) => {
+  const test = (name: string, pg: PropertyGraph, rdf: string) => test_(name, pg, '', rdf);
 
   describe('PREC-0', () => {
     test("EmptyGraph", new PropertyGraph(), '');

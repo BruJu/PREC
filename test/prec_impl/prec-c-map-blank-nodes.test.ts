@@ -1,9 +1,8 @@
+import assert from 'assert';
+import * as utility from "../utility";
+import PREC_C from "../../src/prec/graph-reducer";
 
-const assert = require('assert');
-const utility = require("../utility.js");
-const { default: PREC_C } = require("../../src/prec/graph-reducer");
-
-module.exports = function () {
+module.exports = () => {
   describe("Blank node mapping", () => {
     it("should map nodes", () => {
       let store = utility.turtleToDStar("_:toto a pgo:Node .");

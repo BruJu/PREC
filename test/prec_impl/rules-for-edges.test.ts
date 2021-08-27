@@ -1,6 +1,7 @@
+import { PrecCApplicationTester } from "./test-function";
 
-module.exports = function (test) {
-  describe("Edge convertion", function () {
+module.exports = (test: PrecCApplicationTester) => {
+  describe("Edge convertion", () => {
     const basicGraphs = {
       oneEdge: `
           :edge  a pgo:Edge ; rdf:subject :s  ; rdf:predicate :p  ; rdf:object :o  .
@@ -64,7 +65,7 @@ module.exports = function (test) {
       `,
     }
 
-    describe('Lack of context', function () {
+    describe('Lack of context', () => {
       const graphs = [
         'oneEdge',
         'twoEdges',
@@ -77,6 +78,7 @@ module.exports = function (test) {
       ];
 
       for (const graph of graphs) {
+        // @ts-ignore
         test('Idempotency on basicGraphs.' + graph, basicGraphs[graph], '', basicGraphs[graph]);
       }
     });

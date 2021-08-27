@@ -1,4 +1,4 @@
-const utility = require("./utility.js");
+const utility = require("./utility");
 const graphBuilder = require('../src/prec/graph-builder')
 const { default: graphReducer } = require("../src/prec/graph-reducer");
 const assert = require('assert');
@@ -86,7 +86,7 @@ function test(name, source, context, expected) {
 /**
  * 
  * @param {string} name 
- * @param {import('./mock-pg/pg-implem.js').PropertyGraph} source 
+ * @param {import('./mock-pg/pg-implem').PropertyGraph} source 
  * @param {*} context 
  * @param {*} expected 
  */
@@ -117,14 +117,14 @@ function testFromMockPG(name, source, context, expected) {
     });
 }
 
-require('./prec_impl/prec-0.test.js')(testFromMockPG);
+require('./prec_impl/prec-0.test')(testFromMockPG);
 
 describe('Context Applier', function () {
   require('./prec_impl/prec-c-template-deducing.test')();
-  require('./prec_impl/rules-for-edges.test.js')(test);
-  require('./prec_impl/rules-for-properties-on-nodes.test.js')(test);
-  require('./prec_impl/rules-for-properties-on-edges.test.js')(test);
-  require('./prec_impl/prec-c-map-blank-nodes.test.js')();
+  require('./prec_impl/rules-for-edges.test')(test);
+  require('./prec_impl/rules-for-properties-on-nodes.test')(test);
+  require('./prec_impl/rules-for-properties-on-edges.test')(test);
+  require('./prec_impl/prec-c-map-blank-nodes.test')();
 });
 
 describe("Property convertion", function() {

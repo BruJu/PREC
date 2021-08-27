@@ -1,5 +1,6 @@
+import { PrecCApplicationTester } from "./test-function";
 
-module.exports = function (test) {
+module.exports = function (test: PrecCApplicationTester) {
   describe("Node property convertion", function () {
     const graphs = {
       oneNodeWithProperty: `

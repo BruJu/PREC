@@ -10,3 +10,5 @@ require("./dataset/DatasetCore.test.js")({
     blankNode: N3.DataFactory.blankNode,
     dataset: t => new (require('../src/dataset/index').default)(t)
 });
+
+require("./dataset/DStar.test");
