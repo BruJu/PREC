@@ -68,14 +68,14 @@ export function bindVariables(bindings: Bindings, quad: QuadOrArrayOfQuad): Quad
 
 
 /**
- * An RDF.JS implementation that stores separately the standard RDF quads and
+ * An RDF/JS implementation that stores separately the standard RDF quads and
  * the RDF-star quads.
  * 
  * This implementation also provides methods to replace the quads that matches
  * a certain pattern with quads that match another pattern
  * (see `findFilterReplace`).
  */
-export default class Dataset implements DatasetCore {
+export default class DStar implements DatasetCore {
   store: N3.Store;
   starQuads: Quad[];
 
@@ -149,7 +149,7 @@ export default class Dataset implements DatasetCore {
    * filter
    */
   match(subject?: Term | null, predicate?: Term | null, object?: Term | null, graph?: Term | null) {
-    return new Dataset(this.getQuads(subject, predicate, object, graph));
+    return new DStar(this.getQuads(subject, predicate, object, graph));
   }
 
   /** Iterates over all the quads of this dataset */

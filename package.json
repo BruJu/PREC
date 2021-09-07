@@ -4,7 +4,8 @@
     "description": "A Property Graph to RDF converter",
     "main": "prec.js",
     "scripts": {
-        "test": "npx mocha -r ts-node/register test/*.ts test/*.js"
+        "test": "npx mocha -r ts-node/register test/*.ts test/*.js",
+        "gremlin-to-rdf": "npx ts-node gremlin-to-rdf.ts"
     },
     "repository": {
         "type": "git",

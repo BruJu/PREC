@@ -1,14 +1,8 @@
-'use strict';
+"use strict";
 
 const gremlin = require("gremlin");
-const { ArgumentParser } = require('argparse');
-
 const traversal = gremlin.process.AnonymousTraversalSource.traversal;
 const DriverRemoteConnection = gremlin.driver.DriverRemoteConnection;
-const RDFGraphBuilder = require("./src/prec/graph-builder");
-const { default: graphReducer } = require("./src/prec/graph-reducer");
-const { filenameToArrayOfQuads, outputTheStore } = require('./src/rdf/parsing');
-
 const { EnumValue } = gremlin.process;
 
 
@@ -187,8 +181,12 @@ function readEdge(edge) {
     return neoEdge;
 }
 
-
-async function extract_from_gremlin(connection) {
+/**
+ * 
+ * @param {DriverRemoteConnection} connection 
+ * @returns 
+ */
+async function extractFromGremlin(connection) {
     const g = traversal().withRemote(connection);
 
     let nodes = [];
@@ -217,56 +215,7 @@ async function extract_from_gremlin(connection) {
         edges.push(neoEdge);
     }
 
-    await connection.close();
-
     return { nodes, edges };
 }
 
-
-async function gremlinToJson(uri) {
-    let connection = new DriverRemoteConnection(uri);
-    return extract_from_gremlin(connection);
-}
-
-async function main() {
-    const parser = new ArgumentParser({
-        description: 'Property Graph -> RDF Experimental Parser: From a Gremlin interface'
-    });
-
-    parser.add_argument(
-        "uri",
-        {
-            help: "IRI to connect to",
-            default: "ws://localhost:8182/gremlin",
-            nargs: "?"
-        }
-    );
-    
-    parser.add_argument("-c", "--context", {
-        help: "Context file in turtle format",
-        default: "", nargs: "?"
-    });
-
-    let args = parser.parse_args();
-
-    let result = await gremlinToJson(args.uri);
-    if (result === null) return;
-
-    let [store, prefixes] = RDFGraphBuilder.fromTinkerPop(result.nodes, result.edges);
-
-    if (args.context !== "") {
-        graphReducer(store, filenameToArrayOfQuads(args.context));
-    }
-
-    outputTheStore(store, prefixes);
-}
-
-
-if (require.main === module) {
-    main();
-}
-
-
-module.exports = {
-    gremlinToJson: gremlinToJson
-};
+module.exports = extractFromGremlin;
