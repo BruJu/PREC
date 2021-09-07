@@ -3,14 +3,20 @@ const fs = require('fs');
 const N3 = require('n3');
 
 const namespace = require('@rdfjs/namespace');
-const prec = require('../prec.js')
+const prec = require('../prec.ts')
 const { isSubstituableGraph } = require('../src/rdf/graph-substitution');
 const assert = require('assert');
+const { filenameToArrayOfQuads } = require('../src/rdf/parsing');
 
 const rdf = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 
 const precNS = namespace("http://bruy.at/prec#", N3.DataFactory);
 
+function loadQuads(path) {
+    const fileContent = fs.readFileSync(path);
+    const quads = filenameToArrayOfQuads(fileContent);
+    return quads;
+}
 
 describe("prec", function() {
     for (const file of fs.readdirSync(testFolder)) {
@@ -41,7 +47,8 @@ describe("prec", function() {
                         "The only PG supported model is currently NEO4J APOC Json export"
                     );
 
-                    const result = prec.precOnNeo4J(testFolder + pgPath.value, testFolder + contextPath.value);
+                    const contextQuads = loadQuads(testFolder + contextPath.value);
+                    const result = prec.precOnNeo4J(testFolder + pgPath.value, contextQuads);
 
                     const r = isSubstituableGraph(result.getQuads(), expected.getQuads());
                     assert.ok(r);

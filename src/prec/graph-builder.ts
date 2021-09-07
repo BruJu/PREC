@@ -25,7 +25,9 @@ const prec = namespace("http://bruy.at/prec#"                       , { factory:
  * @param {*} neo4jJavascriptArray The list of Json objects exported from
  * Neo4J APOC plugin.
  */
-export function neo4jJsToStore(neo4jJavascriptArray: APOCDocument[]) {
+export function neo4jJsToStore(
+  neo4jJavascriptArray: APOCDocument[]
+): [DStar, {[prefix: string]: string}] {
   let builder = new BuilderForCypherProperties("http://www.example.org/vocab/");
 
   for (const object of neo4jJavascriptArray) {
@@ -42,7 +44,9 @@ export function neo4jJsToStore(neo4jJavascriptArray: APOCDocument[]) {
   return [builder.toStore(), builder.getPrefixes()];
 }
 
-export function neo4JCypherToStore(neo4JCypherResult: CypherEntry[]) {
+export function neo4JCypherToStore(
+  neo4JCypherResult: CypherEntry[]
+): [DStar, {[prefix: string]: string}] {
   let nodes: IdentityTo<CypherNode> = {};
   let edges: IdentityTo<CypherEdge> = {};
   
