@@ -68,7 +68,7 @@ export function neo4JCypherToStore(neo4JCypherResult: CypherEntry[]) {
 export function neo4JProtocoleToStore(
   nodes: IdentityTo<CypherNode>,
   edges: IdentityTo<CypherEdge>
-) {
+): [DStar, {[prefix: string]: string}] {
   let builder = new BuilderForCypherProperties("http://www.example.org/vocab/");
   builder.populate(nodes, edges);
   return [builder.toStore(), builder.getPrefixes()];
@@ -77,7 +77,7 @@ export function neo4JProtocoleToStore(
 export function fromTinkerPop(
   nodes: IdentityTo<TinkerPopNode>,
   edges: IdentityTo<TinkerPopEdge>
-) {
+): [DStar, {[prefix: string]: string}] {
   let builder = new BuilderForTPProperties("http://www.example.org/vocab/");
   builder.populate(nodes, edges);
   return [builder.toStore(), builder.getPrefixes()];
