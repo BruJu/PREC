@@ -76,29 +76,6 @@ function readNodeBasicValues(node) {
     return neoNode;
 }
 
-function mapMapToStruct(values, builder) {
-    let object = {};
-
-    for (let value of values) {
-        const [key, val] = value;
-
-        let found = false;
-        for (const buildable of builder) {
-            if (buildable[0](key)) {
-                found = true;
-                buildable[1](key, val, object);
-            }
-        }
-
-        if (!found) {
-            return null;
-        }
-    }
-
-    return object;
-}
-
-
 function readPropertyValue(value) {
     if (_isString(value) || typeof(value) == 'number') {
         return value;
@@ -144,54 +121,6 @@ function writeNodeProperties(node, nodeProperties) {
             }
         )
     }
-}
-
-/**
- * Converts a node extracted from a traversal to a node with a format similar
- * to Neo4J cypher query.
- * 
- * Vanilla function to build the node from just a node. Nodes are considered 
- * @param {*} node The traversal node
- * @returns A Neo4j Cypher answer like node
- */
-function convertNodeToNeo4jJsonFormat(node) {
-    let neoNode = {
-        identity: undefined,
-        labels: [],
-        properties: {},
-    };
-
-    for (let prop of node) {
-        let [propKey, propValue] = prop;
-
-        if (propKey instanceof EnumValue) {
-            // Special Field
-            if (propKey.typeName !== "T")
-                throw "Unknown typename for propKey " + propKey;
-            if (propKey.elementName === "id") {
-                neoNode.identity = propValue;
-            } else if (propKey.elementName === "label") {
-                if (_isString(propValue)) {
-                    neoNode.labels = [propValue];
-                } else {
-                    throw "Unknown type for label " + propValue;
-                }
-            } else {
-                throw "Unknown element name for propKey " + propKey;
-            }
-        } else if (_isString(propKey)) {
-            // Regular property
-            if (_isString(propValue) || typeof propValue === "number") {
-                neoNode.properties[propKey] = propValue;
-            } else {
-                throw "Unknown element value for property " + prop;
-            }
-        } else {
-            throw "Unknown property key type " + propKey;
-        }
-    }
-
-    return neoNode;
 }
 
 /**
@@ -259,11 +188,7 @@ function readEdge(edge) {
 }
 
 
-async function extract_from_gremlin(uri) {
-    // const authenticator = new gremlin.driver.auth.PlainTextSaslAuthenticator('myuser', 'mypassword');
-    // const g = traversal().withRemote(new DriverRemoteConnection('uri', { authenticator });
-
-    let connection = new DriverRemoteConnection(uri);
+async function extract_from_gremlin(connection) {
     const g = traversal().withRemote(connection);
 
     let nodes = [];
@@ -299,7 +224,8 @@ async function extract_from_gremlin(uri) {
 
 
 async function gremlinToJson(uri) {
-    return extract_from_gremlin(uri);
+    let connection = new DriverRemoteConnection(uri);
+    return extract_from_gremlin(connection);
 }
 
 async function main() {
@@ -325,8 +251,6 @@ async function main() {
 
     let result = await gremlinToJson(args.uri);
     if (result === null) return;
-
-    //console.log(JSON.stringify(result, null, 2));
 
     let [store, prefixes] = RDFGraphBuilder.fromTinkerPop(result.nodes, result.edges);
 
