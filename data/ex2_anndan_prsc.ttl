@@ -1,0 +1,21 @@
+PREFIX prec: <http://bruy.at/prec#>
+PREFIX pvar: <http://bruy.at/prec-trans#>
+PREFIX ex:   <http://example.org/>
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+# PRSC = Presque = Almost
+
+prec:this_is a prec:prscContext .
+
+ex:PersonForm a prec:prsc_node ;
+  prec:nodeLabel "Person" ;
+  prec:propertyName "name" ;
+  prec:composedOf
+    << pvar:node ex:hasLabel ex:person >> ,
+    << pvar:node ex:name [ prec:prsc_valueOf "name" ] >> .
+
+ex:LovesForm a prec:prsc_edge ;
+  prec:edgeLabel "Likes" ;
+  prec:prscSource      ex:PersonForm ;
+  prec:prscDestination ex:PersonForm ;
+  prec:composedOf << pvar:source ex:loves pvar:destination >> .
