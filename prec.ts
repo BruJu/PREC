@@ -9,6 +9,9 @@ export {
   gremlinToPREC0Graph,
   gremlinToRDF,
   cypherToRDF,
+  prec0ToCypherQuery,
+  prec0ToCypher,
+  prec0ToGremlin
 } from './src/cli_';
 
 if (require.main === module) {

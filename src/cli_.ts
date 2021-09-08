@@ -25,7 +25,7 @@ import {
 
 import { extractFromNeo4jProtocole } from './prec-0/from-cypher';
 import { getNodesOfType } from './rdf/path-travelling';
-import PseudoPGBuilder, { insertIntoGremlin, makeCypherQuery } from './prec-0-1/proto-pg';
+import PseudoPGBuilder, { insertIntoGremlin, makeCypherQuery, PseudoPGEdge, PseudoPGNode } from './prec-0-1/proto-pg';
 import DStar from './dataset';
 import graphReducer from './prec/graph-reducer';
 import { filenameToArrayOfQuads, outputTheStore } from './rdf/parsing';
@@ -141,7 +141,7 @@ export async function main() {
         .finally(async () => {
           await session.close();
           await driver.close();
-        });  
+        });
       }
     });
 
@@ -365,7 +365,7 @@ function revertRdfGraphToPseudoPg(rdfPath: string) {
   const parser = new N3.Parser();
   let quads = parser.parse(fs.readFileSync(rdfPath, "utf8"));
   const dataset = new WasmTree.Dataset(quads);
-  const result = PseudoPGBuilder.from(dataset)
+  const result = PseudoPGBuilder.from(dataset);
   if ('error' in result) {
     console.error(result.error);
     return false;
@@ -378,3 +378,40 @@ function revertRdfGraphToPseudoPg(rdfPath: string) {
   }
 }
 
+export function prec0ToCypherQuery(quads: Quad[]): string {
+  const r = prec0ToCommon(quads);
+  return makeCypherQuery(r);
+}
+
+export function prec0ToCypher(quads: Quad[], connection: Driver) {
+  const r = prec0ToCommon(quads);
+  const query = makeCypherQuery(r);
+  const session = connection.session();
+  return session.run(query)
+  .finally(async () => {
+    await session.close();
+  });
+}
+
+export function prec0ToGremlin(quads: Quad[], connection: DriverRemoteConnection) {
+  const pseudoPG = prec0ToCommon(quads);
+  return insertIntoGremlin(connection, pseudoPG);
+}
+
+function prec0ToCommon(quads: Quad[]): {
+  nodes: PseudoPGNode[];
+  edges: PseudoPGEdge[];
+} {
+  const wt = new WasmTree.Dataset(quads);
+  const result = PseudoPGBuilder.from(wt);
+  wt.free();
+  if ('error' in result) {
+    throw Error(result.error);
+  } else if (result["Remaining Quads"].size !== 0) {
+    result["Remaining Quads"].free();
+    throw Error("All quads were not consumed");
+  } else {
+    result["Remaining Quads"].free();
+    return result.PropertyGraph;
+  }
+}
