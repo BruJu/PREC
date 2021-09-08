@@ -1,5 +1,0 @@
-PREFIX prec: <http://bruy.at/prec#>
-
-<https://schema.org/givenName> prec:IRIOfProperty "surname" .
-<https://schema.org/familyName> prec:IRIOfProperty "name" .
-

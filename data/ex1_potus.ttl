@@ -1,0 +1,32 @@
+PREFIX prec: <http://bruy.at/prec#>
+PREFIX pgo:  <http://ii.uwb.edu.pl/pgo#>
+
+# Property Graph state
+
+prec:Properties prec:templatedBy prec:DirectTriples .
+prec:KeepProvenance prec:flagState false .
+
+
+# Unconditional property IRI
+
+<https://schema.org/givenName> prec:IRIOfProperty "givenName" .
+
+
+# Property IRI different depending on the node label
+[] a prec:PropertyRule ;
+  prec:propertyIRI <https://schema.org/familyName> ;
+  prec:propertyName "name" ;
+  prec:nodeLabel    "PERSON"
+.
+
+[] a prec:PropertyRule ;
+  prec:propertyIRI <http://example.org/countryName> ;
+  prec:propertyName "name" ;
+  prec:nodeLabel    "COUNTRY"
+.
+
+
+# Node labels
+
+<http://dbpedia.org/ontology/Person>  prec:IRIOfNodeLabel "PERSON"  .
+<http://dbpedia.org/ontology/Country> prec:IRIOfNodeLabel "COUNTRY" .

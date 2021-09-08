@@ -2,9 +2,15 @@
     "name": "prec",
     "version": "0.0.1",
     "description": "A Property Graph to RDF converter",
-    "main": "prec.js",
+    "main": "build/prec.js",
+    "types": "build/prec.d.ts",
+    "bin": "./build/prec.js",
     "scripts": {
-        "test": "mocha"
+        "test": "npx mocha -r ts-node/register test/*.ts test/*.js",
+        "prec": "npx ts-node prec.ts",
+        "prepack": "npm run build",
+        "prepublish": "npm run build",
+        "build": "npx tsc --build && npx copyfiles src/builtin_rules.ttl build"
     },
     "repository": {
         "type": "git",
@@ -14,27 +20,39 @@
         "property graph",
         "rdf"
     ],
-    "author": "Julian Bruyat <bruyat.ju@live.fr>",
+    "author": "Julian Bruyat <julian.bruyat@insa-lyon.fr>",
     "license": "MIT",
     "bugs": {
         "url": "https://github.com/BruJu/PREC/issues"
     },
     "homepage": "https://github.com/BruJu/PREC#readme",
     "dependencies": {
-        "@bruju/wasm-tree": "^0.2.1",
+        "@bruju/wasm-tree": "^0.3.0",
         "@graphy/content.ttl.write": "^4.3.3",
         "@graphy/core.data.factory": "^4.3.3",
         "@graphy/memory.dataset.fast": "^4.3.3",
         "@ontologies/core": "^2.0.2",
         "@rdfjs/namespace": "^1.1.0",
-        "argparse": "^2.0.1",
+        "@rdfjs/types": "^1.0.1",
+        "@types/gremlin": "^3.4.6",
+        "commander": "^8.1.0",
         "gremlin": "^3.4.10",
         "n3": "^1.9.0",
-        "neo4j-driver": "^4.2.3",
+        "neo4j-driver": "^4.3.3",
         "rdf-isomorphic": "^1.2.0"
     },
     "devDependencies": {
-        "@rdfjs/types": "^1.0.1",
-        "mocha": "^8.3.2"
-    }
+        "@types/mocha": "^9.0.0",
+        "@types/n3": "^1.10.3",
+        "@types/rdfjs__namespace": "^1.1.5",
+        "copyfiles": "^2.4.1",
+        "mocha": "^8.3.2",
+        "ts-node": "^10.2.1",
+        "typescript": "^4.3.5"
+    },
+    "files": [
+        "build/prec.js",
+        "build/prec.d.ts",
+        "build/src/**"
+    ]
 }

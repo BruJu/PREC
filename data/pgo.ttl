@@ -9,8 +9,7 @@ PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 # graphConv: https://github.com/domel/graphConv
 
 # Usage:
-# node prec.js data/movies_cypher_all.json path/to/this/pgoContext.ttl -f Neo4JCypher
-# Tested on commit 2da9f5dd4a16ec5bac69905569d032ae5266ccc4
+# ts-node prec.ts cypherJson2rdf data/movies_cypher_all.json path/to/this/pgoContext.ttl
 
 # Differences with the graphs produced by graphConv in our experiment:
 # - Numeric values (year for example) are xsd:integer with PREC, xsd:string with

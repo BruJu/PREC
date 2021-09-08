@@ -1,24 +1,21 @@
 digraph G {
-    
-    {
-        rank=same;
-        rank=min;
-        Neo4j, TinkerPop
-    }
+  { rank=same; Neo4j, TinkerPop }
   
-  TinkerPop ->"Json Representation of\nthe Property Graph" [ label="Gremlin", arrowhead="curve" ] 
+  "JSONREP" [label="Json Representation of\nthe Property Graph", fontsize = 10]
+  "RDFREP" [label="Structural description\nof the PG in RDF", fontsize = 10]
   
-  Neo4j -> "Json Representation of\nthe Property Graph" [label="APOC.export.\njson.all"] ;
-  Neo4j -> "Json Representation of\nthe Property Graph" [label="Cypher", arrowhead="curve"] ;
+  TinkerPop -> "RDFREP" [ label="Gremlin", arrowhead="curve" ] 
+  Neo4j -> "JSONREP" [label="APOC.export.\njson.all"] ;
+  Neo4j -> "JSONREP" [label="Cypher"] ;
+  Neo4j -> "RDFREP" [label="Cypher", arrowhead="curve"] ;
   
   
-  "Json Representation of\nthe Property Graph" [fontsize = 10]
-  
-  "Json Representation of\nthe Property Graph" -> "Expanded RDF Graph" [label="PREC-0", arrowhead="curve"] ;
+
+  "JSONREP" -> "RDFREP" [label="PREC-0", arrowhead="curve"] ;
   
   "Context" -> "blanknode" [dir=none];
-  "Expanded RDF Graph" -> "blanknode" [dir=none];
-  "blanknode" -> "Usable RDF Graph" [label="PREC-Context"] ;
+  "RDFREP" -> "blanknode" [dir=none];
+  "blanknode" -> "Idiomatic\nRDF Graph" [label="PREC-C"] ;
   
   
   "blanknode" [shape=diamond,style=filled,label="",height=.0,width=.0] ;

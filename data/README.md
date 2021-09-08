@@ -2,9 +2,11 @@
 
 They are all exported from Neo4J using the APOC plugin
 
-
-- `annlikesdan.json`: A PG with 3 times the same edge
-- `julian.json`: A PG with a very loose semantic on `name`.
+- `ex1_potus.json`: A PG with two nodes.
+- `ex2_annlikesdan1.json`: A PG with two nodes and one edge.
+- `ex2_annlikesdan3.json`: A PG with 3 times the same edge.
+    - The Ann and Dan example is the one used by Jesus Barrasa in one of his
+    presentations.
 
 
 ## Movies

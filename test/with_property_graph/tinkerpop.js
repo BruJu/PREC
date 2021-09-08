@@ -1,4 +1,8 @@
 const assert = require('assert');
+const gremlin = require('gremlin');
+const DriverRemoteConnection = gremlin.driver.DriverRemoteConnection;
+const fs = require('fs');
+const fromGremlin = require('../../src/prec-0/from-gremlin');
 
 /*
  * ==== TINKERPOP TEST ====
@@ -23,15 +27,15 @@ const assert = require('assert');
 
 // TODO: split the file into several or see how to pass args
 
-const fs = require('fs');
-const gremlinToRdf = require('../../gremlin-to-rdf.js');
 const TINKERPOP_URL = "ws://localhost:8182/gremlin";
 
 describe("Tinkerpop connection (one of the test should pass, see comments in file)", async function() {
     let r;
 
     before(async function() {
-        r = await gremlinToRdf.gremlinToJson(TINKERPOP_URL);
+        let connection = new DriverRemoteConnection(TINKERPOP_URL);
+        r = await fromGremlin(connection);
+        await connection.close();
     });
 
     /*
