@@ -2,9 +2,9 @@
 @prefix prec: <http://bruy.at/prec#> .
 
 # Input
-prec:testMetaData prec:pgPath "../../data/annlikesdan1.json" ;
+prec:testMetaData prec:pgPath "../../data/ex2_annlikesdan1.json" ;
                   prec:pgSource <https://neo4j.com/developer/neo4j-apoc/> ;
-                  prec:contextPath "../../data/anndan.ttl" .
+                  prec:contextPath "../../data/ex2_anndan.ttl" .
 
 # Expected output
 _:ann a <http://dbpedia.org/ontology/Person> ;

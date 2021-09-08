@@ -3,10 +3,10 @@
     "version": "0.0.1",
     "description": "A Property Graph to RDF converter",
     "main": "prec.js",
+    "types": "prec.d.ts",
     "scripts": {
       "test": "npx mocha -r ts-node/register test/*.ts test/*.js",
-      "gremlin-to-rdf": "npx ts-node gremlin-to-rdf.ts",
-      "cypher-to-rdf": "npx ts-node index.ts cypher2rdf"
+      "prec": "npx ts-node prec.ts"
     },
     "repository": {
         "type": "git",

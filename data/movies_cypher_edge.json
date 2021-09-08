@@ -1,1902 +1,1604 @@
 ﻿[
   {
     "edge": {
-"identity": 7,
-"start": 8,
-"end": 0,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Emil"
-        ]
+      "identity": 7,
+      "start": 8,
+      "end": 0,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Emil"]
       }
     }
   },
   {
     "edge": {
-"identity": 6,
-"start": 7,
-"end": 0,
-"type": "PRODUCED",
-"properties": {
-
-      }
+      "identity": 6,
+      "start": 7,
+      "end": 0,
+      "type": "PRODUCED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 5,
-"start": 6,
-"end": 0,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 5,
+      "start": 6,
+      "end": 0,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 4,
-"start": 5,
-"end": 0,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 4,
+      "start": 5,
+      "end": 0,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 3,
-"start": 4,
-"end": 0,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Agent Smith"
-        ]
+      "identity": 3,
+      "start": 4,
+      "end": 0,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Agent Smith"]
       }
     }
   },
   {
     "edge": {
-"identity": 2,
-"start": 3,
-"end": 0,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Morpheus"
-        ]
+      "identity": 2,
+      "start": 3,
+      "end": 0,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Morpheus"]
       }
     }
   },
   {
     "edge": {
-"identity": 1,
-"start": 2,
-"end": 0,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Trinity"
-        ]
+      "identity": 1,
+      "start": 2,
+      "end": 0,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Trinity"]
       }
     }
   },
   {
     "edge": {
-"identity": 0,
-"start": 1,
-"end": 0,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Neo"
-        ]
+      "identity": 0,
+      "start": 1,
+      "end": 0,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Neo"]
       }
     }
   },
   {
     "edge": {
-"identity": 14,
-"start": 7,
-"end": 9,
-"type": "PRODUCED",
-"properties": {
-
-      }
+      "identity": 14,
+      "start": 7,
+      "end": 9,
+      "type": "PRODUCED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 13,
-"start": 6,
-"end": 9,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 13,
+      "start": 6,
+      "end": 9,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 12,
-"start": 5,
-"end": 9,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 12,
+      "start": 5,
+      "end": 9,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 11,
-"start": 4,
-"end": 9,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Agent Smith"
-        ]
+      "identity": 11,
+      "start": 4,
+      "end": 9,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Agent Smith"]
       }
     }
   },
   {
     "edge": {
-"identity": 10,
-"start": 3,
-"end": 9,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Morpheus"
-        ]
+      "identity": 10,
+      "start": 3,
+      "end": 9,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Morpheus"]
       }
     }
   },
   {
     "edge": {
-"identity": 9,
-"start": 2,
-"end": 9,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Trinity"
-        ]
+      "identity": 9,
+      "start": 2,
+      "end": 9,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Trinity"]
       }
     }
   },
   {
     "edge": {
-"identity": 8,
-"start": 1,
-"end": 9,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Neo"
-        ]
+      "identity": 8,
+      "start": 1,
+      "end": 9,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Neo"]
       }
     }
   },
   {
     "edge": {
-"identity": 21,
-"start": 7,
-"end": 10,
-"type": "PRODUCED",
-"properties": {
-
-      }
+      "identity": 21,
+      "start": 7,
+      "end": 10,
+      "type": "PRODUCED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 20,
-"start": 6,
-"end": 10,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 20,
+      "start": 6,
+      "end": 10,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 19,
-"start": 5,
-"end": 10,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 19,
+      "start": 5,
+      "end": 10,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 18,
-"start": 4,
-"end": 10,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Agent Smith"
-        ]
+      "identity": 18,
+      "start": 4,
+      "end": 10,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Agent Smith"]
       }
     }
   },
   {
     "edge": {
-"identity": 17,
-"start": 3,
-"end": 10,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Morpheus"
-        ]
+      "identity": 17,
+      "start": 3,
+      "end": 10,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Morpheus"]
       }
     }
   },
   {
     "edge": {
-"identity": 16,
-"start": 2,
-"end": 10,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Trinity"
-        ]
+      "identity": 16,
+      "start": 2,
+      "end": 10,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Trinity"]
       }
     }
   },
   {
     "edge": {
-"identity": 15,
-"start": 1,
-"end": 10,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Neo"
-        ]
+      "identity": 15,
+      "start": 1,
+      "end": 10,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Neo"]
       }
     }
   },
   {
     "edge": {
-"identity": 25,
-"start": 14,
-"end": 11,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 25,
+      "start": 14,
+      "end": 11,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 24,
-"start": 13,
-"end": 11,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "John Milton"
-        ]
+      "identity": 24,
+      "start": 13,
+      "end": 11,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["John Milton"]
       }
     }
   },
   {
     "edge": {
-"identity": 23,
-"start": 12,
-"end": 11,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Mary Ann Lomax"
-        ]
+      "identity": 23,
+      "start": 12,
+      "end": 11,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Mary Ann Lomax"]
       }
     }
   },
   {
     "edge": {
-"identity": 22,
-"start": 1,
-"end": 11,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Kevin Lomax"
-        ]
+      "identity": 22,
+      "start": 1,
+      "end": 11,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Kevin Lomax"]
       }
     }
   },
   {
     "edge": {
-"identity": 35,
-"start": 25,
-"end": 15,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Pfc. Louden Downey"
-        ]
+      "identity": 35,
+      "start": 25,
+      "end": 15,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Pfc. Louden Downey"]
       }
     }
   },
   {
     "edge": {
-"identity": 33,
-"start": 23,
-"end": 15,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Lt. Sam Weinberg"
-        ]
+      "identity": 33,
+      "start": 23,
+      "end": 15,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Lt. Sam Weinberg"]
       }
     }
   },
   {
     "edge": {
-"identity": 34,
-"start": 24,
-"end": 15,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Lt. Col. Matthew Andrew Markinson"
-        ]
+      "identity": 34,
+      "start": 24,
+      "end": 15,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Lt. Col. Matthew Andrew Markinson"]
       }
     }
   },
   {
     "edge": {
-"identity": 37,
-"start": 28,
-"end": 15,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Man in Bar"
-        ]
+      "identity": 37,
+      "start": 28,
+      "end": 15,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Man in Bar"]
       }
     }
   },
   {
     "edge": {
-"identity": 32,
-"start": 22,
-"end": 15,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Cpl. Carl Hammaker"
-        ]
+      "identity": 32,
+      "start": 22,
+      "end": 15,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Cpl. Carl Hammaker"]
       }
     }
   },
   {
     "edge": {
-"identity": 36,
-"start": 26,
-"end": 15,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Dr. Stone"
-        ]
+      "identity": 36,
+      "start": 26,
+      "end": 15,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Dr. Stone"]
       }
     }
   },
   {
     "edge": {
-"identity": 39,
-"start": 28,
-"end": 15,
-"type": "WROTE",
-"properties": {
-
-      }
+      "identity": 39,
+      "start": 28,
+      "end": 15,
+      "type": "WROTE",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 38,
-"start": 27,
-"end": 15,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 38,
+      "start": 27,
+      "end": 15,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 31,
-"start": 21,
-"end": 15,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Cpl. Jeffrey Barnes"
-        ]
+      "identity": 31,
+      "start": 21,
+      "end": 15,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Cpl. Jeffrey Barnes"]
       }
     }
   },
   {
     "edge": {
-"identity": 30,
-"start": 20,
-"end": 15,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Lt. Jonathan Kendrick"
-        ]
+      "identity": 30,
+      "start": 20,
+      "end": 15,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Lt. Jonathan Kendrick"]
       }
     }
   },
   {
     "edge": {
-"identity": 29,
-"start": 19,
-"end": 15,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Capt. Jack Ross"
-        ]
+      "identity": 29,
+      "start": 19,
+      "end": 15,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Capt. Jack Ross"]
       }
     }
   },
   {
     "edge": {
-"identity": 28,
-"start": 18,
-"end": 15,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Lt. Cdr. JoAnne Galloway"
-        ]
+      "identity": 28,
+      "start": 18,
+      "end": 15,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Lt. Cdr. JoAnne Galloway"]
       }
     }
   },
   {
     "edge": {
-"identity": 27,
-"start": 17,
-"end": 15,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Col. Nathan R. Jessup"
-        ]
+      "identity": 27,
+      "start": 17,
+      "end": 15,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Col. Nathan R. Jessup"]
       }
     }
   },
   {
     "edge": {
-"identity": 26,
-"start": 16,
-"end": 15,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Lt. Daniel Kaffee"
-        ]
+      "identity": 26,
+      "start": 16,
+      "end": 15,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Lt. Daniel Kaffee"]
       }
     }
   },
   {
     "edge": {
-"identity": 47,
-"start": 36,
-"end": 29,
-"type": "WROTE",
-"properties": {
-
-      }
+      "identity": 47,
+      "start": 36,
+      "end": 29,
+      "type": "WROTE",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 42,
-"start": 31,
-"end": 29,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Iceman"
-        ]
+      "identity": 42,
+      "start": 31,
+      "end": 29,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Iceman"]
       }
     }
   },
   {
     "edge": {
-"identity": 46,
-"start": 35,
-"end": 29,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 46,
+      "start": 35,
+      "end": 29,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 45,
-"start": 34,
-"end": 29,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Carole"
-        ]
+      "identity": 45,
+      "start": 34,
+      "end": 29,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Carole"]
       }
     }
   },
   {
     "edge": {
-"identity": 44,
-"start": 33,
-"end": 29,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Viper"
-        ]
+      "identity": 44,
+      "start": 33,
+      "end": 29,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Viper"]
       }
     }
   },
   {
     "edge": {
-"identity": 41,
-"start": 30,
-"end": 29,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Charlie"
-        ]
+      "identity": 41,
+      "start": 30,
+      "end": 29,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Charlie"]
       }
     }
   },
   {
     "edge": {
-"identity": 40,
-"start": 16,
-"end": 29,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Maverick"
-        ]
+      "identity": 40,
+      "start": 16,
+      "end": 29,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Maverick"]
       }
     }
   },
   {
     "edge": {
-"identity": 43,
-"start": 32,
-"end": 29,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Goose"
-        ]
+      "identity": 43,
+      "start": 32,
+      "end": 29,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Goose"]
       }
     }
   },
   {
     "edge": {
-"identity": 52,
-"start": 40,
-"end": 37,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Frank Cushman"
-        ]
+      "identity": 52,
+      "start": 40,
+      "end": 37,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Frank Cushman"]
       }
     }
   },
   {
     "edge": {
-"identity": 58,
-"start": 45,
-"end": 37,
-"type": "PRODUCED",
-"properties": {
-
-      }
+      "identity": 58,
+      "start": 45,
+      "end": 37,
+      "type": "PRODUCED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 54,
-"start": 42,
-"end": 37,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Laurel Boyd"
-        ]
+      "identity": 54,
+      "start": 42,
+      "end": 37,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Laurel Boyd"]
       }
     }
   },
   {
     "edge": {
-"identity": 57,
-"start": 45,
-"end": 37,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 57,
+      "start": 45,
+      "end": 37,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 53,
-"start": 41,
-"end": 37,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Bob Sugar"
-        ]
+      "identity": 53,
+      "start": 41,
+      "end": 37,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Bob Sugar"]
       }
     }
   },
   {
     "edge": {
-"identity": 59,
-"start": 45,
-"end": 37,
-"type": "WROTE",
-"properties": {
-
-      }
+      "identity": 59,
+      "start": 45,
+      "end": 37,
+      "type": "WROTE",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 49,
-"start": 22,
-"end": 37,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Rod Tidwell"
-        ]
+      "identity": 49,
+      "start": 22,
+      "end": 37,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Rod Tidwell"]
       }
     }
   },
   {
     "edge": {
-"identity": 252,
-"start": 169,
-"end": 37,
-"type": "REVIEWED",
-"properties": {
-"summary": "You had me at Jerry",
-"rating": 92
+      "identity": 252,
+      "start": 169,
+      "end": 37,
+      "type": "REVIEWED",
+      "properties": {
+        "summary": "You had me at Jerry",
+        "rating": 92
       }
     }
   },
   {
     "edge": {
-"identity": 56,
-"start": 44,
-"end": 37,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Ray Boyd"
-        ]
+      "identity": 56,
+      "start": 44,
+      "end": 37,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Ray Boyd"]
       }
     }
   },
   {
     "edge": {
-"identity": 50,
-"start": 38,
-"end": 37,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Dorothy Boyd"
-        ]
+      "identity": 50,
+      "start": 38,
+      "end": 37,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Dorothy Boyd"]
       }
     }
   },
   {
     "edge": {
-"identity": 51,
-"start": 39,
-"end": 37,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Avery Bishop"
-        ]
+      "identity": 51,
+      "start": 39,
+      "end": 37,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Avery Bishop"]
       }
     }
   },
   {
     "edge": {
-"identity": 55,
-"start": 43,
-"end": 37,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Marcee Tidwell"
-        ]
+      "identity": 55,
+      "start": 43,
+      "end": 37,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Marcee Tidwell"]
       }
     }
   },
   {
     "edge": {
-"identity": 48,
-"start": 16,
-"end": 37,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Jerry Maguire"
-        ]
+      "identity": 48,
+      "start": 16,
+      "end": 37,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Jerry Maguire"]
       }
     }
   },
   {
     "edge": {
-"identity": 62,
-"start": 40,
-"end": 46,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Vern Tessio"
-        ]
+      "identity": 62,
+      "start": 40,
+      "end": 46,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Vern Tessio"]
       }
     }
   },
   {
     "edge": {
-"identity": 67,
-"start": 27,
-"end": 46,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 67,
+      "start": 27,
+      "end": 46,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 61,
-"start": 47,
-"end": 46,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Chris Chambers"
-        ]
+      "identity": 61,
+      "start": 47,
+      "end": 46,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Chris Chambers"]
       }
     }
   },
   {
     "edge": {
-"identity": 66,
-"start": 51,
-"end": 46,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Mr. Lachance"
-        ]
+      "identity": 66,
+      "start": 51,
+      "end": 46,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Mr. Lachance"]
       }
     }
   },
   {
     "edge": {
-"identity": 60,
-"start": 49,
-"end": 46,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Gordie Lachance"
-        ]
+      "identity": 60,
+      "start": 49,
+      "end": 46,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Gordie Lachance"]
       }
     }
   },
   {
     "edge": {
-"identity": 65,
-"start": 20,
-"end": 46,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Ace Merrill"
-        ]
+      "identity": 65,
+      "start": 20,
+      "end": 46,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Ace Merrill"]
       }
     }
   },
   {
     "edge": {
-"identity": 64,
-"start": 50,
-"end": 46,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Denny Lachance"
-        ]
+      "identity": 64,
+      "start": 50,
+      "end": 46,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Denny Lachance"]
       }
     }
   },
   {
     "edge": {
-"identity": 63,
-"start": 48,
-"end": 46,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Teddy Duchamp"
-        ]
+      "identity": 63,
+      "start": 48,
+      "end": 46,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Teddy Duchamp"]
       }
     }
   },
   {
     "edge": {
-"identity": 69,
-"start": 53,
-"end": 52,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Carol Connelly"
-        ]
+      "identity": 69,
+      "start": 53,
+      "end": 52,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Carol Connelly"]
       }
     }
   },
   {
     "edge": {
-"identity": 68,
-"start": 17,
-"end": 52,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Melvin Udall"
-        ]
+      "identity": 68,
+      "start": 17,
+      "end": 52,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Melvin Udall"]
       }
     }
   },
   {
     "edge": {
-"identity": 71,
-"start": 22,
-"end": 52,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Frank Sachs"
-        ]
+      "identity": 71,
+      "start": 22,
+      "end": 52,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Frank Sachs"]
       }
     }
   },
   {
     "edge": {
-"identity": 70,
-"start": 54,
-"end": 52,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Simon Bishop"
-        ]
+      "identity": 70,
+      "start": 54,
+      "end": 52,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Simon Bishop"]
       }
     }
   },
   {
     "edge": {
-"identity": 72,
-"start": 55,
-"end": 52,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 72,
+      "start": 55,
+      "end": 52,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 78,
-"start": 61,
-"end": 56,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 78,
+      "start": 61,
+      "end": 56,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 73,
-"start": 60,
-"end": 56,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Chris Nielsen"
-        ]
+      "identity": 73,
+      "start": 60,
+      "end": 56,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Chris Nielsen"]
       }
     }
   },
   {
     "edge": {
-"identity": 74,
-"start": 22,
-"end": 56,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Albert Lewis"
-        ]
+      "identity": 74,
+      "start": 22,
+      "end": 56,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Albert Lewis"]
       }
     }
   },
   {
     "edge": {
-"identity": 76,
-"start": 58,
-"end": 56,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "The Tracker"
-        ]
+      "identity": 76,
+      "start": 58,
+      "end": 56,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["The Tracker"]
       }
     }
   },
   {
     "edge": {
-"identity": 77,
-"start": 59,
-"end": 56,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "The Face"
-        ]
+      "identity": 77,
+      "start": 59,
+      "end": 56,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["The Face"]
       }
     }
   },
   {
     "edge": {
-"identity": 75,
-"start": 57,
-"end": 56,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Annie Collins-Nielsen"
-        ]
+      "identity": 75,
+      "start": 57,
+      "end": 56,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Annie Collins-Nielsen"]
       }
     }
   },
   {
     "edge": {
-"identity": 79,
-"start": 63,
-"end": 62,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Ishmael Chambers"
-        ]
+      "identity": 79,
+      "start": 63,
+      "end": 62,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Ishmael Chambers"]
       }
     }
   },
   {
     "edge": {
-"identity": 83,
-"start": 66,
-"end": 62,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 83,
+      "start": 66,
+      "end": 62,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 80,
-"start": 64,
-"end": 62,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Kazuo Miyamoto"
-        ]
+      "identity": 80,
+      "start": 64,
+      "end": 62,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Kazuo Miyamoto"]
       }
     }
   },
   {
     "edge": {
-"identity": 81,
-"start": 58,
-"end": 62,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Nels Gudmundsson"
-        ]
+      "identity": 81,
+      "start": 58,
+      "end": 62,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Nels Gudmundsson"]
       }
     }
   },
   {
     "edge": {
-"identity": 82,
-"start": 65,
-"end": 62,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Judge Fielding"
-        ]
+      "identity": 82,
+      "start": 65,
+      "end": 62,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Judge Fielding"]
       }
     }
   },
   {
     "edge": {
-"identity": 84,
-"start": 71,
-"end": 67,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Joe Fox"
-        ]
+      "identity": 84,
+      "start": 71,
+      "end": 67,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Joe Fox"]
       }
     }
   },
   {
     "edge": {
-"identity": 90,
-"start": 72,
-"end": 67,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 90,
+      "start": 72,
+      "end": 67,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 87,
-"start": 68,
-"end": 67,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Patricia Eden"
-        ]
+      "identity": 87,
+      "start": 68,
+      "end": 67,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Patricia Eden"]
       }
     }
   },
   {
     "edge": {
-"identity": 86,
-"start": 54,
-"end": 67,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Frank Navasky"
-        ]
+      "identity": 86,
+      "start": 54,
+      "end": 67,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Frank Navasky"]
       }
     }
   },
   {
     "edge": {
-"identity": 85,
-"start": 34,
-"end": 67,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Kathleen Kelly"
-        ]
+      "identity": 85,
+      "start": 34,
+      "end": 67,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Kathleen Kelly"]
       }
     }
   },
   {
     "edge": {
-"identity": 89,
-"start": 70,
-"end": 67,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "George Pappas"
-        ]
+      "identity": 89,
+      "start": 70,
+      "end": 67,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["George Pappas"]
       }
     }
   },
   {
     "edge": {
-"identity": 88,
-"start": 69,
-"end": 67,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Kevin Jackson"
-        ]
+      "identity": 88,
+      "start": 69,
+      "end": 67,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Kevin Jackson"]
       }
     }
   },
   {
     "edge": {
-"identity": 97,
-"start": 72,
-"end": 73,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 97,
+      "start": 72,
+      "end": 73,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 92,
-"start": 34,
-"end": 73,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Annie Reed"
-        ]
+      "identity": 92,
+      "start": 34,
+      "end": 73,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Annie Reed"]
       }
     }
   },
   {
     "edge": {
-"identity": 95,
-"start": 76,
-"end": 73,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Greg"
-        ]
+      "identity": 95,
+      "start": 76,
+      "end": 73,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Greg"]
       }
     }
   },
   {
     "edge": {
-"identity": 91,
-"start": 71,
-"end": 73,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Sam Baldwin"
-        ]
+      "identity": 91,
+      "start": 71,
+      "end": 73,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Sam Baldwin"]
       }
     }
   },
   {
     "edge": {
-"identity": 94,
-"start": 75,
-"end": 73,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Walter"
-        ]
+      "identity": 94,
+      "start": 75,
+      "end": 73,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Walter"]
       }
     }
   },
   {
     "edge": {
-"identity": 93,
-"start": 74,
-"end": 73,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Suzy"
-        ]
+      "identity": 93,
+      "start": 74,
+      "end": 73,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Suzy"]
       }
     }
   },
   {
     "edge": {
-"identity": 96,
-"start": 77,
-"end": 73,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Becky"
-        ]
+      "identity": 96,
+      "start": 77,
+      "end": 73,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Becky"]
       }
     }
   },
   {
     "edge": {
-"identity": 101,
-"start": 79,
-"end": 78,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 101,
+      "start": 79,
+      "end": 78,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 98,
-"start": 71,
-"end": 78,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Joe Banks"
-        ]
+      "identity": 98,
+      "start": 71,
+      "end": 78,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Joe Banks"]
       }
     }
   },
   {
     "edge": {
-"identity": 100,
-"start": 80,
-"end": 78,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Baw"
-        ]
+      "identity": 100,
+      "start": 80,
+      "end": 78,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Baw"]
       }
     }
   },
   {
     "edge": {
-"identity": 99,
-"start": 34,
-"end": 78,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "DeDe",
-          "Angelica Graynamore",
-          "Patricia Graynamore"
-        ]
+      "identity": 99,
+      "start": 34,
+      "end": 78,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["DeDe", "Angelica Graynamore", "Patricia Graynamore"]
       }
     }
   },
   {
     "edge": {
-"identity": 104,
-"start": 83,
-"end": 81,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Marie"
-        ]
+      "identity": 104,
+      "start": 83,
+      "end": 81,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Marie"]
       }
     }
   },
   {
     "edge": {
-"identity": 108,
-"start": 72,
-"end": 81,
-"type": "PRODUCED",
-"properties": {
-
-      }
+      "identity": 108,
+      "start": 72,
+      "end": 81,
+      "type": "PRODUCED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 102,
-"start": 82,
-"end": 81,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Harry Burns"
-        ]
+      "identity": 102,
+      "start": 82,
+      "end": 81,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Harry Burns"]
       }
     }
   },
   {
     "edge": {
-"identity": 105,
-"start": 84,
-"end": 81,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Jess"
-        ]
+      "identity": 105,
+      "start": 84,
+      "end": 81,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Jess"]
       }
     }
   },
   {
     "edge": {
-"identity": 103,
-"start": 34,
-"end": 81,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Sally Albright"
-        ]
+      "identity": 103,
+      "start": 34,
+      "end": 81,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Sally Albright"]
       }
     }
   },
   {
     "edge": {
-"identity": 106,
-"start": 27,
-"end": 81,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 106,
+      "start": 27,
+      "end": 81,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 109,
-"start": 72,
-"end": 81,
-"type": "WROTE",
-"properties": {
-
-      }
+      "identity": 109,
+      "start": 72,
+      "end": 81,
+      "type": "WROTE",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 107,
-"start": 27,
-"end": 81,
-"type": "PRODUCED",
-"properties": {
-
-      }
+      "identity": 107,
+      "start": 27,
+      "end": 81,
+      "type": "PRODUCED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 110,
-"start": 71,
-"end": 85,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Mr. White"
-        ]
+      "identity": 110,
+      "start": 71,
+      "end": 85,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Mr. White"]
       }
     }
   },
   {
     "edge": {
-"identity": 111,
-"start": 86,
-"end": 85,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Faye Dolan"
-        ]
+      "identity": 111,
+      "start": 86,
+      "end": 85,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Faye Dolan"]
       }
     }
   },
   {
     "edge": {
-"identity": 112,
-"start": 12,
-"end": 85,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Tina"
-        ]
+      "identity": 112,
+      "start": 12,
+      "end": 85,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Tina"]
       }
     }
   },
   {
     "edge": {
-"identity": 113,
-"start": 71,
-"end": 85,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 113,
+      "start": 71,
+      "end": 85,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 115,
-"start": 88,
-"end": 87,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Annabelle Farrell"
-        ]
+      "identity": 115,
+      "start": 88,
+      "end": 87,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Annabelle Farrell"]
       }
     }
   },
   {
     "edge": {
-"identity": 246,
-"start": 170,
-"end": 87,
-"type": "REVIEWED",
-"properties": {
-"summary": "The coolest football movie ever",
-"rating": 100
+      "identity": 246,
+      "start": 170,
+      "end": 87,
+      "type": "REVIEWED",
+      "properties": {
+        "summary": "The coolest football movie ever",
+        "rating": 100
       }
     }
   },
   {
     "edge": {
-"identity": 247,
-"start": 168,
-"end": 87,
-"type": "REVIEWED",
-"properties": {
-"summary": "Pretty funny at times",
-"rating": 62
+      "identity": 247,
+      "start": 168,
+      "end": 87,
+      "type": "REVIEWED",
+      "properties": {
+        "summary": "Pretty funny at times",
+        "rating": 62
       }
     }
   },
   {
     "edge": {
-"identity": 245,
-"start": 169,
-"end": 87,
-"type": "REVIEWED",
-"properties": {
-"summary": "Silly, but fun",
-"rating": 65
+      "identity": 245,
+      "start": 169,
+      "end": 87,
+      "type": "REVIEWED",
+      "properties": {
+        "summary": "Silly, but fun",
+        "rating": 65
       }
     }
   },
   {
     "edge": {
-"identity": 114,
-"start": 1,
-"end": 87,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Shane Falco"
-        ]
+      "identity": 114,
+      "start": 1,
+      "end": 87,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Shane Falco"]
       }
     }
   },
   {
     "edge": {
-"identity": 118,
-"start": 91,
-"end": 87,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 118,
+      "start": 91,
+      "end": 87,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 117,
-"start": 90,
-"end": 87,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Clifford Franklin"
-        ]
+      "identity": 117,
+      "start": 90,
+      "end": 87,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Clifford Franklin"]
       }
     }
   },
   {
     "edge": {
-"identity": 116,
-"start": 89,
-"end": 87,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Jimmy McGinty"
-        ]
+      "identity": 116,
+      "start": 89,
+      "end": 87,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Jimmy McGinty"]
       }
     }
   },
   {
     "edge": {
-"identity": 121,
-"start": 94,
-"end": 92,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Squad Leader"
-        ]
+      "identity": 121,
+      "start": 94,
+      "end": 92,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Squad Leader"]
       }
     }
   },
   {
     "edge": {
-"identity": 122,
-"start": 70,
-"end": 92,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Duane"
-        ]
+      "identity": 122,
+      "start": 70,
+      "end": 92,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Duane"]
       }
     }
   },
   {
     "edge": {
-"identity": 123,
-"start": 59,
-"end": 92,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 123,
+      "start": 59,
+      "end": 92,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 120,
-"start": 93,
-"end": 92,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Dieter Dengler"
-        ]
+      "identity": 120,
+      "start": 93,
+      "end": 92,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Dieter Dengler"]
       }
     }
   },
   {
     "edge": {
-"identity": 119,
-"start": 51,
-"end": 92,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Admiral"
-        ]
+      "identity": 119,
+      "start": 51,
+      "end": 92,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Admiral"]
       }
     }
   },
   {
     "edge": {
-"identity": 124,
-"start": 60,
-"end": 95,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Armand Goldman"
-        ]
+      "identity": 124,
+      "start": 60,
+      "end": 95,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Armand Goldman"]
       }
     }
   },
   {
     "edge": {
-"identity": 127,
-"start": 96,
-"end": 95,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 127,
+      "start": 96,
+      "end": 95,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 125,
-"start": 80,
-"end": 95,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Albert Goldman"
-        ]
+      "identity": 125,
+      "start": 80,
+      "end": 95,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Albert Goldman"]
       }
     }
   },
   {
     "edge": {
-"identity": 126,
-"start": 89,
-"end": 95,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Sen. Kevin Keeley"
-        ]
+      "identity": 126,
+      "start": 89,
+      "end": 95,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Sen. Kevin Keeley"]
       }
     }
   },
   {
     "edge": {
-"identity": 249,
-"start": 169,
-"end": 95,
-"type": "REVIEWED",
-"properties": {
-"summary": "Slapstick redeemed only by the Robin Williams and Gene Hackman's stellar performances",
-"rating": 45
+      "identity": 249,
+      "start": 169,
+      "end": 95,
+      "type": "REVIEWED",
+      "properties": {
+        "summary": "Slapstick redeemed only by the Robin Williams and Gene Hackman's stellar performances",
+        "rating": 45
       }
     }
   },
   {
     "edge": {
-"identity": 129,
-"start": 99,
-"end": 97,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Bill Munny"
-        ]
+      "identity": 129,
+      "start": 99,
+      "end": 97,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Bill Munny"]
       }
     }
   },
   {
     "edge": {
-"identity": 130,
-"start": 89,
-"end": 97,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Little Bill Daggett"
-        ]
+      "identity": 130,
+      "start": 89,
+      "end": 97,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Little Bill Daggett"]
       }
     }
   },
   {
     "edge": {
-"identity": 131,
-"start": 99,
-"end": 97,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 131,
+      "start": 99,
+      "end": 97,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 128,
-"start": 98,
-"end": 97,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "English Bob"
-        ]
+      "identity": 128,
+      "start": 98,
+      "end": 97,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["English Bob"]
       }
     }
   },
   {
     "edge": {
-"identity": 248,
-"start": 169,
-"end": 97,
-"type": "REVIEWED",
-"properties": {
-"summary": "Dark, but compelling",
-"rating": 85
+      "identity": 248,
+      "start": 169,
+      "end": 97,
+      "type": "REVIEWED",
+      "properties": {
+        "summary": "Dark, but compelling",
+        "rating": 85
       }
     }
   },
   {
     "edge": {
-"identity": 135,
-"start": 103,
-"end": 100,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "J-Bone"
-        ]
+      "identity": 135,
+      "start": 103,
+      "end": 100,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["J-Bone"]
       }
     }
   },
   {
     "edge": {
-"identity": 134,
-"start": 102,
-"end": 100,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Jane"
-        ]
+      "identity": 134,
+      "start": 102,
+      "end": 100,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Jane"]
       }
     }
   },
   {
     "edge": {
-"identity": 132,
-"start": 1,
-"end": 100,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Johnny Mnemonic"
-        ]
+      "identity": 132,
+      "start": 1,
+      "end": 100,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Johnny Mnemonic"]
       }
     }
   },
   {
     "edge": {
-"identity": 133,
-"start": 101,
-"end": 100,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Takahashi"
-        ]
+      "identity": 133,
+      "start": 101,
+      "end": 100,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Takahashi"]
       }
     }
   },
   {
     "edge": {
-"identity": 136,
-"start": 104,
-"end": 100,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 136,
+      "start": 104,
+      "end": 100,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 137,
-"start": 71,
-"end": 105,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Zachry",
-          "Dr. Henry Goose",
-          "Isaac Sachs",
-          "Dermot Hoggins"
-        ]
+      "identity": 137,
+      "start": 71,
+      "end": 105,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Zachry", "Dr. Henry Goose", "Isaac Sachs", "Dermot Hoggins"]
       }
     }
   },
   {
     "edge": {
-"identity": 140,
-"start": 107,
-"end": 105,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Vyvyan Ayrs",
-          "Captain Molyneux",
-          "Timothy Cavendish"
-        ]
+      "identity": 140,
+      "start": 107,
+      "end": 105,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Vyvyan Ayrs", "Captain Molyneux", "Timothy Cavendish"]
       }
     }
   },
   {
     "edge": {
-"identity": 144,
-"start": 109,
-"end": 105,
-"type": "WROTE",
-"properties": {
-
-      }
+      "identity": 144,
+      "start": 109,
+      "end": 105,
+      "type": "WROTE",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 141,
-"start": 108,
-"end": 105,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 141,
+      "start": 108,
+      "end": 105,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 143,
-"start": 6,
-"end": 105,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 143,
+      "start": 6,
+      "end": 105,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 145,
-"start": 110,
-"end": 105,
-"type": "PRODUCED",
-"properties": {
-
-      }
+      "identity": 145,
+      "start": 110,
+      "end": 105,
+      "type": "PRODUCED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 244,
-"start": 169,
-"end": 105,
-"type": "REVIEWED",
-"properties": {
-"summary": "An amazing journey",
-"rating": 95
+      "identity": 244,
+      "start": 169,
+      "end": 105,
+      "type": "REVIEWED",
+      "properties": {
+        "summary": "An amazing journey",
+        "rating": 95
       }
     }
   },
   {
     "edge": {
-"identity": 139,
-"start": 106,
-"end": 105,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Luisa Rey",
-          "Jocasta Ayrs",
-          "Ovid",
-          "Meronym"
-        ]
+      "identity": 139,
+      "start": 106,
+      "end": 105,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Luisa Rey", "Jocasta Ayrs", "Ovid", "Meronym"]
       }
     }
   },
   {
     "edge": {
-"identity": 138,
-"start": 4,
-"end": 105,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
+      "identity": 138,
+      "start": 4,
+      "end": 105,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": [
           "Bill Smoke",
           "Haskell Moore",
           "Tadeusz Kesselring",
@@ -1909,1109 +1611,935 @@
   },
   {
     "edge": {
-"identity": 142,
-"start": 5,
-"end": 105,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 142,
+      "start": 5,
+      "end": 105,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 146,
-"start": 71,
-"end": 111,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Dr. Robert Langdon"
-        ]
+      "identity": 146,
+      "start": 71,
+      "end": 111,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Dr. Robert Langdon"]
       }
     }
   },
   {
     "edge": {
-"identity": 250,
-"start": 169,
-"end": 111,
-"type": "REVIEWED",
-"properties": {
-"summary": "A solid romp",
-"rating": 68
+      "identity": 250,
+      "start": 169,
+      "end": 111,
+      "type": "REVIEWED",
+      "properties": {
+        "summary": "A solid romp",
+        "rating": 68
       }
     }
   },
   {
     "edge": {
-"identity": 251,
-"start": 170,
-"end": 111,
-"type": "REVIEWED",
-"properties": {
-"summary": "Fun, but a little far fetched",
-"rating": 65
+      "identity": 251,
+      "start": 170,
+      "end": 111,
+      "type": "REVIEWED",
+      "properties": {
+        "summary": "Fun, but a little far fetched",
+        "rating": 65
       }
     }
   },
   {
     "edge": {
-"identity": 150,
-"start": 115,
-"end": 111,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 150,
+      "start": 115,
+      "end": 111,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 147,
-"start": 112,
-"end": 111,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Sir Leight Teabing"
-        ]
+      "identity": 147,
+      "start": 112,
+      "end": 111,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Sir Leight Teabing"]
       }
     }
   },
   {
     "edge": {
-"identity": 148,
-"start": 113,
-"end": 111,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Sophie Neveu"
-        ]
+      "identity": 148,
+      "start": 113,
+      "end": 111,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Sophie Neveu"]
       }
     }
   },
   {
     "edge": {
-"identity": 149,
-"start": 114,
-"end": 111,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Silas"
-        ]
+      "identity": 149,
+      "start": 114,
+      "end": 111,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Silas"]
       }
     }
   },
   {
     "edge": {
-"identity": 158,
-"start": 6,
-"end": 116,
-"type": "PRODUCED",
-"properties": {
-
-      }
+      "identity": 158,
+      "start": 6,
+      "end": 116,
+      "type": "PRODUCED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 157,
-"start": 5,
-"end": 116,
-"type": "PRODUCED",
-"properties": {
-
-      }
+      "identity": 157,
+      "start": 5,
+      "end": 116,
+      "type": "PRODUCED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 161,
-"start": 6,
-"end": 116,
-"type": "WROTE",
-"properties": {
-
-      }
+      "identity": 161,
+      "start": 6,
+      "end": 116,
+      "type": "WROTE",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 154,
-"start": 119,
-"end": 116,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "High Chancellor Adam Sutler"
-        ]
+      "identity": 154,
+      "start": 119,
+      "end": 116,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["High Chancellor Adam Sutler"]
       }
     }
   },
   {
     "edge": {
-"identity": 159,
-"start": 7,
-"end": 116,
-"type": "PRODUCED",
-"properties": {
-
-      }
+      "identity": 159,
+      "start": 7,
+      "end": 116,
+      "type": "PRODUCED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 153,
-"start": 118,
-"end": 116,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Eric Finch"
-        ]
+      "identity": 153,
+      "start": 118,
+      "end": 116,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Eric Finch"]
       }
     }
   },
   {
     "edge": {
-"identity": 160,
-"start": 5,
-"end": 116,
-"type": "WROTE",
-"properties": {
-
-      }
+      "identity": 160,
+      "start": 5,
+      "end": 116,
+      "type": "WROTE",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 152,
-"start": 117,
-"end": 116,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Evey Hammond"
-        ]
+      "identity": 152,
+      "start": 117,
+      "end": 116,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Evey Hammond"]
       }
     }
   },
   {
     "edge": {
-"identity": 151,
-"start": 4,
-"end": 116,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "V"
-        ]
+      "identity": 151,
+      "start": 4,
+      "end": 116,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["V"]
       }
     }
   },
   {
     "edge": {
-"identity": 156,
-"start": 25,
-"end": 116,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 156,
+      "start": 25,
+      "end": 116,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 155,
-"start": 120,
-"end": 116,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Dascomb"
-        ]
+      "identity": 155,
+      "start": 120,
+      "end": 116,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Dascomb"]
       }
     }
   },
   {
     "edge": {
-"identity": 170,
-"start": 6,
-"end": 121,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 170,
+      "start": 6,
+      "end": 121,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 162,
-"start": 122,
-"end": 121,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Speed Racer"
-        ]
+      "identity": 162,
+      "start": 122,
+      "end": 121,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Speed Racer"]
       }
     }
   },
   {
     "edge": {
-"identity": 169,
-"start": 5,
-"end": 121,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 169,
+      "start": 5,
+      "end": 121,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 173,
-"start": 7,
-"end": 121,
-"type": "PRODUCED",
-"properties": {
-
-      }
+      "identity": 173,
+      "start": 7,
+      "end": 121,
+      "type": "PRODUCED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 167,
-"start": 127,
-"end": 121,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Taejo Togokahn"
-        ]
+      "identity": 167,
+      "start": 127,
+      "end": 121,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Taejo Togokahn"]
       }
     }
   },
   {
     "edge": {
-"identity": 166,
-"start": 126,
-"end": 121,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Trixie"
-        ]
+      "identity": 166,
+      "start": 126,
+      "end": 121,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Trixie"]
       }
     }
   },
   {
     "edge": {
-"identity": 168,
-"start": 120,
-"end": 121,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Cass Jones"
-        ]
+      "identity": 168,
+      "start": 120,
+      "end": 121,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Cass Jones"]
       }
     }
   },
   {
     "edge": {
-"identity": 172,
-"start": 6,
-"end": 121,
-"type": "WROTE",
-"properties": {
-
-      }
+      "identity": 172,
+      "start": 6,
+      "end": 121,
+      "type": "WROTE",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 164,
-"start": 124,
-"end": 121,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Mom"
-        ]
+      "identity": 164,
+      "start": 124,
+      "end": 121,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Mom"]
       }
     }
   },
   {
     "edge": {
-"identity": 163,
-"start": 123,
-"end": 121,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Pops"
-        ]
+      "identity": 163,
+      "start": 123,
+      "end": 121,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Pops"]
       }
     }
   },
   {
     "edge": {
-"identity": 171,
-"start": 5,
-"end": 121,
-"type": "WROTE",
-"properties": {
-
-      }
+      "identity": 171,
+      "start": 5,
+      "end": 121,
+      "type": "WROTE",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 165,
-"start": 125,
-"end": 121,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Racer X"
-        ]
+      "identity": 165,
+      "start": 125,
+      "end": 121,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Racer X"]
       }
     }
   },
   {
     "edge": {
-"identity": 178,
-"start": 25,
-"end": 128,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 178,
+      "start": 25,
+      "end": 128,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 174,
-"start": 127,
-"end": 128,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Raizo"
-        ]
+      "identity": 174,
+      "start": 127,
+      "end": 128,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Raizo"]
       }
     }
   },
   {
     "edge": {
-"identity": 177,
-"start": 120,
-"end": 128,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Ryan Maslow"
-        ]
+      "identity": 177,
+      "start": 120,
+      "end": 128,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Ryan Maslow"]
       }
     }
   },
   {
     "edge": {
-"identity": 176,
-"start": 64,
-"end": 128,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Takeshi"
-        ]
+      "identity": 176,
+      "start": 64,
+      "end": 128,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Takeshi"]
       }
     }
   },
   {
     "edge": {
-"identity": 180,
-"start": 6,
-"end": 128,
-"type": "PRODUCED",
-"properties": {
-
-      }
+      "identity": 180,
+      "start": 6,
+      "end": 128,
+      "type": "PRODUCED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 181,
-"start": 7,
-"end": 128,
-"type": "PRODUCED",
-"properties": {
-
-      }
+      "identity": 181,
+      "start": 7,
+      "end": 128,
+      "type": "PRODUCED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 175,
-"start": 129,
-"end": 128,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Mika Coretti"
-        ]
+      "identity": 175,
+      "start": 129,
+      "end": 128,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Mika Coretti"]
       }
     }
   },
   {
     "edge": {
-"identity": 179,
-"start": 5,
-"end": 128,
-"type": "PRODUCED",
-"properties": {
-
-      }
+      "identity": 179,
+      "start": 5,
+      "end": 128,
+      "type": "PRODUCED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 187,
-"start": 133,
-"end": 130,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "\"Wild Bill\" Wharton"
-        ]
+      "identity": 187,
+      "start": 133,
+      "end": 130,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["\"Wild Bill\" Wharton"]
       }
     }
   },
   {
     "edge": {
-"identity": 185,
-"start": 42,
-"end": 130,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Jan Edgecomb"
-        ]
+      "identity": 185,
+      "start": 42,
+      "end": 130,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Jan Edgecomb"]
       }
     }
   },
   {
     "edge": {
-"identity": 189,
-"start": 135,
-"end": 130,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Melinda Moores"
-        ]
+      "identity": 189,
+      "start": 135,
+      "end": 130,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Melinda Moores"]
       }
     }
   },
   {
     "edge": {
-"identity": 186,
-"start": 65,
-"end": 130,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Warden Hal Moores"
-        ]
+      "identity": 186,
+      "start": 65,
+      "end": 130,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Warden Hal Moores"]
       }
     }
   },
   {
     "edge": {
-"identity": 190,
-"start": 136,
-"end": 130,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 190,
+      "start": 136,
+      "end": 130,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 182,
-"start": 71,
-"end": 130,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Paul Edgecomb"
-        ]
+      "identity": 182,
+      "start": 71,
+      "end": 130,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Paul Edgecomb"]
       }
     }
   },
   {
     "edge": {
-"identity": 183,
-"start": 131,
-"end": 130,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "John Coffey"
-        ]
+      "identity": 183,
+      "start": 131,
+      "end": 130,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["John Coffey"]
       }
     }
   },
   {
     "edge": {
-"identity": 184,
-"start": 132,
-"end": 130,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Brutus \"Brutal\" Howell"
-        ]
+      "identity": 184,
+      "start": 132,
+      "end": 130,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Brutus \"Brutal\" Howell"]
       }
     }
   },
   {
     "edge": {
-"identity": 188,
-"start": 134,
-"end": 130,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Burt Hammersmith"
-        ]
+      "identity": 188,
+      "start": 134,
+      "end": 130,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Burt Hammersmith"]
       }
     }
   },
   {
     "edge": {
-"identity": 195,
-"start": 133,
-"end": 137,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "James Reston, Jr."
-        ]
+      "identity": 195,
+      "start": 133,
+      "end": 137,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["James Reston, Jr."]
       }
     }
   },
   {
     "edge": {
-"identity": 192,
-"start": 139,
-"end": 137,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "David Frost"
-        ]
+      "identity": 192,
+      "start": 139,
+      "end": 137,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["David Frost"]
       }
     }
   },
   {
     "edge": {
-"identity": 196,
-"start": 115,
-"end": 137,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 196,
+      "start": 115,
+      "end": 137,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 191,
-"start": 138,
-"end": 137,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Richard Nixon"
-        ]
+      "identity": 191,
+      "start": 138,
+      "end": 137,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Richard Nixon"]
       }
     }
   },
   {
     "edge": {
-"identity": 194,
-"start": 140,
-"end": 137,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Bob Zelnick"
-        ]
+      "identity": 194,
+      "start": 140,
+      "end": 137,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Bob Zelnick"]
       }
     }
   },
   {
     "edge": {
-"identity": 193,
-"start": 19,
-"end": 137,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Jack Brennan"
-        ]
+      "identity": 193,
+      "start": 19,
+      "end": 137,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Jack Brennan"]
       }
     }
   },
   {
     "edge": {
-"identity": 200,
-"start": 143,
-"end": 141,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Peter \"Pete\" Connelly"
-        ]
+      "identity": 200,
+      "start": 143,
+      "end": 141,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Peter \"Pete\" Connelly"]
       }
     }
   },
   {
     "edge": {
-"identity": 201,
-"start": 142,
-"end": 141,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 201,
+      "start": 142,
+      "end": 141,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 198,
-"start": 142,
-"end": 141,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Robert \"Bobby\" Ciaro"
-        ]
+      "identity": 198,
+      "start": 142,
+      "end": 141,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Robert \"Bobby\" Ciaro"]
       }
     }
   },
   {
     "edge": {
-"identity": 199,
-"start": 24,
-"end": 141,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Frank Fitzsimmons"
-        ]
+      "identity": 199,
+      "start": 24,
+      "end": 141,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Frank Fitzsimmons"]
       }
     }
   },
   {
     "edge": {
-"identity": 197,
-"start": 17,
-"end": 141,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Hoffa"
-        ]
+      "identity": 197,
+      "start": 17,
+      "end": 141,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Hoffa"]
       }
     }
   },
   {
     "edge": {
-"identity": 202,
-"start": 71,
-"end": 144,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Jim Lovell"
-        ]
+      "identity": 202,
+      "start": 71,
+      "end": 144,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Jim Lovell"]
       }
     }
   },
   {
     "edge": {
-"identity": 207,
-"start": 115,
-"end": 144,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 207,
+      "start": 115,
+      "end": 144,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 204,
-"start": 145,
-"end": 144,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Gene Kranz"
-        ]
+      "identity": 204,
+      "start": 145,
+      "end": 144,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Gene Kranz"]
       }
     }
   },
   {
     "edge": {
-"identity": 206,
-"start": 134,
-"end": 144,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Ken Mattingly"
-        ]
+      "identity": 206,
+      "start": 134,
+      "end": 144,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Ken Mattingly"]
       }
     }
   },
   {
     "edge": {
-"identity": 203,
-"start": 19,
-"end": 144,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Jack Swigert"
-        ]
+      "identity": 203,
+      "start": 19,
+      "end": 144,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Jack Swigert"]
       }
     }
   },
   {
     "edge": {
-"identity": 205,
-"start": 146,
-"end": 144,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Fred Haise"
-        ]
+      "identity": 205,
+      "start": 146,
+      "end": 144,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Fred Haise"]
       }
     }
   },
   {
     "edge": {
-"identity": 212,
-"start": 149,
-"end": 147,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 212,
+      "start": 149,
+      "end": 147,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 209,
-"start": 53,
-"end": 147,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Dr. Jo Harding"
-        ]
+      "identity": 209,
+      "start": 53,
+      "end": 147,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Dr. Jo Harding"]
       }
     }
   },
   {
     "edge": {
-"identity": 208,
-"start": 146,
-"end": 147,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Bill Harding"
-        ]
+      "identity": 208,
+      "start": 146,
+      "end": 147,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Bill Harding"]
       }
     }
   },
   {
     "edge": {
-"identity": 211,
-"start": 148,
-"end": 147,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Dustin \"Dusty\" Davis"
-        ]
+      "identity": 211,
+      "start": 148,
+      "end": 147,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Dustin \"Dusty\" Davis"]
       }
     }
   },
   {
     "edge": {
-"identity": 210,
-"start": 94,
-"end": 147,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Eddie"
-        ]
+      "identity": 210,
+      "start": 94,
+      "end": 147,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Eddie"]
       }
     }
   },
   {
     "edge": {
-"identity": 214,
-"start": 53,
-"end": 150,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Kelly Frears"
-        ]
+      "identity": 214,
+      "start": 53,
+      "end": 150,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Kelly Frears"]
       }
     }
   },
   {
     "edge": {
-"identity": 213,
-"start": 71,
-"end": 150,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Chuck Noland"
-        ]
+      "identity": 213,
+      "start": 71,
+      "end": 150,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Chuck Noland"]
       }
     }
   },
   {
     "edge": {
-"identity": 215,
-"start": 151,
-"end": 150,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 215,
+      "start": 151,
+      "end": 150,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 217,
-"start": 142,
-"end": 152,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Martini"
-        ]
+      "identity": 217,
+      "start": 142,
+      "end": 152,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Martini"]
       }
     }
   },
   {
     "edge": {
-"identity": 216,
-"start": 17,
-"end": 152,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Randle McMurphy"
-        ]
+      "identity": 216,
+      "start": 17,
+      "end": 152,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Randle McMurphy"]
       }
     }
   },
   {
     "edge": {
-"identity": 218,
-"start": 153,
-"end": 152,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 218,
+      "start": 153,
+      "end": 152,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 221,
-"start": 1,
-"end": 154,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Julian Mercer"
-        ]
+      "identity": 221,
+      "start": 1,
+      "end": 154,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Julian Mercer"]
       }
     }
   },
   {
     "edge": {
-"identity": 224,
-"start": 156,
-"end": 154,
-"type": "WROTE",
-"properties": {
-
-      }
+      "identity": 224,
+      "start": 156,
+      "end": 154,
+      "type": "WROTE",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 222,
-"start": 156,
-"end": 154,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 222,
+      "start": 156,
+      "end": 154,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 220,
-"start": 155,
-"end": 154,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Erica Barry"
-        ]
+      "identity": 220,
+      "start": 155,
+      "end": 154,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Erica Barry"]
       }
     }
   },
   {
     "edge": {
-"identity": 219,
-"start": 17,
-"end": 154,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Harry Sanborn"
-        ]
+      "identity": 219,
+      "start": 17,
+      "end": 154,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Harry Sanborn"]
       }
     }
   },
   {
     "edge": {
-"identity": 223,
-"start": 156,
-"end": 154,
-"type": "PRODUCED",
-"properties": {
-
-      }
+      "identity": 223,
+      "start": 156,
+      "end": 154,
+      "type": "PRODUCED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 225,
-"start": 60,
-"end": 157,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Andrew Marin"
-        ]
+      "identity": 225,
+      "start": 60,
+      "end": 157,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Andrew Marin"]
       }
     }
   },
   {
     "edge": {
-"identity": 226,
-"start": 140,
-"end": 157,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Rupert Burns"
-        ]
+      "identity": 226,
+      "start": 140,
+      "end": 157,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Rupert Burns"]
       }
     }
   },
   {
     "edge": {
-"identity": 227,
-"start": 158,
-"end": 157,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 227,
+      "start": 158,
+      "end": 157,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 229,
-"start": 160,
-"end": 159,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Joanne Herring"
-        ]
+      "identity": 229,
+      "start": 160,
+      "end": 159,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Joanne Herring"]
       }
     }
   },
   {
     "edge": {
-"identity": 231,
-"start": 96,
-"end": 159,
-"type": "DIRECTED",
-"properties": {
-
-      }
+      "identity": 231,
+      "start": 96,
+      "end": 159,
+      "type": "DIRECTED",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 228,
-"start": 71,
-"end": 159,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Rep. Charlie Wilson"
-        ]
+      "identity": 228,
+      "start": 71,
+      "end": 159,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Rep. Charlie Wilson"]
       }
     }
   },
   {
     "edge": {
-"identity": 230,
-"start": 148,
-"end": 159,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Gust Avrakotos"
-        ]
+      "identity": 230,
+      "start": 148,
+      "end": 159,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Gust Avrakotos"]
       }
     }
   },
   {
     "edge": {
-"identity": 232,
-"start": 71,
-"end": 161,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
+      "identity": 232,
+      "start": 71,
+      "end": 161,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": [
           "Hero Boy",
           "Father",
           "Conductor",
@@ -3024,135 +2552,113 @@
   },
   {
     "edge": {
-"identity": 233,
-"start": 151,
-"end": 161,
-"type": "DIRECTED",
-"properties": {
-
+      "identity": 233,
+      "start": 151,
+      "end": 161,
+      "type": "DIRECTED",
+      "properties": {}
+    }
+  },
+  {
+    "edge": {
+      "identity": 234,
+      "start": 71,
+      "end": 162,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Jimmy Dugan"]
       }
     }
   },
   {
     "edge": {
-"identity": 234,
-"start": 71,
-"end": 162,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Jimmy Dugan"
-        ]
+      "identity": 238,
+      "start": 163,
+      "end": 162,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["\"All the Way\" Mae Mordabito"]
       }
     }
   },
   {
     "edge": {
-"identity": 238,
-"start": 163,
-"end": 162,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "\"All the Way\" Mae Mordabito"
-        ]
+      "identity": 240,
+      "start": 166,
+      "end": 162,
+      "type": "DIRECTED",
+      "properties": {}
+    }
+  },
+  {
+    "edge": {
+      "identity": 237,
+      "start": 77,
+      "end": 162,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Doris Murphy"]
       }
     }
   },
   {
     "edge": {
-"identity": 240,
-"start": 166,
-"end": 162,
-"type": "DIRECTED",
-"properties": {
-
+      "identity": 235,
+      "start": 164,
+      "end": 162,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Dottie Hinson"]
       }
     }
   },
   {
     "edge": {
-"identity": 237,
-"start": 77,
-"end": 162,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Doris Murphy"
-        ]
+      "identity": 239,
+      "start": 146,
+      "end": 162,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Bob Hinson"]
       }
     }
   },
   {
     "edge": {
-"identity": 235,
-"start": 164,
-"end": 162,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Dottie Hinson"
-        ]
+      "identity": 236,
+      "start": 165,
+      "end": 162,
+      "type": "ACTED_IN",
+      "properties": {
+        "roles": ["Kit Keller"]
       }
     }
   },
   {
     "edge": {
-"identity": 239,
-"start": 146,
-"end": 162,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Bob Hinson"
-        ]
-      }
+      "identity": 243,
+      "start": 167,
+      "end": 168,
+      "type": "FOLLOWS",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 236,
-"start": 165,
-"end": 162,
-"type": "ACTED_IN",
-"properties": {
-"roles": [
-          "Kit Keller"
-        ]
-      }
+      "identity": 241,
+      "start": 170,
+      "end": 169,
+      "type": "FOLLOWS",
+      "properties": {}
     }
   },
   {
     "edge": {
-"identity": 243,
-"start": 167,
-"end": 168,
-"type": "FOLLOWS",
-"properties": {
-
-      }
-    }
-  },
-  {
-    "edge": {
-"identity": 241,
-"start": 170,
-"end": 169,
-"type": "FOLLOWS",
-"properties": {
-
-      }
-    }
-  },
-  {
-    "edge": {
-"identity": 242,
-"start": 168,
-"end": 169,
-"type": "FOLLOWS",
-"properties": {
-
-      }
+      "identity": 242,
+      "start": 168,
+      "end": 169,
+      "type": "FOLLOWS",
+      "properties": {}
     }
   }
 ]

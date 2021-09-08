@@ -3,16 +3,10 @@ PREFIX ex:   <http://example.org/>
 PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 prec:Properties prec:templatedBy prec:DirectTriples .
-prec:KeepProvenance        prec:flagState false .
-
-# (default)
-# prec:Edges prec:useRdfStar prec:RDFReification .
-
-prec:Edges prec:templatedBy prec:RDFStarOccurrence .
+prec:Edges      prec:templatedBy prec:RDFStarOccurrence .
+prec:KeepProvenance prec:flagState false .
 
 <http://dbpedia.org/ontology/Person> prec:IRIOfNodeLabel "Person" .
-
-# <https://example.org/likes> prec:IRIOfEdgeLabel "Likes" .
 
 [] a prec:EdgeRule ;
     prec:sourceLabel "Person" ;

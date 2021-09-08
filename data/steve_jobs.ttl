@@ -4,7 +4,7 @@ PREFIX schema: <http:/schema.org/>
 PREFIX ex:     <http://example.org/>
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 
-# node prec.js data/steve_jobs.json data/steve_jobs.ttl
+# npx ts-node prec.ts apoc2rdf data/steve_jobs.json data/steve_jobs.ttl
 
 prec:Edges      prec:templatedBy prec:RdfStarOccurrence .
 prec:Properties prec:templatedBy prec:DirectTriples .
