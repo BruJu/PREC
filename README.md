@@ -41,6 +41,36 @@ It is possible to import PREC to get access to functions to produce RDF graphs
 from a Gremin or a Neo4j connection. The produced output will be an
 [RDF/JS DatasetCore](https://rdf.js.org/dataset-spec/#datasetcore-interface).
 
+*Example*: In this example, we want to count the number of nodes and edges in
+a local instance of a Neo4j property graph. Because simply looking at
+Neo4j Desktop or using properly the Neo4j JS API would be too easy, we are going
+to use PREC and count the nodes and edges in the PG thanks to the produced RDF
+graph.
+
+```js
+// Property Graph API
+import neo4j from 'neo4j-driver';
+// Some useful RDF imports
+import { DataFactory } from 'n3';
+import namespace from '@rdfjs/namespace';
+const rdf = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", { factory: DataFactory });
+const pgo = namespace("http://ii.uwb.edu.pl/pgo#"                  , { factory: DataFactory });
+// PREC
+import { cypherToRDF } from 'prec';
+
+// Open the connection
+const auth = neo4j.auth.basic('neo4j', 'password');
+const driver = neo4j.driver('neo4j://localhost:7687/neo4j', auth);    
+
+// Build an RDF graph
+cypherToRDF(driver)
+.then(graph => {
+  // We can now count
+  console.log(graph.match(undefined, rdf.type, pgo.Node).size + " nodes in the PG");
+  console.log(graph.match(undefined, rdf.type, pgo.Edge).size + " edges in the PG");
+})
+.finally(() => driver.close());
+```
 
 ## Using PREC with CLI
 

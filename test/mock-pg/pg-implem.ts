@@ -1,5 +1,8 @@
 import { IdentityTo } from "../../src/prec-0/PGDefinitions";
 
+type TKProps<Value> = TKProp<Value>[];
+type TKProp<Value> = { key: string, value: Value, meta?: TKProps<Value> };
+
 /** Something that can have properties */
 class PropertyHolder<Value> {
   #properties: Property<Value>[] = [];
@@ -188,14 +191,11 @@ export class PropertyGraph<Value = any> {
   }
 
   convertToProductFromTinkerProp() {
-    type TKProps = TKProp[];
-    type TKProp = { key: string, value: Value, meta?: TKProps }
-
-    function convertProperties(propertyHolder: PropertyHolder<Value>): TKProps {
+    function convertProperties(propertyHolder: PropertyHolder<Value>): TKProps<Value> {
       const result = [];
 
       for (const property of propertyHolder.getProperties()) {
-        let tpProperty: TKProp = {
+        let tpProperty: TKProp<Value> = {
           key: property.key,
           value: property.value
         };
@@ -211,12 +211,12 @@ export class PropertyGraph<Value = any> {
     }
 
     const nodes: IdentityTo<{
-      identity: number, properties: TKProps;
+      identity: number, properties: TKProps<Value>;
       labels: string[];
     }> = {};
 
     const edges: IdentityTo<{
-      identity: number; properties: TKProps;
+      identity: number; properties: TKProps<Value>;
       start: number; end: number; type: string;
     }> = {};
 
