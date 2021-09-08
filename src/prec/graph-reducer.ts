@@ -17,6 +17,8 @@ const prec = namespace("http://bruy.at/prec#"                       , { factory:
 
 const $defaultGraph = DataFactory.defaultGraph;
 
+import prsc, { isPrscContext } from '../prec-c-prsc/PrscContext';
+
 // =============================================================================
 
 /**
@@ -25,6 +27,13 @@ const $defaultGraph = DataFactory.defaultGraph;
  * @param contextQuads The list of quads that are part of the context
  */
 export default function applyContext(dataset: DStar, contextQuads: Quad[]) {
+  if (isPrscContext(contextQuads)) {
+    const dstar = prsc(dataset, contextQuads);
+    dataset.deleteMatches();
+    if (dstar !== null) dataset.addAll([...dstar]);
+    return;
+  }
+
   const context = new Context(contextQuads);
 
   // -- Blank nodes transformation
