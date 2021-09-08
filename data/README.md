@@ -1,5 +1,8 @@
 # Property graph examples
 
+This folder contains Neo4J (small) exported property graphs.
+
+
 They are all exported from Neo4J using the APOC plugin
 
 - `ex1_potus.json`: A PG with two nodes.
