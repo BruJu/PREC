@@ -1,141 +1,24 @@
-"use strict";
-
-// RDF -> Property Graph Experimental Converter
-// Or more like PREC-0-1
-
-// This file extensively uses the concept of "(simple) path following".
-// Following a path is a cute way of saying that we know the subject, and:
-// - We know the predicate, we want to know the unique object that coresponds
-// to (subject, predicate, ?object).
-// - We don't know the predicate, we want to retrieve every path that starts
-// with subject ie every triple that has subject as the subject.
-
-////////////////////////////////////////////////////////////////////////////////
-// ==== Imports
-
-import { ArgumentParser } from 'argparse';
-import fs from 'fs';
-import { outputTheStore } from './src/rdf/parsing';
-
-// -- RDF
-import { DataFactory, Parser, Store as N3Store } from "n3";
 import * as WasmTree from "@bruju/wasm-tree";
+import { DatasetCore, Quad_Subject, NamedNode, BlankNode } from "@rdfjs/types";
+import { DataFactory } from "n3";
+import { extractAndDeletePropertyValue, ExtractedPropertyValue, getRealLabel, readPropertyName } from "../prec-0/Prec0DatasetUtil";
+import { hasNamedGraph, isRdfStar, areDisjointTypes, getNodesOfType, getPathsFrom, RDFPathPartial, followThrough, hasExpectedPaths, RDFPath } from "../rdf/path-travelling";
+
+import gremlin from 'gremlin';
+const traversal = gremlin.process.AnonymousTraversalSource.traversal;
+import DriverRemoteConnection = gremlin.driver.DriverRemoteConnection;
+
 import namespace from '@rdfjs/namespace';
 
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", { factory: DataFactory });
 const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , { factory: DataFactory });
-const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , { factory: DataFactory });
 const prec = namespace("http://bruy.at/prec#"                       , { factory: DataFactory });
+const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , { factory: DataFactory });
 
-const QUAD = DataFactory.quad;
-
-// -- Property Graph API
-import neo4j from 'neo4j-driver';
-
-import gremlin from "gremlin";
-import { BlankNode, DatasetCore, NamedNode, Quad_Subject } from '@rdfjs/types';
-import { areDisjointTypes, followThrough, getNodesOfType, getPathsFrom, hasExpectedPaths, hasNamedGraph, isRdfStar, RDFPath, RDFPathPartial } from './src/rdf/path-travelling';
-import { extractAndDeletePropertyValue, ExtractedPropertyValue, getRealLabel, readPropertyName } from './src/prec-0/Prec0DatasetUtil';
-const traversal = gremlin.process.AnonymousTraversalSource.traversal;
-const DriverRemoteConnection = gremlin.driver.DriverRemoteConnection;
+const $quad = DataFactory.quad;
 
 
-////////////////////////////////////////////////////////////////////////////////
-// ==== Helper functions and extension of dataset
-
-/** Read the turtle (not star) file in filepath and builds a WT Dataset from it */
-function readDataset(filepath: string): WasmTree.Dataset {
-  const parser = new Parser();
-  let quads = parser.parse(fs.readFileSync(filepath, "utf8"));
-
-  return new WasmTree.Dataset(quads);
-}
-
-/**
- * For a given edge in the RDF graph that was an export from PREC, return the
- * subject node, the object node and the label.
- * 
- * The rdf:subject, rdf:predicate and rdf:object must be unique.
- *
- * The type of the subject and the object are checked to be as type pgo:Node.
- * For the predicate, both the node and its label are retrieved.
- * 
- * Returns null on error.
- * @returns [subject node, object node, [ predicate node, predicate label ]]
- */
-function extractEdgeSPO(dataset: DatasetCore, rdfEdge: NamedNode | BlankNode)
-: [Quad_Subject, Quad_Subject, [Quad_Subject, string | null]] {
-  function extractConnectedNodeToEdge(dataset: DatasetCore, rdfEdge: Quad_Subject, predicate: NamedNode) {
-    let result = followThrough(dataset, rdfEdge, predicate);
-    if (!result) throw "Edge has no " + predicate.value + " " + rdfEdge.value;
-    if (!dataset.has(QUAD(result as Quad_Subject, rdf.type, pgo.Node))) {
-      throw "Edge connected to something that is not a node";
-    }
-    return result as Quad_Subject;
-  }
-
-  function extractLabel(dataset: DatasetCore, rdfEdge: Quad_Subject, predicate: NamedNode)
-  : [Quad_Subject, string | null] {
-    let result = followThrough(dataset, rdfEdge, predicate);
-    if (!result) throw "Edge has no " + predicate.value;
-    return [
-      result as Quad_Subject,
-      getRealLabel(dataset, result as Quad_Subject, prec.CreatedEdgeLabel)
-    ];
-  }
-
-  return [
-    extractConnectedNodeToEdge(dataset, rdfEdge, rdf.subject),
-    extractConnectedNodeToEdge(dataset, rdfEdge, rdf.object),
-    extractLabel(dataset, rdfEdge, rdf.predicate)
-  ];
-}
-
-/**
- * Remove all subject that have the given paths and match the given predicate.
- */
-function removeSubjectIfMatchPaths(
-  dataset: DatasetCore,
-  requiredPaths: RDFPathPartial[],
-  optionalPaths: RDFPathPartial[] = [],
-  extraPredicate: (dataset: DatasetCore, subject: Quad_Subject) => boolean = () => true
-) {
-  if (requiredPaths.length == 0) {
-    throw "Empty required path is not yet implemented";
-  }
-
-  function removePaths(dataset: DatasetCore, subject: Quad_Subject, paths: RDFPath[]) {
-    paths.map(path => DataFactory.quad(subject, path[0], path[1]))
-      .forEach(q => dataset.delete(q));
-  }
-
-  // Find subjects that match the first pattern
-  let match = dataset.match(null, requiredPaths[0][0], requiredPaths[0][1], DataFactory.defaultGraph());
-
-  let old01 = requiredPaths[0][1];
-
-  for (let quad of match) {
-    const subject = quad.subject;
-    if (old01 == null) requiredPaths[0][1] = quad.object;
-
-    let foundMappings: RDFPath[] = [];
-
-    if (
-      hasExpectedPaths(dataset, subject, requiredPaths, optionalPaths, foundMappings)
-      && extraPredicate(dataset, subject)
-    ) {
-      removePaths(dataset, subject, foundMappings);
-    }
-  }
-
-  requiredPaths[0][1] = old01;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-// ==== Pseudo PG builder
-
-type PseudoPGNode = {
+export type PseudoPGNode = {
   id: string;
   identifier?: string;
   labels?: string[];
@@ -143,17 +26,18 @@ type PseudoPGNode = {
   _gremlin?: any
 };
 
-type PseudoPGEdge = {
+export type PseudoPGEdge = {
   source: PseudoPGNode;
   destination: PseudoPGNode;
   label?: string;
   properties?: {[key: string]: ExtractedPropertyValue};
 };
 
+
 /**
  * Builder for a property graph structure.
  */
-export class PseudoPGBuilder {
+export default class PseudoPGBuilder {
   nodes: PseudoPGNode[] = [];
   edges: PseudoPGEdge[] = [];
   iriToNodes: {[iri: string]: PseudoPGNode} = {};
@@ -249,7 +133,7 @@ export class PseudoPGBuilder {
         // Some other things that are properties
         pgEdge.properties = extractProperties(dataset, rdfEdge, "Edge");
 
-        dataset.delete(QUAD(rdfEdge, rdf.type, pgo.Edge));
+        dataset.delete($quad(rdfEdge, rdf.type, pgo.Edge));
       }
 
       // Nodes
@@ -289,9 +173,9 @@ export class PseudoPGBuilder {
       ], noMoreInContext);
 
       // Remove axioms and meta data
-      dataset.delete(QUAD(prec.CreatedNodeLabel, rdfs.subClassOf, prec.CreatedVocabulary));
-      dataset.delete(QUAD(prec.CreatedEdgeLabel, rdfs.subClassOf, prec.CreatedVocabulary));
-      dataset.delete(QUAD(prec.CreatedPropertyKey, rdfs.subClassOf, prec.CreatedVocabulary));
+      dataset.delete($quad(prec.CreatedNodeLabel, rdfs.subClassOf, prec.CreatedVocabulary));
+      dataset.delete($quad(prec.CreatedEdgeLabel, rdfs.subClassOf, prec.CreatedVocabulary));
+      dataset.delete($quad(prec.CreatedPropertyKey, rdfs.subClassOf, prec.CreatedVocabulary));
 
       // End
       if (dataset.size === 0) {
@@ -307,9 +191,11 @@ export class PseudoPGBuilder {
       return { "error": e as string };
     }
   }
-
-  
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+// ==== Helper functions and extension of dataset
 
 // A property is:
 // - _e prop propBN - propBN rdf:value a_literal
@@ -366,11 +252,99 @@ function extractLabels(dataset: DatasetCore, node: Quad_Subject) {
   return result.map(term => getRealLabel(dataset, term as Quad_Subject, prec.CreatedNodeLabel)!);
 }
 
+
+// ====
+
+
 /**
+ * For a given edge in the RDF graph that was an export from PREC, return the
+ * subject node, the object node and the label.
+ * 
+ * The rdf:subject, rdf:predicate and rdf:object must be unique.
+ *
+ * The type of the subject and the object are checked to be as type pgo:Node.
+ * For the predicate, both the node and its label are retrieved.
+ * 
+ * Returns null on error.
+ * @returns [subject node, object node, [ predicate node, predicate label ]]
+ */
+function extractEdgeSPO(dataset: DatasetCore, rdfEdge: NamedNode | BlankNode)
+: [Quad_Subject, Quad_Subject, [Quad_Subject, string | null]] {
+  function extractConnectedNodeToEdge(dataset: DatasetCore, rdfEdge: Quad_Subject, predicate: NamedNode) {
+    let result = followThrough(dataset, rdfEdge, predicate);
+    if (!result) throw "Edge has no " + predicate.value + " " + rdfEdge.value;
+    if (!dataset.has($quad(result as Quad_Subject, rdf.type, pgo.Node))) {
+      throw "Edge connected to something that is not a node";
+    }
+    return result as Quad_Subject;
+  }
+
+  function extractLabel(dataset: DatasetCore, rdfEdge: Quad_Subject, predicate: NamedNode)
+  : [Quad_Subject, string | null] {
+    let result = followThrough(dataset, rdfEdge, predicate);
+    if (!result) throw "Edge has no " + predicate.value;
+    return [
+      result as Quad_Subject,
+      getRealLabel(dataset, result as Quad_Subject, prec.CreatedEdgeLabel)
+    ];
+  }
+
+  return [
+    extractConnectedNodeToEdge(dataset, rdfEdge, rdf.subject),
+    extractConnectedNodeToEdge(dataset, rdfEdge, rdf.object),
+    extractLabel(dataset, rdfEdge, rdf.predicate)
+  ];
+}
+
+/**
+ * Remove all subject that have the given paths and match the given predicate.
+ */
+function removeSubjectIfMatchPaths(
+  dataset: DatasetCore,
+  requiredPaths: RDFPathPartial[],
+  optionalPaths: RDFPathPartial[] = [],
+  extraPredicate: (dataset: DatasetCore, subject: Quad_Subject) => boolean = () => true
+) {
+  if (requiredPaths.length == 0) {
+    throw "Empty required path is not yet implemented";
+  }
+
+  function removePaths(dataset: DatasetCore, subject: Quad_Subject, paths: RDFPath[]) {
+    paths.map(path => DataFactory.quad(subject, path[0], path[1]))
+      .forEach(q => dataset.delete(q));
+  }
+
+  // Find subjects that match the first pattern
+  let match = dataset.match(null, requiredPaths[0][0], requiredPaths[0][1], DataFactory.defaultGraph());
+
+  let old01 = requiredPaths[0][1];
+
+  for (let quad of match) {
+    const subject = quad.subject;
+    if (old01 == null) requiredPaths[0][1] = quad.object;
+
+    let foundMappings: RDFPath[] = [];
+
+    if (
+      hasExpectedPaths(dataset, subject, requiredPaths, optionalPaths, foundMappings)
+      && extraPredicate(dataset, subject)
+    ) {
+      removePaths(dataset, subject, foundMappings);
+    }
+  }
+
+  requiredPaths[0][1] = old01;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Converts the given property graph structure to a cypher query to build it.
  * 
  * This function assigns a new member to the identifier property of nodes
  */
-function makeCypherQuery(propertyGraphStructure: { nodes: PseudoPGNode[], edges: PseudoPGEdge[] }) {
+export function makeCypherQuery(propertyGraphStructure: { nodes: PseudoPGNode[], edges: PseudoPGEdge[] }) {
   class QueryBuilder {
     instructions: string[] = [];
 
@@ -420,21 +394,6 @@ function makeCypherQuery(propertyGraphStructure: { nodes: PseudoPGNode[], edges:
   return builder.getQuery();
 }
 
-async function makeNeo4Jrequest(username: string, password: string, uri: string, query: string) {
-  const driver = neo4j.driver(uri, neo4j.auth.basic(username, password));
-  const session = driver.session();
-
-  try {
-    await session.run(query);
-  } catch (error) {
-    console.error("-- Make Neo4J Request");
-    console.error(error);
-  } finally {
-    await session.close();
-  }
-
-  await driver.close();
-}
 
 /**
  * Insert the content of the property graph in the given Gremlin end point.
@@ -442,8 +401,10 @@ async function makeNeo4Jrequest(username: string, password: string, uri: string,
  * @param propertyGraphStructure The content of the property graph, in the
  * meta property-less model
  */
-async function insertIntoGremlin(uri: string, propertyGraphStructure: { nodes: PseudoPGNode[], edges: PseudoPGEdge[] }) {
-  let connection = new DriverRemoteConnection(uri);
+export async function insertIntoGremlin(
+  connection: DriverRemoteConnection,
+  propertyGraphStructure: { nodes: PseudoPGNode[], edges: PseudoPGEdge[] }
+) {
   const g = traversal().withRemote(connection);
 
   let numberOfNodes = 0;
@@ -460,7 +421,7 @@ async function insertIntoGremlin(uri: string, propertyGraphStructure: { nodes: P
     }
 
     for (let propertyKey in node.properties) {
-        vertex = vertex.property(propertyKey, node.properties[propertyKey]);
+      vertex = vertex.property(propertyKey, node.properties[propertyKey]);
     }
 
     node._gremlin = await vertex.next();
@@ -479,80 +440,5 @@ async function insertIntoGremlin(uri: string, propertyGraphStructure: { nodes: P
     ++numberOfEdges;
   }
 
-  await connection.close();
-  console.error(`${numberOfNodes} node${numberOfNodes===1?'':'s'} `
-    + `and ${numberOfEdges} edge${numberOfEdges===1?'':'s'} `
-    + `have been added to the Gremlin endpoint ${uri}`);
+  return { numberOfNodes, numberOfEdges };
 }
-
-async function main() {
-  const parser = new ArgumentParser({
-    description: 'PREC-1 (Property Graph <- RDF Experimental Converter)'
-  });
-
-  parser.add_argument("RDFPath", {
-    help: "Path to the RDF graph to convert back"
-  });
-
-  parser.add_argument( "-f", "--OutputFormat", {
-    help: "Output format",
-    default: "Cypher",
-    choices: ["Cypher", "Neo4J", "PGStructure", "Gremlin"],
-    nargs: "?"
-  });
-
-  parser.add_argument( "--Neo4JLogs", {
-    help: "Neo4J credentials in the format username:password. Only used if output is Neo4J",
-    default: "", nargs: "?"
-  });
-
-  parser.add_argument("--Neo4JURI", {
-    help: "Neo4J database URI. Only used if output if Neo4J.",
-    default: "neo4j://localhost/neo4j", nargs: "?"
-  });
-    
-  parser.add_argument("--GremlinURI", {
-    help: "Gremlin end point URI. Only used id output is Gremlin",
-    default: "ws://localhost:8182/gremlin", nargs: "?"
-  });
-
-  const args = parser.parse_args();
-  const dataset = readDataset(args.RDFPath);
-    
-  let result = PseudoPGBuilder.from(dataset)
-    
-  if ('error' in result) {
-    console.error("Error: " + result.error);
-  } else if (result["Remaining Quads"].size !== 0) {
-    console.error(dataset.size + " remaining quads");
-    outputTheStore(new N3Store([...dataset]));
-  } else {
-    if (args.OutputFormat === "Cypher") {
-      console.log(makeCypherQuery(result.PropertyGraph));
-    } else if (args.OutputFormat === "PGStructure") {
-      console.log(JSON.stringify(result.PropertyGraph, null, 2));
-    } else if (args.OutputFormat === "Neo4J") {
-      const credentials = args.Neo4JLogs.split(":");
-      const query = makeCypherQuery(result.PropertyGraph);
-
-      await makeNeo4Jrequest(
-        credentials[0],
-        credentials[1],
-        args.Neo4JURI,
-        query
-      );
-
-      result["Remaining Quads"].free();
-    } else if (args.OutputFormat === 'Gremlin') {
-      const uri = args.GremlinURI;
-      await insertIntoGremlin(uri, result.PropertyGraph);
-    } else {
-      console.error("Unknown output format " + args.OutputFormat);
-    }
-  }
-}
-
-if (require.main === module) {
-  main();
-}
-

@@ -12,6 +12,7 @@ import DriverRemoteConnection = gremlin.driver.DriverRemoteConnection;
 
 // RDF
 import * as N3 from 'n3';
+import * as WasmTree from '@bruju/wasm-tree';
 import { isomorphic } from "rdf-isomorphic";
 import { Quad, Quad_Graph, Quad_Object, Quad_Predicate, Quad_Subject, Term } from '@rdfjs/types';
 import namespace from '@rdfjs/namespace';
@@ -33,6 +34,7 @@ import graphReducer from "./src/prec/graph-reducer";
 import { filenameToArrayOfQuads, outputTheStore } from './src/rdf/parsing';
 import fromGremlin from './src/prec-0/from-gremlin';
 import { extractFromNeo4jProtocole } from './src/prec-0/from-cypher';
+import PseudoPGBuilder, { insertIntoGremlin, makeCypherQuery } from './src/prec-0-1/proto-pg';
 
 // TODO: export prec0 to PG
 
@@ -91,13 +93,72 @@ async function main() {
 
   program.command('cypherJson2rdf')
     .description("Converts the result of a Cypher query stored in JSON into an RDF graph. The query result must only contain nodes and edges.")
-    .argument('<path-to-cypher-result>', "Path to the JSON file with the answer of the Cypehr query")
+    .argument('<path-to-cypher-result>', "Path to the JSON file with the answer of the Cypher query")
     .option('-c, --context <context-path>', 'The path to the context')
     .action((cypherResultPath: string, options: any) => {
       const fileContent = fs.readFileSync(cypherResultPath, 'utf-8');
       const content = JSON.parse(fileContent);
       const [dataset, prefixes] = neo4JCypherToStore(content);
       applyContextIfAnyAndPrint(dataset, prefixes, options.context);
+    });
+
+  // PREC-0-1
+
+  const prec0m1 = program.command('preczero2rdf')
+    .description('Converts an RDF graph generated without any context to a Property Graph.');
+
+  prec0m1.command('print-structure')
+    .argument('<path-to-rdf-graph>', "Path to the RDF graph that describes the property graph.")
+    .action((pathToRdf: string) => {
+      const pseudoPG = revertRdfGraphToPseudoPg(pathToRdf);
+      if (pseudoPG !== false) {
+        console.log(JSON.stringify(pseudoPG, null, 2));
+      }
+    });
+
+  prec0m1.command('print-cypher')
+    .argument('<path-to-rdf-graph>', "Path to the RDF graph that describes the property graph.")
+    .action((pathToRdf: string) => {
+      const pseudoPG = revertRdfGraphToPseudoPg(pathToRdf);
+      if (pseudoPG !== false) {
+        console.log(makeCypherQuery(pseudoPG));
+      }
+    });
+
+  prec0m1.command('cypher')
+    .argument('<path-to-rdf-graph>', "Path to the RDF graph that describes the property graph.")
+    .argument('<username>', "The Cypher username, usually neo4j")
+    .argument('<password>', "The Cypher password")
+    .argument('[URI]', "The URI to the connection", 'neo4j://localhost/neo4j')
+    .action((pathToRdf: string, username: string, password: string, uri: string) => {
+      const pseudoPG = revertRdfGraphToPseudoPg(pathToRdf);
+      if (pseudoPG !== false) {
+        const query = makeCypherQuery(pseudoPG);
+        const driver = neo4j.driver(uri, neo4j.auth.basic(username, password));
+        const session = driver.session();
+  
+        session.run(query)
+        .finally(async () => {
+          await session.close();
+          await driver.close();
+        });  
+      }
+    });
+
+  prec0m1.command('gremlin')
+    .argument('<path-to-rdf-graph>', "Path to the RDF graph that describes the property graph.")
+    .argument('[uri]', "The URI to the Gremlin API", "ws://localhost:8182/gremlin")
+    .action(async (pathToRdf: string, uri: string) => {
+      const pseudoPG = revertRdfGraphToPseudoPg(pathToRdf);
+      if (pseudoPG !== false) {
+        const connection = new DriverRemoteConnection(uri);
+        const r = await insertIntoGremlin(connection, pseudoPG);
+        await connection.close();
+        
+        console.error(`${r.numberOfNodes} node${r.numberOfNodes===1?'':'s'} `
+        + `and ${r.numberOfEdges} edge${r.numberOfEdges===1?'':'s'} `
+        + `have been added to the Gremlin endpoint ${uri}`);  
+      }
     });
 
   // ==== Extra tools
@@ -297,6 +358,25 @@ export async function cypherToRDF(connection: Driver, context?: Quad[]) {
 
     return dataset;
   });
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+function revertRdfGraphToPseudoPg(rdfPath: string) {
+  const parser = new N3.Parser();
+  let quads = parser.parse(fs.readFileSync(rdfPath, "utf8"));
+  const dataset = new WasmTree.Dataset(quads);
+  const result = PseudoPGBuilder.from(dataset)
+  if ('error' in result) {
+    console.error(result.error);
+    return false;
+  } else if (result["Remaining Quads"].size !== 0) {
+    console.error(dataset.size + " remaining quads");
+    outputTheStore(new N3.Store([...dataset]));
+    return false;
+  } else {
+    return result.PropertyGraph;
+  }
 }
 
 
