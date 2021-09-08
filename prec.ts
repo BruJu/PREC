@@ -13,13 +13,18 @@ import fs from 'fs';
 import { Quad } from "@rdfjs/types";
 import DStar from "./src/dataset";
 import * as N3 from 'n3';
+import { APOCDocument, CypherEntry } from "./src/prec-0/PGDefinitions";
 
-/// Transforms an array of strings, each strings being a JSON representation,
-/// into an array of JS objects
-function stringsToJsObjects(file_content: string): any[] {
+/**
+ * Transforms a string, supposed to be a list of APOCDocuments, content of a
+ * file produced by a call to `apoc.export.json.all` in Neo4j.
+ * @param fileContent The content of the file
+ * @returns The list of APOC documents
+ */
+export function stringToApocDocuments(fileContent: string): APOCDocument[] {
   let collection = [];
 
-  for (const line of file_content.split(/\r?\n/)) {
+  for (const line of fileContent.split(/\r?\n/)) {
     if (line.trim() == "") {
       continue;
     }
@@ -27,20 +32,34 @@ function stringsToJsObjects(file_content: string): any[] {
     collection.push(JSON.parse(line));
   }
 
-  return collection;
+  return collection as APOCDocument[];
 }
 
-export function precOnNeo4J(filename: string, contextQuads: Quad[]) {
-  const content = fs.readFileSync(filename, 'utf-8');
-  const propertyGraphStructure = stringsToJsObjects(content);
-  const store = neo4jJsToStore(propertyGraphStructure)[0];
+/**
+ * Transforms a list of APOCDocument which corresponds to the content of a Neo4j
+ * Property Graph to an RDF graph.
+ * @param documents The list of APOCDocuments contained in the Neo4j graph
+ * @param contextQuads The list of quads in the PREC context
+ * @returns The RDF graph
+ */
+export function apocToRDF(documents: APOCDocument[], contextQuads: Quad[] = []): DStar {
+  const store = neo4jJsToStore(documents)[0];
   graphReducer(store, contextQuads);
   return store;
 }
 
-export function precOnNeo4JString(json: string, contextQuads: Quad[]) {
-  const pgStructure = stringsToJsObjects(json);
-  const store = neo4jJsToStore(pgStructure)[0];
+// TODO: Specify that cypherJsonToRDF also supports other formats, as long as
+// the output is only constitued of nodes and edges
+
+/**
+ * Transform the result in JSON format of a `(src)-(edge)->(dest)` cypher query
+ * into an RDF graph.
+ * @param cypherResult The result of the query
+ * @param contextQuads The list of quads in the PREC context
+ * @returns The RDF graph
+ */
+export function cypherJsontoRDF(cypherResult: CypherEntry[], contextQuads: Quad[] = []): DStar {
+  const store = neo4JCypherToStore(cypherResult)[0];
   graphReducer(store, contextQuads);
   return store;
 }
@@ -76,7 +95,7 @@ function main() {
   let getter: () => [DStar, {[prefixes: string]: string}];
 
   if (pgContentFormat === "Neo4JAPOC") {
-    const propertyGraphStructure = stringsToJsObjects(fileContent);
+    const propertyGraphStructure = stringToApocDocuments(fileContent);
     getter = () => neo4jJsToStore(propertyGraphStructure);
   } else if (pgContentFormat === "Neo4JCypher") {
     let content = JSON.parse(fileContent);

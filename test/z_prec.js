@@ -3,10 +3,12 @@ const fs = require('fs');
 const N3 = require('n3');
 
 const namespace = require('@rdfjs/namespace');
-const prec = require('../prec.ts')
+const { apocToRDF, stringToApocDocuments } = require('../prec')
 const { isSubstituableGraph } = require('../src/rdf/graph-substitution');
 const assert = require('assert');
 const { filenameToArrayOfQuads } = require('../src/rdf/parsing');
+
+const { badToString } = require('../src/rdf/utils');
 
 const rdf = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", N3.DataFactory);
 
@@ -48,8 +50,9 @@ describe("prec", function() {
                     );
 
                     const contextQuads = loadQuads(testFolder + contextPath.value);
-                    const result = prec.precOnNeo4J(testFolder + pgPath.value, contextQuads);
-
+                    const content = fs.readFileSync(testFolder + pgPath.value, 'utf-8');
+                    const apocDocuments = stringToApocDocuments(content);
+                    const result = apocToRDF(apocDocuments, contextQuads);
                     const r = isSubstituableGraph(result.getQuads(), expected.getQuads());
                     assert.ok(r);
                 })
@@ -73,7 +76,7 @@ function extractGraph(store, graph) {
             .map(quad => N3.DataFactory.quad(quad.subject, quad.predicate, quad.object))
     );
 
-    const parentGraphs = store.getQuads(null, prec.testIsBaseOf, graph, N3.DataFactory.defaultGraph());
+    const parentGraphs = store.getQuads(null, precNS.testIsBaseOf, graph, N3.DataFactory.defaultGraph());
 
     for (const parentGraph of parentGraphs) {
         result.addQuads(extractGraph(store, parentGraph.subject).getQuads());
@@ -84,7 +87,7 @@ function extractGraph(store, graph) {
 
 function getContent(store, term) {
     while (term.termType !== "Literal") {
-        const query = store.getQuads(term, prec.testContent, null, N3.DataFactory.defaultGraph());
+        const query = store.getQuads(term, precNS.testContent, null, N3.DataFactory.defaultGraph());
 
         if (query.length === 0) {
             assert.ok(false, "Malformed test");
@@ -111,18 +114,19 @@ function smallExample(store) {
             assert.notStrictEqual(propertyGraph, null);
 
             const contextGraph = extractGraph(store, context);
-            const expectedGraph = extractGraph(store, output);
-            const aaa = prec.precOnNeo4JString(getContent(store, propertyGraph), contextGraph.getQuads());
 
-            const r = isSubstituableGraph(aaa.getQuads(), expectedGraph.getQuads());
+            const expectedGraph = extractGraph(store, output);
+            const apocDocumentsAsString = getContent(store, propertyGraph);
+            const apocDocuments = stringToApocDocuments(apocDocumentsAsString);
+            const result = apocToRDF(apocDocuments, contextGraph.getQuads());
+
+            const r = isSubstituableGraph(result.getQuads(), expectedGraph.getQuads());
 
             if (!r) {
-                const precUtils = require('../src/rdf/utils')
-
                 console.error("• Result:");
-                console.error(precUtils.badToString(aaa.getQuads(), 7));
+                console.error(badToString(aaa.getQuads(), 7));
                 console.error("• Expected:");
-                console.error(precUtils.badToString(expectedGraph.getQuads(), 8));
+                console.error(badToString(expectedGraph.getQuads(), 8));
             }
 
             assert.ok(r, context.value);
