@@ -15,6 +15,9 @@ import DStar from "./src/dataset";
 import * as N3 from 'n3';
 import { APOCDocument, CypherEntry } from "./src/prec-0/PGDefinitions";
 
+export { cypherToRDF } from './neo4j-to-rdf';
+export { gremlinToRDF } from './gremlin-to-rdf';
+
 /**
  * Transforms a string, supposed to be a list of APOCDocuments, content of a
  * file produced by a call to `apoc.export.json.all` in Neo4j.

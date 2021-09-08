@@ -304,7 +304,7 @@ export class PseudoPGBuilder {
       };
     } catch (e) {
       if (dataset.free !== undefined) dataset.free();
-      return { "error": e };
+      return { "error": e as string };
     }
   }
 

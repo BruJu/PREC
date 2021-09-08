@@ -5,7 +5,8 @@
     "main": "prec.js",
     "scripts": {
         "test": "npx mocha -r ts-node/register test/*.ts test/*.js",
-        "gremlin-to-rdf": "npx ts-node gremlin-to-rdf.ts"
+        "gremlin-to-rdf": "npx ts-node gremlin-to-rdf.ts",
+        "cypher-to-rdf": "npx ts-node neo4j-to-rdf.ts"
     },
     "repository": {
         "type": "git",
@@ -31,7 +32,7 @@
         "argparse": "^2.0.1",
         "gremlin": "^3.4.10",
         "n3": "^1.9.0",
-        "neo4j-driver": "^4.2.3",
+        "neo4j-driver": "^4.3.3",
         "rdf-isomorphic": "^1.2.0"
     },
     "devDependencies": {
