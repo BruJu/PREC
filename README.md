@@ -32,7 +32,7 @@ example files.
     mainly from DBpedia and Schema.org
 
 - Example 2: The node Ann likes the node Dan
-    - `npx ts-node prec.ts apoc2rdf data\ex2_annlikesdan1.json data\anndan.ttl`
+    - `npx ts-node prec.ts apoc2rdf data\ex2_annlikesdan1.json -c data\anndan.ttl`
 
 
 ## Using PREC as a library

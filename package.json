@@ -1,6 +1,6 @@
 {
     "name": "prec",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "A Property Graph to RDF converter",
     "main": "build/prec.js",
     "types": "build/prec.d.ts",
