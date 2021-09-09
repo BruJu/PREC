@@ -14,8 +14,8 @@ ex:PersonForm a prec:prsc_node ;
     << pvar:node ex:hasLabel ex:person >> ,
     << pvar:node ex:name [ prec:prsc_valueOf "name" ] >> .
 
-# ex:LovesForm a prec:prsc_edge ;
-#   prec:edgeLabel "Likes" ;
-#   prec:prscSource      ex:PersonForm ;
-#   prec:prscDestination ex:PersonForm ;
-#   prec:composedOf << pvar:source ex:loves pvar:destination >> .
+ex:LovesForm a prec:prsc_edge ;
+  prec:edgeLabel "Likes" ;
+  prec:prscSource      ex:PersonForm ;
+  prec:prscDestination ex:PersonForm ;
+  prec:composedOf << pvar:source ex:loves pvar:destination >> .
