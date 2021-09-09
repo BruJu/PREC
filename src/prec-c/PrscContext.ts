@@ -1,4 +1,4 @@
-import { DatasetCore, Quad, Quad_Object, Quad_Predicate, Quad_Subject, Term, NamedNode } from "@rdfjs/types";
+import { Quad, Quad_Object, Quad_Predicate, Quad_Subject, Term, NamedNode } from "@rdfjs/types";
 import { DataFactory } from "n3";
 import DStar from "../dataset";
 
@@ -8,27 +8,12 @@ const $variable     = DataFactory.variable;
 const $defaultGraph = DataFactory.defaultGraph();
 
 import namespace from '@rdfjs/namespace';
-import { followThrough } from "../rdf/path-travelling";
+import { followThrough, followOrNull, followAll } from "../rdf/path-travelling";
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", { factory: DataFactory });
 const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , { factory: DataFactory });
 const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , { factory: DataFactory });
 const prec = namespace("http://bruy.at/prec#"                       , { factory: DataFactory });
 const pvar = namespace("http://bruy.at/prec-trans#"                 , { factory: DataFactory });
-
-////////////////////////////////////////////////////////////////////////////////
-// Path following
-
-function followOrNull(dataset: DatasetCore): Quad_Object | null {
-  const triples = [...dataset];
-  if (triples.length === 0) return null;
-  else if (triples.length === 1) return triples[0].object;
-  else throw Error("More than one path");
-}
-
-function followAll(dataset: DatasetCore, subject: Quad_Subject, predicate: Quad_Predicate): Quad_Object[] {
-  return [...dataset.match(subject, predicate, null, $defaultGraph)].map(quad => quad.object);
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // General purpose utilty functions
@@ -159,8 +144,8 @@ class EdgeSchemaDetector extends SchemaDetector {
     this.labels = followAll(dataset, myName, prec.edgeLabel).map(labelLiteral => labelLiteral.value);
     this.properties = followAll(dataset, myName, prec.propertyName).map(object => ({ name: object.value, mandatory: true }));
 
-    this.startForm = followOrNull(dataset.match(myName, prec.prscSource, null, $defaultGraph)) as (Quad_Subject | null);
-    this.endForm = followOrNull(dataset.match(myName, prec.prscDestination, null, $defaultGraph)) as (Quad_Subject | null);
+    this.startForm = followOrNull(dataset, myName, prec.prscSource) as (Quad_Subject | null);
+    this.endForm = followOrNull(dataset, myName, prec.prscDestination) as (Quad_Subject | null);
   }
 
   match(dataset: DStar, element: Quad_Subject): boolean {
@@ -258,14 +243,12 @@ class PrscContext {
     for (const node of dataset.match(null, rdf.type, pgo.Node, $defaultGraph)) {
       const schema = this.findNodeSchema(dataset, node.subject);
       if (schema === null) {
-        console.error("No schema for " + node.value);
-        return false;
+        throw Error(`The node ${node.subject} does not comply to any schema`);
       }
+
       dataset.add($quad(node.subject, prec._prsc_schema, schema.iri));
       schema.produce(output, dataset, node.subject);
     }
-
-    return true;
   }
 
   findNodeSchema(dataset: DStar, node: Quad_Subject) {
@@ -278,14 +261,12 @@ class PrscContext {
     for (const edge of dataset.match(null, rdf.type, pgo.Edge, $defaultGraph)) {
       const schema = this.findEdgeSchema(dataset, edge.subject);
       if (schema === null) {
-        console.error("No schema for edge " + edge.subject.value);
-        return false;
+        throw Error(`The edge ${edge.subject} does not comply to any schema`);
       }
+
       dataset.add($quad(edge.subject, prec._prsc_schema, schema.iri));
       schema.produce(output, dataset, edge.subject);
     }
-
-    return true;
   }
 
   findEdgeSchema(dataset: DStar, edge: Quad_Subject) {
@@ -296,8 +277,8 @@ class PrscContext {
 
   producePrecCGraph(dataset: DStar) {
     const result = new DStar();
-    if (!this.markSchemaOfNodes(dataset, result)) return null;
-    if (!this.markSchemaOfEdges(dataset, result)) return null;
+    this.markSchemaOfNodes(dataset, result);
+    this.markSchemaOfEdges(dataset, result);
     return result;
   }
 }
@@ -308,6 +289,5 @@ export function isPrscContext(contextQuads: Quad[]) {
 }
 
 export default function precCwithPRSC(dataset: DStar, contextQuads: Quad[]) {
-  const context = new PrscContext(contextQuads);
-  return context.producePrecCGraph(dataset);
+  return new PrscContext(contextQuads).producePrecCGraph(dataset);
 }

@@ -104,6 +104,43 @@ export function followThrough(dataset: DatasetCore, subject: Quad_Subject, predi
 }
 
 /**
+ * Find the triple (subject, predicate, ?object) and return the value of object.
+ * 
+ * If there are no match, returns null. If there are more than one match, throws
+ * an error.
+ * @param dataset The dataset
+ * @param subject The subject
+ * @param predicate The predicate
+ * @returns null if no value has been found, the value if one.
+ */
+export function followOrNull(
+  dataset: DatasetCore,
+  subject: Quad_Subject, predicate: Quad_Predicate
+): Quad_Object | null {
+  const triples = dataset.match(subject, predicate, null, DataFactory.defaultGraph());
+  if (triples.size === 0) return null;
+  else if (triples.size === 1) return [...triples][0].object;
+  else throw Error("More than one path");
+}
+
+/**
+ * Returns every object from triples of the form (subject, predicate, ?object).
+ * @param dataset The dataset
+ * @param subject The subject
+ * @param predicate The predicate
+ * @returns The list of objects
+ */
+export function followAll(
+  dataset: DatasetCore,
+  subject: Quad_Subject, predicate: Quad_Predicate
+): Quad_Object[] {
+  return [
+    ...dataset.match(subject, predicate, null, DataFactory.defaultGraph())
+  ].map(quad => quad.object);
+}
+
+
+/**
  * Check every paths from the subject node are the expected one, ie every
  * requiredPath exists and there are no unlisted paths.
  * 
