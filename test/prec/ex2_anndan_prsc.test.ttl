@@ -1,0 +1,12 @@
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix prec: <http://bruy.at/prec#> .
+@prefix ex:   <http://example.org/> .
+
+prec:testMetaData
+  prec:pgPath      "../../data/ex2_annlikesdan1.json" ;
+  prec:pgSource    <https://neo4j.com/developer/neo4j-apoc/> ;
+  prec:contextPath "../../data/ex2_anndan_prsc.ttl" .
+
+_:ann ex:hasLabel ex:person ; ex:name "Ann" .
+_:dan ex:hasLabel ex:person ; ex:name "Dan" .
+_:ann ex:loves _:dan .

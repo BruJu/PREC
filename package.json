@@ -7,6 +7,7 @@
     "bin": "./build/prec.js",
     "scripts": {
         "test": "npx mocha -r ts-node/register test/*.ts test/*.js",
+        "nyc": "npx nyc mocha -r ts-node/register test/*.ts test/*.js",
         "prec": "npx ts-node prec.ts",
         "prepack": "npm run build",
         "prepublish": "npm run build",

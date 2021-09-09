@@ -49,6 +49,24 @@ function _equalsPattern(pattern1: Pattern, pattern2: Pattern) {
 }
 
 describe('DStar', () => {
+  describe('forEach', () => {
+    it('should iterate on every quads', () => {
+      const quads = [
+        $quad(ex.subject, ex.predicate, ex.object1),
+        $quad(ex.subject, ex.predicate, ex.object2)
+      ];
+
+      const dstar = new DStar(quads);
+
+      const result: Quad[] = [];
+      dstar.forEach(quad => result.push(quad));
+
+      assert.ok(quads.length === result.length);
+      quads.forEach(quad => assert.ok(undefined !== result.find(q => q.equals(quad))));
+    });
+  })
+
+
   describe('bindVariables', () => {
     it('should do nothing on empty patterns', () => {
       assert.ok(equalsPattern({}                       , [], []));
@@ -166,7 +184,7 @@ describe('DStar', () => {
   });
 
   describe("allUsageOfAre", () => {
-    it('test1', () => {
+    it('should work with vanilla RDF', () => {
       const dstar = new DStar();
       dstar.addFromTurtleStar(
         `
@@ -191,7 +209,25 @@ describe('DStar', () => {
         [$$quad(ex.other, undefined, ex.object)]
       ));
     });
+
+    it('should work with RDF-star', () => {
+      const dstar = new DStar();
+      dstar.addFromTurtleStar(
+        `
+          @prefix ex:  <http://example.org/> .
+          @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+          
+          ex:a_former_twitter_user ex:says << ex:toto ex:likes ex:anna >> .
+        `
+      );
+
+      assert.ok(null !== dstar.allUsageOfAre(ex.toto,
+        [$$quad(ex.a_former_twitter_user, ex.says, $$quad(ex.toto, undefined, undefined))]
+      ));
+
+      assert.ok(null === dstar.allUsageOfAre(ex.toto,
+        [$$quad(undefined, undefined, $$quad(ex.anna, undefined, undefined))]
+      ));
+    });
   });
 });
-
-
