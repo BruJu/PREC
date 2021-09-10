@@ -1,4 +1,4 @@
-import { PropertyGraph } from '../mock-pg/pg-implem';
+import { PropertyGraph, PGBuild } from '../mock-pg/pg-implem';
 
 const PREFIX_NODE_LABEL = 'PREFIX nl: <http://www.example.org/vocab/node/label/> \n';
 const PREFIX_NODE_PROP  = 'PREFIX np: <http://www.example.org/vocab/node/property/> \n';
@@ -14,11 +14,7 @@ module.exports = (test_: (name: string, pg: PropertyGraph, _: string, rdf: strin
     test("EmptyGraph", new PropertyGraph(), '');
 
     test("OneNode",
-      (() => {
-        const pg = new PropertyGraph();
-        pg.addNode("Person", "Father", "President");
-        return pg;
-      })(),
+      PGBuild().addNode(null, ["Person", "Father", "President"]).build(),
       PREFIXES + 
       `
         _:node a nl:Person, nl:Father, nl:President, pgo:Node .
@@ -29,12 +25,9 @@ module.exports = (test_: (name: string, pg: PropertyGraph, _: string, rdf: strin
     );
 
     test("AliceIsNamed",
-      (() => {
-        const pg = new PropertyGraph();
-        const alice = pg.addNode("Person");
-        alice.addProperty("name", "Alice");
-        return pg;
-      })(),
+      PGBuild()
+      .addNode(null, ["Person"], { name: "Alice" })
+      .build(),
       PREFIXES + 
       `
         _:alice a nl:Person, pgo:Node .

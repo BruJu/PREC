@@ -1,120 +1,88 @@
-const utility = require("./utility");
-const graphBuilder = require('../src/prec/graph-builder')
-const { default: graphReducer } = require("../src/prec/graph-reducer");
-const assert = require('assert');
-const { isomorphic } = require("rdf-isomorphic");
-const precUtils = require('../src/rdf/utils')
+import * as utility from "./utility";
+import { toStringWithDiffColor } from './utility';
+import * as graphBuilder from '../src/prec/graph-builder';
+import graphReducer from "../src/prec/graph-reducer";
+import assert from 'assert';
+import { isomorphic } from "rdf-isomorphic";
+import DStar from "../src/dataset";
+import { Quad } from "@rdfjs/types";
+import { badToString } from "../src/rdf/utils";
+import { PropertyGraph } from "./mock-pg/pg-implem";
 
-function badToColorizedToStrings(quads1, quads2, indent = 8) {
-    function badToColorizedToString(quads, match, indent) {
-        let asString = precUtils.badToString(quads, indent).split(/\r?\n/);
+function generateMessage(
+  input: DStar | string,
+  context: Quad[] | string,
+  output: DStar,
+  expected: DStar
+) {
+  let msg = '\x1b[0m' + "• Base Graph:";
+  msg += '\n' + (typeof input === 'string' ? input : badToString(input.getQuads(), 2));
+  msg += '\n' + "• Context:";
+  msg += '\n' + (typeof context === 'string' ? context : badToString(context, 2));
+
+  const [r, e] = toStringWithDiffColor(output.getQuads(), expected.getQuads(), 2);
+
+  msg += '\n' + `• Result (${output.size} quads):`;
+  msg += '\n' + r;
+  msg += '\n' + `• Expected (${expected.size} quads):`;
+  msg += '\n' + e;
+  return msg;
+}
+
+function runATest_(
+  dict: {[x: string]: string},
+  graphName: string,
+  contextName: string,
+  expected: string
+) {
+  it(graphName + " x " + contextName, function() {
+    const store   = utility.turtleToDStar(dict[graphName]);
+    const context = utility.turtleToQuads(dict[contextName]);
+    graphReducer(store, context);
+
+    const expectedStore = utility.turtleToDStar(expected);
+    const r = isomorphic(store.getQuads(), expectedStore.getQuads());
+    let msg = ""
+    if (!r) {
+      msg = generateMessage(dict[graphName], dict[contextName], store, expectedStore);
+    }
+    assert.ok(r, msg);
+  });
+}
+
+function test(name: string, source: string, context: string, expected: string) {
+  it(name, function () {
+    const store = utility.turtleToDStar(source);
+    const ctx   = utility.turtleToQuads(context);
+    graphReducer(store, ctx);
+
+    const expectedStore = utility.turtleToDStar(expected);
+    const r = isomorphic(store.getQuads(), expectedStore.getQuads());
+    let msg = "";
+    if (!r) {
+      msg = generateMessage(source, context, store, expectedStore);
+    }
     
-        for (let i = 0 ; i != quads.length ; ++i) {
-            if (match[i] === undefined) continue;
-    
-            if (match[i] >= 0) asString[i] = "\x1b[36m" + asString[i] + "\x1b[0m";
-        }
-    
-        return asString.join("\n");
+    assert.ok(r, msg);
+  });
+}
+
+function testFromMockPG(name: string, source: PropertyGraph, context: string, expected: string) {
+  it(name, () => {
+    const { nodes, edges } = source.convertToProductFromTinkerProp() as any;
+    const store = graphBuilder.fromTinkerPop(nodes, edges)[0];
+    const ctx = utility.turtleToQuads(context);
+    graphReducer(store, ctx);
+
+    const expectedStore = utility.turtleToDStar(expected);
+    const r = isomorphic(store.getQuads(), expectedStore.getQuads());
+    let msg = "";
+    if (!r) {
+      msg = generateMessage("", context, store, expectedStore);
     }
 
-    let [s1, s2] = precUtils.approximateIsomorphism(quads1, quads2)
-    return [
-        badToColorizedToString(quads1, s1, indent),
-        badToColorizedToString(quads2, s2, indent)
-    ];
-}
-
-function print(store, d1, graphName, d2, contextName, expectedStore) {
-    console.error("Error on " + graphName + " x " + contextName);
-    console.error("• Base Graph:");
-    console.error(d1[graphName]);
-    console.error("• Context:");
-    console.error(d2[contextName]);
-
-    [result, expected] = badToColorizedToStrings(store.getQuads(), expectedStore.getQuads());
-
-    console.error(`• Result (${store.size} quads):`);
-    console.error(result);
-    console.error(`• Expected (${expectedStore.size} quads):`);
-    console.error(expected);
-}
-
-
-
-function runATest_(dict, graphName, contextName, expected) {
-    it(graphName + " x " + contextName, function() {
-        const store         = utility.turtleToDStar(dict[graphName]);
-        const context       = utility.turtleToQuads(dict[contextName]);
-        graphReducer(store, context);
-
-        const expectedStore = utility.turtleToDStar(expected);
-        const r = isomorphic(store.getQuads(), expectedStore.getQuads());
-        if (!r) print(store, dict, graphName, dict, contextName, expectedStore);
-        assert.ok(r);
-    });
-}
-
-function test(name, source, context, expected) {
-    it(name, function () {
-        const store         = utility.turtleToDStar(source);
-        const ctx           = utility.turtleToQuads(context);
-        graphReducer(store, ctx);
-
-        const expectedStore = utility.turtleToDStar(expected);
-        const r = isomorphic(store.getQuads(), expectedStore.getQuads());
-        let msg = "";
-        if (!r) {
-            msg = "Error on " + name;
-            msg += '\n' + '\x1b[0m' + "• Base Graph:";
-            msg += '\n' + source;
-            msg += '\n' + "• Context:";
-            msg += '\n' + context;
-        
-            [result, expected] = badToColorizedToStrings(store.getQuads(), expectedStore.getQuads(), 2);
-        
-            msg += '\n' + `• Result (${store.size} quads):`;
-            msg += '\n' + result;
-            msg += '\n' + `• Expected (${expectedStore.size} quads):`;
-            msg += '\n' + expected;
-        }
-        
-        assert.ok(r, msg);
-    });
-}
-
-/**
- * 
- * @param {string} name 
- * @param {import('./mock-pg/pg-implem').PropertyGraph} source 
- * @param {*} context 
- * @param {*} expected 
- */
-function testFromMockPG(name, source, context, expected) {
-    it(name, () => {
-        const { nodes, edges } = source.convertToProductFromTinkerProp();
-        const store = graphBuilder.fromTinkerPop(nodes, edges)[0];
-        const ctx = utility.turtleToQuads(context);
-        graphReducer(store, ctx);
-
-        const expectedStore = utility.turtleToDStar(expected);
-        const r = isomorphic(store.getQuads(), expectedStore.getQuads());
-        let msg = "";
-        if (!r) {
-            msg = "Error on " + name;
-            msg += '\n' + '\x1b[0m' + "• Context:";
-            msg += '\n' + context;
-        
-            [result, expected] = badToColorizedToStrings(store.getQuads(), expectedStore.getQuads(), 2);
-        
-            msg += '\n' + `• Result (${store.size} quads):`;
-            msg += '\n' + result;
-            msg += '\n' + `• Expected (${expectedStore.size} quads):`;
-            msg += '\n' + expected;
-        }
-
-        assert.ok(r, msg);
-    });
+    assert.ok(r, msg);
+  });
 }
 
 require('./prec_impl/prec-0.test')(testFromMockPG);
@@ -333,7 +301,7 @@ describe("Property convertion", function() {
             :pName rdfs:label "key" ; a prec:PropertyKey, prec:CreatedPropertyKey .
         `;
 
-        const templatedBy = function (template) {
+        const templatedBy = function (template: string) {
             return `
                 prec:Properties prec:templatedBy [ prec:composedOf ${template} ] .
                 [] a prec:PropertyRule ;

@@ -1,6 +1,7 @@
 import { Quad } from '@rdfjs/types';
 import { Parser } from 'n3';
 import DStar from '../src/dataset/index';
+import { badToString, approximateIsomorphism } from '../src/rdf/utils';
 
 function readQuads(turtleContent: string): Quad[] {
   const prefixes =
@@ -29,3 +30,24 @@ export { readQuads as turtleToQuads };
 export function turtleToDStar(content: string) {
   return new DStar(readQuads(content));
 }
+
+export function toStringWithDiffColor(quads1: Quad[], quads2: Quad[], indent: number = 8) {
+  function toStringWithColor(quads: Quad[], match: (number | undefined)[], indent: number) {
+    let asString = badToString(quads, indent).split(/\r?\n/);
+
+    for (let i = 0 ; i != quads.length ; ++i) {
+      if (match[i] === undefined) continue;
+
+      if (match[i]! >= 0) asString[i] = "\x1b[36m" + asString[i] + "\x1b[0m";
+    }
+  
+    return asString.join("\n");
+  }
+
+  let [s1, s2] = approximateIsomorphism(quads1, quads2)
+  return [
+    toStringWithColor(quads1, s1, indent),
+    toStringWithColor(quads2, s2, indent)
+  ];
+}
+
