@@ -4,7 +4,7 @@ import { DataFactory, Parser } from 'n3';
 import namespace from '@rdfjs/namespace';
 import * as WT from '@bruju/wasm-tree';
 import { DatasetCore, NamedNode, Quad, Quad_Predicate, Quad_Subject, Term } from '@rdfjs/types';
-import { checkAndFollow, followThrough, getNodesOfType, getPathsFrom } from '../../src/rdf/path-travelling';
+import { checkAndFollow, followAll, followOrNull, followThrough, getNodesOfType, getPathsFrom } from '../../src/rdf/path-travelling';
 
 const ex = namespace("http://ex.org/", { factory: DataFactory });
 const quad = DataFactory.quad;
@@ -188,6 +188,43 @@ describe("Path Travelling Expansion", () => {
       ), ex.subjectx, ex.predicate2), ex.object2);
     });
 
+    it('followOrNull', () => {
+      expectQuad(followOrNull(toDataset(
+        "<subject> <hey> <object> . \n" +
+        "<noiseS> <noiseP> <noiseO> . "
+      ), ex.subject, ex.predicate), null);
+
+      expectQuad(followOrNull(toDataset(
+        "<subject> <predicate> <object> . \n" +
+        "<noiseS> <noiseP> <noiseO> . "
+      ), ex.subject, ex.predicate), ex.object);
+
+      assert.throws(() => followOrNull(toDataset(
+        "<subject> <predicate> <object1>, <object2> . \n" +
+        "<noiseS> <noiseP> <noiseO> . "
+      ), ex.subject, ex.predicate));
+    });
+
+    it('followAll', () => {
+      const dataset = toDataset(
+        "<subject> <predicate> <a>, <b>, <c> . \n" +
+        "<another> <hey> <a>, <d> ."
+      );
+
+      const subject = followAll(dataset, ex.subject, ex.predicate);
+      assert.strictEqual(subject.length, 3);
+      assert.ok(subject.find(q => q.equals(ex.a)) !== undefined);
+      assert.ok(subject.find(q => q.equals(ex.b)) !== undefined);
+      assert.ok(subject.find(q => q.equals(ex.c)) !== undefined);
+      
+      const another = followAll(dataset, ex.another, ex.hey);
+      assert.strictEqual(another.length, 2);
+      assert.ok(another.find(q => q.equals(ex.a)) !== undefined);
+      assert.ok(another.find(q => q.equals(ex.d)) !== undefined);
+
+      const noResult = followAll(dataset, ex.a, ex.predicate);
+      assert.strictEqual(noResult.length, 0);
+    });
 
     it("checkAndFollow", function () {
       // Empty dataset

@@ -1,7 +1,7 @@
 @prefix prec: <http://bruy.at/prec#> .
 
-prec:testMetaData prec:pgPath "../../data/joe_biden.json" ;
-                  prec:contextPath "../../data/joe_biden.ttl" ;
+prec:testMetaData prec:pgPath "../../data/ex1_potus.json" ;
+                  prec:contextPath "../../data/ex1_potus.ttl" ;
                   prec:pgSource <https://neo4j.com/developer/neo4j-apoc/> .
 
 _:joe a <http://dbpedia.org/ontology/Person>;

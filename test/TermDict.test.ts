@@ -1,5 +1,5 @@
 import TermDict from "../src/TermDict";
-import { strictEqual } from 'assert';
+import { ok, strictEqual } from 'assert';
 
 describe("TermDict", () => {
   class TwoInts {
@@ -46,5 +46,12 @@ describe("TermDict", () => {
     d.set(E(10, 10), "new");
     strictEqual(d.get(E(10, 10)), "new");
     strictEqual(d.get(E(10, 11)), "untouched");
+  });
+
+  it("should detect whetever it is empty or not", () => {
+    const d = new TermDict<TwoInts, string>();
+    ok(d.isEmpty());
+    d.set(E(7, 77), "hey");
+    ok(!d.isEmpty());
   });
 });

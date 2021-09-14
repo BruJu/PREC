@@ -85,6 +85,15 @@ function testFromMockPG(name: string, source: PropertyGraph, context: string, ex
   });
 }
 
+function badPGxContext(name: string, source: PropertyGraph, context: string) {
+  it(name, () => {
+      const { nodes, edges } = source.convertToProductFromTinkerProp();
+      const store = graphBuilder.fromTinkerPop(nodes as any, edges as any)[0];
+      const ctx = utility.turtleToQuads(context);
+      assert.throws(() => graphReducer(store, ctx));
+  });
+}
+
 require('./prec_impl/prec-0.test')(testFromMockPG);
 
 describe('Context Applier', () => {
@@ -94,6 +103,7 @@ describe('Context Applier', () => {
   require('./prec_impl/rules-for-properties-on-edges.test')(test);
   require('./prec_impl/prec-c-map-blank-nodes.test')();
   require('./prec_impl/prec-c-rule-properties.test')(test);
+  require('./prec_impl/prsc.test')(testFromMockPG, badPGxContext);
 });
 
 describe("Property convertion", () => {
