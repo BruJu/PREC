@@ -19,7 +19,7 @@ function isLikeNone<T>(something: T | null | undefined) {
 }
 
 type VariablesInstanciation = {[key: string]: Term | Quad[]};
-type MatchResult = VariablesInstanciation & { '@quads': Quad[] };
+export type MatchResult = VariablesInstanciation & { '@quads': Quad[] };
 type MatchOneResult = VariablesInstanciation & { '@quad': Quad };
 
 /**
