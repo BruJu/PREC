@@ -1,4 +1,5 @@
-import { IdentityTo } from "../../src/prec-0/PGDefinitions";
+import { IdentityTo, TinkerPopProperties } from "../../src/prec-0/PGDefinitions";
+import { fromTinkerPop } from '../../src/prec/graph-builder';
 
 type TKProps<Value> = TKProp<Value>[];
 type TKProp<Value> = { key: string, value: Value, meta?: TKProps<Value> };
@@ -243,3 +244,48 @@ export class PropertyGraph<Value = any> {
     return { nodes, edges };
   }
 }
+
+class PGBuilder {
+  namedNodes: Map<string, Node<TinkerPopProperties>> = new Map();
+  pg: PropertyGraph<TinkerPopProperties> = new PropertyGraph<TinkerPopProperties>();
+
+  addNode(name: string | null = null, labels: string[] = [], properties: {[key: string]: any} = {}): this {
+    const node = this.pg.addNode(...labels);
+    if (name !== null) this.namedNodes.set(name, node);
+
+    for (const [key, value] of Object.entries(properties)) {
+      node.addProperty(key, value);
+    }
+
+    return this;
+  }
+
+  addEdge(from: string, label: string , to: string, properties: {[key: string]: any} = {}): this {
+    const start = this.namedNodes.get(from);
+    if (start === undefined) throw Error("No node named " + from);
+
+    const end = this.namedNodes.get(to);
+    if (end === undefined) throw Error("No node named " + from);
+
+    const edge = this.pg.addEdge(start, label, end);
+    
+    for (const [key, value] of Object.entries(properties)) {
+      edge.addProperty(key, value);
+    }
+
+    return this;
+  }
+
+  build() {
+    return this.pg;
+  }
+
+  prec0() {
+    const pg = this.pg;
+    const { nodes, edges } = pg.convertToProductFromTinkerProp();
+    const store = fromTinkerPop(nodes as any, edges as any)[0];
+    return [...store];
+  }
+}
+
+export const PGBuild = () => new PGBuilder();
