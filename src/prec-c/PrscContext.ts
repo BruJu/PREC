@@ -4,7 +4,7 @@ import DStar from "../dataset";
 import * as RDFString from 'rdf-string';
 
 const $quad         = DataFactory.quad;
-//const $literal      = DataFactory.literal;
+const $literal      = DataFactory.literal;
 const $variable     = DataFactory.variable;
 const $defaultGraph = DataFactory.defaultGraph();
 
@@ -16,8 +16,19 @@ const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , { factory:
 const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , { factory: DataFactory });
 const prec = namespace("http://bruy.at/prec#"                       , { factory: DataFactory });
 const pvar = namespace("http://bruy.at/prec-trans#"                 , { factory: DataFactory });
+const ex   = namespace("http://example.org/"                        , { factory: DataFactory });
 
 const xsdString = DataFactory.namedNode("http://www.w3.org/2001/XMLSchema#string");
+const pvarPrefix = "http://bruy.at/prec-trans#";
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+
+type IdentificationTriple = {
+  rule: PRSCRule;
+  triple: RDF.Quad;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // General purpose utilty functions
@@ -139,6 +150,82 @@ class PRSCRule {
     });
   }
   
+  findIdentificationTriple(rules: PRSCRule[]): RDF.Quad {
+    const unifiedTriples = this.template.map(q => tripleWithUnifiedTerms(q));
+    const unifiedOthers = rules.filter(r => r !== this)
+      .map(r => r.template.map(q => tripleWithUnifiedTerms(q)));
+  
+    for (let i = 0; i != unifiedTriples.length; ++i) {
+      const triple = unifiedTriples[i];
+      if (unifiedOthers.every(other => other.find(t => t.equals(triple)) === undefined)) {
+        return this.template[i];
+      }
+    }
+  
+    throw Error(`No unique triple found in ${RDFString.termToString(this.identity)}`);
+  }
+
+  revertFromPrec0(dataGraph: DStar, self: RDF.Term): { used: RDF.Quad[], prec0: RDF.Quad[] } {
+    let matchPattern: RDF.Quad[] = [];
+
+    this.template.forEach(templateQuad => {
+      matchPattern.push(eventuallyRebuildQuad(
+        templateQuad,
+        term => {
+          if (term.equals(pvar.node) || term.equals(pvar.edge)) return self;
+          else if (term.equals(pvar.source)) return $variable("edge_source");
+          else if (term.equals(pvar.destination)) return $variable("edge_destination");
+          else if (term.termType === 'Literal' && term.datatype.equals(prec._valueOf))
+            return $variable("property_" + term.value);
+          else return term;
+        }
+      ));
+    });
+
+    const matchResult = dataGraph.matchAndBind(matchPattern);
+    if (matchResult.length !== 1) throw Error("More than one result");
+  
+    const matchResult1 = matchResult[0];
+    
+    let toAdd: RDF.Quad[] = [
+      $quad(self as RDF.Quad_Subject, rdf.type, this.type === 'node' ? pgo.Node : pgo.Edge)
+    ];
+
+    if (this.type === 'edge') {
+      toAdd.push(
+        $quad(self as RDF.Quad_Subject, rdf.subject, matchResult1['edge_source']      as RDF.Quad_Object),
+        $quad(self as RDF.Quad_Subject, rdf.object , matchResult1['edge_destination'] as RDF.Quad_Object)
+      );
+    }
+
+    this.labels.forEach(label => {
+      let labelBlankNode = DataFactory.blankNode();
+      toAdd.push(
+        $quad(self as RDF.Quad_Subject, this.type === 'node' ? rdf.type : rdf.predicate, labelBlankNode),
+        $quad(labelBlankNode, rdfs.label, $literal(label))
+      );
+    });
+
+    let labelsM = this.labels.map(x => x).sort().join("/");
+
+    this.properties.forEach(propertyName => {
+      let pn = ex[labelsM + "/" + propertyName];
+      let bn = DataFactory.blankNode();
+
+      let v = matchResult1["property_" + propertyName];
+      if (v === undefined) throw Error("Invalid code logic in thePatternBecomesAMatch");
+
+      toAdd.push(
+        $quad(self as RDF.Quad_Subject, pn, bn),
+        $quad(pn, rdfs.label, $literal(propertyName)),
+        $quad(bn, rdf.value, v as RDF.Quad_Object)
+      );
+    });
+
+    const used = matchResult1["@quads"];
+  
+    return { used, prec0: toAdd };
+  }
 }
 
 class PRSCSchema {
@@ -213,7 +300,19 @@ class PRSCSchema {
       t === 'edge' ? followThrough(dataset, element, rdf.object )! as RDF.Quad_Subject : undefined
     );
   }
+
+  findIdentificationTriples(): IdentificationTriple[] {
+    return this.prscRules
+      .map(rule => ({
+        rule: rule,
+        triple: rule.findIdentificationTriple(this.prscRules)
+      }));
+  }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// ==== Structural description graph -> Idiomatic Graph
+
 
 export function isPrscContext(contextQuads: RDF.Quad[]) {
   const searched = $quad(prec.this_is, rdf.type, prec.prscContext);
@@ -223,3 +322,117 @@ export function isPrscContext(contextQuads: RDF.Quad[]) {
 export default function precCwithPRSC(dataset: DStar, contextQuads: RDF.Quad[]) {
   return new PRSCSchema(contextQuads).applyContext(dataset);
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+// ==== Structural description graph <- Idiomatic Graph
+
+
+
+export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): DStar {
+  dataset = dataset.match();
+
+  const schema = new PRSCSchema(contextQuads);
+  const identificationTriples = schema.findIdentificationTriples();
+
+  const usedQuads = new DStar();
+  const listOfUsedRules: { term: RDF.Term, rule: PRSCRule }[] = [];
+  for (const dataQuad of dataset) {    
+    const f = identificationTriples.find(
+      t => isPossibleSourceFor(tripleWithUnifiedTerms(t.triple), dataQuad)
+    );
+
+    if (f === undefined) continue;
+
+    const element = findElement(dataQuad, f);
+    listOfUsedRules.push({ term: element, rule: f.rule });
+    usedQuads.add(dataQuad);
+  }
+
+  const prec0Graph = new DStar();
+  for (const { term, rule } of listOfUsedRules) {
+    const { used, prec0 } = rule.revertFromPrec0(dataset, term);
+    prec0Graph.addAll(prec0);
+    usedQuads.addAll(used);
+  }
+
+  if (usedQuads.size !== dataset.size) {
+    console.error("Not all quads were consumed");
+  }
+
+  return prec0Graph;
+}
+
+/**
+ * Return the unified form of the triple.
+ * 
+ * The unified form is the triple with pvar nodes and ^^prec:_valueOf merged
+ */
+ function tripleWithUnifiedTerms(quad: RDF.Quad) {
+  return eventuallyRebuildQuad(quad, term => {
+    if (term.termType === 'Literal') {
+      if (term.datatype.equals(prec._valueOf)) {
+        return $literal("XX", prec._valueOf);
+      } else {
+        return term;
+      }
+    } else if (term.termType === 'BlankNode') {
+      return $literal('nodeOrIRI', prec._placeholder);
+    } else if (term.termType === 'NamedNode') {
+      if (term.value.startsWith(pvarPrefix)) {
+        if (term.equals(pvar.edge) || term.equals(pvar.node)) {
+          return $literal('self', prec._placeholder);
+        } else {
+          return $literal('nodeOrIRI', prec._placeholder);
+        }
+      } else {
+        return term;
+      }
+    } else {
+      return term;
+    }
+  })
+}
+
+
+
+function isPossibleSourceFor(pattern: RDF.Quad, data: RDF.Quad): boolean {
+  function isPossibleSourceTermFor(pattern: RDF.Term, data: RDF.Term): boolean {
+    if (pattern.termType === 'Literal' && pattern.datatype.equals(prec._placeholder)) {
+      return data.termType === 'BlankNode';
+    }
+
+    if (pattern.termType === 'Literal' && pattern.datatype.equals(prec._valueOf)) {
+      return data.termType === 'Literal';
+    }
+
+    if (data.termType === 'BlankNode') return false;
+
+    if (pattern.termType !== data.termType) {
+      return false;
+    } else if (pattern.termType === 'Quad' && data.termType === 'Quad') {
+      return isPossibleSourceTermFor(pattern.subject, data.subject) && 
+        isPossibleSourceTermFor(pattern.predicate, data.predicate) &&
+        isPossibleSourceTermFor(pattern.object, data.object) &&
+        isPossibleSourceTermFor(pattern.graph, data.graph);
+    } else {
+      return pattern.equals(data);
+    }
+  }
+
+  return isPossibleSourceTermFor(pattern, data);
+}
+
+function findElement(dataQuad: RDF.Quad, f: { rule: PRSCRule, triple: RDF.Quad }): RDF.Term {
+  const lookingFor = f.rule.type === 'edge' ? pvar.edge : pvar.node;
+
+  const position = ((): 'subject' | 'predicate' | 'object' => {
+    if (f.triple.subject.equals(lookingFor)) return 'subject';
+    if (f.triple.predicate.equals(lookingFor)) return 'predicate';
+    if (f.triple.object.equals(lookingFor)) return 'object';
+    throw Error("Did not found " + lookingFor.value + " in template");
+  })();
+
+  return dataQuad[position];
+}
+
