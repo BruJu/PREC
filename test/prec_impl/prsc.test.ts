@@ -283,7 +283,72 @@ module.exports = (test: TestFromPG, bad: TestBad) => {
           << _:toto :knows _:alice >> :since "2021" .
         `
         ,
-        undefined
+        true
+      );
+
+      test("Twice the same property name",
+        PGBuild()
+        .addNode(null, [], { name: "Tintin" })
+        .addNode(null, [], { name: "Mille Loups" })
+        .build(),
+        `
+        prec:this_is a prec:prscContext .
+
+        [] a prec:prsc_node ;
+          prec:propertyName "name" ;
+          prec:composedOf << pvar:node :name "name"^^prec:_valueOf  >> .
+        `,
+        ' _:tintin :name "Tintin" . _:milou :name "Mille Loups" .',
+        true
+      );
+
+      test("A label",
+        PGBuild()
+        .addNode(null, ["Letter"], { value: "A" })
+        .build(),
+        `
+        prec:this_is a prec:prscContext .
+
+        [] a prec:prsc_node ;
+          prec:nodeLabel "Letter" ;
+          prec:propertyName "value" ;
+          prec:composedOf << pvar:node :isTheLetter "value"^^prec:_valueOf >> .
+        `,
+        ` _:a :isTheLetter "A" . `,
+        true
+      );
+
+      test("Two labels",
+        PGBuild()
+        .addNode(null, ["Letter", "Vowel"], { value: "A" })
+        .build(),
+        `
+        prec:this_is a prec:prscContext .
+
+        [] a prec:prsc_node ;
+          prec:nodeLabel "Letter", "Vowel" ;
+          prec:propertyName "value" ;
+          prec:composedOf << pvar:node :isTheLetter "value"^^prec:_valueOf >> .
+        `,
+        ` _:a :isTheLetter "A" . `,
+        true
+      );
+
+      test("Twice the same label",
+        PGBuild()
+        .addNode(null, ["Letter"], { value: "A" })
+        .addNode(null, ["Letter"], { value: "B" })
+        .build(),
+        `
+        prec:this_is a prec:prscContext .
+
+        [] a prec:prsc_node ;
+          prec:nodeLabel "Letter" ;
+          prec:propertyName "value" ;
+          prec:composedOf << pvar:node :isTheLetter "value"^^prec:_valueOf >> .
+        `,
+        ` _:a :isTheLetter "A" . _:b :isTheLetter "B" . `,
+        true
       );
     });
   });
