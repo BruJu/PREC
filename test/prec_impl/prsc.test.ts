@@ -1,20 +1,60 @@
 import { PropertyGraph, PGBuild } from "../mock-pg/pg-implem";
+import { fromTinkerPop } from '../../src/prec/graph-builder';
+import { turtleToQuads, turtleToDStar, generateMessage } from "../utility";
+import graphReducer from "../../src/prec/graph-reducer";
+import assert from 'assert';
+import { revertPrecC } from "../../src/prec-c/PrscContext";
+import { isomorphic } from "rdf-isomorphic";
 
-export type TestFromPG = (
-  name: string,
-  pg: PropertyGraph,
-  context: string, expected: string,
-  revertible?: boolean
-) => void;
+enum RevertableType {
+  ShouldThrow
+};
 
-export type TestBad = (
-  name: string,
-  pg: PropertyGraph,
-  context: string
-) => void;
+function test(
+  name: string, source: PropertyGraph, context: string, expected: string,
+  revertable?: boolean | RevertableType
+) {
+  it(name, () => {
+    const { nodes, edges } = source.convertToProductFromTinkerProp() as any;
+    const store = fromTinkerPop(nodes, edges)[0];
+    const cleanSource = store.match();
+    const ctx = turtleToQuads(context);
+    graphReducer(store, ctx);
 
+    const expectedStore = turtleToDStar(expected);
+    const r = isomorphic(store.getQuads(), expectedStore.getQuads());
+    let msg = "";
+    if (!r) {
+      msg = generateMessage("", context, store, expectedStore);
+    }
 
-module.exports = (test: TestFromPG, bad: TestBad) => {
+    assert.ok(r, msg);
+
+    if (revertable === true) {
+      const o = revertPrecC(expectedStore, ctx);
+
+      const iso = isomorphic(o.dataset.getQuads(), cleanSource.getQuads());
+      let msg = "";
+      if (!iso) {
+        msg = generateMessage("PRSC reversiblity", context, o.dataset, cleanSource);
+      }
+      assert.ok(iso, msg);
+    } else if (revertable === RevertableType.ShouldThrow) {
+      assert.throws(() => revertPrecC(expectedStore, ctx));
+    }
+  });
+}
+
+function badPGToRDF(name: string, source: PropertyGraph, context: string) {
+  it(name, () => {
+      const { nodes, edges } = source.convertToProductFromTinkerProp();
+      const store = fromTinkerPop(nodes as any, edges as any)[0];
+      const ctx = turtleToQuads(context);
+      assert.throws(() => graphReducer(store, ctx));
+  });
+}
+
+module.exports = () => {
   describe('PRSC', () => {
 
     describe("Simple cases", () => {
@@ -23,50 +63,6 @@ module.exports = (test: TestFromPG, bad: TestBad) => {
         "prec:this_is a prec:prscContext .",
         "",
         true
-      );
-
-      bad("A PG but no context",
-        (() => {
-          const pg = new PropertyGraph();
-          const toto = pg.addNode("toto");
-          const titi = pg.addNode("titi");
-          pg.addEdge(toto, "knows", titi);
-          return pg;
-        })(),
-        "prec:this_is a prec:prscContext ."
-      );
-
-      bad(
-        "A node with incompatible schema",
-        (() => {
-          const pg = new PropertyGraph();
-          pg.addNode();
-          return pg;
-        })(),
-        `
-        prec:this_is a prec:prscContext .
-
-        [] a prec:prsc_node ;
-          prec:nodeLabel "You need a label" ;
-          prec:composedOf << pvar:node :exists :inthepg >> .
-        `
-      );
-
-      bad(
-        "A node with incompatible schema (strict schema requirement)",
-        (() => {
-          const pg = new PropertyGraph();
-          pg.addNode("FirstLabel");
-          pg.addNode("OtherLabel")
-          return pg;
-        })(),
-        `
-        prec:this_is a prec:prscContext .
-
-        [] a prec:prsc_node ;
-          prec:nodeLabel "First Label" ;
-          prec:composedOf << pvar:node :exists :inthepg >> .
-        `
       );
 
       test(
@@ -84,48 +80,6 @@ module.exports = (test: TestFromPG, bad: TestBad) => {
         `,
         ` _:thenode :exists :inthepg . `,
         true
-      );
-
-      bad("A PG without a schema for the edge (bad node schema)",
-        (() => {
-          const pg = new PropertyGraph();
-          const toto = pg.addNode("person");
-          const titi = pg.addNode("person");
-          pg.addEdge(toto, "knows", titi);
-          return pg;
-        })(),
-        `
-        prec:this_is a prec:prscContext .
-
-        [] a prec:prsc_node ;
-          prec:nodeLabel "person" .
-
-        :otherSchema a prec:prsc_node .
-
-        [] a prec:prsc_edge ;
-          prec:prscSource :otherSchema .
-        `
-      );
-
-      bad("A PG without a schema for the edge (bad label)",
-        (() => {
-          const pg = new PropertyGraph();
-          const toto = pg.addNode("person");
-          const titi = pg.addNode("person");
-          pg.addEdge(toto, "knows", titi);
-          return pg;
-        })(),
-        `
-        prec:this_is a prec:prscContext .
-
-        :person a prec:prsc_node ;
-          prec:nodeLabel "person" .
-
-        [] a prec:prsc_edge ;
-          prec:prscSource :person ;
-          prec:prscDestination :person ;
-          prec:edgeLabel "connait" .
-        `
       );
 
       test("A PG without a schema for the edge (bad label)",
@@ -151,58 +105,6 @@ module.exports = (test: TestFromPG, bad: TestBad) => {
         undefined
       );
 
-      bad("A bad context format (invalid blank node)",
-        (() => {
-          const pg = new PropertyGraph();
-          pg.addNode();
-          return pg;
-        })(),
-        `prec:this_is a prec:prscContext .
-        
-        [] a prec:prsc_node ;
-          prec:composedOf << pvar:node a [ :hello :work ] >> .
-        `
-      );
-
-      bad("A bad context format (property name is not a literal)",
-        (() => {
-          const pg = new PropertyGraph();
-          pg.addNode();
-          return pg;
-        })(),
-        `prec:this_is a prec:prscContext .
-        
-        [] a prec:prsc_node ;
-          prec:composedOf << pvar:node a [ prec:prsc_valueOf :hey ] >> .
-        `
-      );
-
-      bad("A bad context format (property name is not found in the node / schema)",
-        (() => {
-          const pg = new PropertyGraph();
-          pg.addNode();
-          return pg;
-        })(),
-        `prec:this_is a prec:prscContext .
-        
-        [] a prec:prsc_node ;
-          prec:composedOf << pvar:node a [ prec:prsc_valueOf "name" ] >> .
-        `
-      );
-      
-      bad("Node lacks the property in the schema",
-        (() => {
-          const pg = new PropertyGraph();
-          pg.addNode();
-          return pg;
-        })(),
-        `prec:this_is a prec:prscContext .
-        
-        [] a prec:prsc_node ;
-          prec:propertyName "name" ;
-          prec:composedOf << pvar:node a [ prec:prsc_valueOf "name" ] >> .
-        `
-      );
 
       test("A property is used",
         PGBuild().addNode(null, [], { name: "toto" }).build(),
@@ -351,5 +253,167 @@ module.exports = (test: TestFromPG, bad: TestBad) => {
         true
       );
     });
+
+    describe("Cases with bad PG to RDF convertion", () => {
+      badPGToRDF("A PG but no context",
+        (() => {
+          const pg = new PropertyGraph();
+          const toto = pg.addNode("toto");
+          const titi = pg.addNode("titi");
+          pg.addEdge(toto, "knows", titi);
+          return pg;
+        })(),
+        "prec:this_is a prec:prscContext ."
+      );
+
+      badPGToRDF(
+        "A node with incompatible schema",
+        (() => {
+          const pg = new PropertyGraph();
+          pg.addNode();
+          return pg;
+        })(),
+        `
+        prec:this_is a prec:prscContext .
+
+        [] a prec:prsc_node ;
+          prec:nodeLabel "You need a label" ;
+          prec:composedOf << pvar:node :exists :inthepg >> .
+        `
+      );
+
+      badPGToRDF(
+        "A node with incompatible schema (strict schema requirement)",
+        (() => {
+          const pg = new PropertyGraph();
+          pg.addNode("FirstLabel");
+          pg.addNode("OtherLabel")
+          return pg;
+        })(),
+        `
+        prec:this_is a prec:prscContext .
+
+        [] a prec:prsc_node ;
+          prec:nodeLabel "First Label" ;
+          prec:composedOf << pvar:node :exists :inthepg >> .
+        `
+      );
+
+      badPGToRDF("A PG without a schema for the edge (bad node schema)",
+        (() => {
+          const pg = new PropertyGraph();
+          const toto = pg.addNode("person");
+          const titi = pg.addNode("person");
+          pg.addEdge(toto, "knows", titi);
+          return pg;
+        })(),
+        `
+        prec:this_is a prec:prscContext .
+
+        [] a prec:prsc_node ;
+          prec:nodeLabel "person" .
+
+        :otherSchema a prec:prsc_node .
+
+        [] a prec:prsc_edge ;
+          prec:prscSource :otherSchema .
+        `
+      );
+
+      badPGToRDF("A PG without a schema for the edge (bad label)",
+        (() => {
+          const pg = new PropertyGraph();
+          const toto = pg.addNode("person");
+          const titi = pg.addNode("person");
+          pg.addEdge(toto, "knows", titi);
+          return pg;
+        })(),
+        `
+        prec:this_is a prec:prscContext .
+
+        :person a prec:prsc_node ;
+          prec:nodeLabel "person" .
+
+        [] a prec:prsc_edge ;
+          prec:prscSource :person ;
+          prec:prscDestination :person ;
+          prec:edgeLabel "connait" .
+        `
+      );
+
+      badPGToRDF("A bad context format (invalid blank node)",
+        (() => {
+          const pg = new PropertyGraph();
+          pg.addNode();
+          return pg;
+        })(),
+        `prec:this_is a prec:prscContext .
+        
+        [] a prec:prsc_node ;
+          prec:composedOf << pvar:node a [ :hello :work ] >> .
+        `
+      );
+
+      badPGToRDF("A bad context format (property name is not a literal)",
+        (() => {
+          const pg = new PropertyGraph();
+          pg.addNode();
+          return pg;
+        })(),
+        `prec:this_is a prec:prscContext .
+        
+        [] a prec:prsc_node ;
+          prec:composedOf << pvar:node a [ prec:prsc_valueOf :hey ] >> .
+        `
+      );
+
+      badPGToRDF("A bad context format (property name is not found in the node / schema)",
+        (() => {
+          const pg = new PropertyGraph();
+          pg.addNode();
+          return pg;
+        })(),
+        `prec:this_is a prec:prscContext .
+        
+        [] a prec:prsc_node ;
+          prec:composedOf << pvar:node a [ prec:prsc_valueOf "name" ] >> .
+        `
+      );
+      
+      badPGToRDF("Node lacks the property in the schema",
+        (() => {
+          const pg = new PropertyGraph();
+          pg.addNode();
+          return pg;
+        })(),
+        `prec:this_is a prec:prscContext .
+        
+        [] a prec:prsc_node ;
+          prec:propertyName "name" ;
+          prec:composedOf << pvar:node a [ prec:prsc_valueOf "name" ] >> .
+        `
+      );
+
+    });
+
+    describe("Ambiguous reversion", () => {
+      test(
+        "A context that add a value for a property",
+        PGBuild()
+        .addNode(null, [], { name: "Thomas" })
+        .build(),
+        `
+        prec:this_is a prec:prscContext .
+
+        :something a prec:prsc_node ;
+          prec:propertyName "name" ;
+          prec:composedOf
+            << pvar:node :is_named [ prec:prsc_valueOf "name" ] >> ,
+            << pvar:node :is_named "Grove" >> .
+        `,
+        ' _:thomas :is_named "Thomas", "Grove" . ',
+        RevertableType.ShouldThrow
+      );
+    })
   });
 };
