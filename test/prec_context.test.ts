@@ -2,6 +2,7 @@ import * as utility from "./utility";
 import { toStringWithDiffColor } from './utility';
 import * as graphBuilder from '../src/prec/graph-builder';
 import graphReducer from "../src/prec/graph-reducer";
+import { revertPrecC } from "../src/prec-c/PrscContext";
 import assert from 'assert';
 import { isomorphic } from "rdf-isomorphic";
 import DStar from "../src/dataset";
@@ -67,10 +68,11 @@ function test(name: string, source: string, context: string, expected: string) {
   });
 }
 
-function testFromMockPG(name: string, source: PropertyGraph, context: string, expected: string) {
+function testFromMockPG(name: string, source: PropertyGraph, context: string, expected: string, revertable?: boolean) {
   it(name, () => {
     const { nodes, edges } = source.convertToProductFromTinkerProp() as any;
     const store = graphBuilder.fromTinkerPop(nodes, edges)[0];
+    const cleanSource = store.match();
     const ctx = utility.turtleToQuads(context);
     graphReducer(store, ctx);
 
@@ -82,6 +84,17 @@ function testFromMockPG(name: string, source: PropertyGraph, context: string, ex
     }
 
     assert.ok(r, msg);
+
+    if (revertable === true) {
+      const o = revertPrecC(expectedStore, ctx);
+
+      const iso = isomorphic(o.dataset.getQuads(), cleanSource.getQuads());
+      let msg = "";
+      if (!iso) {
+        msg = generateMessage("PRSC reversiblity", context, o.dataset, cleanSource);
+      }
+      assert.ok(iso, msg);
+    }
   });
 }
 

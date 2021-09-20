@@ -16,7 +16,7 @@ const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , { factory:
 const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , { factory: DataFactory });
 const prec = namespace("http://bruy.at/prec#"                       , { factory: DataFactory });
 const pvar = namespace("http://bruy.at/prec-trans#"                 , { factory: DataFactory });
-const ex   = namespace("http://example.org/"                        , { factory: DataFactory });
+const ex   = namespace("http://www.example.org/"                    , { factory: DataFactory });
 
 const xsdString = DataFactory.namedNode("http://www.w3.org/2001/XMLSchema#string");
 const pvarPrefix = "http://bruy.at/prec-trans#";
@@ -209,7 +209,7 @@ class PRSCRule {
     let labelsM = this.labels.map(x => x).sort().join("/");
 
     this.properties.forEach(propertyName => {
-      let pn = ex[labelsM + "/" + propertyName];
+      let pn = ex["vocab/" + this.type + "/property/" + propertyName + "/" + labelsM];
       let bn = DataFactory.blankNode();
 
       let v = matchResult1["property_" + propertyName];
@@ -218,7 +218,11 @@ class PRSCRule {
       toAdd.push(
         $quad(self as RDF.Quad_Subject, pn, bn),
         $quad(pn, rdfs.label, $literal(propertyName)),
-        $quad(bn, rdf.value, v as RDF.Quad_Object)
+        $quad(bn, rdf.value, v as RDF.Quad_Object),
+        $quad(bn, rdf.type, prec.PropertyKeyValue),
+        $quad(pn, rdf.type, prec.PropertyKey),
+        $quad(pn, rdf.type, prec.CreatedPropertyKey),
+        $quad(prec.CreatedPropertyKey, rdfs.subClassOf, prec.CreatedVocabulary)
       );
     });
 
@@ -329,7 +333,7 @@ export default function precCwithPRSC(dataset: DStar, contextQuads: RDF.Quad[]) 
 
 
 
-export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): DStar {
+export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): { dataset: DStar, complete: boolean } {
   dataset = dataset.match();
 
   const schema = new PRSCSchema(contextQuads);
@@ -356,11 +360,10 @@ export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): DStar {
     usedQuads.addAll(used);
   }
 
-  if (usedQuads.size !== dataset.size) {
-    console.error("Not all quads were consumed");
-  }
-
-  return prec0Graph;
+  return {
+    dataset: prec0Graph,
+    complete: usedQuads.size === dataset.size
+  };
 }
 
 /**

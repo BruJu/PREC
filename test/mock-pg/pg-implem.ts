@@ -245,7 +245,7 @@ export class PropertyGraph<Value = any> {
   }
 }
 
-class PGBuilder {
+export class PGBuilder {
   namedNodes: Map<string, Node<TinkerPopProperties>> = new Map();
   pg: PropertyGraph<TinkerPopProperties> = new PropertyGraph<TinkerPopProperties>();
 

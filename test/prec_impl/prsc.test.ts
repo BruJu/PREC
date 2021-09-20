@@ -1,9 +1,10 @@
-import { PropertyGraph } from "../mock-pg/pg-implem";
+import { PropertyGraph, PGBuild } from "../mock-pg/pg-implem";
 
 export type TestFromPG = (
   name: string,
   pg: PropertyGraph,
-  context: string, expected: string
+  context: string, expected: string,
+  revertible?: boolean
 ) => void;
 
 export type TestBad = (
@@ -20,7 +21,8 @@ module.exports = (test: TestFromPG, bad: TestBad) => {
 
       test("Empty all", new PropertyGraph(),
         "prec:this_is a prec:prscContext .",
-        ""
+        "",
+        true
       );
 
       bad("A PG but no context",
@@ -80,7 +82,8 @@ module.exports = (test: TestFromPG, bad: TestBad) => {
         [] a prec:prsc_node ;
           prec:composedOf << pvar:node :exists :inthepg >> .
         `,
-        ` _:thenode :exists :inthepg . `
+        ` _:thenode :exists :inthepg . `,
+        true
       );
 
       bad("A PG without a schema for the edge (bad node schema)",
@@ -126,13 +129,11 @@ module.exports = (test: TestFromPG, bad: TestBad) => {
       );
 
       test("A PG without a schema for the edge (bad label)",
-        (() => {
-          const pg = new PropertyGraph();
-          const toto = pg.addNode("person");
-          const titi = pg.addNode("person");
-          pg.addEdge(toto, "knows", titi);
-          return pg;
-        })(),
+        PGBuild()
+        .addNode("toto", ["person"])
+        .addNode("titi", ["person"])
+        .addEdge("toto", "knows", "titi")
+        .build(),
         `
         prec:this_is a prec:prscContext .
 
@@ -146,7 +147,8 @@ module.exports = (test: TestFromPG, bad: TestBad) => {
           prec:composedOf << pvar:source :knows pvar:destination >>,
             << pvar:edge :is :discarded  >> .
         `,
-        " _:toto :knows _:titi . _:theedgeblanknode :is :discarded . "
+        " _:toto :knows _:titi . _:theedgeblanknode :is :discarded . ",
+        undefined
       );
 
       bad("A bad context format (invalid blank node)",
@@ -203,19 +205,15 @@ module.exports = (test: TestFromPG, bad: TestBad) => {
       );
 
       test("A property is used",
-        (() => {
-          const pg = new PropertyGraph();
-          const node = pg.addNode();
-          node.addProperty("name", "toto");
-          return pg;
-        })(),
+        PGBuild().addNode(null, [], { name: "toto" }).build(),
         `prec:this_is a prec:prscContext .
         
         [] a prec:prsc_node ;
           prec:propertyName "name" ;
           prec:composedOf << pvar:node :name [ prec:prsc_valueOf "name" ] >> .
         `,
-        '_:toto :name "toto" . '
+        '_:toto :name "toto" . ',
+        true
       );
       
       test("Map the property of an edge",
@@ -243,6 +241,49 @@ module.exports = (test: TestFromPG, bad: TestBad) => {
         `,
         ' _:toto :knows _:titi . \n ' +
         '<< _:titi :isStalkedBy _:toto >> :since "yesterday" .'
+      );
+
+      test("Translate labels",
+        PGBuild()
+        .addNode("toto", ["person"], { name: "Toto" })
+        .addNode("alice", ["knight"], { name: "Alice", number: 30 })
+        .addEdge("toto", "knows", "alice", { since: "2021" })
+        .build(),
+        `
+        prec:this_is a prec:prscContext .
+
+        :PersonPGType a prec:prsc_node ;
+          prec:nodeLabel "person" ;
+          prec:propertyName "name" ;
+          prec:composedOf
+            << pvar:node rdf:type :Person >> ,
+            << pvar:node :name [ prec:prsc_valueOf "name" ] >> .
+        
+        :KnightPGType a prec:prsc_node ;
+          prec:nodeLabel "knight" ;
+          prec:propertyName "name" ;
+          prec:propertyName "number" ;
+          prec:composedOf
+            << pvar:node rdf:type :Knight >> ,
+            << pvar:node :name [ prec:prsc_valueOf "name" ] >> ,
+            << pvar:node :number [ prec:prsc_valueOf "number" ] >> .
+        
+        :KnowsPGEdge a prec:prsc_edge ;
+          prec:edgeLabel "knows" ;
+          prec:propertyName "since" ;
+          prec:composedOf
+               << pvar:source :knows pvar:destination >> ,
+            << << pvar:source :knows pvar:destination >> :since [ prec:prsc_valueOf "since" ]  >> .
+        `,
+        `
+          _:toto a :Person ; :name "Toto" .
+          _:alice a :Knight ; :name "Alice" ; :number 30 .
+
+          _:toto :knows _:alice .
+          << _:toto :knows _:alice >> :since "2021" .
+        `
+        ,
+        undefined
       );
     });
   });
