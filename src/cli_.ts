@@ -33,6 +33,8 @@ import { filenameToArrayOfQuads, outputTheStore } from './rdf/parsing';
 import { APOCDocument, CypherEntry } from "./prec-0/PGDefinitions";
 import fromGremlin from './prec-0/from-gremlin';
 
+import { isPrscContext, revertPrecC } from './prec-c/PrscContext';
+
 import gremlin from 'gremlin';
 import { Driver } from 'neo4j-driver';
 import DriverRemoteConnection = gremlin.driver.DriverRemoteConnection;
@@ -104,13 +106,18 @@ export async function main() {
 
   // PREC-0-1
 
-  const prec0m1 = program.command('preczero2rdf')
-    .description('Converts an RDF graph generated without any context to a Property Graph.');
+  const prec0m1 = program.command('prec2pg')
+    .description(
+      'Converts an RDF graph generated to a Property Graph. Input can either '
+      + 'be a description of the Property Graph (a graph generated without any '
+      + 'context) or both an RDF graph and a PRSC context.'
+    );
 
   prec0m1.command('print-structure')
     .argument('<path-to-rdf-graph>', "Path to the RDF graph that describes the property graph.")
-    .action((pathToRdf: string) => {
-      const pseudoPG = revertRdfGraphToPseudoPg(pathToRdf);
+    .option('-c, --context <context-path>', 'The path to a PRSC context')
+    .action((pathToRdf: string, options: any) => {
+      const pseudoPG = revertRdfGraphToPseudoPg(pathToRdf, options);
       if (pseudoPG !== false) {
         console.log(JSON.stringify(pseudoPG, null, 2));
       }
@@ -118,8 +125,9 @@ export async function main() {
 
   prec0m1.command('print-cypher')
     .argument('<path-to-rdf-graph>', "Path to the RDF graph that describes the property graph.")
-    .action((pathToRdf: string) => {
-      const pseudoPG = revertRdfGraphToPseudoPg(pathToRdf);
+    .option('-c, --context <context-path>', 'The path to a PRSC context')
+    .action((pathToRdf: string, options: any) => {
+      const pseudoPG = revertRdfGraphToPseudoPg(pathToRdf, options);
       if (pseudoPG !== false) {
         console.log(makeCypherQuery(pseudoPG));
       }
@@ -130,8 +138,9 @@ export async function main() {
     .argument('<username>', "The Cypher username, usually neo4j")
     .argument('<password>', "The Cypher password")
     .argument('[URI]', "The URI to the connection", 'neo4j://localhost/neo4j')
-    .action((pathToRdf: string, username: string, password: string, uri: string) => {
-      const pseudoPG = revertRdfGraphToPseudoPg(pathToRdf);
+    .option('-c, --context <context-path>', 'The path to a PRSC context')
+    .action((pathToRdf: string, username: string, password: string, uri: string, options: any) => {
+      const pseudoPG = revertRdfGraphToPseudoPg(pathToRdf, options);
       if (pseudoPG !== false) {
         const query = makeCypherQuery(pseudoPG);
         const driver = neo4j.driver(uri, neo4j.auth.basic(username, password));
@@ -148,8 +157,9 @@ export async function main() {
   prec0m1.command('gremlin')
     .argument('<path-to-rdf-graph>', "Path to the RDF graph that describes the property graph.")
     .argument('[uri]', "The URI to the Gremlin API", "ws://localhost:8182/gremlin")
-    .action(async (pathToRdf: string, uri: string) => {
-      const pseudoPG = revertRdfGraphToPseudoPg(pathToRdf);
+    .option('-c, --context <context-path>', 'The path to a PRSC context')
+    .action(async (pathToRdf: string, uri: string, options: any) => {
+      const pseudoPG = revertRdfGraphToPseudoPg(pathToRdf, options);
       if (pseudoPG !== false) {
         const connection = new DriverRemoteConnection(uri);
         const r = await insertIntoGremlin(connection, pseudoPG);
@@ -361,9 +371,26 @@ export async function cypherToRDF(connection: Driver, context?: Quad[]) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function revertRdfGraphToPseudoPg(rdfPath: string) {
+function revertRdfGraphToPseudoPg(rdfPath: string, options: any) {
   const parser = new N3.Parser();
-  let quads = parser.parse(fs.readFileSync(rdfPath, "utf8"));
+  let quads: Quad[] = parser.parse(fs.readFileSync(rdfPath, "utf8"));
+
+  if (options['context'] !== undefined) {
+    const ctxQuads = parser.parse(fs.readFileSync(options['context'], "utf8"));
+    if (!isPrscContext(ctxQuads)) {
+      console.error("Error: The given context must be a PRSC context");
+      return false;
+    }
+
+    const dstar = new DStar(quads);
+    const { dataset, complete } = revertPrecC(dstar, ctxQuads);
+    quads = [...dataset];
+
+    if (complete === false) {
+      console.error("Not all triples were read from the source dataset");
+    }
+  }
+
   const dataset = new WasmTree.Dataset(quads);
   const result = PseudoPGBuilder.from(dataset);
   if ('error' in result) {

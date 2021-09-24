@@ -51,3 +51,23 @@ export function toStringWithDiffColor(quads1: Quad[], quads2: Quad[], indent: nu
   ];
 }
 
+export function generateMessage(
+  input: DStar | string,
+  context: Quad[] | string,
+  output: DStar,
+  expected: DStar
+) {
+  let msg = '\x1b[0m' + "• Base Graph:";
+  msg += '\n' + (typeof input === 'string' ? input : badToString(input.getQuads(), 2));
+  msg += '\n' + "• Context:";
+  msg += '\n' + (typeof context === 'string' ? context : badToString(context, 2));
+
+  const [r, e] = toStringWithDiffColor(output.getQuads(), expected.getQuads(), 2);
+
+  msg += '\n' + `• Result (${output.size} quads):`;
+  msg += '\n' + r;
+  msg += '\n' + `• Expected (${expected.size} quads):`;
+  msg += '\n' + e;
+  return msg;
+}
+

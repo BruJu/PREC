@@ -1,33 +1,9 @@
 import * as utility from "./utility";
-import { toStringWithDiffColor } from './utility';
 import * as graphBuilder from '../src/prec/graph-builder';
 import graphReducer from "../src/prec/graph-reducer";
 import assert from 'assert';
 import { isomorphic } from "rdf-isomorphic";
-import DStar from "../src/dataset";
-import { Quad } from "@rdfjs/types";
-import { badToString } from "../src/rdf/utils";
 import { PropertyGraph } from "./mock-pg/pg-implem";
-
-function generateMessage(
-  input: DStar | string,
-  context: Quad[] | string,
-  output: DStar,
-  expected: DStar
-) {
-  let msg = '\x1b[0m' + "• Base Graph:";
-  msg += '\n' + (typeof input === 'string' ? input : badToString(input.getQuads(), 2));
-  msg += '\n' + "• Context:";
-  msg += '\n' + (typeof context === 'string' ? context : badToString(context, 2));
-
-  const [r, e] = toStringWithDiffColor(output.getQuads(), expected.getQuads(), 2);
-
-  msg += '\n' + `• Result (${output.size} quads):`;
-  msg += '\n' + r;
-  msg += '\n' + `• Expected (${expected.size} quads):`;
-  msg += '\n' + e;
-  return msg;
-}
 
 function runATest_(
   dict: {[x: string]: string},
@@ -44,7 +20,7 @@ function runATest_(
     const r = isomorphic(store.getQuads(), expectedStore.getQuads());
     let msg = ""
     if (!r) {
-      msg = generateMessage(dict[graphName], dict[contextName], store, expectedStore);
+      msg = utility.generateMessage(dict[graphName], dict[contextName], store, expectedStore);
     }
     assert.ok(r, msg);
   });
@@ -60,7 +36,7 @@ function test(name: string, source: string, context: string, expected: string) {
     const r = isomorphic(store.getQuads(), expectedStore.getQuads());
     let msg = "";
     if (!r) {
-      msg = generateMessage(source, context, store, expectedStore);
+      msg = utility.generateMessage(source, context, store, expectedStore);
     }
     
     assert.ok(r, msg);
@@ -78,21 +54,14 @@ function testFromMockPG(name: string, source: PropertyGraph, context: string, ex
     const r = isomorphic(store.getQuads(), expectedStore.getQuads());
     let msg = "";
     if (!r) {
-      msg = generateMessage("", context, store, expectedStore);
+      msg = utility.generateMessage("", context, store, expectedStore);
     }
 
     assert.ok(r, msg);
   });
 }
 
-function badPGxContext(name: string, source: PropertyGraph, context: string) {
-  it(name, () => {
-      const { nodes, edges } = source.convertToProductFromTinkerProp();
-      const store = graphBuilder.fromTinkerPop(nodes as any, edges as any)[0];
-      const ctx = utility.turtleToQuads(context);
-      assert.throws(() => graphReducer(store, ctx));
-  });
-}
+
 
 require('./prec_impl/prec-0.test')(testFromMockPG);
 
@@ -103,7 +72,7 @@ describe('Context Applier', () => {
   require('./prec_impl/rules-for-properties-on-edges.test')(test);
   require('./prec_impl/prec-c-map-blank-nodes.test')();
   require('./prec_impl/prec-c-rule-properties.test')(test);
-  require('./prec_impl/prsc.test')(testFromMockPG, badPGxContext);
+  require('./prec_impl/prsc.test')();
 });
 
 describe("Property convertion", () => {
