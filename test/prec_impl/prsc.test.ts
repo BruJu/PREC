@@ -7,7 +7,9 @@ import { revertPrecC } from "../../src/prec-c/PrscContext";
 import { isomorphic } from "rdf-isomorphic";
 
 enum RevertableType {
-  ShouldThrow
+  ShouldThrow,
+  /** Operations that could be reverted with a better algorithm */
+  ShouldThrowForNow
 };
 
 function test(
@@ -39,7 +41,8 @@ function test(
         msg = generateMessage("PRSC reversiblity", context, o.dataset, cleanSource);
       }
       assert.ok(iso, msg);
-    } else if (revertable === RevertableType.ShouldThrow) {
+    } else if (revertable === RevertableType.ShouldThrow
+      || revertable === RevertableType.ShouldThrowForNow) {
       assert.throws(() => revertPrecC(expectedStore, ctx));
     }
   });
@@ -414,6 +417,32 @@ module.exports = () => {
         ' _:thomas :is_named "Thomas", "Grove" . ',
         RevertableType.ShouldThrow
       );
-    })
+
+      test(
+        "Same template form with swapped blank node placeholders",
+        PGBuild()
+        .addNode("node", [], {})
+        .addEdge("node", "to", "node", {})
+        .build(),
+        `
+        prec:this_is a prec:prscContext .
+
+        :node a prec:prsc_node ; prec:composedOf << pvar:node a :node >> .
+
+        :edgeHey a prec:prsc_edge ;
+          prec:edgeLabel "hey" ;
+          prec:composedOf << << pvar:edge :src pvar:source >> :to pvar:destination >> .
+
+        :edgeTo a prec:prsc_edge ;
+          prec:edgeLabel "to" ;
+          prec:composedOf << << pvar:source :src pvar:edge >> :to pvar:destination >> .
+        `,
+        `
+        _:node a :node .
+        << _:node :src _:edge >> :to _:node .
+        `,
+        RevertableType.ShouldThrowForNow
+      )
+    });
   });
 };

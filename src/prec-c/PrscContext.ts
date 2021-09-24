@@ -398,30 +398,16 @@ export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): { dataset
  function tripleWithUnifiedTerms(quad: RDF.Quad) {
   return eventuallyRebuildQuad(quad, term => {
     if (term.termType === 'Literal') {
-      if (term.datatype.equals(prec._valueOf)) {
-        return $literal("XX", prec._valueOf);
-      } else {
-        return term;
-      }
+      return $literal("Literal", prec._valueOf);
     } else if (term.termType === 'BlankNode') {
-      return $literal('nodeOrIRI', prec._placeholder);
-    } else if (term.termType === 'NamedNode') {
-      if (term.value.startsWith(pvarPrefix)) {
-        if (term.equals(pvar.edge) || term.equals(pvar.node)) {
-          return $literal('self', prec._placeholder);
-        } else {
-          return $literal('nodeOrIRI', prec._placeholder);
-        }
-      } else {
-        return term;
-      }
+      throw Error("A template quad should not contain any blank node");
+    } else if (term.termType === 'NamedNode' && term.value.startsWith(pvarPrefix)) {
+      return $literal('BlankNode', prec._placeholder);
     } else {
       return term;
     }
-  })
+  });
 }
-
-
 
 function isPossibleSourceFor(pattern: RDF.Quad, data: RDF.Quad): boolean {
   function isPossibleSourceTermFor(pattern: RDF.Term, data: RDF.Term): boolean {
