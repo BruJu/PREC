@@ -106,7 +106,7 @@ export async function main() {
 
   // PREC-0-1
 
-  const prec0m1 = program.command('prec2rdf')
+  const prec0m1 = program.command('prec2pg')
     .description(
       'Converts an RDF graph generated to a Property Graph. Input can either '
       + 'be a description of the Property Graph (a graph generated without any '
