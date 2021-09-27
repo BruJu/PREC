@@ -31,11 +31,6 @@ export function hasNamedGraph(dataset: DatasetCore) {
 
 /** Returns true if one of the quad has a embedded quad */
 export function isRdfStar(dataset: DatasetCore) {
-  if ('free' in dataset) {
-    // Probably WasmTree. WT doesn't supported embedded quads
-    return false;
-  }
-
   for (const quad of dataset) {
     if (quad.subject.termType === 'Quad') return true;
     if (quad.object.termType === 'Quad') return true;
