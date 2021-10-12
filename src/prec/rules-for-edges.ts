@@ -33,6 +33,7 @@ class EdgesRuleClass implements RuleType {
     PropertyHolderSubstitutionTerm: prec.edgeIs,
     EntityIsHeuristic: [
       [pvar.edge],
+      [pvar.self],
       [pvar.source, pvar.edgeIRI, pvar.destination]
     ]
   }

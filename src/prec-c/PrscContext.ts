@@ -122,7 +122,7 @@ class PRSCRule {
   ) {
     this.template.forEach(templateQuad => {
       output.add(eventuallyRebuildQuad(templateQuad, term => {
-        if (term.equals(pvar.node) || term.equals(pvar.edge)) {
+        if (term.equals(pvar.node) || term.equals(pvar.edge) || term.equals(pvar.self)) {
           return pgElement;
         } else if (term.equals(pvar.source)) {
           return source!;
@@ -168,7 +168,7 @@ class PRSCRule {
       matchPattern.push(eventuallyRebuildQuad(
         templateQuad,
         term => {
-          if (term.equals(pvar.node) || term.equals(pvar.edge)) return self;
+          if (term.equals(pvar.node) || term.equals(pvar.edge) || term.equals(pvar.self)) return self;
           else if (term.equals(pvar.source)) return nodesOfEdge![0];
           else if (term.equals(pvar.destination)) return nodesOfEdge![1];
           else if (term.termType === 'Literal' && term.datatype.equals(prec._valueOf))
@@ -240,13 +240,13 @@ enum ValuationResult { Ok, Partial, No };
 
 function getValuationOfTriple(quad: RDF.Quad, type: 'node' | 'edge'): ValuationResult {
   if (type === 'node') {
-    if (QuadStar.containsTerm(quad, pvar.node)) {
+    if (QuadStar.containsTerm(quad, pvar.node) || QuadStar.containsTerm(quad, pvar.self)) {
       return ValuationResult.Ok;
     } else {
       return ValuationResult.No;
     }
   } else {
-    if (QuadStar.containsTerm(quad, pvar.edge)) {
+    if (QuadStar.containsTerm(quad, pvar.edge) || QuadStar.containsTerm(quad, pvar.self)) {
       return ValuationResult.Ok;
     } else if (QuadStar.containsTerm(quad, pvar.source)
     && QuadStar.containsTerm(quad, pvar.destination)) {
@@ -444,7 +444,7 @@ function findElement(dataQuad: RDF.Quad, f: { rule: PRSCRule, triple: RDF.Quad }
   let destination: RDF.Term | null = null;
 
   function recurseIn(data: RDF.Term, template: RDF.Term) {
-    if (template.equals(pvar.node) || template.equals(pvar.edge)) {
+    if (template.equals(pvar.node) || template.equals(pvar.edge) || template.equals(pvar.self)) {
       self = data;
     } else if (template.equals(pvar.source)) {
       source = data;

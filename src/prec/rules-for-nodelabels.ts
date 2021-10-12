@@ -77,6 +77,7 @@ class NLRuleClass implements RuleType {
       term,
       [
         [$variable('node'), pvar.node],
+        [$variable('node'), pvar.self],
         // labelIRI, captured by the pattern of nodesToLabels
         [$variable("labelIRI"), pvar.nodeLabelIRI],
         // label as a string, captured at the beginning of this loop
