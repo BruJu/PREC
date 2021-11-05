@@ -412,7 +412,8 @@ module.exports = () => {
           prec:propertyName "name" ;
           prec:composedOf
             << pvar:node :is_named [ prec:prsc_valueOf "name" ] >> ,
-            << pvar:node :is_named "Grove" >> .
+            << pvar:node :is_named "Grove" >> ,
+            << pvar:node :is_named "Thomas" >> .
         `,
         ' _:thomas :is_named "Thomas", "Grove" . ',
         RevertableType.ShouldThrow
@@ -440,9 +441,34 @@ module.exports = () => {
         `
         _:node a :node .
         << _:node :src _:edge >> :to _:node .
+        `
+      );
+
+      test(
+        "Same template form with swapped blank node placeholders",
+        PGBuild()
+        .addNode("node", [], {})
+        .addEdge("node", "to", "node", {})
+        .build(),
+        `
+        prec:this_is a prec:prscContext .
+
+        :node a prec:prsc_node ; prec:composedOf << pvar:node a :node >> .
+
+        :edgeHey a prec:prsc_edge ;
+          prec:edgeLabel "hey" ;
+          prec:composedOf << << pvar:destination :and pvar:source >> :edge_is pvar:self >> .
+
+        :edgeTo a prec:prsc_edge ;
+          prec:edgeLabel "to" ;
+          prec:composedOf << << pvar:source :and pvar:destination >> :edge_is pvar:self >> .
         `,
-        RevertableType.ShouldThrowForNow
-      )
+        `
+        _:node a :node .
+        << _:node :and _:node >> :edge_is _:edge .
+        `,
+        RevertableType.ShouldThrow
+      );
     });
   });
 };
