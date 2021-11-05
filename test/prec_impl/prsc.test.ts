@@ -441,7 +441,8 @@ module.exports = () => {
         `
         _:node a :node .
         << _:node :src _:edge >> :to _:node .
-        `
+        `,
+        true
       );
 
       test(
@@ -468,6 +469,69 @@ module.exports = () => {
         << _:node :and _:node >> :edge_is _:edge .
         `,
         RevertableType.ShouldThrow
+      );
+
+      test(
+        "Anonymous edge that comes from and goes to the same node",
+        PGBuild()
+        .addNode("node", [], {})
+        .addEdge("node", "to", "node", {})
+        .build(),
+        `
+        prec:this_is a prec:prscContext .
+
+        :nodeType a prec:prsc_node ;
+          prec:composedOf << pvar:self a pgo:Node >> .
+        :edgeType a prec:prsc_edge ;
+          prec:edgeLabel "to" ;
+          prec:composedOf << pvar:source :goesTo pvar:destination >> .
+        `,
+        ` _:node a pgo:Node . _:node :goesTo _:node . `,
+        true
+      );
+
+      test(
+        "Ambiguity between anonymous edge and node",
+        PGBuild()
+        .addNode("node", [], {})
+        .addEdge("node", "to", "node", {})
+        .build(),
+        `
+        prec:this_is a prec:prscContext .
+
+        :nodeType a prec:prsc_node ;
+          prec:composedOf << pvar:self :x pvar:self >> .
+        :edgeType a prec:prsc_edge ;
+          prec:edgeLabel "to" ;
+          prec:composedOf << pvar:source :x pvar:destination >> .
+        `,
+        ` _:node :x _:node . `
+      );
+
+      // This test doesn't pass because the engine is looking for a template
+      // that can produce both (alexa friendof oceane) and (oceane friendof alexa)
+      // instead of trying to find the set of rules x variables instantiation to
+      // produce them
+      test(
+        "Two anonymous edges between two nodes with opposite directions",
+        PGBuild()
+        .addNode("alexa", [], {})
+        .addNode("oceane", [], {})
+        .addEdge("alexa", "friend_of", "oceane", {})
+        .addEdge("oceane", "friend_of", "alexa", {})
+        .build(),
+        `
+        prec:this_is a prec:prscContext .
+
+        :personType a prec:prsc_node ; prec:composedOf << pvar:self a :Person >> .
+
+        :friendType a prec:prsc_edge ;
+          prec:edgeLabel "friend_of" ;
+          prec:composedOf << pvar:source :friendOf pvar:destination >> .
+        `,
+        ` _:alexa :friendOf _:oceane . _:oceane :friendOf _:alexa . 
+          _:alexa a :Person . _:oceane a :Person . `,
+        true
       );
     });
   });
