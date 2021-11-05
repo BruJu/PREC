@@ -4,7 +4,8 @@ import fs from 'fs';
 import * as N3 from 'n3';
 import namespace from '@rdfjs/namespace';
 import { Quad, NamedNode, Term, Quad_Subject, Literal } from 'rdf-js';
-import TermDict from '../TermDict';
+import TermSet from '@rdfjs/term-set';
+import TermMap from '@rdfjs/term-map';
 import * as QuadStar from '../rdf/quad-star';
 import * as PrecUtils from '../rdf/utils';
 import { FilterProvider, Priorisable, RuleDomain, RuleType, Template } from './RuleType';
@@ -347,12 +348,13 @@ export function readRawTemplate(dataset: DStar, template: Term, ruleDomain: Rule
  */
 function _buildTemplate(dataset: DStar, materializations: SplitDefMaterialization[], ruleDomain: RuleDomain): Template {
   let template = ruleDomain.DefaultTemplate;
-  let substitutionRequests = new TermDict<Term, Term>();
+  
+  let substitutionRequests = new TermMap<Term, Term>();
 
   for (const materialization of materializations) {
     // Copy all substitution
     for (const sub of materialization.substitutions) {
-      if (substitutionRequests.get(sub[0]) === undefined) {
+      if (!substitutionRequests.has(sub[0])) {
         substitutionRequests.set(sub[0], sub[1]);
       }
     }
@@ -399,13 +401,7 @@ function findImplicitEntity(searchedTermss: NamedNode[][], quads: Quad[]) {
     if (c.length === 0) continue;
     if (searchedTerms.length === 1) return searchedTerms;
 
-    const td = new TermDict<Quad, true>();
-    
-    c.forEach(t => td.set(t, true));
-    
-    let l: Quad[] = [];
-    td.forEach(unique => l.push(unique));
-    
+    const l: Quad[] = [...new TermSet<Quad>(c)];
     if (l.length !== 1) return null;
     return l;
   }
@@ -421,7 +417,7 @@ export class EntitiesManager {
   iriRemapper: FilterProvider[] = [];
 
   // List of known (and computed) templates
-  templatess = new TermDict<Quad_Subject, TermDict<Quad_Subject, Template>>();
+  templatess = new TermMap<Quad_Subject, TermMap<Quad_Subject, Template>>();
   
   ruleset: RuleType;
 
@@ -441,7 +437,7 @@ export class EntitiesManager {
     }
 
     // Load the base templates
-    let baseTemplates = new TermDict<Quad_Subject, SplitDefMaterialization>();
+    let baseTemplates = new TermMap<Quad_Subject, SplitDefMaterialization>();
 
     for (let [templateName, _] of domain.TemplateBases) {
       // Read the node, ensure it just have a template
@@ -451,7 +447,7 @@ export class EntitiesManager {
       // The template can be used to compute other templates
       baseTemplates.set(templateName, splitted.materialization);
       // Also a tempalte that can be used
-      let tm = new TermDict<Quad_Subject, Template>();
+      let tm = new TermMap<Quad_Subject, Template>();
       tm.set(templateName, makeTemplate([splitted.materialization]));
       this.templatess.set(templateName, tm);
     }
@@ -577,7 +573,7 @@ export function addBuiltIn(dataset: DStar, file: string) {
  */
 export function replaceSynonyms(dataset: DStar) {
   function makeSynonymsDict() {
-    let dict = new TermDict<Term, Term>();
+    let dict = new TermMap<Term, Term>();
     dict.set(prec.RelationshipRule      , prec.EdgeRule);
     dict.set(prec.RelationshipTemplate  , prec.EdgeTemplate);
     dict.set(prec.relationshipLabel     , prec.edgeLabel);
@@ -593,10 +589,10 @@ export function replaceSynonyms(dataset: DStar) {
   /**
    * Transform the dataset by replacing the terms found in the dict to the one
    * it maps to
-   * @param {Dataset} dataset 
-   * @param {TermDict<Term, Term>} dict A Term to term dict
+   * @param dataset 
+   * @param dict A Term to term dict
    */
-  function transformStore(dataset: DStar, dict: TermDict<Term, Term>) {
+  function transformStore(dataset: DStar, dict: TermMap<Term, Term>) {
     const toDelete: Quad[] = [];
     const toAdd: Quad[] = [];
 

@@ -12,7 +12,9 @@ const $defaultGraph = DataFactory.defaultGraph();
 import namespace from '@rdfjs/namespace';
 import { followThrough, followAll } from "../rdf/path-travelling";
 import { eventuallyRebuildQuad } from "../rdf/quad-star";
-import TermDict from "../TermDict";
+import TermMap from "@rdfjs/term-map";
+import TermSet from "@rdfjs/term-set";
+
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", { factory: DataFactory });
 const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , { factory: DataFactory });
 const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , { factory: DataFactory });
@@ -386,10 +388,10 @@ class PRSCSchema {
   }
 
   static cutGraphByBlankNodes(dataset: DStar): {
-    blankNodes: TermDict<RDF.BlankNode, DStar>,
+    blankNodes: TermMap<RDF.BlankNode, DStar>,
     suspiciousGangs: Map<string, SuspiciousGang>
   } {
-    const bnToSubGraph = new TermDict<RDF.BlankNode, DStar>();
+    const bnToSubGraph = new TermMap<RDF.BlankNode, DStar>();
     const suspiciousGangs = new Map<string, SuspiciousGang>();
     for (const quad of dataset) {
       const extractedBNs = findListOfBlankNodesIn(quad);
@@ -464,8 +466,9 @@ class PRSCSchema {
 
     const anonymousEdgeTemplateTriples = this.getAnonymousEdgeTemplateTriples();
 
-    const edgeBNs = new TermDict<RDF.BlankNode, true>();
-    blankNodes.forEach((blankNode, subgraphIfEdge) => {
+    const edgeBNs = new TermSet<RDF.BlankNode>();
+
+    for (const [blankNode, subgraphIfEdge] of blankNodes.entries()) {
       const {
         nodeGraph: subgraphIfNode, banned
       } = PRSCSchema.filterOutNonNodesDataTriple(subgraphIfEdge, anonymousEdgeTemplateTriples);
@@ -498,12 +501,12 @@ class PRSCSchema {
         bindings: candidates[0].variables
       });
 
-      if (candidates[0].rule.type === 'edge') edgeBNs.set(blankNode, true);
-    });
+      if (candidates[0].rule.type === 'edge') edgeBNs.add(blankNode);
+    }
 
     for (const suspiciousGang of suspiciousGangs.values()) {
-      if (edgeBNs.get(suspiciousGang.identifier[0]) !== undefined) continue;
-      if (edgeBNs.get(suspiciousGang.identifier[1]) !== undefined) continue;
+      if (edgeBNs.has(suspiciousGang.identifier[0])) continue;
+      if (edgeBNs.has(suspiciousGang.identifier[1])) continue;
 
       // Every quad in suspiciousGang.quads has two blank nodes that are not
       // bound to PG edges. The only case where PRSC can produce such triples
@@ -601,7 +604,7 @@ export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): { dataset
 }
 
 function templateCanProduceData(template: RDF.Quad, data: RDF.Quad) {
-  const variableValues = new TermDict<RDF.Term, RDF.Term>();
+  const variableValues = new TermMap<RDF.Term, RDF.Term>();
   function addVariableValue(variable: RDF.Term, value: RDF.Term) {
     const previously = variableValues.get(variable);
     if (previously === undefined) {
