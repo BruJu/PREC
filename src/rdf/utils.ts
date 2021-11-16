@@ -1,6 +1,7 @@
 import { DataFactory } from 'n3';
 import namespace from '@rdfjs/namespace';
-import { Term, Quad, BaseQuad } from 'rdf-js';
+import * as RDF from '@rdfjs/types';
+import * as RDFString from 'rdf-string';
 
 const xsd = namespace("http://www.w3.org/2001/XMLSchema#", { factory: DataFactory });
 
@@ -12,7 +13,7 @@ const xsd = namespace("http://www.w3.org/2001/XMLSchema#", { factory: DataFactor
  * @returns The value contained in the literal. Returns undefined if the term is
  * not a literal.
  */
-export function rdfLiteralToValue(literal: Term): string | number | undefined {
+export function rdfLiteralToValue(literal: RDF.Term): string | number | undefined {
   if (literal.termType !== "Literal") return undefined;
 
   if (literal.datatype.equals(xsd.integer)) {
@@ -30,7 +31,7 @@ export function rdfLiteralToValue(literal: Term): string | number | undefined {
  * @param term The term to convert to the boolean
  * @returns The value of the boolean, or undefined if not a valid boolean
  */
-export function xsdBoolToBool(term: Term): boolean | undefined {
+export function xsdBoolToBool(term: RDF.Term): boolean | undefined {
   if (term.termType !== "Literal" || !xsd.boolean.equals(term.datatype)) {
     return undefined;
   }
@@ -49,51 +50,18 @@ export function xsdBoolToBool(term: Term): boolean | undefined {
  * @param quads The list of quads to convert
  * @param indent Number of spaces that prefixes each line
  */
-export function badToString(quads: Quad[], indent: number = 0): string {
+export function badToString(quads: RDF.Quad[], indent: number = 0): string {
   let s = "";
 
-  function pushTerm(term: Term) {
-    if (term.termType === "Quad") {
-      s += "<< ";
-      push(term);
-      s += " >>";
-    } else if (term.termType == "Literal") {
-      s += "\"" + term.value + "\"";
-    } else if (term.termType == "NamedNode") {
-      s += "<" + term.value + ">";
-    } else if (term.termType == "Variable") {
-      s += "?" + term.value;
-    } else if (term.termType == 'BlankNode') {
-      s += "_:" + term.value
-    } else {
-      s += "UnknownTermType" + term.termType;
-    }
-  }
-
-  function push(quad: BaseQuad) {
-    if (Array.isArray(quad)) {
-      pushTerm(quad[0]);
-      s += " ";
-      pushTerm(quad[1]);
-      s += " ";
-      pushTerm(quad[2]);
-    } else {
-      pushTerm(quad.subject);
-      s += " ";
-      pushTerm(quad.predicate);
-      s += " ";
-      pushTerm(quad.object);
-    }
-  }
-
-  let prefix = "";
-  for (let i = 0; i != indent; ++i) prefix += " ";
+  let prefix = "".padStart(indent, " ");
 
   for (let quad of quads) {
     if (s !== "") s += "\n";
     s += prefix;
 
-    push(quad);
+    const termStr = RDFString.termToString(quad);
+    // Remove << and >> before appending
+    s += termStr.substr(2, termStr.length - 4);
   }
 
   return s;
@@ -105,14 +73,14 @@ export function badToString(quads: Quad[], indent: number = 0): string {
  * @param listOfTerms The list of terms
  * @returns True if the term is in the list of tems
  */
-export function termIsIn(term: Term, listOfTerms: Term[]) {
+export function termIsIn(term: RDF.Term, listOfTerms: RDF.Term[]) {
   return listOfTerms.find(t => t.equals(term)) !== undefined;
 }
 
 /**
  * Tries to build an approximation of the isomorphism.
- * @param {Quad[]} quads1 
- * @param {Quad[]} quads2 
+ * @param quads1 
+ * @param quads2 
  * @returns A list of two list of numbers. For each list, the ith member is the
  * position of the ith quad in the other list of quads.
  * 
@@ -120,8 +88,8 @@ export function termIsIn(term: Term, listOfTerms: Term[]) {
  * quad of quads1 is the 1st quad of quads2, and the others quads are not
  * in the other list of quads.
  */
-export function approximateIsomorphism(quads1: Quad[], quads2: Quad[]) {
-  function makeBaseR(quads: Quad[]): (number | undefined)[] {
+export function approximateIsomorphism(quads1: RDF.Quad[], quads2: RDF.Quad[]) {
+  function makeBaseR(quads: RDF.Quad[]): (number | undefined)[] {
     return quads.map(_ => undefined);
   }
 

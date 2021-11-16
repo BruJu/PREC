@@ -15,6 +15,7 @@ import { eventuallyRebuildQuad } from "../rdf/quad-star";
 import TermMap from "@rdfjs/term-map";
 import TermSet from "@rdfjs/term-set";
 
+import { unifyTemplateWithData } from "./PrscTemplateToDataCheck";
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", { factory: DataFactory });
 const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , { factory: DataFactory });
 const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , { factory: DataFactory });
@@ -446,7 +447,7 @@ class PRSCSchema {
 
     function banned(data: RDF.Quad) {
       return templateTriplesBanList.find(
-        template => templateCanProduceData(template, data)
+        template => canTemplateProduceData(template, data)
       );
     }
 
@@ -605,58 +606,6 @@ export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): { dataset
   };
 }
 
-function templateCanProduceData(template: RDF.Quad, data: RDF.Quad) {
-  const variableValues = new TermMap<RDF.Term, RDF.Term>();
-  function addVariableValue(variable: RDF.Term, value: RDF.Term) {
-    const previously = variableValues.get(variable);
-    if (previously === undefined) {
-      variableValues.set(variable, value);
-      return true;
-    } else {
-      return previously.equals(value);
-    }
-  }
-
-  function inner(template: RDF.Term, data: RDF.Term): boolean {
-    if (template.termType === 'DefaultGraph') {
-      return template.equals(data);
-    }
-
-    if (template.termType === 'Literal') {
-      if (data.termType !== 'Literal') return false;
-
-      if (template.datatype === prec._valueOf) {
-        return addVariableValue(template, data);
-      } else {
-        return template.equals(data);
-      }
-    }
-
-    if (template.termType === 'NamedNode') {
-      if (template.equals(pvar.self)
-        || template.equals(pvar.node)
-        || template.equals(pvar.edge)) {
-        return addVariableValue(pvar.self, data);
-      } else if (template.equals(pvar.source)) {
-        return addVariableValue(pvar.source, data);
-      } else if (template.equals(pvar.destination)) {
-        return addVariableValue(pvar.destination, data);
-      } else {
-        return template.equals(data);
-      }
-    }
-
-    if (template.termType === 'Quad') {
-      if (data.termType !== 'Quad') return false;
-
-      return inner(template.subject, data.subject)
-        && inner(template.predicate, data.predicate)
-        && inner(template.object, data.object)
-        && inner(template.graph, data.graph);
-    }
-
-    return false;
-  }
-
-  return inner(template, data);
+export function canTemplateProduceData(pattern: RDF.Quad, data: RDF.Quad): boolean {
+  return unifyTemplateWithData(pattern, data) !== null;
 }
