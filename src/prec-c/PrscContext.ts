@@ -292,21 +292,7 @@ function findListOfBlankNodesIn(quad: RDF.Quad) {
   }
 
   function uniquefyBlankNodeList(list: RDF.BlankNode[]): RDF.BlankNode[] {
-    let res = list
-    .map(bn => ({ node: bn, str: RDFString.termToString(bn) }))
-    .sort((e1, e2) => e1.str.localeCompare(e2.str) )
-    .map(e => e.node);
-  
-    let i = 1;
-    while (i < res.length) {
-      if (res[i - 1].equals(res[i])) {
-        res.splice(i, 1);
-      } else {
-        ++i;
-      }
-    }
-  
-    return res;
+    return [...new TermSet(list)].sort((lhs, rhs) => lhs.value.localeCompare(rhs.value));
   }
 
   return uniquefyBlankNodeList(extractBlankNodes(quad));
@@ -328,6 +314,9 @@ class PRSCSchema {
       this.prscRules.push(new PRSCRule(dataset, edgeForm.subject));
     }
   }
+
+  // ===================================
+  // PREC-0 Graph -> Idiomatic RDF Graph
 
   applyContext(dataset: DStar): DStar {
     let result = new DStar();
@@ -387,6 +376,18 @@ class PRSCSchema {
     );
   }
 
+  // ===================================
+  // Idiomatic RDF Graph -> PREC-0 Graph
+
+  /**
+   * Extract for every blank node the list of quads it appears in.
+   * @param dataset The dataset
+   * @returns Two maps: `blankNodes` is a map that maps blank nodes to the quads
+   * that contains the blank node. `suspiciousGangs` contains the list of every
+   * blank nodes that appears in the same triple of another blank node. They
+   * are named suspicious because we do not know if they both represent nodes
+   * or if one of them is an edge.
+   */
   static cutGraphByBlankNodes(dataset: DStar): {
     blankNodes: TermMap<RDF.BlankNode, DStar>,
     suspiciousGangs: Map<string, SuspiciousGang>
@@ -504,6 +505,7 @@ class PRSCSchema {
       if (candidates[0].rule.type === 'edge') edgeBNs.add(blankNode);
     }
 
+    let gangNumber = 1;
     for (const suspiciousGang of suspiciousGangs.values()) {
       if (edgeBNs.has(suspiciousGang.identifier[0])) continue;
       if (edgeBNs.has(suspiciousGang.identifier[1])) continue;
@@ -540,12 +542,14 @@ class PRSCSchema {
 
       for (const candidate of candidates[0]) {
         identified.push({
-          identifier: suspiciousGang.identifier,
+          identifier: DataFactory.blankNode("gang-" + gangNumber + "-" + RDFString.termToString(candidate.rule.identity)),
           rule: candidate.rule,
           quads: suspiciousGang.quads,
           bindings: candidate.mr as MatchResult
         });
       }
+
+      ++gangNumber;
     }
 
     return identified;
@@ -558,7 +562,7 @@ type SuspiciousGang = {
 };
 
 type IdentifiedPGElement = {
-  identifier: RDF.BlankNode | [RDF.BlankNode, RDF.BlankNode];
+  identifier: RDF.BlankNode
   rule: PRSCRule;
   quads: DStar,
   bindings: MatchResult
@@ -590,9 +594,7 @@ export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): { dataset
   const usedQuads = new DStar();
 
   for (const { identifier, rule, bindings } of identifiedPGElements) {
-    const selfBN = Array.isArray(identifier) ? DataFactory.blankNode() : identifier;
-
-    const { used, prec0 } = rule.buildBackPREC0(selfBN, bindings);
+    const { used, prec0 } = rule.buildBackPREC0(identifier, bindings);
     prec0Graph.addAll(prec0);
     usedQuads.addAll(used);
   }
