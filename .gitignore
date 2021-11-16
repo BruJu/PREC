@@ -6,5 +6,6 @@ output/
 .vscode/
 ignore/
 .nyc_output/
-build/
+dist/
 prec-*.tgz
+build/
