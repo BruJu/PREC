@@ -12,6 +12,7 @@ const $defaultGraph = DataFactory.defaultGraph();
 import namespace from '@rdfjs/namespace';
 import { followThrough, followAll } from "../rdf/path-travelling";
 import { eventuallyRebuildQuad } from "../rdf/quad-star";
+import { unifyTemplateWithData } from "./PrscTemplateToDataCheck";
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", { factory: DataFactory });
 const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , { factory: DataFactory });
 const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , { factory: DataFactory });
@@ -138,9 +139,9 @@ class PRSCRule {
   }
   
   findIdentificationTriple(rules: PRSCRule[]): RDF.Quad {
-    const unifiedTriples = this.template.map(q => tripleWithUnifiedTerms(q));
+    const unifiedTriples = this.template.map(q => characterizeTemplateTriple(q));
     const unifiedOthers = rules.filter(r => r !== this)
-      .map(r => r.template.map(q => tripleWithUnifiedTerms(q)));
+      .map(r => r.template.map(q => characterizeTemplateTriple(q)));
   
     let result: number | null = null;
 
@@ -356,7 +357,18 @@ export default function precCwithPRSC(dataset: DStar, contextQuads: RDF.Quad[]) 
 ////////////////////////////////////////////////////////////////////////////////
 // ==== Structural description graph <- Idiomatic Graph
 
-
+/**
+ * A pair (rule, the value of prec:valueOf). May eventually also contain values
+ * for pvar:source and pvar:destination.
+ */
+type UsedRule = {
+  /** The related PRSC rule */
+  rule: PRSCRule;
+  /** pvar:self value */
+  self: RDF.Term;
+  /** Value of pvar:source and pvar:destination. null if unknown */
+  linkedNodes: [RDF.Term, RDF.Term] | null;
+};
 
 export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): { dataset: DStar, complete: boolean } {
   dataset = dataset.match();
@@ -365,12 +377,9 @@ export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): { dataset
   const identificationTriples = schema.findIdentificationTriples();
 
   const usedQuads = new DStar();
-  const listOfUsedRules: { term: RDF.Term, terms: [RDF.Term, RDF.Term] | null, rule: PRSCRule }[] = [];
-  for (const dataQuad of dataset) {    
-    const f = identificationTriples.find(
-      t => isPossibleSourceFor(t.triple, dataQuad)
-    );
-
+  const listOfUsedRules: UsedRule[] = [];
+  for (const dataQuad of dataset) {
+    const f = identificationTriples.find(t => canTemplateProduceData(t.triple, dataQuad));
     if (f === undefined) continue;
 
     listOfUsedRules.push(findElement(dataQuad, f));
@@ -378,8 +387,8 @@ export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): { dataset
   }
 
   const prec0Graph = new DStar();
-  for (const { term, terms, rule } of listOfUsedRules) {
-    const { used, prec0 } = rule.revertFromPrec0(dataset, term, terms);
+  for (const { self, linkedNodes, rule } of listOfUsedRules) {
+    const { used, prec0 } = rule.revertFromPrec0(dataset, self, linkedNodes);
     prec0Graph.addAll(prec0);
     usedQuads.addAll(used);
   }
@@ -395,7 +404,7 @@ export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): { dataset
  * 
  * The unified form is the triple with pvar nodes and ^^prec:_valueOf merged
  */
- function tripleWithUnifiedTerms(quad: RDF.Quad) {
+function characterizeTemplateTriple(quad: RDF.Quad) {
   return eventuallyRebuildQuad(quad, term => {
     if (term.termType === 'Literal') {
       return $literal("Literal", prec._valueOf);
@@ -409,42 +418,11 @@ export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): { dataset
   });
 }
 
-export function isPossibleSourceFor(pattern: RDF.Quad, data: RDF.Quad): boolean {
-  function isPossibleSourceTermFor(pattern: RDF.Term, data: RDF.Term): boolean {
-    if (
-      pattern.equals(pvar.self)
-      || pattern.equals(pvar.node)
-      || pattern.equals(pvar.edge)
-      || pattern.equals(pvar.source)
-      || pattern.equals(pvar.destination)
-    ) {
-      return data.termType === 'BlankNode';
-    }
-
-    if (pattern.termType === 'Literal' && pattern.datatype.equals(prec._valueOf)) {
-      return data.termType === 'Literal';
-    }
-
-    if (data.termType === 'BlankNode') return false;
-
-    if (pattern.termType !== data.termType) {
-      return false;
-    } else if (pattern.termType === 'Quad' && data.termType === 'Quad') {
-      return isPossibleSourceTermFor(pattern.subject, data.subject) && 
-        isPossibleSourceTermFor(pattern.predicate, data.predicate) &&
-        isPossibleSourceTermFor(pattern.object, data.object) &&
-        isPossibleSourceTermFor(pattern.graph, data.graph);
-    } else {
-      return pattern.equals(data);
-    }
-  }
-
-  return isPossibleSourceTermFor(pattern, data);
+export function canTemplateProduceData(pattern: RDF.Quad, data: RDF.Quad): boolean {
+  return unifyTemplateWithData(pattern, data) !== null;
 }
 
-
-function findElement(dataQuad: RDF.Quad, f: { rule: PRSCRule, triple: RDF.Quad })
-: { term: RDF.Term, terms: [RDF.Term, RDF.Term] | null, rule: PRSCRule } {
+function findElement(dataQuad: RDF.Quad, f: { rule: PRSCRule, triple: RDF.Quad }): UsedRule {
   let self: RDF.Term | null = null;
   let source: RDF.Term | null = null;
   let destination: RDF.Term | null = null;
@@ -467,7 +445,7 @@ function findElement(dataQuad: RDF.Quad, f: { rule: PRSCRule, triple: RDF.Quad }
 
   if (f.rule.type === 'node') {
     if (self === null) throw Error("Did not found pvar:node in template");
-    return { term: self, terms: null, rule: f.rule };
+    return { self, linkedNodes: null, rule: f.rule };
   } else if (f.rule.type === 'edge') {
     if (self === null) {
       if (source === null || destination === null) {
@@ -480,7 +458,7 @@ function findElement(dataQuad: RDF.Quad, f: { rule: PRSCRule, triple: RDF.Quad }
     let src = source || $variable("edge_source");
     let dst = destination || $variable("edge_destination");
 
-    return { term: self, terms: [src, dst], rule: f.rule };
+    return { self, linkedNodes: [src, dst], rule: f.rule };
   } else {
     throw Error("Impossible path by design");
   }

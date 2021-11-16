@@ -1,58 +1,42 @@
-import * as RDF from "@rdfjs/types";
-import * as RDFString from 'rdf-string';
-import assert from 'assert';
-
-import { DataFactory } from "n3";
-
 import namespace from '@rdfjs/namespace';
-import { isPossibleSourceFor } from "../src/prec-c/PrscContext";
-
-const $quad         = DataFactory.quad;
-const $literal      = DataFactory.literal;
-const $bn           = DataFactory.blankNode;
+import * as RDF from "@rdfjs/types";
+import assert from 'assert';
+import { DataFactory } from "n3";
+import * as RDFString from 'rdf-string';
+import { canTemplateProduceData } from "../src/prec-c/PrscContext";
 
 const prec = namespace("http://bruy.at/prec#"      , { factory: DataFactory });
 const pvar = namespace("http://bruy.at/prec-trans#", { factory: DataFactory });
 const ex   = namespace("http://example.org/"       , { factory: DataFactory });
 
+const $quad         = DataFactory.quad;
+const $literal      = DataFactory.literal;
+const $bn           = DataFactory.blankNode;
+
 const pvarSelf    = pvar.self;
-
-// @ts-ignore
 const pvarSource  = pvar.source;
-
-// @ts-ignore
 const pvarDest    = pvar.destination;
 const precValueOf = prec._valueOf;
-
-// @ts-ignore
 const propVal = (name: string) => DataFactory.literal(name, precValueOf);
 
 
 describe("Template - Data reversion", () => {
   function isFrom(template: RDF.Quad, data: RDF.Quad) {
-    const r = isPossibleSourceFor(template, data);
-
-    assert.ok(
-      r,
-      RDFString.termToString(template)
-      + " should be able to produce "
-      + RDFString.termToString(data)
-    );
+    it(RDFString.termToString(template) + " |> " + RDFString.termToString(data), () => {
+      const r = canTemplateProduceData(template, data);
+      assert.ok(r, "should be produced");
+    });
   }
 
 // @ts-ignore
   function isNotFrom(template: RDF.Quad, data: RDF.Quad) {
-    const r = !isPossibleSourceFor(template, data);
-
-    assert.ok(
-      r,
-      RDFString.termToString(template)
-      + " should not be able to produce "
-      + RDFString.termToString(data)
-    );
+    it(RDFString.termToString(template) + " not |> " + RDFString.termToString(data), () => {
+      const r = canTemplateProduceData(template, data);
+      assert.ok(!r, "should not be produced");
+    });
   }
 
-  it("Without variables", () => {
+  describe("Without variables", () => {
     // Regular triple
     isFrom(
       $quad(ex.subject, ex.predicate, ex.object),
@@ -94,7 +78,7 @@ describe("Template - Data reversion", () => {
     );
   });
 
-  it("With variables", () => {
+  describe("With variables", () => {
     // Trivially possible
     isFrom(
       $quad(pvarSelf   , ex.rdftype, ex.Person),
@@ -102,9 +86,14 @@ describe("Template - Data reversion", () => {
     );
 
     isFrom(
-      $quad(pvarSource , ex.knows  , pvarDest),
-      $quad($bn("toto"), ex.rdftype, $bn("titi"))
+      $quad(pvarSource , ex.knows, pvarDest),
+      $quad($bn("toto"), ex.knows, $bn("titi"))
     );
+
+    isFrom(
+      $quad(ex.toto, ex.age, propVal("age")),
+      $quad(ex.toto, ex.age, $literal(5))
+    )
 
     isFrom(
       $quad(pvarSelf   , ex.age, propVal("age")),
@@ -124,13 +113,13 @@ describe("Template - Data reversion", () => {
 
     // Variable evaluation consistency
     isFrom(
-      $quad(pvarSelf   , ex.knows  , pvarSelf),
-      $quad($bn("toto"), ex.rdftype, $bn("toto"))
+      $quad(pvarSelf   , ex.knows, pvarSelf),
+      $quad($bn("toto"), ex.knows, $bn("toto"))
     );
 
     isNotFrom(
-      $quad(pvarSelf   , ex.knows  , pvarSelf),
-      $quad($bn("toto"), ex.rdftype, $bn("titi"))
+      $quad(pvarSelf   , ex.knows, pvarSelf),
+      $quad($bn("toto"), ex.knows, $bn("titi"))
     );
   });
 });
