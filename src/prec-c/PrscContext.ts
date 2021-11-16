@@ -368,7 +368,7 @@ export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): { dataset
   const listOfUsedRules: { term: RDF.Term, terms: [RDF.Term, RDF.Term] | null, rule: PRSCRule }[] = [];
   for (const dataQuad of dataset) {    
     const f = identificationTriples.find(
-      t => isPossibleSourceFor(tripleWithUnifiedTerms(t.triple), dataQuad)
+      t => isPossibleSourceFor(t.triple, dataQuad)
     );
 
     if (f === undefined) continue;
@@ -409,9 +409,15 @@ export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): { dataset
   });
 }
 
-function isPossibleSourceFor(pattern: RDF.Quad, data: RDF.Quad): boolean {
+export function isPossibleSourceFor(pattern: RDF.Quad, data: RDF.Quad): boolean {
   function isPossibleSourceTermFor(pattern: RDF.Term, data: RDF.Term): boolean {
-    if (pattern.termType === 'Literal' && pattern.datatype.equals(prec._placeholder)) {
+    if (
+      pattern.equals(pvar.self)
+      || pattern.equals(pvar.node)
+      || pattern.equals(pvar.edge)
+      || pattern.equals(pvar.source)
+      || pattern.equals(pvar.destination)
+    ) {
       return data.termType === 'BlankNode';
     }
 
