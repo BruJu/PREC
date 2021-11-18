@@ -1,0 +1,74 @@
+PREFIX rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:  <http://www.w3.org/2000/01/rdf-schema#>       
+PREFIX prec:  <http://bruy.at/prec#> 
+PREFIX ex:    <http://example.org/> 
+PREFIX pvar:  <http://bruy.at/prec-trans#>
+PREFIX pgo:   <http://ii.uwb.edu.pl/pgo#>
+PREFIX :      <http://test/>
+
+PREFIX this:  <http://bruy.at/prec#name=>
+
+GRAPH this:empty {
+  this:all prec:well_behaved true .
+}
+
+GRAPH this:element_identification_check {
+  ex:empty_node a prec:prsc_node ;
+    prec:element_identification true .
+
+  ex:template_1_good_ident a prec:prsc_node ;
+    prec:composedOf << pvar:self a pgo:node >> ;
+    prec:element_identification true .
+
+  ex:template_1_bad_ident a prec:prsc_node ;
+    prec:composedOf << ex:X a pgo:node >> ;
+    prec:element_identification false .
+
+  ex:template_several_good a prec:prsc_node ;
+    prec:composedOf
+      << pvar:self a pgo:node >> ,
+      << pvar:self a :element >> ;
+    prec:element_identification true .
+
+  ex:object_self a prec:prsc_node ;
+    prec:composedOf << :thegraph :has pvar:self >> ;
+    prec:element_identification true .
+  
+  ex:quoted_self a prec:prsc_node ;
+    prec:composedOf << << pvar:self a pgo:node >> :generatedBy :pgo >> ;
+    prec:element_identification true .
+  
+  ex:element_ident_one_good_one_bad a prec:prsc_node ;
+    prec:composedOf
+      << pvar:self a pgo:node >> ,
+      << :thisgraph :generatedBy :prsc >> ;
+    prec:element_identification false .
+
+  ex:element_ident_moving a prec:prsc_node ;
+    prec:composedOf
+      << pvar:self a :A >> ,
+      << :A :contains pvar:self >> ;
+    prec:element_identification true .
+
+  ex:pvarnode_in_node a prec:prsc_node ;
+    prec:composedOf << pvar:node a pgo:node >> ;
+    prec:element_identification true .
+
+  ex:pvaredge_in_node a prec:prsc_node ;
+    prec:composedOf << pvar:edge a pgo:node >> ;
+    prec:element_identification false .
+
+  ex:pvarnode_in_edge a prec:prsc_edge ;
+    prec:composedOf << pvar:node a pgo:edge >> ;
+    prec:element_identification false .
+
+  ex:pvaredge_in_edge a prec:prsc_edge ;
+    prec:composedOf << pvar:edge a pgo:edge >> ;
+    prec:element_identification true .
+
+  ex:inconsitent_synonyms a prec:prsc_node ;
+    prec:composedOf
+      << pvar:node a pgo:node >> ,
+      << pvar:self a :element >> ;
+    prec:element_identification true .
+}
