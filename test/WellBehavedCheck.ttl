@@ -72,3 +72,83 @@ GRAPH this:element_identification_check {
       << pvar:self a :element >> ;
     prec:element_identification true .
 }
+
+GRAPH this:no_value_loss_check {
+  ex:empty_node a prec:prsc_node ;
+    prec:no_value_loss true .
+  
+  ex:empty_edge a prec:prsc_edge ;
+    prec:no_value_loss false .
+  
+  ex:one_triple_edge a prec:prsc_edge ;
+    prec:composedOf << pvar:source ex:connected_to pvar:destination >> ;
+    prec:no_value_loss true .
+  
+  ex:edge_with_source_only a prec:prsc_edge ;
+    prec:composedOf << pvar:source ex:exists ex:here >> ;
+    prec:no_value_loss false .
+
+  ex:edge_with_destination_only a prec:prsc_edge ;
+    prec:composedOf << pvar:destination ex:exists ex:here >> ;
+    prec:no_value_loss false .
+  
+  ex:node_with_name a prec:prsc_node ;
+    prec:propertyName "name" ;
+    prec:composedOf << pvar:self ex:name "name"^^prec:_valueOf >> ;
+    prec:no_value_loss true .
+  
+  ex:missing_label a prec:prsc_node ;
+    prec:propertyName "name" ;
+    prec:composedOf << pvar:self ex:name "toto" >> ;
+    prec:no_value_loss false .
+
+  ex:two_good a prec:prsc_node ;
+    prec:propertyName "name", "age" ;
+    prec:composedOf
+      << pvar:self ex:name "name"^^prec:_valueOf >>,
+      << pvar:self ex:age "age"^^prec:_valueOf >> ;
+    prec:no_value_loss true .
+  
+  ex:one_good_one_bad a prec:prsc_node ;
+    prec:propertyName "name", "age" ;
+    prec:composedOf
+      << pvar:self ex:name "name"^^prec:_valueOf >> ,
+      << pvar:self ex:age "name"^^prec:_valueOf >> ;
+    prec:no_value_loss false .
+
+  ex:drowned_values a prec:prsc_node ;
+    prec:propertyName "firstname", "lastname" ;
+    prec:composedOf
+      << pvar:self ex:name "firstname"^^prec:_valueOf >> ,
+      << pvar:self ex:name "lastname"^^prec:_valueOf >> ;
+    prec:no_value_loss false .
+
+  ex:both_drowned_and_identifiable_values a prec:prsc_node ;
+    prec:propertyName "firstname", "lastname" ;
+    prec:composedOf
+      << pvar:self ex:first "firstname"^^prec:_valueOf >> ,
+      << pvar:self ex:last "lastname"^^prec:_valueOf >> ,
+      << pvar:self ex:name "firstname"^^prec:_valueOf >> ,
+      << pvar:self ex:name "lastname"^^prec:_valueOf >> ;
+    prec:no_value_loss true .
+
+  ex:rdf_star_prop a prec:prsc_edge ;
+    prec:propertyName "since" ;
+    prec:composedOf
+      <<
+        << pvar:source ex:connected_to pvar:destination >> 
+        ex:since
+        "since"^^prec:_valueOf
+      >> ;
+    prec:no_value_loss true .
+
+  ex:weird_rdf_star a prec:prsc_node ;
+    prec:propertyName "familyname", "givenname" ;
+    prec:composedOf
+      <<
+        << pvar:self ex:member_of_family "familyname"^^prec:_valueOf >>
+        ex:givenname "givenname"^^prec:_valueOf
+      >> ;
+    prec:no_value_loss true .
+  
+}

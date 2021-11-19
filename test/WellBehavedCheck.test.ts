@@ -118,7 +118,7 @@ function readResourceFile(path: string): TestGraph[] {
         }
 
         y.elementIdentification = xsdBoolToBool(quad.object);
-      } else if (quad.predicate.equals(prec.noValueLoss)) {
+      } else if (quad.predicate.equals(prec.no_value_loss)) {
         let y = x.testRules.get(quad.subject);
         if (y === undefined) {
           y = {};

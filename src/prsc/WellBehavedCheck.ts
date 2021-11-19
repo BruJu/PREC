@@ -126,7 +126,7 @@ function extractArgs(templateTriple: RDF.Quad): (string | SpecialArg)[] {
       visit(term.graph);
     } else if (term.termType === 'NamedNode') {
       if (term.equals(pvarSource)) result.push(SpecialArg.Source);
-      if (term.equals(pvarDestination)) result.push(SpecialArg.Source);
+      if (term.equals(pvarDestination)) result.push(SpecialArg.Destination);
     } else if (term.termType === 'Literal') {
       if (term.datatype.equals(precValueOf)) {
         result.push(term.value);
