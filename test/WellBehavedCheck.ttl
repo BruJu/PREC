@@ -91,7 +91,7 @@ GRAPH this:no_value_loss_check {
   ex:edge_with_destination_only a prec:prsc_edge ;
     prec:composedOf << pvar:destination ex:exists ex:here >> ;
     prec:no_value_loss false .
-  
+
   ex:node_with_name a prec:prsc_node ;
     prec:propertyName "name" ;
     prec:composedOf << pvar:self ex:name "name"^^prec:_valueOf >> ;
@@ -149,6 +149,141 @@ GRAPH this:no_value_loss_check {
         << pvar:self ex:member_of_family "familyname"^^prec:_valueOf >>
         ex:givenname "givenname"^^prec:_valueOf
       >> ;
+    prec:no_value_loss true .
+}
+
+GRAPH this:signature_triple_check {
+  [] prec:all_signed true .
+
+  # The signature criteria forces templates to have a triple
+  
+  [] prec:all_signed false ,
+    ex:empty_node .
+
+  ex:empty_node a prec:prsc_node .
+
+  # 
+
+  ex:only_a prec:all_signed true, ex:node_a .
+  ex:only_b prec:all_signed true, ex:node_b .
+  ex:ok_a_b prec:all_signed true, ex:node_a, ex:node_b .
+  ex:bad_a_alike prec:all_signed false, ex:node_a, ex:node_alike .
+
+  ex:node_a a prec:prsc_node ;
+    prec:nodeLabel "A" ;
+    prec:composedOf << pvar:self a ex:A >> .
+
+  ex:node_b a prec:prsc_node ;
+    prec:nodeLabel "B" ;
+    prec:composedOf << pvar:self a ex:B >> .
+
+  ex:node_alike a prec:prsc_node ;
+    prec:nodeLabel "A-like" ;
+    prec:composedOf << pvar:self a ex:A >> .
+
+  # Literal production
+
+  ex:node_named_c a prec:prsc_node ;
+    prec:nodeLabel "C" ;
+    prec:propertyName "name" ;
+    prec:composedOf << pvar:self ex:name "name"^^prec:_valueOf >> .
+  
+  ex:node_firstnamed_d a prec:prsc_node ;
+    prec:nodeLabel "D" ;
+    prec:propertyName "firstname" ;
+    prec:composedOf << pvar:self ex:name "fistname"^^prec:_valueOf >> .
+  
+  ex:node_firstnamed_e a prec:prsc_node ;
+    prec:nodeLabel "E" ;
+    prec:propertyName "firstname" ;
+    prec:composedOf << pvar:self ex:firstname "firstname"^^prec:_valueOf >> .
+  
+  ex:bad_c_d prec:all_signed false, ex:node_named_c, ex:node_firstnamed_d .
+  ex:ok_c_e prec:all_signed true, ex:node_named_c, ex:node_firstnamed_e .
+  ex:ok_d_e prec:all_signed true, ex:node_firstnamed_d, ex:node_firstnamed_e .
+
+  # With edges
+
+  ex:reflexive_node a prec:prsc_node ;
+    prec:nodeLabel "Philosoph" ;
+    prec:composedOf << pvar:self ex:knows pvar:self >> .
+  
+  ex:not_so_reflexive_node a prec:prsc_node ;
+    prec:nodeLabel "CarefulPhilosoph" ;
+    prec:composedOf << pvar:self ex:knows ex:themself >> .
+
+  ex:edge_knows a prec:prsc_edge ;
+    prec:edgeLabel "Knows" ;
+    prec:composedOf << pvar:source ex:knows pvar:destination >> .
+  
+  ex:bad_knows prec:all_signed false, ex:reflexive_node, ex:edge_knows .
+  ex:ok_knows prec:all_signed true, ex:not_so_reflexive_node, ex:edge_knows .
+
+  # Multiple similar signatures
+
+  ex:fan_of_names a prec:prsc_node ;
+    prec:nodelLabel "FanOfNames" ;
+    prec:propertyName "name", "name2" ;
+    prec:composedOf
+      << pvar:self ex:name "name"^^prec:_valueOf >> ,
+      << pvar:self ex:name "name2"^^prec:_valueOf >> .
+  
+  ex:only_me_use_names_because_im_alone prec:all_signed true,
+    ex:fan_of_names .
+
+  ex:only_me_use_names_and_i_have_friends prec:all_signed true,
+    ex:fan_of_names, ex:node_firstnamed_e .
+  
+  ex:someone_else_uses_names prec:all_signed false,
+    ex:fan_of_names, ex:node_named_c .
+
+  # One signature, one non signature
+
+  ex:dog a prec:prsc_node ;
+    prec:nodelLabel "Dog" ;
+    prec:composedOf
+      << pvar:self a pgo:node >> ,
+      << pvar:self a ex:Dog >> .
+  
+  ex:cat a prec:prsc_node ;
+    prec:nodeLabel "Cat" ;
+    prec:composedOf
+      << pvar:self a pgo:node >> ,
+      << pvar:self a ex:Cat >> .
+  
+  ex:cats_and_dogs prec:all_signed true, ex:dog, ex:cat .
+}
+
+GRAPH ex:animal_context {
+  this:all prec:well_behaved true .
+
+  ex:cat a prec:prsc_node ;
+    prec:nodeLabel "Cat" ;
+    prec:propertyName "name" ;
+    prec:composedOf
+      << pvar:self a pgo:node >> ,
+      << pvar:self ex:name "name"^^prec:_valueOf >> ,
+      << pvar:self a ex:Cat >> .
+    
+  ex:dog a prec:prsc_node ;
+    prec:nodeLabel "Dog" ;
+    prec:propertyName "name" ;
+    prec:composedOf
+      << pvar:self ex:name "name"^^prec:_valueOf >> ,
+      << pvar:self ex:oncesaid "Wouf" >> .
+    
+  ex:human a prec:prsc_node ;
+    prec:nodeLabel "Human" ;
+    prec:composedOf << pvar:self a ex:Human >> .
+  
+  ex:ownership a prec:prsc_edge ;
+    prec:edgeLabel "Owns" ;
+    prec:propertyName "declaration_date" ;
+    prec:composedOf
+      << pvar:self a ex:ownership_declaration >> ,
+      << pvar:self ex:owner pvar:source >> ,
+      << pvar:self ex:about pvar:destination >> ,
+      << pvar:self ex:filledOn "declaration_date"^^prec:_valueOf >> ;
     prec:no_value_loss true .
   
 }
