@@ -29,8 +29,12 @@ describe('WellBehavedCheck', () => {
           const rule = schema.prscRules.find(r => r.identity.equals(ident));
           assert.ok(rule !== undefined);
           const r = WBC.elementIdentification(rule);
-          assert.ok(
-            r === conditions.elementIdentification,
+          const expected = conditions.elementIdentification
+            ? WBC.ElementIdentificationAnswer.FullyIdentifiable
+            : WBC.ElementIdentificationAnswer.No;
+          
+            assert.ok(
+            r === expected,
             RDFString.termToString(ident)
             + " is"
             + (conditions.elementIdentification ? "" : " not")

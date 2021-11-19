@@ -254,7 +254,7 @@ GRAPH this:signature_triple_check {
   ex:cats_and_dogs prec:all_signed true, ex:dog, ex:cat .
 }
 
-GRAPH ex:animal_context {
+GRAPH this:animal_context {
   this:all prec:well_behaved true .
 
   ex:cat a prec:prsc_node ;
@@ -285,5 +285,54 @@ GRAPH ex:animal_context {
       << pvar:self ex:about pvar:destination >> ,
       << pvar:self ex:filledOn "declaration_date"^^prec:_valueOf >> ;
     prec:no_value_loss true .
+}
+
+GRAPH this:ok_monoedge {
+  this:all prec:well_behaved true .
+
+  ex:human a prec:prsc_node ;
+    prec:composedOf << pvar:self a ex:Human >> .
   
+  ex:knows a prec:prsc_edge ;
+    prec:composedOf << pvar:source ex:knows pvar:destination >> .
+}
+
+GRAPH this:bad_monoedge {
+  this:all prec:well_behaved false .
+
+  ex:philosoph a prec:prsc_node ;
+    prec:composedOf << pvar:self ex:knows pvar:destination >> .
+  
+  ex:knows a prec:prsc_edge ;
+    prec:composedOf << pvar:source ex:knows pvar:destination >> .
+}
+
+GRAPH this:bad_monoedges {
+  this:all prec:well_behaved false .
+
+  ex:human a prec:prsc_node ;
+    prec:composedOf << pvar:self a ex:Human >> .
+  
+  ex:knows a prec:prsc_edge ;
+    prec:edgeLabel "knows" ;
+    prec:composedOf << pvar:source ex:knows pvar:destination >> .
+    
+  ex:heard_about a prec:prsc_edge ;
+    prec:edgeLabel "heard_about" ;
+    prec:composedOf << pvar:source ex:knows pvar:destination >> .
+}
+
+GRAPH this:good_monoedges {
+  this:all prec:well_behaved true .
+
+  ex:human a prec:prsc_node ;
+    prec:composedOf << pvar:self a ex:Human >> .
+  
+  ex:knows a prec:prsc_edge ;
+    prec:edgeLabel "knows" ;
+    prec:composedOf << pvar:source ex:knows pvar:destination >> .
+    
+  ex:heard_about a prec:prsc_edge ;
+    prec:edgeLabel "heard_about" ;
+    prec:composedOf << pvar:source ex:heard_about pvar:destination >> .
 }
