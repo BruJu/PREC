@@ -360,6 +360,25 @@ module.exports = () => {
         `
       );
 
+      test("A context with a nested property",
+        (() => {
+          const pg = new PropertyGraph();
+          pg.addNode().addProperty("name", "toto");
+          pg.addNode().addProperty("name", "titi");
+          return pg;
+        })(),
+        `prec:this_is a prec:prscContext .
+        
+        [] a prec:prsc_node ;
+          prec:propertyName "name" ;
+          prec:composedOf << pvar:node :has_prop [ :name "name"^^prec:_valueOf ] >> .
+        `,
+        `
+        _:toto :has_prop [ :name "toto" ] .
+        _:titi :has_prop [ :name "titi" ] .
+        `
+      );
+
       badPGToRDF("A bad context format (property name is not found in the node / schema)",
         (() => {
           const pg = new PropertyGraph();

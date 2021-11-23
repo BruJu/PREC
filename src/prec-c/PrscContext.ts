@@ -16,6 +16,7 @@ import namespace from '@rdfjs/namespace';
 import { followThrough, followAll } from "../rdf/path-travelling";
 import { eventuallyRebuildQuad } from "../rdf/quad-star";
 import { unifyTemplateWithData } from "./PrscTemplateToDataCheck";
+import TermMap from "@rdfjs/term-map";
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", { factory: DataFactory });
 const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , { factory: DataFactory });
 const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , { factory: DataFactory });
@@ -155,6 +156,8 @@ class PRSCRule {
     source?: RDF.Quad_Subject,
     destination?: RDF.Quad_Subject
   ) {
+    const blankNodeInstantiations = new TermMap<RDF.BlankNode, RDF.BlankNode>();
+
     this.template.forEach(templateQuad => {
       output.add(eventuallyRebuildQuad(templateQuad, term => {
         if (term.equals(pvar.node) || term.equals(pvar.edge) || term.equals(pvar.self)) {
@@ -165,6 +168,14 @@ class PRSCRule {
           return destination!;
         } else if (term.termType === 'Literal' && term.datatype.equals(prec._valueOf)) {
           return properties[term.value];
+        } else if (term.termType === 'BlankNode') {
+          if (blankNodeInstantiations.has(term)) {
+            return blankNodeInstantiations.get(term)!;
+          } else {
+            const result = DataFactory.blankNode();
+            blankNodeInstantiations.set(term, result);
+            return result;
+          }
         } else {
           return term;
         }
