@@ -90,11 +90,17 @@ class PRSCRule {
       this.labels = followAllXSDStrings(context, identity, prec.edgeLabel);
     }
 
+    this.labels.push(...followAllXSDStrings(context, identity, prec.label));
+
     this.properties = followAllXSDStrings(context, identity, prec.propertyName);
 
     this.template = PRSCRule.#readTemplate(context, identity);
 
-    // TODO : check if the template is well formed WRT the properties
+    const listOfInvalidPropNames = getInvalidPropNames(this.template, this.properties);
+
+    if (listOfInvalidPropNames !== null) {
+      throw Error(`${RDFString.termToString(identity)} uses property names that are not defined in the PRSC type: ${listOfInvalidPropNames.join(", ")}`);
+    }
   }
 
   static #readTemplate(context: DStar, identity: RDF.Quad_Subject): RDF.Quad[] {
@@ -235,6 +241,44 @@ class PRSCRule {
   
     return { used, prec0: toAdd };
   }
+}
+
+/**
+ * Search in the template graph the list of terms of type prec:_valueOf and check
+ * if they are all in allowedKeys.
+ * @param templateGraph The template graph
+ * @param allowedKeys The list of allowed property names
+ * @returns null if the template graph only uses allowed keys. The list of keys
+ * that are not allowed if such keys exists.
+ */
+function getInvalidPropNames(templateGraph: RDF.Quad[], allowedKeys: string[]): string[] | null {
+  let badKeys: string[] = [];
+
+  function searchBadKeys(templateTerm: RDF.Term) {
+    if (templateTerm.termType === 'Quad') {
+      searchBadKeys(templateTerm.subject);
+      searchBadKeys(templateTerm.predicate);
+      searchBadKeys(templateTerm.object);
+      searchBadKeys(templateTerm.graph);
+    } else if (templateTerm.termType === 'Literal') {
+      if (templateTerm.datatype.equals(prec._valueOf)) {
+        const key = templateTerm.value;
+
+        if (!allowedKeys.includes(key)) {
+          if (!badKeys.includes(key)) {
+            badKeys.push(key);
+          }
+        }
+      }
+    }
+  }
+
+  for (const templateTriple of templateGraph) {
+    searchBadKeys(templateTriple);
+  }
+
+  if (badKeys.length === 0) return null;
+  return badKeys;
 }
 
 enum ValuationResult { Ok, Partial, No };
