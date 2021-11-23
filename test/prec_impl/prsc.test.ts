@@ -115,7 +115,7 @@ module.exports = () => {
         
         [] a prec:prsc_node ;
           prec:propertyName "name" ;
-          prec:composedOf << pvar:node :name [ prec:prsc_valueOf "name" ] >> .
+          prec:composedOf << pvar:node :name "name"^^prec:_valueOf >> .
         `,
         '_:toto :name "toto" . ',
         true
@@ -142,7 +142,7 @@ module.exports = () => {
           prec:edgeLabel "knows" ;
           prec:propertyName "since" ;
           prec:composedOf << pvar:source :knows pvar:destination >>,
-            << << pvar:destination :isStalkedBy pvar:source >> :since [ prec:prsc_valueOf "since" ] >> .
+            << << pvar:destination :isStalkedBy pvar:source >> :since "since"^^prec:_valueOf >> .
         `,
         ' _:toto :knows _:titi . \n ' +
         '<< _:titi :isStalkedBy _:toto >> :since "yesterday" .'
@@ -162,7 +162,7 @@ module.exports = () => {
           prec:propertyName "name" ;
           prec:composedOf
             << pvar:node rdf:type :Person >> ,
-            << pvar:node :name [ prec:prsc_valueOf "name" ] >> .
+            << pvar:node :name "name"^^prec:_valueOf >> .
         
         :KnightPGType a prec:prsc_node ;
           prec:nodeLabel "knight" ;
@@ -170,15 +170,15 @@ module.exports = () => {
           prec:propertyName "number" ;
           prec:composedOf
             << pvar:node rdf:type :Knight >> ,
-            << pvar:node :name [ prec:prsc_valueOf "name" ] >> ,
-            << pvar:node :number [ prec:prsc_valueOf "number" ] >> .
+            << pvar:node :name   "name"^^prec:_valueOf >> ,
+            << pvar:node :number "number"^^prec:_valueOf >> .
         
         :KnowsPGEdge a prec:prsc_edge ;
           prec:edgeLabel "knows" ;
           prec:propertyName "since" ;
           prec:composedOf
                << pvar:source :knows pvar:destination >> ,
-            << << pvar:source :knows pvar:destination >> :since [ prec:prsc_valueOf "since" ]  >> .
+            << << pvar:source :knows pvar:destination >> :since "since"^^prec:_valueOf >> .
         `,
         `
           _:toto a :Person ; :name "Toto" .
@@ -344,7 +344,7 @@ module.exports = () => {
         `
       );
 
-      badPGToRDF("A bad context format (invalid blank node)",
+      test("A bad context format (invalid blank node)",
         (() => {
           const pg = new PropertyGraph();
           pg.addNode();
@@ -354,19 +354,9 @@ module.exports = () => {
         
         [] a prec:prsc_node ;
           prec:composedOf << pvar:node a [ :hello :work ] >> .
+        `,
         `
-      );
-
-      badPGToRDF("A bad context format (property name is not a literal)",
-        (() => {
-          const pg = new PropertyGraph();
-          pg.addNode();
-          return pg;
-        })(),
-        `prec:this_is a prec:prscContext .
-        
-        [] a prec:prsc_node ;
-          prec:composedOf << pvar:node a [ prec:prsc_valueOf :hey ] >> .
+        _:the_node a [ :hello :work ] .
         `
       );
 
@@ -379,7 +369,7 @@ module.exports = () => {
         `prec:this_is a prec:prscContext .
         
         [] a prec:prsc_node ;
-          prec:composedOf << pvar:node a [ prec:prsc_valueOf "name" ] >> .
+          prec:composedOf << pvar:node a "name"^^prec:_valueOf >> .
         `
       );
       
@@ -393,7 +383,7 @@ module.exports = () => {
         
         [] a prec:prsc_node ;
           prec:propertyName "name" ;
-          prec:composedOf << pvar:node a [ prec:prsc_valueOf "name" ] >> .
+          prec:composedOf << pvar:node a "name"^^prec:_valueOf >> .
         `
       );
 
@@ -411,7 +401,7 @@ module.exports = () => {
         :something a prec:prsc_node ;
           prec:propertyName "name" ;
           prec:composedOf
-            << pvar:node :is_named [ prec:prsc_valueOf "name" ] >> ,
+            << pvar:node :is_named "name"^^prec:_valueOf >> ,
             << pvar:node :is_named "Grove" >> .
         `,
         ' _:thomas :is_named "Thomas", "Grove" . ',

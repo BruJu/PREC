@@ -1724,7 +1724,7 @@
         <li>`pvar:edge` - Edges only, the identifier for the edge</li>
         <li>`pvar:source` - Edges only, source of the edge</li>
         <li>`pvar:destination` - Edges only, destination of the edge</li>
-        <li>`[ prec:prsc_valueOf "property name" ]` - Placeholder for the value of the property "property name"</li>
+        <li>`"property name"^^prec:_valueOf` - Placeholder for the value of the property "property name"</li>
       </ul>
 
       
@@ -1751,7 +1751,7 @@
               prec:propertyName "name" ;
               prec:composedOf
                 << pvar:node ex:hasLabel ex:person >> ,
-                << pvar:node ex:name [ prec:prsc_valueOf "name" ] >> .
+                << pvar:node ex:name "name"^^prec:_valueOf >> .
 
             ex:LovesForm a prec:prsc_edge ;
               prec:edgeLabel "Likes" ;

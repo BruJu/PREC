@@ -12,7 +12,7 @@ ex:PersonForm a prec:prsc_node ;
   prec:propertyName "name" ;
   prec:composedOf
     << pvar:node ex:hasLabel ex:person >> ,
-    << pvar:node ex:name [ prec:prsc_valueOf "name" ] >> .
+    << pvar:node ex:name "name"^^prec:_valueOf >> .
 
 ex:LovesForm a prec:prsc_edge ;
   prec:edgeLabel "Likes" ;

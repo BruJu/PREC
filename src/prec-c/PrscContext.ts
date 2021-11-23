@@ -1,4 +1,5 @@
 import * as RDF from "@rdfjs/types";
+import TermSet from '@rdfjs/term-set';
 import { DataFactory } from "n3";
 import DStar from "../dataset";
 import * as RDFString from 'rdf-string';
@@ -8,6 +9,8 @@ const $quad         = DataFactory.quad;
 const $literal      = DataFactory.literal;
 const $variable     = DataFactory.variable;
 const $defaultGraph = DataFactory.defaultGraph();
+
+const TTS = RDFString.termToString;
 
 import namespace from '@rdfjs/namespace';
 import { followThrough, followAll } from "../rdf/path-travelling";
@@ -98,22 +101,53 @@ class PRSCRule {
   }
 
   static #readTemplate(context: DStar, identity: RDF.Quad_Subject): RDF.Quad[] {
-    return (followAll(context, identity, prec.composedOf) as RDF.Quad[])
-      .map(quad => eventuallyRebuildQuad(quad, PRSCRule.#removeBlankNodes(context)));
+    let alreadySeenQuads = new TermSet();
+
+    const template: RDF.Quad[] = [];
+
+    for (const object of followAll(context, identity, prec.composedOf)) {
+      if (object.termType === 'Quad') {
+        if (alreadySeenQuads.has(object)) continue;
+ 
+        let searchBlankNodesIn = new TermSet<RDF.Quad>();
+        searchBlankNodesIn.add(object);
+        alreadySeenQuads.add(object);
+        template.push(object);
+
+        while (searchBlankNodesIn.size !== 0) {
+          const searchBlankNodesInHere = [...searchBlankNodesIn.values()][0];
+          searchBlankNodesIn.delete(searchBlankNodesInHere);
+
+          const addedBns = extractBnsIn(searchBlankNodesInHere);
+          const theNewBnsAreIn = findAllCoolOccurrencesOfTerms(context, addedBns);
+
+          for (const newQuad of theNewBnsAreIn) {
+            if (!alreadySeenQuads.has(newQuad)) {
+              alreadySeenQuads.add(newQuad);
+              searchBlankNodesIn.add(newQuad);
+
+              template.push(newQuad);
+            }
+          }
+        }
+      } else if (object.termType === 'BlankNode' || object.termType === 'NamedNode') {
+        const graphContent = context.getQuads(null, null, null, object);
+        if (graphContent.length === 0) {
+          throw Error(`${TTS(identity)} prec:composedOf ${TTS(object)} has been found but the graph ${TTS(object)} is empty.`);
+        }
+
+        for (const quad of graphContent) {
+          const quadInDefaultGraph = $quad(quad.subject, quad.predicate, quad.object, $defaultGraph);
+          template.push(quadInDefaultGraph);
+        }
+      } else {
+        throw Error(`Invalid object for prec:composedOf found in rule ${RDFString.termToString(identity)}`);
+      }
+    }
+
+    return template;
   }
   
-  static #removeBlankNodes(context: DStar): (quad: RDF.Term) => RDF.Term {
-    return (term: RDF.Term) => {
-      if (term.termType === 'BlankNode') {
-        const valueOf = followThrough(context, term, prec.prsc_valueOf);
-        if (valueOf === null) throw Error("invalid template (blank node is bad)");
-        return DataFactory.literal(valueOf.value, prec._valueOf);
-      } else {
-        return term;
-      }
-    };
-  }
-
   prec0Production(
     output: DStar,
     pgElement: RDF.Quad_Subject,
@@ -462,4 +496,33 @@ function findElement(dataQuad: RDF.Quad, f: { rule: PRSCRule, triple: RDF.Quad }
   } else {
     throw Error("Impossible path by design");
   }
+}
+
+
+
+
+function extractBnsIn(quad: RDF.Quad): RDF.BlankNode[] {
+  let result: RDF.BlankNode[] = [];
+
+  const explore = (term: RDF.Term) => {
+    if (term.termType === 'Quad') {
+      explore(term.subject);
+      explore(term.predicate);
+      explore(term.object);
+      explore(term.graph);
+    } else if (term.termType === 'BlankNode') {
+      result.push(term);
+    }
+  }
+
+  explore(quad);
+
+  return result;
+}
+
+
+function findAllCoolOccurrencesOfTerms(graph: DStar, terms: RDF.BlankNode[]): RDF.Quad[] {
+  return terms.flatMap(term => [
+    ...graph.getQuads(term, null, null, $defaultGraph)
+  ]);
 }
