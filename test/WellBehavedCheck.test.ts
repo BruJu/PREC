@@ -4,7 +4,7 @@ import path from 'path';
 import * as RDF from '@rdfjs/types';
 import * as N3 from 'n3';
 import fs from 'fs';
-import { PRSCSchema } from '../src/prsc/PrscContext';
+import { assertSchema, PRSCSchema } from '../src/prsc/PrscContext';
 import TermMap from '@rdfjs/term-map';
 import * as RDFString from 'rdf-string';
 
@@ -22,7 +22,7 @@ describe('WellBehavedCheck', () => {
     it(RDFString.termToString(test.name), () => {
       let atLeastOneCheck = false;
 
-      const schema = new PRSCSchema(test.quads);
+      const schema = assertSchema(PRSCSchema.build(test.quads));
 
       for (const [ident, conditions] of test.testRules) {
         if (conditions.elementIdentification !== undefined) {

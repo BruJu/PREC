@@ -13,6 +13,7 @@ import namespace from '@rdfjs/namespace';
 import { followThrough, followAll } from "../rdf/path-travelling";
 import { eventuallyRebuildQuad } from "../rdf/quad-star";
 import { unifyTemplateWithData } from "./possible-template-to-data-check";
+import TermSet from "@rdfjs/term-set";
 const ex   = namespace("http://www.example.org/"                    , { factory: DataFactory });
 
 const xsdString = DataFactory.namedNode("http://www.w3.org/2001/XMLSchema#string");
@@ -70,32 +71,59 @@ export class PRSCRule {
   readonly properties: string[];
   readonly template: RDF.Quad[];
 
-  constructor(context: DStar, identity: RDF.Quad_Subject) {
-    this.identity = identity;
+  static build(context: DStar, identity: RDF.Quad_Subject): { rule: PRSCRule } | { violations: PRSCSchemaViolation[] } {
+    let violations: PRSCSchemaViolation[] = [];
+
+    let nodeOrEdge: 'node' | 'edge' | undefined = undefined;
 
     const type = followThrough(context, identity, rdf.type);
-    if (type === null) throw Error(`${RDFString.termToString(identity)} is an invalid PRSC rule: must have one type`);
-    else if (type.equals(prec.prsc_node)) this.type = 'node';
-    else if (type.equals(prec.prsc_edge)) this.type = 'edge';
-    else throw Error(`${RDFString.termToString(identity)} is an invalid PRSC rule: has a bad type`);
-
-    if (this.type === 'node') {
-      this.labels = followAllXSDStrings(context, identity, prec.nodeLabel);
+    if (type === null) {
+      violations.push({ type: 'rule_bad_type_qtt', identity: identity, message: "must have exactly one type" });
+    } else if (type.equals(prec.prsc_node)) {
+      nodeOrEdge = 'node';
+    } else if (type.equals(prec.prsc_edge)) {
+      nodeOrEdge = 'edge';
     } else {
-      this.labels = followAllXSDStrings(context, identity, prec.edgeLabel);
+      violations.push({ type: 'rule_given_bad_type', identity: identity, foundType: type });
     }
 
-    this.labels.push(...followAllXSDStrings(context, identity, prec.label));
+    const labels = followAllXSDStrings(context, identity, prec.label);
+    if (nodeOrEdge === 'node') {
+      labels.push(...followAllXSDStrings(context, identity, prec.nodeLabel));
+    } else if (nodeOrEdge === 'edge') {
+      labels.push(...followAllXSDStrings(context, identity, prec.edgeLabel));
+    }
 
-    this.properties = followAllXSDStrings(context, identity, prec.propertyName);
+    const properties = followAllXSDStrings(context, identity, prec.propertyName);
+    const template = PRSCRule.#readTemplate(context, identity);
 
-    this.template = PRSCRule.#readTemplate(context, identity);
-
-    const listOfInvalidPropNames = getInvalidPropNames(this.template, this.properties);
-
+    const listOfInvalidPropNames = getInvalidPropNames(template, properties);
     if (listOfInvalidPropNames !== null) {
-      throw Error(`${RDFString.termToString(identity)} uses property names that are not defined in the PRSC type: ${listOfInvalidPropNames.join(", ")}`);
+      const errors: PRSCSchemaViolation[] = listOfInvalidPropNames.map(invalidPropName =>
+        ({ type: 'template_has_invalid_prop_name', identity: identity, propName: invalidPropName })
+      );
+      violations.push(...errors);
     }
+
+    if (violations.length !== 0) {
+      return { violations };
+    }
+
+    return { rule: new PRSCRule(identity, nodeOrEdge!, labels, properties, template) };
+  }
+
+  private constructor(
+    identity: RDF.Quad_Subject,
+    type: 'node' | 'edge',
+    labels: string[],
+    properties: string[],
+    template: RDF.Quad[]
+  ) {
+    this.identity = identity;
+    this.type = type;
+    this.labels = labels;
+    this.properties = properties;
+    this.template = template;
   }
 
   static #readTemplate(context: DStar, identity: RDF.Quad_Subject): RDF.Quad[] {
@@ -300,16 +328,37 @@ function getValuationOfTriple(quad: RDF.Quad, type: 'node' | 'edge'): ValuationR
 export class PRSCSchema {
   prscRules: PRSCRule[] = [];
 
-  constructor(contextQuads: RDF.Quad[]) {
+  static build(contextQuads: RDF.Quad[]): { schema: PRSCSchema } | { violations: PRSCSchemaViolation[] } {
+    const rules: PRSCRule[] = [];
+    const violations: PRSCSchemaViolation[] = [];
     const dataset = new DStar(contextQuads);
+    const alreadySeenTypes = new TermSet();
 
-    for (const nodeForm of dataset.match(null, rdf.type, prec.prsc_node, $defaultGraph)) {
-      this.prscRules.push(new PRSCRule(dataset, nodeForm.subject));
+    for (const type of [prec.prsc_node, prec.prsc_edge]) {
+      for (const ruleQuad of dataset.match(null, rdf.type, type, $defaultGraph)) {
+        // 
+        if (alreadySeenTypes.has(ruleQuad.subject)) continue;
+        alreadySeenTypes.add(ruleQuad.subject);
+
+        // Read and add the rule
+        const thisRule = PRSCRule.build(dataset, ruleQuad.subject);
+        if ('violations' in thisRule) {
+          violations.push(...thisRule.violations);
+        } else {
+          rules.push(thisRule.rule);
+        }
+      }
     }
 
-    for (const edgeForm of dataset.match(null, rdf.type, prec.prsc_edge, $defaultGraph)) {
-      this.prscRules.push(new PRSCRule(dataset, edgeForm.subject));
+    if (violations.length !== 0) {
+      return { violations };
+    } else {
+      return { schema: new PRSCSchema(rules) };
     }
+  }
+
+  private constructor(rules: PRSCRule[]) {
+    this.prscRules = rules;
   }
 
   applyContext(dataset: DStar): DStar {
@@ -379,6 +428,39 @@ export class PRSCSchema {
   }
 }
 
+export type PRSCSchemaViolation = { identity: RDF.Quad_Subject } & (
+  { type: 'rule_bad_type_qtt', message: string }
+  | { type: 'rule_given_bad_type', foundType: RDF.Quad_Object }
+  | { type: 'template_has_invalid_prop_name', propName: string }
+);
+
+export function violationsToString(violations: PRSCSchemaViolation[], delimiter: string = " ; "): string {
+  return violations.map(violation => violationToString(violation)).join(delimiter);
+}
+
+export function violationToString(violation: PRSCSchemaViolation): string {
+  if (violation.type === 'rule_bad_type_qtt') {
+    return `${RDFString.termToString(violation.identity)} does not have exactly one type`;
+  } else if (violation.type === 'rule_given_bad_type') {
+    return `${RDFString.termToString(violation.identity)} has the type ${RDFString.termToString(violation.foundType)} `
+      + 'which is different from the expected types prec:prsc_node and prec:prsc_edge.'
+  } else if (violation.type === 'template_has_invalid_prop_name') {
+    return RDFString.termToString(violation.identity)
+      + " uses the property name " + violation.propName
+      + " in its template but it is not a property in the described type."
+  } else {
+    return 'Unknown violation';
+  }
+}
+
+export function assertSchema(r: { schema: PRSCSchema } | {violations: PRSCSchemaViolation[] }): PRSCSchema {
+  if ('violations' in r) {
+    throw Error("The given schema is invalid: " + violationsToString(r.violations));
+  }
+
+  return r.schema;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // ==== Structural description graph -> Idiomatic Graph
 
@@ -388,8 +470,9 @@ export function isPrscContext(contextQuads: RDF.Quad[]) {
   return contextQuads.find(q => q.equals(searched)) !== undefined;
 }
 
-export default function precCwithPRSC(dataset: DStar, contextQuads: RDF.Quad[]) {
-  return new PRSCSchema(contextQuads).applyContext(dataset);
+export default function precCwithPRSC(dataset: DStar, contextQuads: RDF.Quad[]): DStar {
+  const schema = assertSchema(PRSCSchema.build(contextQuads));
+  return schema.applyContext(dataset);
 }
 
 
@@ -412,7 +495,7 @@ type UsedRule = {
 export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): { dataset: DStar, complete: boolean } {
   dataset = dataset.match();
 
-  const schema = new PRSCSchema(contextQuads);
+  const schema = assertSchema(PRSCSchema.build(contextQuads));
   const identificationTriples = schema.findIdentificationTriples();
 
   const usedQuads = new DStar();
