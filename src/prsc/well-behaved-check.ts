@@ -8,6 +8,7 @@ import {
 } from './PrscContext';
 import { precValueOf, pvarDestination, pvarEdge, pvarNode, pvarSelf, pvarSource } from "../PRECNamespace";
 import * as QuadStar from '../rdf/quad-star';
+import { findBlankNodes } from '../../build/src/rdf/graph-substitution';
 
 
 /** A violation for a Well Behaved Context */
@@ -28,6 +29,14 @@ export enum ElementIdentificationAnswer { FullyIdentifiable, MonoEdge, No }
  */
 export function elementIdentification(rule: PRSCRule): ElementIdentificationAnswer {
   const other = rule.type === 'node' ? pvarNode : pvarEdge;
+
+  // The template must contain no blank node: as pvar:self will be mapped to blank node,
+  // if a blank node is produced by another source, we can not identify every
+  // blank node as a PG element trivially.
+  const hasABlankNode = undefined !== rule.template.find(templateTriple => findBlankNodes(templateTriple).size !== 0);
+  if (hasABlankNode) {
+    return ElementIdentificationAnswer.No;
+  }
 
   const isFull = undefined === rule.template.find(templateTriple =>
     !(QuadStar.containsTerm(templateTriple, pvarSelf)
