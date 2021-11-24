@@ -5,13 +5,9 @@ import { DataFactory } from "n3";
 import * as RDFString from 'rdf-string';
 import { canTemplateProduceData } from "../src/prsc/PrscContext";
 
-const prec = namespace("http://bruy.at/prec#"      , { factory: DataFactory });
-const pvar = namespace("http://bruy.at/prec-trans#", { factory: DataFactory });
-const ex   = namespace("http://example.org/"       , { factory: DataFactory });
+import { prec, pvar, $quad, $literal, $blankNode } from '../src/PRECNamespace';
 
-const $quad         = DataFactory.quad;
-const $literal      = DataFactory.literal;
-const $bn           = DataFactory.blankNode;
+const ex   = namespace("http://example.org/"       , { factory: DataFactory });
 
 const pvarSelf    = pvar.self;
 const pvarSource  = pvar.source;
@@ -82,12 +78,12 @@ describe("Template - Data reversion", () => {
     // Trivially possible
     isFrom(
       $quad(pvarSelf   , ex.rdftype, ex.Person),
-      $quad($bn("toto"), ex.rdftype, ex.Person)
+      $quad($blankNode("toto"), ex.rdftype, ex.Person)
     );
 
     isFrom(
       $quad(pvarSource , ex.knows, pvarDest),
-      $quad($bn("toto"), ex.knows, $bn("titi"))
+      $quad($blankNode("toto"), ex.knows, $blankNode("titi"))
     );
 
     isFrom(
@@ -97,13 +93,13 @@ describe("Template - Data reversion", () => {
 
     isFrom(
       $quad(pvarSelf   , ex.age, propVal("age")),
-      $quad($bn("toto"), ex.age, $literal(5))
+      $quad($blankNode("toto"), ex.age, $literal(5))
     )
 
     // Trivially impossible
     isNotFrom(
       $quad(pvarSelf   , ex.age, propVal("age")),
-      $quad($bn("toto"), ex.age, $bn("three"))
+      $quad($blankNode("toto"), ex.age, $blankNode("three"))
     );
 
     isNotFrom(
@@ -114,12 +110,12 @@ describe("Template - Data reversion", () => {
     // Variable evaluation consistency
     isFrom(
       $quad(pvarSelf   , ex.knows, pvarSelf),
-      $quad($bn("toto"), ex.knows, $bn("toto"))
+      $quad($blankNode("toto"), ex.knows, $blankNode("toto"))
     );
 
     isNotFrom(
       $quad(pvarSelf   , ex.knows, pvarSelf),
-      $quad($bn("toto"), ex.knows, $bn("titi"))
+      $quad($blankNode("toto"), ex.knows, $blankNode("titi"))
     );
   });
 });

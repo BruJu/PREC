@@ -10,7 +10,7 @@ export const xsd  = namespace("http://www.w3.org/2001/XMLSchema#"          , { f
 export const prec = namespace("http://bruy.at/prec#"      , { factory: DataFactory });
 export const pvar = namespace("http://bruy.at/prec-trans#", { factory: DataFactory });
 export const pgo  = namespace("http://ii.uwb.edu.pl/pgo#" , { factory: DataFactory });
-
+export const ex = namespace("http://example.org/"         , { factory: DataFactory });
 
 export const pvarSelf        = pvar.self;
 export const pvarNode        = pvar.node;
