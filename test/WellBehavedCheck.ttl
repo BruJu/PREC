@@ -71,6 +71,11 @@ GRAPH this:element_identification_check {
       << pvar:node a pgo:node >> ,
       << pvar:self a :element >> ;
     prec:element_identification true .
+  
+  ex:with_a_blank_node a prec:prsc_node ;
+    prec:composedOf
+      << pvar:node a pgo:node >> ,
+      << pvar:node :has_a_friend_named _:some_blank_node >> .
 }
 
 GRAPH this:no_value_loss_check {

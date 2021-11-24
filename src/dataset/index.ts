@@ -1,4 +1,5 @@
 import { Quad, Term, DatasetCore } from "rdf-js";
+import * as RDF from '@rdfjs/types';
 
 import * as N3 from 'n3';
 import * as QuadStar from '../rdf/quad-star';
@@ -185,6 +186,22 @@ export default class DStar implements DatasetCore {
   }
 
   // =========================================================================
+
+  /**
+   * Look for all triples in the given graph that has one of the terms as the
+   * subject
+   * @param terms The possible subjects
+   * @param graph The graph, or null for any graph
+   * @returns The list of quads where one of the given term is found as subject
+   */
+  findAllOccurrencesAsSubject(
+    terms: RDF.Quad_Subject[],
+    graph: null | RDF.Quad_Graph = N3.DataFactory.defaultGraph()
+  ): RDF.Quad[] {
+    return terms.flatMap(term => [
+      ...this.getQuads(term, null, null, graph)
+    ]);
+  }
 
   /**
    * Look for every occurrence of term, returning them if they all match an
