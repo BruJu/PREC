@@ -1,15 +1,12 @@
 import { DatasetCore, Quad, Quad_Graph, Quad_Object, Quad_Predicate, Quad_Subject, Term } from "@rdfjs/types";
-import { DataFactory } from "n3";
 import TermSet from "@rdfjs/term-set";
 import * as PrecUtils from './utils';
 
-import namespace from '@rdfjs/namespace';
-const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", { factory: DataFactory });
+import { rdf, $quad, $defaultGraph } from '../PRECNamespace';
 
 export type RDFPath = [Quad_Predicate, Quad_Object];
 export type RDFPathPartial = [Quad_Predicate, Quad_Object | null];
 
-const $quad = DataFactory.quad;
 
 /*
  * Mathods that relies on the RDF/JS DatasetCore interfce
@@ -21,7 +18,7 @@ const $quad = DataFactory.quad;
 /** Returns true if one of the quad is not in the default graph */
 export function hasNamedGraph(dataset: DatasetCore) {
   for (const quad of dataset) {
-    if (!DataFactory.defaultGraph().equals(quad.graph)) {
+    if (!$defaultGraph.equals(quad.graph)) {
       return true;
     }
   }
@@ -92,7 +89,7 @@ export function getPathsFrom(dataset: DatasetCore, subject: Quad_Subject, ignore
  * @returns The corresponding object if it exists and is unique
  */
 export function followThrough(dataset: DatasetCore, subject: Quad_Subject, predicate: Quad_Predicate) {
-  let match = dataset.match(subject, predicate, null, DataFactory.defaultGraph());
+  let match = dataset.match(subject, predicate, null, $defaultGraph);
   if (match.size !== 1) return null;
 
   return [...match][0].object;
@@ -112,7 +109,7 @@ export function followOrNull(
   dataset: DatasetCore,
   subject: Quad_Subject, predicate: Quad_Predicate
 ): Quad_Object | null {
-  const triples = dataset.match(subject, predicate, null, DataFactory.defaultGraph());
+  const triples = dataset.match(subject, predicate, null, $defaultGraph);
   if (triples.size === 0) return null;
   else if (triples.size === 1) return [...triples][0].object;
   else throw Error("More than one path");
@@ -130,7 +127,7 @@ export function followAll(
   subject: Quad_Subject, predicate: Quad_Predicate
 ): Quad_Object[] {
   return [
-    ...dataset.match(subject, predicate, null, DataFactory.defaultGraph())
+    ...dataset.match(subject, predicate, null, $defaultGraph)
   ].map(quad => quad.object);
 }
 
@@ -166,7 +163,7 @@ export function hasExpectedPaths(
   if (outFoundPaths !== undefined) outFoundPaths.length = 0;
 
   // Get actual paths
-  const match = dataset.match(subject, null, null, DataFactory.defaultGraph());
+  const match = dataset.match(subject, null, null, $defaultGraph);
   if (match.size < requiredPaths.length) return null;
 
   // Copy the expected path to modify them
@@ -178,7 +175,7 @@ export function hasExpectedPaths(
     let iPath = paths.findIndex(path =>
       quad.predicate.equals(path[0])
       && (path[1] === null || quad.object.equals(path[1]))
-      && quad.graph.equals(DataFactory.defaultGraph())
+      && quad.graph.equals($defaultGraph)
     );
 
     if (iPath === -1) return false;

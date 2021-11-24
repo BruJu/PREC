@@ -1,5 +1,4 @@
 import { DataFactory } from 'n3';
-import namespace from '@rdfjs/namespace';
 
 import * as QuadStar from '../rdf/quad-star';
 import { FilterProvider, RuleDomain, RuleType } from './RuleType';
@@ -9,14 +8,11 @@ import { Quad, Term } from '@rdfjs/types';
 import DStar from '../dataset/index';
 import Context from './Context';
 
-const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", { factory: DataFactory });
-const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , { factory: DataFactory });
-const prec = namespace("http://bruy.at/prec#"                       , { factory: DataFactory });
-const pvar = namespace("http://bruy.at/prec-trans#"                 , { factory: DataFactory });
-const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , { factory: DataFactory });
+import {
+  rdf, rdfs, prec, pvar, pgo,
+  $quad, $variable
+} from '../PRECNamespace';
 
-const $quad         = DataFactory.quad;
-const $variable     = DataFactory.variable;
 const $defaultGraph = DataFactory.defaultGraph;
 
 class NLRuleClass implements RuleType {

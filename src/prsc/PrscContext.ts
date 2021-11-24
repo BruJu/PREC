@@ -4,20 +4,15 @@ import DStar from "../dataset";
 import * as RDFString from 'rdf-string';
 import * as QuadStar from '../rdf/quad-star';
 
-const $quad         = DataFactory.quad;
-const $literal      = DataFactory.literal;
-const $variable     = DataFactory.variable;
-const $defaultGraph = DataFactory.defaultGraph();
+import {
+  rdf, rdfs, pgo, prec, pvar,
+  $quad, $literal, $variable, $defaultGraph
+} from '../PRECNamespace';
 
 import namespace from '@rdfjs/namespace';
 import { followThrough, followAll } from "../rdf/path-travelling";
 import { eventuallyRebuildQuad } from "../rdf/quad-star";
 import { unifyTemplateWithData } from "./possible-template-to-data-check";
-const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", { factory: DataFactory });
-const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , { factory: DataFactory });
-const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , { factory: DataFactory });
-const prec = namespace("http://bruy.at/prec#"                       , { factory: DataFactory });
-const pvar = namespace("http://bruy.at/prec-trans#"                 , { factory: DataFactory });
 const ex   = namespace("http://www.example.org/"                    , { factory: DataFactory });
 
 const xsdString = DataFactory.namedNode("http://www.w3.org/2001/XMLSchema#string");

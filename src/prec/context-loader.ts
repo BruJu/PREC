@@ -2,7 +2,6 @@ import DStar from '../dataset/index';
 
 import fs from 'fs';
 import * as N3 from 'n3';
-import namespace from '@rdfjs/namespace';
 import { Quad, NamedNode, Term, Quad_Subject, Literal } from 'rdf-js';
 import TermMap from '@rdfjs/term-map';
 import TermSet from '@rdfjs/term-set';
@@ -10,16 +9,13 @@ import * as QuadStar from '../rdf/quad-star';
 import * as PrecUtils from '../rdf/utils';
 import { FilterProvider, Priorisable, RuleDomain, RuleType, Template } from './RuleType';
 
-const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", { factory: N3.DataFactory });
-const xsd  = namespace("http://www.w3.org/2001/XMLSchema#"          , { factory: N3.DataFactory });
-const prec = namespace("http://bruy.at/prec#"                       , { factory: N3.DataFactory });
-const pvar = namespace("http://bruy.at/prec-trans#"                 , { factory: N3.DataFactory });
-const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , { factory: N3.DataFactory });
+import {
+  rdf, xsd, prec, pvar, pgo,
+  $quad, $blankNode
+} from '../PRECNamespace';
 
 const variable      = N3.DataFactory.variable;
-const $blankNode    = N3.DataFactory.blankNode;
 const $defaultGraph = N3.DataFactory.defaultGraph;
-const $quad         = N3.DataFactory.quad;
 
 // This file contains utility functions for the Context.ts file
 

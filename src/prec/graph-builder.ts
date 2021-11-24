@@ -12,10 +12,7 @@ import DStar from '../dataset/index';
 import namespace, { NamespaceBuilder } from '@rdfjs/namespace';
 
 // Namespaces
-const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", { factory: DataFactory });
-const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , { factory: DataFactory });
-const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , { factory: DataFactory });
-const prec = namespace("http://bruy.at/prec#"                       , { factory: DataFactory });
+import { rdf, rdfs, pgo, prec } from '../PRECNamespace';
 
 
 /**
