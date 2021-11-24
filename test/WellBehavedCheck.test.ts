@@ -4,11 +4,11 @@ import path from 'path';
 import * as RDF from '@rdfjs/types';
 import * as N3 from 'n3';
 import fs from 'fs';
-import { PRSCSchema } from '../src/prec-c/PrscContext';
+import { PRSCSchema } from '../src/prsc/PrscContext';
 import TermMap from '@rdfjs/term-map';
 import * as RDFString from 'rdf-string';
 
-import * as WBC from '../src/prsc/WellBehavedCheck';
+import * as WBC from '../src/prsc/well-behaved-check';
 
 import namespace from '@rdfjs/namespace';
 import { xsdBoolToBool } from '../src/rdf/utils';

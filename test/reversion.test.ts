@@ -3,7 +3,7 @@ import * as RDF from "@rdfjs/types";
 import assert from 'assert';
 import { DataFactory } from "n3";
 import * as RDFString from 'rdf-string';
-import { canTemplateProduceData } from "../src/prec-c/PrscContext";
+import { canTemplateProduceData } from "../src/prsc/PrscContext";
 
 const prec = namespace("http://bruy.at/prec#"      , { factory: DataFactory });
 const pvar = namespace("http://bruy.at/prec-trans#", { factory: DataFactory });

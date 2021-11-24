@@ -12,7 +12,7 @@ const $defaultGraph = DataFactory.defaultGraph();
 import namespace from '@rdfjs/namespace';
 import { followThrough, followAll } from "../rdf/path-travelling";
 import { eventuallyRebuildQuad } from "../rdf/quad-star";
-import { unifyTemplateWithData } from "./PrscTemplateToDataCheck";
+import { unifyTemplateWithData } from "./possible-template-to-data-check";
 const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", { factory: DataFactory });
 const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , { factory: DataFactory });
 const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , { factory: DataFactory });

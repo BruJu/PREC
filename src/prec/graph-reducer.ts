@@ -17,7 +17,7 @@ const prec = namespace("http://bruy.at/prec#"                       , { factory:
 
 const $defaultGraph = DataFactory.defaultGraph;
 
-import prsc, { isPrscContext } from '../prec-c/PrscContext';
+import prsc, { isPrscContext } from '../prsc/PrscContext';
 
 // =============================================================================
 

@@ -34,12 +34,12 @@ import { filenameToArrayOfQuads, outputTheStore } from './rdf/parsing';
 import { APOCDocument, CypherEntry } from "./prec-0/PGDefinitions";
 import fromGremlin from './prec-0/from-gremlin';
 
-import { isPrscContext, PRSCSchema, revertPrecC } from './prec-c/PrscContext';
+import { isPrscContext, PRSCSchema, revertPrecC } from './prsc/PrscContext';
 
 import gremlin from 'gremlin';
 import { Driver } from 'neo4j-driver';
 import DriverRemoteConnection = gremlin.driver.DriverRemoteConnection;
-import wellBehavedCheck from './prsc/WellBehavedCheck';
+import wellBehavedCheck from './prsc/well-behaved-check';
 
 
 export async function main() {
