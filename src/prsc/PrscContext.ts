@@ -105,6 +105,17 @@ export class PRSCRule {
       violations.push(...errors);
     }
 
+    if (nodeOrEdge === 'node') {
+      const edgeTemplateTriple = template.find(triple =>
+        QuadStar.containsTerm(triple, pvar.source)
+        || QuadStar.containsTerm(triple, pvar.destination)
+      );
+
+      if (edgeTemplateTriple !== undefined) {
+        violations.push({ type: 'template_has_invalid_prop_name', identity: identity, propName: "pvar:source or pvar:destination" });
+      }
+    }
+
     if (violations.length !== 0) {
       return { violations };
     }
