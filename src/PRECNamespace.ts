@@ -3,6 +3,7 @@
 import { DataFactory } from "n3";
 import namespace from '@rdfjs/namespace';
 
+export const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", { factory: DataFactory });
 export const prec = namespace("http://bruy.at/prec#"      , { factory: DataFactory });
 export const pvar = namespace("http://bruy.at/prec-trans#", { factory: DataFactory });
 export const pgo  = namespace("http://ii.uwb.edu.pl/pgo#" , { factory: DataFactory });

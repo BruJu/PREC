@@ -1,6 +1,6 @@
 import { DatasetCore, Quad, Quad_Graph, Quad_Object, Quad_Predicate, Quad_Subject, Term } from "@rdfjs/types";
 import { DataFactory } from "n3";
-import TermDict from "../TermDict";
+import TermSet from "@rdfjs/term-set";
 import * as PrecUtils from './utils';
 
 import namespace from '@rdfjs/namespace';
@@ -44,14 +44,14 @@ export function isRdfStar(dataset: DatasetCore) {
  * one of them as a type doesn't have the others as type.
  */
 export function areDisjointTypes(dataset: DatasetCore, types: Quad_Object[]) {
-  const typedObjects = new TermDict<Term, true>();
+  const typedObjects = new TermSet<Term>();
 
   for (const type of types) {
     const thisType = dataset.match(null, rdf.type, type);
 
     for (const quad of thisType) {
-      if (typedObjects.get(quad.subject) !== undefined) return false;
-      typedObjects.set(quad.subject, true);
+      if (typedObjects.has(quad.subject)) return false;
+      typedObjects.add(quad.subject);
     }
   }
 

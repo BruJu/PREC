@@ -2,18 +2,15 @@
 
 import { DataFactory, NamedNode } from 'n3';
 import DStar from '../dataset/index';
-import namespace from '@rdfjs/namespace';
 
 import Context from "./Context";
 import * as QuadStar from '../rdf/quad-star';
-import TermDict from '../TermDict';
+import TermSet from '@rdfjs/term-set';
 
 import { Quad } from '@rdfjs/types';
 import { Term } from '@rdfjs/types';
 
-const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", { factory: DataFactory });
-const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , { factory: DataFactory });
-const prec = namespace("http://bruy.at/prec#"                       , { factory: DataFactory });
+import { rdf, pgo, prec } from '../PRECNamespace';
 
 const $defaultGraph = DataFactory.defaultGraph;
 
@@ -66,18 +63,18 @@ function ruleBasedProduction(dataset: DStar, context: Context): DStar {
   
   const newDataset = new DStar();
 
-  const preservedLabels = new TermDict<Term, true>();
+  const preservedLabels = new TermSet<Term>();
   
   for (const entityManager of context.entityManagers) {
     const ruleType = entityManager.ruleset;
 
     for (const mark of dataset.getQuads(null, ruleType.mark, null, $defaultGraph())) {
       const ts = ruleType.applyMark(newDataset, mark, dataset, context);
-      ts.forEach(t => preservedLabels.set(t, true));
+      ts.forEach(t => preservedLabels.add(t));
     }
   }
 
-  preservedLabels.forEach((label, _) => newDataset.addAll(dataset.getQuads(label)));
+  preservedLabels.forEach(label => newDataset.addAll(dataset.getQuads(label)));
   
   // As it is impossible to write a rule that catches a node without any label and property, we add back the nodes here
   newDataset.addAll(dataset.getQuads(null, rdf.type, pgo.Node, $defaultGraph()));
