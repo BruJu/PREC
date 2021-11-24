@@ -40,7 +40,7 @@ type IdentificationTriple = {
  * 
  * Assumes that both array contains no duplicate.
  */
-function haveSameStrings(lhs: string[], rhs: string[]): boolean {
+export function haveSameStrings(lhs: string[], rhs: string[]): boolean {
   if (lhs.length !== rhs.length) return false;
 
   for (const label of lhs) {
@@ -68,7 +68,7 @@ function followAllXSDStrings(
   })
 }
 
-class PRSCRule {
+export class PRSCRule {
   readonly identity: RDF.Quad_Subject;
   readonly type: 'edge' | 'node';
   readonly labels: string[];
@@ -258,7 +258,7 @@ function getValuationOfTriple(quad: RDF.Quad, type: 'node' | 'edge'): ValuationR
   }
 }
 
-class PRSCSchema {
+export class PRSCSchema {
   prscRules: PRSCRule[] = [];
 
   constructor(contextQuads: RDF.Quad[]) {
@@ -404,7 +404,7 @@ export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): { dataset
  * 
  * The unified form is the triple with pvar nodes and ^^prec:_valueOf merged
  */
-function characterizeTemplateTriple(quad: RDF.Quad) {
+export function characterizeTemplateTriple(quad: RDF.Quad) {
   return eventuallyRebuildQuad(quad, term => {
     if (term.termType === 'Literal') {
       return $literal("Literal", prec._valueOf);
