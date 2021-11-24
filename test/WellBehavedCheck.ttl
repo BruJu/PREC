@@ -191,7 +191,7 @@ GRAPH this:signature_triple_check {
   ex:node_firstnamed_d a prec:prsc_node ;
     prec:nodeLabel "D" ;
     prec:propertyName "firstname" ;
-    prec:composedOf << pvar:self ex:name "fistname"^^prec:_valueOf >> .
+    prec:composedOf << pvar:self ex:name "firstname"^^prec:_valueOf >> .
   
   ex:node_firstnamed_e a prec:prsc_node ;
     prec:nodeLabel "E" ;
