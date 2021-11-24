@@ -5,11 +5,10 @@ import RulesForNodeLabels from './rules-for-nodelabels';
 import RulesForProperties from './rules-for-properties';
 import * as XX from './context-loader';
 
-import { DataFactory } from 'n3';
-import namespace from '@rdfjs/namespace';
 import { NamedNode, Quad, Quad_Subject } from '@rdfjs/types';
 import { Template } from './RuleType';
-const prec = namespace("http://bruy.at/prec#", { factory: DataFactory });
+
+import { prec } from '../PRECNamespace';
 
 /**
  * A `Context` is an object that stores every data that is stored in a context

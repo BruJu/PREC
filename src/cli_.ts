@@ -7,6 +7,7 @@ import fs from 'fs';
 
 import * as N3 from 'n3';
 import * as WasmTree from '@bruju/wasm-tree';
+import * as RDFString from 'rdf-string';
 
 import namespace from '@rdfjs/namespace';
 const pgo  = namespace("http://ii.uwb.edu.pl/pgo#", { factory: N3.DataFactory });
@@ -33,11 +34,12 @@ import { filenameToArrayOfQuads, outputTheStore } from './rdf/parsing';
 import { APOCDocument, CypherEntry } from "./prec-0/PGDefinitions";
 import fromGremlin from './prec-0/from-gremlin';
 
-import { isPrscContext, revertPrecC } from './prec-c/PrscContext';
+import { isPrscContext, PRSCSchema, revertPrecC, violationToString } from './prsc/PrscContext';
 
 import gremlin from 'gremlin';
 import { Driver } from 'neo4j-driver';
 import DriverRemoteConnection = gremlin.driver.DriverRemoteConnection;
+import wellBehavedCheck from './prsc/well-behaved-check';
 
 
 export async function main() {
@@ -180,6 +182,30 @@ export async function main() {
     .action((pathToRdfGraph: string, options: any) => {
       const dataset = new DStar(filenameToArrayOfQuads(pathToRdfGraph));
       applyContextIfAnyAndPrint(dataset, {}, options.context);
+    });
+  
+  program.command('prscCheckWellBehaved')
+    .description("Checks if a PRSC context is well behaved. Well behaved PRSC contexts are known to be revertible")
+    .argument("<path-to-the-context>", "Path to the PRSC context")
+    .action((pathToPrscContext: string) => {
+      const quads = filenameToArrayOfQuads(pathToPrscContext);
+      const r = PRSCSchema.build(quads);
+      if ('violations' in r) {
+        console.log("bad: invalid context");
+        r.violations.forEach(violation => console.log(violationToString(violation)));
+        return;
+      }
+
+      const wellBehaved = wellBehavedCheck(r.schema);
+      // TODO: print error in turtle format
+      if (wellBehaved === true) {
+        console.log("ok");
+      } else {
+        console.log("bad: not well behaved");
+        for (const violation of wellBehaved) {
+          console.log(`${RDFString.termToString(violation.rule.identity)}: ${violation.reason}`);
+        }
+      }
     });
 
   program.command('checkIsomorphism')

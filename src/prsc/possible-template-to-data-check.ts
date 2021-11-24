@@ -1,9 +1,5 @@
 import * as RDF from "@rdfjs/types";
-import { DataFactory } from "n3";
-
-import namespace from '@rdfjs/namespace';
-const prec = namespace("http://bruy.at/prec#"      , { factory: DataFactory });
-const pvar = namespace("http://bruy.at/prec-trans#", { factory: DataFactory });
+import { prec, pvar } from '../PRECNamespace';
 
 
 /** A small TermMap backed by an array */

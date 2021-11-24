@@ -8,14 +8,7 @@ import gremlin from 'gremlin';
 const traversal = gremlin.process.AnonymousTraversalSource.traversal;
 import DriverRemoteConnection = gremlin.driver.DriverRemoteConnection;
 
-import namespace from '@rdfjs/namespace';
-
-const rdf  = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", { factory: DataFactory });
-const rdfs = namespace("http://www.w3.org/2000/01/rdf-schema#"      , { factory: DataFactory });
-const prec = namespace("http://bruy.at/prec#"                       , { factory: DataFactory });
-const pgo  = namespace("http://ii.uwb.edu.pl/pgo#"                  , { factory: DataFactory });
-
-const $quad = DataFactory.quad;
+import { rdf, rdfs, prec, pgo, $quad } from '../PRECNamespace';
 
 
 export type PseudoPGNode = {

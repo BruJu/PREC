@@ -2,7 +2,6 @@ import fs from 'fs';
 import * as N3 from 'n3';
 import path from 'path';
 
-import namespace from '@rdfjs/namespace';
 import { apocToRDF, stringToApocDocuments } from '../prec';
 import { isSubstituableGraph } from '../src/rdf/graph-substitution';
 import assert from 'assert';
@@ -13,12 +12,7 @@ import { Quad, Quad_Graph, Quad_Predicate, Quad_Subject, Term } from 'rdf-js';
 
 const testFolder = './test/prec/';
 
-const rdf = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", { factory: N3.DataFactory });
-const precNS = namespace("http://bruy.at/prec#", { factory: N3.DataFactory });
-
-const $quad = N3.DataFactory.quad;
-const $literal = N3.DataFactory.literal;
-const $defaultGraph = N3.DataFactory.defaultGraph();
+import { rdf, prec, $quad, $literal, $defaultGraph } from '../src/PRECNamespace';
 
 function get(store: N3.Store, subject: Quad_Subject, predicate: Quad_Predicate) {
   const quads = store.getQuads(subject, predicate, null, N3.DataFactory.defaultGraph());
@@ -33,7 +27,7 @@ function extractGraph(store: N3.Store, graph: Quad_Graph) {
       .map(quad => $quad(quad.subject, quad.predicate, quad.object))
   );
 
-  const parentGraphs = store.getQuads(null, precNS.testIsBaseOf, graph, $defaultGraph);
+  const parentGraphs = store.getQuads(null, prec.testIsBaseOf, graph, $defaultGraph);
 
   for (const parentGraph of parentGraphs) {
     result.addQuads(
@@ -46,7 +40,7 @@ function extractGraph(store: N3.Store, graph: Quad_Graph) {
 
 function getContent(store: N3.Store, term: Term) {
   while (term.termType !== "Literal") {
-    const next = get(store, term as Quad_Subject, precNS.testContent);
+    const next = get(store, term as Quad_Subject, prec.testContent);
     if (next === null) assert.ok(false, "Malformed test");
     term = next;
   }
@@ -64,18 +58,18 @@ describe("prec", () => {
         new N3.Parser().parse(fs.readFileSync(testFolder + file, "utf-8"))
       );
 
-      if (expected.has($quad(precNS.testMetaData, precNS.kind, $literal("SmallExamples")))) {
+      if (expected.has($quad(prec.testMetaData, prec.kind, $literal("SmallExamples")))) {
         smallExample(expected);
         return;
       }
 
       it("should work", function() {
-        const meta = expected.getQuads(precNS.testMetaData, null, null, $defaultGraph);
+        const meta = expected.getQuads(prec.testMetaData, null, null, $defaultGraph);
         assert.ok(meta.length === 3);
 
-        const pgPath      = get(expected, precNS.testMetaData, precNS.pgPath)!;
-        const pgSource    = get(expected, precNS.testMetaData, precNS.pgSource)!;
-        const contextPath = get(expected, precNS.testMetaData, precNS.contextPath)!;
+        const pgPath      = get(expected, prec.testMetaData, prec.pgPath)!;
+        const pgSource    = get(expected, prec.testMetaData, prec.pgSource)!;
+        const contextPath = get(expected, prec.testMetaData, prec.contextPath)!;
 
         expected.removeQuads(meta);
 
@@ -94,13 +88,13 @@ describe("prec", () => {
 });
 
 function smallExample(store: N3.Store) {
-  for (const unitTest of store.getQuads(null, rdf.type, precNS.unitTest, $defaultGraph)) {
+  for (const unitTest of store.getQuads(null, rdf.type, prec.unitTest, $defaultGraph)) {
     const node = unitTest.subject;
-    const context = get(store, node, precNS.context)! as Quad_Predicate;
+    const context = get(store, node, prec.context)! as Quad_Predicate;
 
     it(context.value, () => {
-      const output        = get(store, node, precNS.output) as Quad_Predicate;
-      const propertyGraph = get(store, node, precNS.propertyGraph) as Quad_Predicate;
+      const output        = get(store, node, prec.output) as Quad_Predicate;
+      const propertyGraph = get(store, node, prec.propertyGraph) as Quad_Predicate;
 
       assert.notStrictEqual(context, null);
       assert.notStrictEqual(output, null);
