@@ -4,16 +4,38 @@ import path from 'path';
 import * as RDF from '@rdfjs/types';
 import * as N3 from 'n3';
 import fs from 'fs';
-import { PRSCSchema } from '../src/prec-c/PrscContext';
+import { assertSchema, PRSCRule, PRSCSchema } from '../src/prsc/PrscContext';
 import TermMap from '@rdfjs/term-map';
 import * as RDFString from 'rdf-string';
 
-import * as WBC from '../src/prsc/WellBehavedCheck';
+import * as WBC from '../src/prsc/well-behaved-check';
 
 import namespace from '@rdfjs/namespace';
 import { xsdBoolToBool } from '../src/rdf/utils';
+import DStar from '../src/dataset';
+import { $defaultGraph } from '../src/PRECNamespace';
 const prec   = namespace("http://bruy.at/prec#"     , { factory: N3.DataFactory });
 const thisns = namespace("http://bruy.at/prec#name=", { factory: N3.DataFactory });
+
+describe('PRSC Individual rules validity', () => {
+  const content = fs.readFileSync(path.join(__dirname, "prsc_rules-validity.ttl"), "utf-8");
+  const dataset = new DStar(new N3.Parser().parse(content));
+
+  for (const quad of dataset.match(null, prec.is_valid_template, null, $defaultGraph)) {
+    const asBool = xsdBoolToBool(quad.object);
+    if (asBool === undefined) continue;
+
+    it(RDFString.termToString(quad.subject), () => {
+      const rule = PRSCRule.build(dataset, quad.subject);
+
+      if (asBool) {
+        assert.ok('rule' in rule, "The rule should be valid");
+      } else {
+        assert.ok('violations' in rule, "The rule should be invalid");
+      }
+    });
+  }
+});
 
 describe('WellBehavedCheck', () => {
   const tests = readResourceFile(path.join(__dirname, 'WellBehavedCheck.ttl'));
@@ -22,7 +44,7 @@ describe('WellBehavedCheck', () => {
     it(RDFString.termToString(test.name), () => {
       let atLeastOneCheck = false;
 
-      const schema = new PRSCSchema(test.quads);
+      const schema = assertSchema(PRSCSchema.build(test.quads));
 
       for (const [ident, conditions] of test.testRules) {
         if (conditions.elementIdentification !== undefined) {

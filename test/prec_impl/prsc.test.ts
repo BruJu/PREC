@@ -3,7 +3,7 @@ import { fromTinkerPop } from '../../src/prec/graph-builder';
 import { turtleToQuads, turtleToDStar, generateMessage } from "../utility";
 import graphReducer from "../../src/prec/graph-reducer";
 import assert from 'assert';
-import { revertPrecC } from "../../src/prec-c/PrscContext";
+import { revertPrecC } from "../../src/prsc/PrscContext";
 import { isomorphic } from "rdf-isomorphic";
 
 enum RevertableType {

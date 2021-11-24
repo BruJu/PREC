@@ -191,7 +191,7 @@ GRAPH this:signature_triple_check {
   ex:node_firstnamed_d a prec:prsc_node ;
     prec:nodeLabel "D" ;
     prec:propertyName "firstname" ;
-    prec:composedOf << pvar:self ex:name "fistname"^^prec:_valueOf >> .
+    prec:composedOf << pvar:self ex:name "firstname"^^prec:_valueOf >> .
   
   ex:node_firstnamed_e a prec:prsc_node ;
     prec:nodeLabel "E" ;
@@ -301,7 +301,7 @@ GRAPH this:bad_monoedge {
   this:all prec:well_behaved false .
 
   ex:philosoph a prec:prsc_node ;
-    prec:composedOf << pvar:self ex:knows pvar:destination >> .
+    prec:composedOf << pvar:self ex:knows pvar:self >> .
   
   ex:knows a prec:prsc_edge ;
     prec:composedOf << pvar:source ex:knows pvar:destination >> .

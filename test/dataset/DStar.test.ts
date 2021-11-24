@@ -1,15 +1,9 @@
 import assert from 'assert';
-import * as N3 from 'n3';
-import namespace from '@rdfjs/namespace';
-const ex = namespace("http://example.org/", { factory: N3.DataFactory });
-const rdf = namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", { factory: N3.DataFactory });
-
-
-import DStar, { Bindings, bindVariables } from "../../src/dataset/index";
 import { Quad, Term } from '@rdfjs/types';
 
-const variable = N3.DataFactory.variable;
-const $quad = N3.DataFactory.quad;
+import { rdf, ex, $variable, $quad } from '../../src/PRECNamespace';
+import DStar, { Bindings, bindVariables } from "../../src/dataset/index";
+
 
 // TODO: change DStar::allUsageOfAre signature to make TypeScript happy
 function $$quad(
@@ -76,14 +70,14 @@ describe('DStar', () => {
     it('should work', () => {
       assert.ok(equalsPattern(
         {},
-        [$quad(variable("a"), variable("b"), ex.object)],
-        [$quad(variable("a"), variable("b"), ex.object)]
+        [$quad($variable("a"), $variable("b"), ex.object)],
+        [$quad($variable("a"), $variable("b"), ex.object)]
       ));
 
       assert.ok(equalsPattern(
         { a: ex.Value },
-        [$quad(variable("a"), variable("b"), ex.object)],
-        [$quad(ex.Value     , variable("b"), ex.object)]
+        [$quad($variable("a"), $variable("b"), ex.object)],
+        [$quad(ex.Value      , $variable("b"), ex.object)]
       ));
     });
   });
@@ -102,9 +96,9 @@ describe('DStar', () => {
       );
 
       dstar.findFilterReplace(
-        [$quad(variable("a"), ex.b, ex.c)],
-        [[$quad(variable("a"), rdf.type, ex.typeA)]],
-        [$quad(variable("a"), ex.b, ex.d)]
+        [$quad($variable("a"), ex.b, ex.c)],
+        [[$quad($variable("a"), rdf.type, ex.typeA)]],
+        [$quad($variable("a"), ex.b, ex.d)]
       );
 
       assert.strictEqual(dstar.size, 2);
@@ -126,8 +120,8 @@ describe('DStar', () => {
       );
 
       dstar.findFilterReplace(
-        [$quad(variable("a"), ex.b, ex.c)],
-        [[$quad(variable("a"), rdf.type, ex.typeB)]],
+        [$quad($variable("a"), ex.b, ex.c)],
+        [[$quad($variable("a"), rdf.type, ex.typeB)]],
         []
       );
 
@@ -155,16 +149,16 @@ describe('DStar', () => {
 
     it("should work on non rdf-star calls", () => {
       let r = dstar.matchPattern(
-        $quad(variable("s"), variable("p"), variable("o"), variable("g"))
+        $quad($variable("s"), $variable("p"), $variable("o"), $variable("g"))
       );
 
       assert.strictEqual(r.length, dstar.size);
 
-      r = dstar.matchPattern($quad(variable("subjectWithP1"), ex.p1, ex.o));
+      r = dstar.matchPattern($quad($variable("subjectWithP1"), ex.p1, ex.o));
 
       assert.strictEqual(r.length, 2);
 
-      r = dstar.matchPattern($quad(ex.s2, ex.p2, variable("o")));
+      r = dstar.matchPattern($quad(ex.s2, ex.p2, $variable("o")));
 
       assert.strictEqual(r.length, 1);
       assert.ok((r[0].o as Term).equals(ex.otherO));
@@ -173,9 +167,9 @@ describe('DStar', () => {
     it("should work on rdf-star calls", () => {
       let r = dstar.matchPattern(
         $quad(
-          $quad(ex.ss, ex.so, variable("thesubjectpredicate")),
+          $quad(ex.ss, ex.so, $variable("thesubjectpredicate")),
           ex.starP,
-          variable("starO")
+          $variable("starO")
         )
       );
 

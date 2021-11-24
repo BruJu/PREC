@@ -5,8 +5,8 @@ import * as RDFString from 'rdf-string';
 import {
   characterizeTemplateTriple,
   haveSameStrings, PRSCRule, PRSCSchema
-} from '../prec-c/PrscContext';
-import { precValueOf, pvarDestination, pvarEdge, pvarNode, pvarSelf, pvarSource } from "../prec/PRECNamespace";
+} from './PrscContext';
+import { precValueOf, pvarDestination, pvarEdge, pvarNode, pvarSelf, pvarSource } from "../PRECNamespace";
 import * as QuadStar from '../rdf/quad-star';
 
 
