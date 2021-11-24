@@ -161,7 +161,7 @@ export class PRSCRule {
           searchBlankNodesIn.delete(searchBlankNodesInHere);
 
           const addedBns = extractBnsIn(searchBlankNodesInHere);
-          const theNewBnsAreIn = findAllCoolOccurrencesOfTerms(context, addedBns);
+          const theNewBnsAreIn = context.findAllOccurrencesAsSubject(addedBns);
 
           for (const newQuad of theNewBnsAreIn) {
             if (!alreadySeenQuads.has(newQuad)) {
@@ -510,7 +510,7 @@ export function violationToString(violation: PRSCSchemaViolation): string {
   }
 }
 
-export function assertSchema(r: { schema: PRSCSchema } | {violations: PRSCSchemaViolation[] }): PRSCSchema {
+export function assertSchema(r: { schema: PRSCSchema } | { violations: PRSCSchemaViolation[] }): PRSCSchema {
   if ('violations' in r) {
     throw Error("The given schema is invalid: " + violationsToString(r.violations));
   }
@@ -643,8 +643,7 @@ function findElement(dataQuad: RDF.Quad, f: { rule: PRSCRule, triple: RDF.Quad }
   }
 }
 
-
-
+////////////////////////////////////////////////////////////////////////////////
 
 function extractBnsIn(quad: RDF.Quad): RDF.BlankNode[] {
   let result: RDF.BlankNode[] = [];
@@ -663,11 +662,4 @@ function extractBnsIn(quad: RDF.Quad): RDF.BlankNode[] {
   explore(quad);
 
   return result;
-}
-
-
-function findAllCoolOccurrencesOfTerms(graph: DStar, terms: RDF.BlankNode[]): RDF.Quad[] {
-  return terms.flatMap(term => [
-    ...graph.getQuads(term, null, null, $defaultGraph)
-  ]);
 }
