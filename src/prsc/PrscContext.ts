@@ -18,6 +18,7 @@ const TTS = RDFString.termToString;
 import { followThrough, followAll } from "../rdf/path-travelling";
 import { eventuallyRebuildQuad } from "../rdf/quad-star";
 import { unifyTemplateWithData } from "./possible-template-to-data-check";
+import findPGTypeOfAllBlankNodesIn, { SignatureTripleOf } from "./reversion-type-identification";
 
 const ex   = namespace("http://www.example.org/"                    , { factory: DataFactory });
 
@@ -28,11 +29,6 @@ const pvarPrefix = "http://bruy.at/prec-trans#";
 ////////////////////////////////////////////////////////////////////////////////
 //
 
-/** A pair with a rule and (one of) its signature triple. */
-type SignatureTripleOf = {
-  rule: PRSCRule;
-  signature: RDF.Quad;
-};
 
 
 
@@ -546,19 +542,6 @@ export default function precCwithPRSC(dataset: DStar, contextQuads: RDF.Quad[]):
 ////////////////////////////////////////////////////////////////////////////////
 // ==== Structural description graph <- Idiomatic Graph
 
-/**
- * A pair (rule, the value of prec:valueOf). May eventually also contain values
- * for pvar:source and pvar:destination.
- */
-type UsedRule = {
-  /** The related PRSC rule */
-  rule: PRSCRule;
-  /** pvar:self value */
-  self: RDF.Term;
-  /** Value of pvar:source and pvar:destination. null if unknown */
-  linkedNodes: [RDF.Term, RDF.Term] | null;
-};
-
 export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): { dataset: DStar, complete: boolean } {
   dataset = dataset.match();
 
@@ -567,8 +550,9 @@ export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): { dataset
 
   const usedQuads = new DStar();
 
-  const blankNodesToSignature = findSignaturesThatMatchesTheBlankNodes(dataset, signatures, usedQuads);
-  const blankNodesToType = findBlankNodeTypes(blankNodesToSignature);
+  const blankNodesToType = findPGTypeOfAllBlankNodesIn(
+    dataset, signatures, usedQuads
+  );
 
   const prec0Graph = new DStar();
   for (const [self, { linkedNodes, rule }] of blankNodesToType.entries()) {
@@ -583,125 +567,6 @@ export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): { dataset
   };
 }
 
-type CandidateInstantiation = SignatureTripleOf & {
-  data: RDF.Quad,
-  blankNodes: RDF.BlankNode[]
-};
-
-function findSignaturesThatMatchesTheBlankNodes(
-  dataset: DStar, signatures: SignatureTripleOf[], usedQuads: DStar
-): TermMap<RDF.BlankNode, CandidateInstantiation[]> {
-  const blankNodesToSignature = new TermMap<RDF.BlankNode, CandidateInstantiation[]>();
-
-  for (const dataQuad of dataset) {
-    const bns = extractBnsIn(dataQuad);
-    for (const bn of bns) {
-      if (!blankNodesToSignature.has(bn)) {
-        blankNodesToSignature.set(bn, []);
-      }
-    }
-
-    const f = signatures.find(t => canTemplateProduceData(t.signature, dataQuad));
-    if (f === undefined) continue;
-
-    const x: CandidateInstantiation = Object.assign({ data: dataQuad, blankNodes: bns }, f);
-    bns.forEach(bn => blankNodesToSignature.get(bn)!.push(x));
-    usedQuads.add(dataQuad);
-  }
-
-  return blankNodesToSignature;
-}
-
-function findBlankNodeTypes(
-  candidates: TermMap<RDF.BlankNode, CandidateInstantiation[]>)
-: TermMap<RDF.BlankNode, { rule: PRSCRule, linkedNodes: null | [RDF.Term, RDF.Term] }> {
-  let tm = new TermMap<RDF.BlankNode, { rule: PRSCRule, linkedNodes: null | [RDF.Term, RDF.Term] }>();
-
-  function findOneAndOnlyOne(me: RDF.BlankNode, myCandidates: SignatureTripleOf[], type: 'node' | 'edge'): boolean {
-    const asType = myCandidates.filter(candidate => candidate.rule.type === type);
-
-    if (asType.length > 1) {
-      const identityNodes = new TermSet(); 
-      asType.map(c => c.rule.identity).forEach(identityNode => identityNodes.add(identityNode));
-
-      if (identityNodes.size > 1) {
-        throw Error("Should never happen. If so, we are in big trouble");
-      }
-
-      // All the same rule
-      asType.splice(1);
-    }
-
-    if (asType.length === 1) {
-      tm.set(me, { rule: asType[0].rule, linkedNodes: null });
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  // Find the nodes
-  for (const [bn, myCandidates] of candidates) {
-    const isNode = findOneAndOnlyOne(bn, myCandidates, 'node');
-    if (!isNode) {
-      findOneAndOnlyOne(bn, myCandidates, 'edge');
-    }
-  }
-
-  for (const [bn, _] of candidates) {
-    if (!tm.has(bn)) {
-      throw Error("incomplete");
-    }
-  }
-
-  // Add the monoedges
-
-  let cis: CandidateInstantiation[] = [];
-
-  for (const [bn, myCandidates] of candidates) {
-    if (tm.get(bn)!.rule.type === 'edge') continue;
-    
-    for (const candidate of myCandidates) {
-      if (candidate.rule.type === 'node') continue;
-
-      if (!cis.includes(candidate)) cis.push(candidate);
-    }
-  }
-
-  cis = cis.filter(cis => {
-    let a = cis.rule.template.find(t => QuadStar.containsTerm(t, pvar.self)) === undefined;
-    if (!a) return false;
-
-    let b = cis.rule.template.find(t => QuadStar.containsTerm(t, pvar.source) && QuadStar.containsTerm(t, pvar.destination)) !== undefined;
-    return b;
-  });
-
-  let qs = new TermMap<RDF.Quad, PRSCRule>();
-  for (const ci of cis) {
-    const xs = findElement(ci.data, { rule: ci.rule, triple: ci.signature });
-    if (xs.linkedNodes === null) throw Error("Could not identify pvar src and pvar dest");
-
-    const key = DataFactory.quad(
-      xs.linkedNodes[0] as RDF.Quad_Subject,
-      ci.rule.identity as RDF.Quad_Predicate,
-      xs.linkedNodes[1] as RDF.Quad_Object
-    );
-
-    qs.set(key, ci.rule);
-  }
-
-  for (const [triple, rule] of qs) {
-    tm.set(
-      DataFactory.blankNode(),
-      {
-        rule: rule,
-        linkedNodes: [triple.subject, triple.object]
-      }
-    );
-  }
-
-  return tm;
-}
 
 /**
  * Return the unified form of the triple.
@@ -727,51 +592,9 @@ export function canTemplateProduceData(pattern: RDF.Quad, data: RDF.Quad): boole
 }
 
 
-function findElement(dataQuad: RDF.Quad, f: { rule: PRSCRule, triple: RDF.Quad }): UsedRule {
-  let self: RDF.Term | null = null;
-  let source: RDF.Term | null = null;
-  let destination: RDF.Term | null = null;
-
-  function recurseIn(data: RDF.Term, template: RDF.Term) {
-    if (template.equals(pvar.node) || template.equals(pvar.edge) || template.equals(pvar.self)) {
-      self = data;
-    } else if (template.equals(pvar.source)) {
-      source = data;
-    } else if (template.equals(pvar.destination)) {
-      destination = data;
-    } else if (template.termType === 'Quad' && data.termType === 'Quad') {
-      recurseIn(data.subject, template.subject);
-      recurseIn(data.predicate, template.predicate);
-      recurseIn(data.object, template.object);
-    }
-  }
-
-  recurseIn(dataQuad, f.triple);
-
-  if (f.rule.type === 'node') {
-    if (self === null) throw Error("Did not found pvar:node in template");
-    return { self, linkedNodes: null, rule: f.rule };
-  } else if (f.rule.type === 'edge') {
-    if (self === null) {
-      if (source === null || destination === null) {
-        throw Error("Did not found pvar:node nor pvar:source + pvar:destination in template");
-      }
-
-      self = DataFactory.blankNode();
-    }
-
-    let src = source || $variable("edge_source");
-    let dst = destination || $variable("edge_destination");
-
-    return { self, linkedNodes: [src, dst], rule: f.rule };
-  } else {
-    throw Error("Impossible path by design");
-  }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
-function extractBnsIn(quad: RDF.Quad): RDF.BlankNode[] {
+export function extractBnsIn(quad: RDF.Quad): RDF.BlankNode[] {
   let result: RDF.BlankNode[] = [];
 
   const explore = (term: RDF.Term) => {
