@@ -224,6 +224,25 @@ GRAPH this:signature_triple_check {
   ex:bad_knows prec:all_signed false, ex:reflexive_node, ex:edge_knows .
   ex:ok_knows prec:all_signed true, ex:not_so_reflexive_node, ex:edge_knows .
 
+  ex:edge_double_knows a prec:prsc_edge ;
+    prec:edgeLabel "DoubleKnows" ;
+    prec:composedOf
+      << pvar:source ex:dknows pvar:destination >> ,
+      << pvar:destination ex:dknows pvar:source >> .
+    
+  ex:double_knows_is_bad prec:all_signed false, ex:node_a, ex:edge_double_knows .
+
+  ex:edge_triple_knows a prec:prsc_edge ;
+    prec:edgeLabel "TripleKnows" ;
+    prec:composedOf
+      # Not (local) signature
+      << pvar:source ex:dknows pvar:destination >> ,
+      << pvar:destination ex:dknows pvar:source >> ,
+      # The actual signature
+      << pvar:source ex:knows pvar:destination >>  .
+
+  ex:triple_knows_is_good prec:all_signed true, ex:node_a, ex:edge_triple_knows .
+
   # Multiple similar signatures
 
   ex:fan_of_names a prec:prsc_node ;

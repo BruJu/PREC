@@ -155,10 +155,7 @@ function addMonoedges(
   // - a data triple
   // - the signature triple of a monoedge that created it (or a Kappa identical one)
   // - the monoedge rule
-
-  // TODO: ensure that the signatures or mono edges are chosen carefully, i.e. we can extract from
-  // them pvar:source and pvar:destination.
-
+  
   // 3) If the signature has been chosen carefully, we can extract from the
   // data and the template the source and the destination.
   // We put it in a TermMap to ensure that we do not create several edges

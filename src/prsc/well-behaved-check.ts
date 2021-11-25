@@ -4,7 +4,7 @@ import * as RDF from "@rdfjs/types";
 import * as RDFString from 'rdf-string';
 import {
   characterizeTemplateTriple,
-  haveSameStrings, PRSCRule, PRSCSchema
+  haveSameStrings, isSrcDestCompatible, PRSCRule, PRSCSchema
 } from './PrscContext';
 import { precValueOf, pvarDestination, pvarEdge, pvarNode, pvarSelf, pvarSource } from "../PRECNamespace";
 import * as QuadStar from '../rdf/quad-star';
@@ -83,6 +83,44 @@ export function signatureTriple(rules: PRSCRule[]): PRSCRule[] {
     }
   }));
 
+  // Monoedges: All triples must be "signature" + at least one must not have a
+  // triple with inverted pvar:source and pvar:destination
+  rules.filter(rule => isMonoedgeTemplate(rule.template))
+  .forEach(rule => {
+    const kappaTemplateGraph = rule.template.map(t => characterizeTemplateTriple(t));
+
+    const notSignature = kappaTemplateGraph.find(triple => found.get(triple) !== rule);
+
+    if (notSignature !== undefined) {
+      kappaTemplateGraph.forEach(t => found.set(t, null));
+    }
+
+    let signatureWithIdentifiableSrcAndDest: number | null = null;
+
+    for (let i = 0; i !== kappaTemplateGraph.length; ++i) {
+      let good = true;
+
+      for (let j = 0; j !== kappaTemplateGraph.length; ++j) {
+        if (i === j) continue;
+        if (!kappaTemplateGraph[i].equals(kappaTemplateGraph[j])) continue;
+
+        if (!isSrcDestCompatible(rule.template[i], rule.template[j])) {
+          good = false;
+          break;
+        }
+      }
+
+      if (good) {
+        signatureWithIdentifiableSrcAndDest = i;
+        break;
+      }
+    }
+
+    if (signatureWithIdentifiableSrcAndDest === null) {
+      kappaTemplateGraph.forEach(t => found.set(t, null));
+    }
+  });
+
   // 2) Find which rules are in the map
   const withSignature = new TermSet<RDF.Term>();
 
@@ -94,6 +132,16 @@ export function signatureTriple(rules: PRSCRule[]): PRSCRule[] {
 
   // 3) Build list of missings and return it
   return rules.filter(rule => !withSignature.has(rule.identity));
+}
+
+function isMonoedgeTemplate(template: RDF.Quad[]) {
+  return template.find(triple => QuadStar.containsTerm(triple, pvarSelf)) === undefined
+    && (
+      template.find(triple =>
+        !(QuadStar.containsTerm(triple, pvarSource)
+        && QuadStar.containsTerm(triple, pvarDestination))
+      ) === undefined
+    );
 }
 
 enum SpecialArg { Source, Destination }

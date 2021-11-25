@@ -224,10 +224,6 @@ export class PRSCRule {
   }
   
   findSignature(rules: PRSCRule[]): RDF.Quad {
-    // TODO: a smarter choice of the signature for the case:
-    // pvar:source :connected_to pvar:destination
-    // pvar:destination :connected_to pvar:source
-    // pvar:source :hello pvar:destination        -> We want this one
     const unifiedTriples = this.template.map(q => characterizeTemplateTriple(q));
     const unifiedOthers = rules.filter(r => r !== this)
       .map(r => r.template.map(q => characterizeTemplateTriple(q)));
@@ -240,7 +236,27 @@ export class PRSCRule {
         const value = getValuationOfTriple(this.template[i], this.type);
 
         if (value === ValuationResult.Ok) return this.template[i];
-        else if (value === ValuationResult.Partial && result === null) result = i;
+        else if (value === ValuationResult.Partial && result === null) {
+          // For monoedges, let us suppose we have this template graph:           
+          //   pvar:source :connected_to pvar:destination
+          //   pvar:destination :connected_to pvar:source
+          //   pvar:source :hello pvar:destination        -> this one is the actual signature
+          let ok = true;
+          for (let j = 0; j != unifiedTriples.length; ++j) {
+            if (i === j) continue;
+
+            if (triple.equals(unifiedTriples[j])) {
+              if (!isSrcDestCompatible(this.template[i], this.template[j])) {
+                ok = false;
+                break;
+              }
+            }
+          }
+
+          if (ok) {
+            result = i;
+          }
+        }
       }
     }
   
@@ -270,7 +286,7 @@ export class PRSCRule {
 
     const matchResult = dataGraph.matchAndBind(matchPattern);
     if (matchResult.length !== 1) {
-//      console.error(matchPattern.map(t => RDFString.termToString(t)).join("\n"));
+      console.error(matchPattern.map(t => RDFString.termToString(t)).join("\n"));
       throw Error("Not exactly one result: " + matchResult.length);
     }
   
@@ -327,6 +343,33 @@ export class PRSCRule {
   
     return { used, prec0: toAdd };
   }
+}
+
+/**
+ * Assuming that they have the same kappa, returns true if every pvar:source
+ * and pvar:destination are at the same place in both templates.
+ */
+export function isSrcDestCompatible(template1: RDF.Term, template2: RDF.Term) {
+  function visit(t1: RDF.Term, t2: RDF.Term): boolean {
+    if (t1.termType !== t2.termType) return false;
+
+    if (t1.termType === 'Quad' && t2.termType === 'Quad') {
+      return visit(t1.subject, t2.subject)
+        && visit(t1.predicate, t2.predicate)
+        && visit(t1.object, t2.object)
+        && visit(t1.graph, t2.graph);
+    }
+
+    if (t1.termType === 'NamedNode' && t2.termType === 'NamedNode') {
+      if (t1.equals(pvar.source)) return t2.equals(pvar.source);
+      if (t1.equals(pvar.destination)) return t2.equals(pvar.destination);
+      if (t2.equals(pvar.source) || t2.equals(pvar.destination)) return false;
+    }
+
+    return true;
+  }
+
+  return visit(template1, template2);
 }
 
 /**

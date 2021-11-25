@@ -457,14 +457,16 @@ module.exports = () => {
       )
     });
 
+    const pgNodeEdgeNode = PGBuild()
+      .addNode("node1", [], {})
+      .addNode("node2", [], {})
+      .addEdge("node1", "to", "node2", {})
+      .build();
+
     describe("Trick reversions", () => {
       test(
         "The signature is not unique",
-        PGBuild()
-        .addNode("node1", [], {})
-        .addNode("node2", [], {})
-        .addEdge("node1", "to", "node2", {})
-        .build(),
+        pgNodeEdgeNode,
         `
 
           prec:this_is a prec:prscContext .
@@ -499,6 +501,28 @@ module.exports = () => {
         true
       );
 
+      test(
+        "Monoedge should be translated back correctly",
+        pgNodeEdgeNode,
+        `
+          prec:this_is a prec:prscContext .
+          :node a prec:prsc_node ; prec:composedOf << pvar:self a :node >> .
+
+          :edgeTo a prec:prsc_edge ;
+            prec:edgeLabel "to" ;
+            prec:composedOf
+              << pvar:source :connected_to pvar:destination >> ,
+              << pvar:destination :connected_to pvar:source >> ,
+              << pvar:source :to pvar:destination >> .
+        `,
+        `
+          _:n1 a :node. _:n2 a :node.
+          _:n1 :connected_to _:n2 .
+          _:n2 :connected_to _:n1 .
+          _:n1 :to _:n2 .
+        `,
+        true
+      );
     })
   });
 };
