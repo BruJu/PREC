@@ -134,7 +134,8 @@ module.exports = () => {
         prec:this_is a prec:prscContext .
 
         :person a prec:prsc_node ;
-          prec:nodeLabel "person" .
+          prec:nodeLabel "person" ;
+          prec:composedOf << pvar:self a :Person >> .
 
         [] a prec:prsc_edge ;
           prec:prscSource :person ;
@@ -145,7 +146,9 @@ module.exports = () => {
             << << pvar:destination :isStalkedBy pvar:source >> :since "since"^^prec:_valueOf >> .
         `,
         ' _:toto :knows _:titi . \n ' +
-        '<< _:titi :isStalkedBy _:toto >> :since "yesterday" .'
+        '<< _:titi :isStalkedBy _:toto >> :since "yesterday" . \n' +
+        ' _:toto a :Person . _:titi a :Person . ',
+        true
       );
 
       test("Translate labels",
@@ -453,5 +456,49 @@ module.exports = () => {
         RevertableType.ShouldThrowForNow
       )
     });
+
+    describe("Trick reversions", () => {
+      test(
+        "The signature is not unique",
+        PGBuild()
+        .addNode("node1", [], {})
+        .addNode("node2", [], {})
+        .addEdge("node1", "to", "node2", {})
+        .build(),
+        `
+
+          prec:this_is a prec:prscContext .
+          
+          :node a prec:prsc_node ; prec:composedOf << pvar:self a :node >> .
+
+          :edgeTo a prec:prsc_edge ;
+            prec:edgeLabel "to" ;
+            prec:composedOf
+              << pvar:source :to pvar:self >> ,
+              << pvar:self :to pvar:destination >> ,
+              << pvar:self rdf:subject pvar:source >> ,
+              << pvar:self rdf:object pvar:destination >> .
+
+            
+          :edgeFrom a prec:prsc_edge ;
+            prec:edgeLabel "from" ;
+            prec:composedOf
+              << pvar:destination :from pvar:self >> ,
+              << pvar:self :from pvar:source >> ,
+              << pvar:self rdf:subject pvar:source >> ,
+              << pvar:self rdf:object pvar:destination >> .
+        `,
+        `
+          _:n1 a :node .
+          _:n2 a :node .
+          _:n1 :to _:e1 .
+          _:e1 :to _:n2 .
+          _:e1 rdf:subject _:n1 .
+          _:e1 rdf:object _:n2 .
+        `,
+        true
+      );
+
+    })
   });
 };
