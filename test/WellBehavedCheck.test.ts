@@ -4,7 +4,8 @@ import path from 'path';
 import * as RDF from '@rdfjs/types';
 import * as N3 from 'n3';
 import fs from 'fs';
-import { assertSchema, PRSCRule, PRSCSchema } from '../src/prsc/PrscContext';
+import { assertSchema, PRSCSchema } from '../src/prsc/PrscContext';
+import { buildRule } from '../src/prsc/PrscRule';
 import TermMap from '@rdfjs/term-map';
 import * as RDFString from 'rdf-string';
 
@@ -26,7 +27,7 @@ describe('PRSC Individual rules validity', () => {
     if (asBool === undefined) continue;
 
     it(RDFString.termToString(quad.subject), () => {
-      const rule = PRSCRule.build(dataset, quad.subject);
+      const rule = buildRule(dataset, quad.subject);
 
       if (asBool) {
         assert.ok('rule' in rule, "The rule should be valid");

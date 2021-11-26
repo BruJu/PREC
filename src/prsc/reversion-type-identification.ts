@@ -94,16 +94,16 @@ function findBlankNodeTypes(
 }
 
 /**
- * Checks if the given blank node only has one candidate of the given type.
+ * Checks if the given blank node only has one candidate of the given kind.
  * 
- * Returns true if myCandidates has only one rule of type `type`.
+ * Returns true if myCandidates has only one rule of kind `kind`.
  * If true, tm is filled at the key `me` with this candidate.
  */
 function findOneAndOnlyOne(
   tm: TermMap<RDF.BlankNode, UsedRule>,
-  me: RDF.BlankNode, myCandidates: SignatureTripleOf[], type: 'node' | 'edge'
+  me: RDF.BlankNode, myCandidates: SignatureTripleOf[], kind: 'node' | 'edge'
 ): boolean {
-  const asType = myCandidates.filter(candidate => candidate.rule.type === type);
+  const asType = myCandidates.filter(candidate => candidate.rule.kind === kind);
 
   if (asType.length > 1) {
     const identityNodes = new TermSet(); 
@@ -130,11 +130,11 @@ function addMonoedges(
 
   for (const [bn, myCandidates] of candidates) {
     // If we know that an edge is involved, it can not be a monoedge
-    if (alreadyFound.get(bn)!.rule.type === 'edge') continue;
+    if (alreadyFound.get(bn)!.rule.kind === 'edge') continue;
     
     for (const candidate of myCandidates) {
       // Node rules are not monoedges rules
-      if (candidate.rule.type === 'node') continue;
+      if (candidate.rule.kind === 'node') continue;
 
       // Possible
       if (!edgeCandidates.includes(candidate)) {

@@ -4,8 +4,9 @@ import * as RDF from "@rdfjs/types";
 import * as RDFString from 'rdf-string';
 import {
   characterizeTemplateTriple,
-  haveSameStrings, isSrcDestCompatible, PRSCRule, PRSCSchema
+  haveSameStrings, PRSCSchema
 } from './PrscContext';
+import { PRSCRule, isSrcDestCompatible } from './PrscRule';
 import { precValueOf, pvarDestination, pvarEdge, pvarNode, pvarSelf, pvarSource } from "../PRECNamespace";
 import * as QuadStar from '../rdf/quad-star';
 import { findBlankNodes } from '../../build/src/rdf/graph-substitution';
@@ -28,7 +29,7 @@ export enum ElementIdentificationAnswer { FullyIdentifiable, MonoEdge, No }
  * @returns True if pvar:self is in all triples of the template
  */
 export function elementIdentification(rule: PRSCRule): ElementIdentificationAnswer {
-  const other = rule.type === 'node' ? pvarNode : pvarEdge;
+  const other = rule.kind === 'node' ? pvarNode : pvarEdge;
 
   // The template must contain no blank node: as pvar:self will be mapped to blank node,
   // if a blank node is produced by another source, we can not identify every
@@ -45,7 +46,7 @@ export function elementIdentification(rule: PRSCRule): ElementIdentificationAnsw
 
   if (isFull) return ElementIdentificationAnswer.FullyIdentifiable;
 
-  if (rule.type === 'edge') {
+  if (rule.kind === 'edge') {
     const areAllPartial = undefined === rule.template.find(templateTriple =>
       !(QuadStar.containsTerm(templateTriple, pvarSource)
       && QuadStar.containsTerm(templateTriple, pvarDestination))
@@ -184,7 +185,7 @@ export function noValueLoss(rule: PRSCRule): boolean {
   }
 
   if (foundSrc !== foundDest) return false;
-  if (foundSrc !== (rule.type === 'edge')) return false;
+  if (foundSrc !== (rule.kind === 'edge')) return false;
   if (!haveSameStrings([...foundPropertyValues], rule.properties)) return false;
   return true;
 }
