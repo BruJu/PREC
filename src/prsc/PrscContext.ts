@@ -18,6 +18,7 @@ const TTS = RDFString.termToString;
 import { followThrough, followAll } from "../rdf/path-travelling";
 import { eventuallyRebuildQuad } from "../rdf/quad-star";
 import { unifyTemplateWithData } from "./possible-template-to-data-check";
+import findPGTypeOfAllBlankNodesIn, { SignatureTripleOf } from "./reversion-type-identification";
 
 const ex   = namespace("http://www.example.org/"                    , { factory: DataFactory });
 
@@ -28,10 +29,8 @@ const pvarPrefix = "http://bruy.at/prec-trans#";
 ////////////////////////////////////////////////////////////////////////////////
 //
 
-type IdentificationTriple = {
-  rule: PRSCRule;
-  triple: RDF.Quad;
-};
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // General purpose utilty functions
@@ -224,7 +223,7 @@ export class PRSCRule {
     });
   }
   
-  findIdentificationTriple(rules: PRSCRule[]): RDF.Quad {
+  findSignature(rules: PRSCRule[]): RDF.Quad {
     const unifiedTriples = this.template.map(q => characterizeTemplateTriple(q));
     const unifiedOthers = rules.filter(r => r !== this)
       .map(r => r.template.map(q => characterizeTemplateTriple(q)));
@@ -237,7 +236,27 @@ export class PRSCRule {
         const value = getValuationOfTriple(this.template[i], this.type);
 
         if (value === ValuationResult.Ok) return this.template[i];
-        else if (value === ValuationResult.Partial && result === null) result = i;
+        else if (value === ValuationResult.Partial && result === null) {
+          // For monoedges, let us suppose we have this template graph:           
+          //   pvar:source :connected_to pvar:destination
+          //   pvar:destination :connected_to pvar:source
+          //   pvar:source :hello pvar:destination        -> this one is the actual signature
+          let ok = true;
+          for (let j = 0; j != unifiedTriples.length; ++j) {
+            if (i === j) continue;
+
+            if (triple.equals(unifiedTriples[j])) {
+              if (!isSrcDestCompatible(this.template[i], this.template[j])) {
+                ok = false;
+                break;
+              }
+            }
+          }
+
+          if (ok) {
+            result = i;
+          }
+        }
       }
     }
   
@@ -256,8 +275,8 @@ export class PRSCRule {
         templateQuad,
         term => {
           if (term.equals(pvar.node) || term.equals(pvar.edge) || term.equals(pvar.self)) return self;
-          else if (term.equals(pvar.source)) return nodesOfEdge![0];
-          else if (term.equals(pvar.destination)) return nodesOfEdge![1];
+          else if (term.equals(pvar.source)) return nodesOfEdge ? nodesOfEdge[0] : $variable("edge_source");
+          else if (term.equals(pvar.destination)) return nodesOfEdge ? nodesOfEdge[1] : $variable("edge_destination");
           else if (term.termType === 'Literal' && term.datatype.equals(prec._valueOf))
             return $variable("property_" + term.value);
           else return term;
@@ -266,13 +285,16 @@ export class PRSCRule {
     });
 
     const matchResult = dataGraph.matchAndBind(matchPattern);
-    if (matchResult.length !== 1) throw Error("More than one result");
+    if (matchResult.length !== 1) {
+      console.error(matchPattern.map(t => RDFString.termToString(t)).join("\n"));
+      throw Error("Not exactly one result: " + matchResult.length);
+    }
   
     const matchResult1 = matchResult[0];
 
     if (nodesOfEdge !== null) {
-      matchResult1['edge_source']      ||= nodesOfEdge![0];
-      matchResult1['edge_destination'] ||= nodesOfEdge![1];
+      matchResult1['edge_source']      ||= nodesOfEdge[0];
+      matchResult1['edge_destination'] ||= nodesOfEdge[1];
     }
     
     let toAdd: RDF.Quad[] = [
@@ -321,6 +343,33 @@ export class PRSCRule {
   
     return { used, prec0: toAdd };
   }
+}
+
+/**
+ * Assuming that they have the same kappa, returns true if every pvar:source
+ * and pvar:destination are at the same place in both templates.
+ */
+export function isSrcDestCompatible(template1: RDF.Term, template2: RDF.Term) {
+  function visit(t1: RDF.Term, t2: RDF.Term): boolean {
+    if (t1.termType !== t2.termType) return false;
+
+    if (t1.termType === 'Quad' && t2.termType === 'Quad') {
+      return visit(t1.subject, t2.subject)
+        && visit(t1.predicate, t2.predicate)
+        && visit(t1.object, t2.object)
+        && visit(t1.graph, t2.graph);
+    }
+
+    if (t1.termType === 'NamedNode' && t2.termType === 'NamedNode') {
+      if (t1.equals(pvar.source)) return t2.equals(pvar.source);
+      if (t1.equals(pvar.destination)) return t2.equals(pvar.destination);
+      if (t2.equals(pvar.source) || t2.equals(pvar.destination)) return false;
+    }
+
+    return true;
+  }
+
+  return visit(template1, template2);
 }
 
 /**
@@ -476,11 +525,11 @@ export class PRSCSchema {
     );
   }
 
-  findIdentificationTriples(): IdentificationTriple[] {
+  getAllSignatures(): SignatureTripleOf[] {
     return this.prscRules
       .map(rule => ({
         rule: rule,
-        triple: rule.findIdentificationTriple(this.prscRules)
+        signature: rule.findSignature(this.prscRules)
       }));
   }
 }
@@ -536,37 +585,20 @@ export default function precCwithPRSC(dataset: DStar, contextQuads: RDF.Quad[]):
 ////////////////////////////////////////////////////////////////////////////////
 // ==== Structural description graph <- Idiomatic Graph
 
-/**
- * A pair (rule, the value of prec:valueOf). May eventually also contain values
- * for pvar:source and pvar:destination.
- */
-type UsedRule = {
-  /** The related PRSC rule */
-  rule: PRSCRule;
-  /** pvar:self value */
-  self: RDF.Term;
-  /** Value of pvar:source and pvar:destination. null if unknown */
-  linkedNodes: [RDF.Term, RDF.Term] | null;
-};
-
 export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): { dataset: DStar, complete: boolean } {
   dataset = dataset.match();
 
   const schema = assertSchema(PRSCSchema.build(contextQuads));
-  const identificationTriples = schema.findIdentificationTriples();
+  const signatures = schema.getAllSignatures();
 
   const usedQuads = new DStar();
-  const listOfUsedRules: UsedRule[] = [];
-  for (const dataQuad of dataset) {
-    const f = identificationTriples.find(t => canTemplateProduceData(t.triple, dataQuad));
-    if (f === undefined) continue;
 
-    listOfUsedRules.push(findElement(dataQuad, f));
-    usedQuads.add(dataQuad);
-  }
+  const blankNodesToType = findPGTypeOfAllBlankNodesIn(
+    dataset, signatures, usedQuads
+  );
 
   const prec0Graph = new DStar();
-  for (const { self, linkedNodes, rule } of listOfUsedRules) {
+  for (const [self, { linkedNodes, rule }] of blankNodesToType.entries()) {
     const { used, prec0 } = rule.revertFromPrec0(dataset, self, linkedNodes);
     prec0Graph.addAll(prec0);
     usedQuads.addAll(used);
@@ -577,6 +609,7 @@ export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): { dataset
     complete: usedQuads.size === dataset.size
   };
 }
+
 
 /**
  * Return the unified form of the triple.
@@ -601,51 +634,10 @@ export function canTemplateProduceData(pattern: RDF.Quad, data: RDF.Quad): boole
   return unifyTemplateWithData(pattern, data) !== null;
 }
 
-function findElement(dataQuad: RDF.Quad, f: { rule: PRSCRule, triple: RDF.Quad }): UsedRule {
-  let self: RDF.Term | null = null;
-  let source: RDF.Term | null = null;
-  let destination: RDF.Term | null = null;
-
-  function recurseIn(data: RDF.Term, template: RDF.Term) {
-    if (template.equals(pvar.node) || template.equals(pvar.edge) || template.equals(pvar.self)) {
-      self = data;
-    } else if (template.equals(pvar.source)) {
-      source = data;
-    } else if (template.equals(pvar.destination)) {
-      destination = data;
-    } else if (template.termType === 'Quad' && data.termType === 'Quad') {
-      recurseIn(data.subject, template.subject);
-      recurseIn(data.predicate, template.predicate);
-      recurseIn(data.object, template.object);
-    }
-  }
-
-  recurseIn(dataQuad, f.triple);
-
-  if (f.rule.type === 'node') {
-    if (self === null) throw Error("Did not found pvar:node in template");
-    return { self, linkedNodes: null, rule: f.rule };
-  } else if (f.rule.type === 'edge') {
-    if (self === null) {
-      if (source === null || destination === null) {
-        throw Error("Did not found pvar:node nor pvar:source + pvar:destination in template");
-      }
-
-      self = DataFactory.blankNode();
-    }
-
-    let src = source || $variable("edge_source");
-    let dst = destination || $variable("edge_destination");
-
-    return { self, linkedNodes: [src, dst], rule: f.rule };
-  } else {
-    throw Error("Impossible path by design");
-  }
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function extractBnsIn(quad: RDF.Quad): RDF.BlankNode[] {
+export function extractBnsIn(quad: RDF.Quad): RDF.BlankNode[] {
   let result: RDF.BlankNode[] = [];
 
   const explore = (term: RDF.Term) => {
