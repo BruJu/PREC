@@ -126,7 +126,7 @@ function addMonoedges(
   candidates: TermMap<RDF.BlankNode, CandidateInstantiation[]>
 ) {
   // 1) Find all candidate instantiation involving nodes
-  let cis: CandidateInstantiation[] = [];
+  const edgeCandidates: CandidateInstantiation[] = [];
 
   for (const [bn, myCandidates] of candidates) {
     // If we know that an edge is involved, it can not be a monoedge
@@ -137,18 +137,24 @@ function addMonoedges(
       if (candidate.rule.type === 'node') continue;
 
       // Possible
-      if (!cis.includes(candidate)) cis.push(candidate);
+      if (!edgeCandidates.includes(candidate)) {
+        edgeCandidates.push(candidate);
+      }
     }
   }
 
   // 2) To be a monoedge rule, every triples in the template should not have
   // pvar:self and should have both pvar:source + pvar:destination
-  cis = cis.filter(cis => {
-    let a = cis.rule.template.find(t => QuadStar.containsTerm(t, pvar.self)) === undefined;
-    if (!a) return false;
+  const monoedgeCandidates = edgeCandidates.filter(edgeCandidate => {
+    const pvarSelfIsMissing = undefined === edgeCandidate.rule.template.find(
+      t => QuadStar.containsTerm(t, pvar.self)
+    );
+    if (!pvarSelfIsMissing) return false;
 
-    let b = cis.rule.template.find(t => QuadStar.containsTerm(t, pvar.source) && QuadStar.containsTerm(t, pvar.destination)) !== undefined;
-    return b;
+    const allHaveSourceAndDestination = undefined === edgeCandidate.rule.template.find(
+      t => !(QuadStar.containsTerm(t, pvar.source) && QuadStar.containsTerm(t, pvar.destination))
+    );
+    return allHaveSourceAndDestination;
   });
 
   // cis contains a list of tuples with:
@@ -158,26 +164,30 @@ function addMonoedges(
   
   // 3) If the signature has been chosen carefully, we can extract from the
   // data and the template the source and the destination.
-  // We put it in a TermMap to ensure that we do not create several edges
-  // for a given (monoedge rule, source, destination).
-  let qs = new TermMap<RDF.Quad, PRSCRule>();
-  for (const ci of cis) {
-    const xs = findSrcAndDestInMonoedge(ci.data, ci.signature);
-    const key = $quad(
-      xs.source,
-      ci.rule.identity as RDF.Quad_Predicate,
-      xs.destination
+  // We put it in a TermSet to ensure that we do not create several edges
+  // for a given (monoedge type, source, destination).
+  const ruleIdentityToRule = new TermMap<RDF.Term, PRSCRule>();
+  const monoedgesInThePG = new TermSet<RDF.Quad>();
+  for (const monoedgeCandidate of monoedgeCandidates) {
+    const { source, destination } = findSrcAndDestInMonoedge(monoedgeCandidate.data, monoedgeCandidate.signature);
+    // We encode the fact that there is a PG edge between source and destination
+    // as a regular RDF triple that uses the rule identity, = a node that
+    // identifies this type of PG edge, in predicate position.
+    const directTriple = $quad(
+      source,
+      monoedgeCandidate.rule.identity as RDF.Quad_Predicate,
+      destination
     );
 
-    qs.set(key, ci.rule);
+    monoedgesInThePG.add(directTriple);
+    ruleIdentityToRule.set(monoedgeCandidate.rule.identity, monoedgeCandidate.rule);
   }
 
-  // 4) qs contains as key tuples with
-  // (source, monoedge type identifer, destination). We forge a blank node for
-  // a new monoedge of the given type with the given source and destination.
-  for (const [triple, rule] of qs) {
+  // 4) Add all monoedges in the PG to the list of PG element to build back.
+  for (const directTriple of monoedgesInThePG) {
+    const correspondingRule = ruleIdentityToRule.get(directTriple.predicate)!;
     alreadyFound.set(
-      $blankNode(), { rule: rule, linkedNodes: [triple.subject, triple.object] }
+      $blankNode(), { rule: correspondingRule, linkedNodes: [directTriple.subject, directTriple.object] }
     );
   }
 }
