@@ -15,7 +15,7 @@ import { followThrough } from "../rdf/path-travelling";
 import { eventuallyRebuildQuad } from "../rdf/quad-star";
 import { unifyTemplateWithData } from "./possible-template-to-data-check";
 import findPGTypeOfAllBlankNodesIn, { SignatureTripleOf } from "./reversion-type-identification";
-import { buildRule, findSignature, PRSCRule } from "./PrscRule";
+import { buildRule, findSignatureOfRules, PRSCRule } from "./PrscRule";
 export { PRSCRule };
 
 const ex   = namespace("http://www.example.org/"                    , { factory: DataFactory });
@@ -42,9 +42,6 @@ export function haveSameStrings(lhs: string[], rhs: string[]): boolean {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Schema detection
-
-
-
 
 export class PRSCSchema {
   prscRules: PRSCRule[] = [];
@@ -142,11 +139,7 @@ export class PRSCSchema {
   }
 
   getAllSignatures(): SignatureTripleOf[] {
-    return this.prscRules
-      .map(rule => ({
-        rule: rule,
-        signature: findSignature(rule, this.prscRules)
-      }));
+    return findSignatureOfRules(this.prscRules);
   }
 }
 

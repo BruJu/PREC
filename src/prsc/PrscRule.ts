@@ -1,3 +1,4 @@
+import TermMap from '@rdfjs/term-map';
 import TermSet from '@rdfjs/term-set';
 import * as RDF from "@rdfjs/types";
 import { DataFactory } from "n3";
@@ -8,6 +9,7 @@ import { $defaultGraph, $quad, prec, pvar, rdf } from '../PRECNamespace';
 import { followAll, followThrough } from "../rdf/path-travelling";
 import * as QuadStar from '../rdf/quad-star';
 import { characterizeTemplateTriple, extractBnsIn, PRSCSchemaViolation } from "./PrscContext";
+import { SignatureTripleOf } from './reversion-type-identification';
 
 
 const xsdString = DataFactory.namedNode("http://www.w3.org/2001/XMLSchema#string");
@@ -165,86 +167,101 @@ function readTemplate(context: DStar, identity: RDF.Quad_Subject): RDF.Quad[] {
 // ==== Signature triple
 
 /**
- * Look for one of the signature template triple of the given rule.
- * @param rule The rule where we want to find a signature
- * @param rules The list of rules from which we want to find a signature.
- * @returns A signature triple. Throws if no such triple exists.
+ * Find the signature of every given rule.
+ * 
+ * The signatures are returned in the format (Signature Triple, the rule).
+ * Users that want to ensure that all rules has a signature must check if
+ * the result.length === rules.length.
+ * @param rules The list of rules
  */
-export function findSignature(rule: PRSCRule, rules: PRSCRule[]): RDF.Quad {
-  const unifiedTriples = rule.template.map(q => characterizeTemplateTriple(q));
-  const unifiedOthers = rules.filter(r => r !== rule)
-    .map(r => r.template.map(q => characterizeTemplateTriple(q)));
+export function findSignatureOfRules(rules: PRSCRule[]): SignatureTripleOf[] {
+  // 1) Build a map characterization -> rule
+  const found = new TermMap<RDF.Quad, PRSCRule | null>();
 
-  let result: number | null = null;
+  rules.forEach(rule => rule.template.forEach(templateTriple => {
+    const characterized = characterizeTemplateTriple(templateTriple);
 
-  for (let i = 0; i != unifiedTriples.length; ++i) {
-    const triple = unifiedTriples[i];
-    if (unifiedOthers.every(other => other.find(t => t.equals(triple)) === undefined)) {
-      const value = getValuationOfTriple(rule.template[i], rule.kind);
+    const f = found.get(characterized);
+    if (f === undefined) {
+      found.set(characterized, rule);
+    } else if (f === rule) {
+      // ok: multiple signature templates within the same rule can produce the
+      // same triples
+    } else if (f !== null) {
+      // not ok: This template triple is shared by several rules
+      found.set(characterized, null);
+    } else {
+      // f === null, we know this template triple is not signature
+    }
+  }));
 
-      if (value === ValuationResult.Ok) return rule.template[i];
-      else if (value === ValuationResult.Partial && result === null) {
-        // For monoedges, let us suppose we have this template graph:           
-        //   pvar:source :connected_to pvar:destination
-        //   pvar:destination :connected_to pvar:source
-        //   pvar:source :hello pvar:destination        -> this one is the actual signature
-        let ok = true;
-        for (let j = 0; j != unifiedTriples.length; ++j) {
-          if (i === j) continue;
+  // Monoedges: All triples must be "signature" + at least one must not have a
+  // triple with inverted pvar:source and pvar:destination
+  rules.filter(rule => isMonoedgeTemplate(rule.template))
+  .forEach(rule => {
+    const kappaTemplateGraph = rule.template.map(t => characterizeTemplateTriple(t));
 
-          if (triple.equals(unifiedTriples[j])) {
-            if (!isSrcDestCompatible(rule.template[i], rule.template[j])) {
-              ok = false;
-              break;
-            }
-          }
-        }
+    const notSignature = kappaTemplateGraph.find(triple => found.get(triple) !== rule);
 
-        if (ok) {
-          result = i;
+    if (notSignature !== undefined) {
+      kappaTemplateGraph.forEach(t => found.set(t, null));
+      return;
+    }
+
+    let signatureWithIdentifiableSrcAndDest: number | null = null;
+
+    for (let i = 0; i !== kappaTemplateGraph.length; ++i) {
+      let good = true;
+
+      for (let j = 0; j !== kappaTemplateGraph.length; ++j) {
+        if (i === j) continue;
+        if (!kappaTemplateGraph[i].equals(kappaTemplateGraph[j])) continue;
+
+        if (!isSrcDestCompatible(rule.template[i], rule.template[j])) {
+          good = false;
+          found.set(kappaTemplateGraph[i], null);
+          found.set(kappaTemplateGraph[j], null);
         }
       }
+
+      if (good) {
+        signatureWithIdentifiableSrcAndDest = i;
+      }
+    }
+
+    // TODO: this if is useless?
+    if (signatureWithIdentifiableSrcAndDest === null) {
+      kappaTemplateGraph.forEach(t => found.set(t, null));
+    }
+  });
+
+  // Build the result
+  let result: SignatureTripleOf[] = [];
+
+  for (const rule of rules) {
+    const signature = rule.template.find(template => {
+      const kappa = characterizeTemplateTriple(template);
+      const signatureOf = found.get(kappa);
+      return signatureOf === rule;
+    });
+
+    if (signature !== undefined) {
+      result.push({ rule: rule, signature: signature });
     }
   }
 
-  if (result === null) {
-    throw Error(`No unique triple found in ${RDFString.termToString(rule.identity)}`);
-  } else {
-    return rule.template[result];
-  }
+  return result;
 }
 
-/** Result of getValuationOftriple */
-enum ValuationResult {
-  /** The triple contains pvar:self */
-  Ok,
-  /** The triple contains both pvar:source and pvar:destination */
-  Partial,
-  /** The triple contains neither pvar:self neither pvar:source + pvar:destination */
-  No
-};
 
-/**
- * Checks if the given template triple owns pvar:self or 
- * the pair pvar:source + pvar:destination.
- */
-function getValuationOfTriple(quad: RDF.Quad, type: 'node' | 'edge'): ValuationResult {
-  if (type === 'node') {
-    if (QuadStar.containsTerm(quad, pvar.node) || QuadStar.containsTerm(quad, pvar.self)) {
-      return ValuationResult.Ok;
-    } else {
-      return ValuationResult.No;
-    }
-  } else {
-    if (QuadStar.containsTerm(quad, pvar.edge) || QuadStar.containsTerm(quad, pvar.self)) {
-      return ValuationResult.Ok;
-    } else if (QuadStar.containsTerm(quad, pvar.source)
-    && QuadStar.containsTerm(quad, pvar.destination)) {
-      return ValuationResult.Partial;
-    } else {
-      return ValuationResult.No;
-    }
-  }
+function isMonoedgeTemplate(template: RDF.Quad[]) {
+  return template.find(triple => QuadStar.containsTerm(triple, pvar.self)) === undefined
+    && (
+      template.find(triple =>
+        !(QuadStar.containsTerm(triple, pvar.source)
+        && QuadStar.containsTerm(triple, pvar.destination))
+      ) === undefined
+    );
 }
 
 /**
