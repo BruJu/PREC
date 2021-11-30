@@ -14,6 +14,7 @@ import { SignatureTripleOf } from './reversion-type-identification';
 
 const xsdString = DataFactory.namedNode("http://www.w3.org/2001/XMLSchema#string");
 
+
 /**
  * A PRSC rule, corresponding to a PG type and the template required by the
  * user to represent the PG elements of this type.
@@ -201,37 +202,25 @@ export function findSignatureOfRules(rules: PRSCRule[]): SignatureTripleOf[] {
   .forEach(rule => {
     const kappaTemplateGraph = rule.template.map(t => characterizeTemplateTriple(t));
 
+    // All triples must be signature
     const notSignature = kappaTemplateGraph.find(triple => found.get(triple) !== rule);
-
     if (notSignature !== undefined) {
       kappaTemplateGraph.forEach(t => found.set(t, null));
       return;
     }
 
-    let signatureWithIdentifiableSrcAndDest: number | null = null;
-
+    // Triples with the same kappa-value must have pvar:source and
+    // pvar:destination at the same place
     for (let i = 0; i !== kappaTemplateGraph.length; ++i) {
-      let good = true;
-
       for (let j = 0; j !== kappaTemplateGraph.length; ++j) {
         if (i === j) continue;
         if (!kappaTemplateGraph[i].equals(kappaTemplateGraph[j])) continue;
 
         if (!isSrcDestCompatible(rule.template[i], rule.template[j])) {
-          good = false;
           found.set(kappaTemplateGraph[i], null);
           found.set(kappaTemplateGraph[j], null);
         }
       }
-
-      if (good) {
-        signatureWithIdentifiableSrcAndDest = i;
-      }
-    }
-
-    // TODO: this if is useless?
-    if (signatureWithIdentifiableSrcAndDest === null) {
-      kappaTemplateGraph.forEach(t => found.set(t, null));
     }
   });
 
@@ -253,7 +242,10 @@ export function findSignatureOfRules(rules: PRSCRule[]): SignatureTripleOf[] {
   return result;
 }
 
-
+/**
+ * Returns true if all triples in the template graph misses pvar:self but have
+ * both pvar:source and pvar:destination
+ */
 function isMonoedgeTemplate(template: RDF.Quad[]) {
   return template.find(triple => QuadStar.containsTerm(triple, pvar.self)) === undefined
     && (
