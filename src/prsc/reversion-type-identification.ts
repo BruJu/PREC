@@ -23,8 +23,7 @@ export default function findPGTypeOfAllBlankNodesIn(
   // For each blank node, find which signature have produced a triple with it.
   const blankNodesToSignature = findSignaturesThatMatchesTheBlankNodes(dataset, signatures, usedQuads);
   
-  // For each blank node, find the signature that is the only one who could have
-  // produced the blank node.
+  // For each blank node, find the type from the list of signatures
   const blankNodesToType = findBlankNodeTypes(blankNodesToSignature);
 
   // A PG monoedge does not have a blank node in the produced RDF graph: use
@@ -76,48 +75,52 @@ function findSignaturesThatMatchesTheBlankNodes(
 function findBlankNodeTypes(
   candidates: TermMap<RDF.BlankNode, CandidateInstantiation[]>)
 : TermMap<RDF.BlankNode, UsedRule> {
-  let tm = new TermMap<RDF.BlankNode, UsedRule>();
+  let blankNodesToType = new TermMap<RDF.BlankNode, UsedRule>();
 
   // Find the nodes
   for (const [bn, myCandidates] of candidates) {
-    const isNode = findOneAndOnlyOne(tm, bn, myCandidates, 'node');
+    const isNode = findOneAndOnlyOne(blankNodesToType, bn, myCandidates, 'node');
     if (isNode) continue;
     
-    const isEdge = findOneAndOnlyOne(tm, bn, myCandidates, 'edge');
+    const isEdge = findOneAndOnlyOne(blankNodesToType, bn, myCandidates, 'edge');
     if (isEdge) continue;
     
     // This is theorically impossible.
     throw Error("Some blank node could not be identified.");
   }
 
-  return tm;
+  return blankNodesToType;
 }
 
 /**
  * Checks if the given blank node only has one candidate of the given kind.
  * 
  * Returns true if myCandidates has only one rule of kind `kind`.
- * If true, tm is filled at the key `me` with this candidate.
+ * If true, blankNodesToType is filled at the key `me` with this candidate.
  */
 function findOneAndOnlyOne(
-  tm: TermMap<RDF.BlankNode, UsedRule>,
+  blankNodesToType: TermMap<RDF.BlankNode, UsedRule>,
   me: RDF.BlankNode, myCandidates: SignatureTripleOf[], kind: 'node' | 'edge'
 ): boolean {
-  const asType = myCandidates.filter(candidate => candidate.rule.kind === kind);
+  const asKind = myCandidates.filter(candidate => candidate.rule.kind === kind);
 
-  if (asType.length > 1) {
-    const identityNodes = new TermSet(); 
-    asType.map(c => c.rule.identity).forEach(identityNode => identityNodes.add(identityNode));
+  if (asKind.length > 1) {
+    // More than one candidate of this kind: check if every candidate comes from
+    // the exact same rule
+    const rulesIdentifiers = new TermSet(); 
+    asKind.map(c => c.rule.identity).forEach(identifierForRule => rulesIdentifiers.add(identifierForRule));
 
-    if (identityNodes.size > 1) throw Error("Should never happen: identityNode = " + identityNodes.size + " != 1");
+    if (rulesIdentifiers.size > 1) {
+      throw Error("Should never happen: rulesIdentifiers.length = " + rulesIdentifiers.size + " != 1");
+    }
 
-    // All the same rule
-    asType.splice(1);
+    // Yes all the same rule
+    asKind.splice(1);
   }
 
-  if (asType.length !== 1) return false;
+  if (asKind.length !== 1) return false;
 
-  tm.set(me, { rule: asType[0].rule, linkedNodes: null });
+  blankNodesToType.set(me, { rule: asKind[0].rule, linkedNodes: null });
   return true;
 }
 
