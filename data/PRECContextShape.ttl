@@ -1,0 +1,212 @@
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix sh: <http://www.w3.org/ns/shacl#>
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+prefix s: <http://schema.org/>
+PREFIX prec: <http://bruy.at/prec#>
+prefix : <http://bruy.at/prec/shape#>
+@prefix pgo:  <http://ii.uwb.edu.pl/pgo#> .
+
+# /!\ sh:targetNode are not currently checked
+
+# ==== Short rules
+
+:ShortEdgeRule a sh:NodeShape ;
+  sh:targetSubjectsOf prec:IRIOfEdgeLabel ;
+  sh:nodeKind sh:IRI ;
+  sh:property [
+    sh:path prec:IRIOfEdgeLabel ;
+    sh:nodeKind sh:Literal ;
+    sh:datatype xsd:string
+  ] .
+
+:ShortPropertyRule a sh:NodeShape ;
+  sh:targetSubjectsOf prec:IRIOfProperty ;
+  sh:nodeKind sh:IRI ;
+  sh:property [
+    sh:path prec:IRIOfProperty ;
+    sh:nodeKind sh:Literal ;
+    sh:datatype xsd:string
+  ] .
+
+:ShortNodeLabelRule a sh:NodeShape ;
+  sh:targetSubjectsOf prec:IRIOfNodeLabel ;
+  sh:nodeKind sh:IRI ;
+  sh:property [
+    sh:path prec:IRIOfNodeLabel ;
+    sh:nodeKind sh:Literal ;
+    sh:datatype xsd:string
+  ] .
+
+
+# ==== Rule
+
+:GeneralRule a sh:NodeShape ;
+  sh:property :PathToTemplate ;
+  sh:property [
+    sh:path prec:priority ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:integer
+  ]
+  # + path with substitution term as predicate and iri as object
+.
+
+
+:NodeLabelRule a sh:NodeShape ;
+  sh:targetClass prec:NodeLabelRule ;
+  sh:comment "A node label rule: specifies how to represent a node label" ;
+  sh:node :GeneralRule ;
+  sh:property [
+    sh:path prec:nodeLabel ;
+    sh:minCount 1 ; sh:maxCount 1 ;
+    sh:nodeKind sh:Literal ; sh:datatype xsd:string ;
+    sh:comment "The node label focused by the rule"
+  ] ;
+  sh:property [
+    sh:path prec:nodeLabelIRI ;
+    sh:minCount 1 ; sh:maxCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:comment "The IRI used to represent the node label"
+  ] .
+
+:PropertyRule a sh:NodeShape ;
+  sh:targetClass prec:PropertyRule ;
+  sh:property [
+    sh:path prec:propertyName ;
+    sh:minCount 1 ; sh:maxCount 1 ;
+    sh:nodeKind sh:Literal ; sh:datatype xsd:string ;
+  ] ;
+  sh:property [
+    sh:path prec:propertyIRI ;
+    sh:minCount 1 ; sh:maxCount 1 ;
+    sh:nodeKind sh:IRI
+  ] ;
+  sh:property [
+    sh:path prec:nodeLabel ;
+    sh:or (
+      [ sh:in ( prec:any ) ]
+      [ sh:nodeKind sh:Literal ; sh:datatype xsd:string ]
+    )
+  ] .
+
+:EdgeRule a sh:NodeShape ;
+  sh:targetClass prec:EdgeRule ;
+  sh:node :GeneralRule ;
+  sh:property [
+    sh:path prec:edgeLabel ;
+    sh:minCount 1 ; sh:maxCount 1 ;
+    sh:nodeKind sh:Literal ; sh:datatype xsd:string
+  ] ;
+  sh:property [
+    sh:path prec:edgeIRI ;
+    sh:minCount 1 ; sh:maxCount 1 ;
+    sh:nodeKind sh:IRI
+  ] ;
+  sh:property [
+    sh:path prec:sourceLabel ;
+    sh:nodeKind sh:Literal ; sh:datatype xsd:string
+  ] ;
+  sh:property [
+    sh:path prec:destinationLabel ;
+    sh:nodeKind sh:Literal ; sh:datatype xsd:string
+  ] .
+
+
+
+
+# ==== Template
+
+:TemplatedByGroups a sh:NodeShape ;
+  sh:targetNode
+    prec:Properties,
+    prec:NodeProperties,
+    prec:EdgeProperties,
+    prec:MetaProperties,
+    prec:Edges,
+    prec:NodeLabels ;
+  sh:property :PathToTemplate .
+
+:PathToTemplate a sh:PropertyShape ;
+  sh:path prec:templatedBy ;
+  sh:node :Template ;
+  sh:maxCount 1 .
+
+# Only one value for templated by
+:TemplatedBy a sh:NodeShape ;
+  sh:targetSubjectsOf prec:templatedBy ;
+  sh:property [
+    sh:path prec:templatedBy ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:node :Template
+  ] ;
+  sh:property [
+    sh:path prec:templatedBy ;
+    sh:maxCount 1
+  ] .
+
+
+# ==== Template
+
+:Template a sh:NodeShape ;
+  sh:targetClass
+    prec:EdgeTemplate,
+    prec:NodeLabelTemplate,
+    prec:PropertyTemplate ;
+  # sh:closed true ;
+  sh:property [
+    sh:path prec:composedOf ;
+    # sh:nodeKind sh:TripleStar
+    sh:minCount 0
+  ] ;
+  sh:property [
+    sh:path prec:entityIs ;
+    sh:maxCount 1
+  ]
+.
+
+# ==== Substitution term
+
+:SubstitutionTerm a sh:NodeShape ;
+  sh:targetClass prec:SubstitutionTerm ;
+  # sh:closed true ;
+  sh:property [
+    sh:path prec:substitutionTarget ;
+    sh:nodeKind sh:IRI ;
+    sh:minCount 1 ;
+    sh:maxCount 1
+  ] .
+
+
+
+# ==== KeepProvenance / flagState
+
+:KeepProvenance a sh:NodeShape ;
+  sh:targetNode prec:KeepProvenance ;
+  sh:targetSubjectsOf prec:flagState ;
+  sh:closed true ;
+  sh:property [
+    sh:path prec:flagState ;
+    sh:datatype xsd:boolean ;
+    sh:maxCount 1
+  ] .
+
+
+# ==== Map Blank nodes to prefix
+
+:MapBlankNodesToPrefix_nodeCentric a sh:NodeShape ;
+  sh:targetNode pgo:Node, pgo:Edge, prec:PropertyKey ;
+  sh:property [
+    sh:path prec:mapBlankNodesToPrefix ;
+    sh:nodeKind sh:Literal ;
+    sh:maxCount 1
+  ] .
+
+:MapBlankNodesToPrefix_predicateCentric a sh:NodeShape ;
+  sh:targetSubjectsOf prec:mapBlankNodesToPrefix ;
+  sh:property [
+    sh:path prec:mapBlankNodesToPrefix ;
+    sh:nodeKind sh:IRI ;
+    sh:maxCount 1
+  ]
+.
