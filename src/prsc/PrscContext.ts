@@ -4,6 +4,7 @@ import TermMap from "@rdfjs/term-map";
 import TermSet from '@rdfjs/term-set';
 import { DataFactory } from "n3";
 import * as RDFString from 'rdf-string';
+import { isShaclValidContext } from "../prec/context-shacl-check";
 
 import DStar from "../dataset";
 import {
@@ -186,6 +187,11 @@ export function isPrscContext(contextQuads: RDF.Quad[]) {
 }
 
 export default function precCwithPRSC(dataset: DStar, contextQuads: RDF.Quad[]): DStar {
+  const conform = isShaclValidContext(new DStar(contextQuads));
+  if (conform !== true) {
+    throw Error("Invalid graph " + conform);
+  }
+
   const schema = assertSchema(PRSCSchema.build(contextQuads));
   return schema.applyContext(dataset);
 }

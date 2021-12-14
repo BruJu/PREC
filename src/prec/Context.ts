@@ -1,9 +1,4 @@
-import SHACLValidator from 'rdf-validate-shacl';
-import fs from 'fs';
-import path from 'path';
-import * as n3 from 'n3';
 import DStar from '../dataset';
-import factory from 'rdf-ext';
 
 import RulesForEdges from './rules-for-edges';
 import RulesForNodeLabels from './rules-for-nodelabels';
@@ -14,6 +9,7 @@ import { NamedNode, Quad, Quad_Subject } from '@rdfjs/types';
 import { Template } from './RuleType';
 
 import { prec } from '../PRECNamespace';
+import { isShaclValidContext } from './context-shacl-check';
 
 /**
  * A `Context` is an object that stores every data that is stored in a context
@@ -36,7 +32,7 @@ export default class Context {
     XX.addBuiltIn(dataset, __dirname + "/../builtin_rules.ttl");
     XX.replaceSynonyms(dataset);
 
-    if (!isShaclValidContext(dataset)) {
+    if (isShaclValidContext(dataset) !== true) {
       throw Error("SHACL validation failed");
     }
 
@@ -105,22 +101,3 @@ function trueIfUndefined(b: boolean | undefined) {
   return b === undefined ? true : b;
 }
 
-
-let contextValidator: SHACLValidator | undefined = undefined;
-
-/**
- * Return true if the dataset is a valid context according to the context shape
- * graph
- * @param dataset The context
- */
-export function isShaclValidContext(dataset: DStar): boolean {
-  if (contextValidator === undefined) {
-    const shapePath = path.join(__dirname, "..", "..", "data", "PRECContextShape.ttl");
-    const shapeContent = fs.readFileSync(shapePath, 'utf-8');
-    const shapeStore = new n3.Store(new n3.Parser().parse(shapeContent));
-  
-    contextValidator = new SHACLValidator(shapeStore, { factory });
-  }
-
-  return contextValidator.validate(dataset).conforms;
-}

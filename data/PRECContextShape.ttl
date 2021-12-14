@@ -112,8 +112,6 @@ prefix : <http://bruy.at/prec/shape#>
   ] .
 
 
-
-
 # ==== Template
 
 :TemplatedByGroups a sh:NodeShape ;
@@ -210,3 +208,63 @@ prefix : <http://bruy.at/prec/shape#>
     sh:maxCount 1
   ]
 .
+
+# ==== PRSC
+
+:PrscNode a sh:NodeShape ;
+  sh:targetClass prec:prsc_node ;
+  sh:closed true ;
+  sh:property [
+    sh:path rdf:type ;
+    sh:in ( prec:prsc_node )
+  ] ;
+  sh:property [
+    sh:path prec:nodeLabel ;
+    sh:nodeKind sh:Literal ; sh:datatype xsd:string
+  ] ;
+  sh:property [
+    sh:path prec:propertyName ;
+    sh:nodeKind sh:Literal ; sh:datatype xsd:string
+  ] ;
+  sh:property [
+    sh:path prec:composedOf
+  ] ;
+  sh:node :PRSCTestable
+.
+
+:PrscEdge a sh:NodeShape ;
+  sh:targetClass prec:prsc_edge ;
+  sh:node :PRSCTestable ;
+  sh:closed true ;
+  sh:property [
+    sh:path prec:composedOf
+  ] ;
+  sh:property [
+    sh:path rdf:type ;
+    sh:in ( prec:prsc_edge )
+  ] ;
+  sh:property [
+    sh:path prec:edgeLabel ;
+    sh:nodeKind sh:Literal ; sh:datatype xsd:string
+  ] ;
+  sh:property [
+    sh:path prec:propertyName ;
+    sh:nodeKind sh:Literal ; sh:datatype xsd:string
+  ] ;
+  sh:property [
+    sh:path prec:prscSource ;
+    sh:maxCount 1 ;
+    sh:nodeKind sh:IRI
+  ] ;
+  sh:property [
+    sh:path prec:prscDestination ;
+    sh:maxCount 1 ;
+    sh:nodeKind sh:IRI
+  ] .
+
+:PRSCTestable a sh:NodeShape ;
+  sh:ignoredProperties (
+    prec:element_identification
+    prec:no_value_loss
+  ) .
+
