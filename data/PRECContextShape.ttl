@@ -11,13 +11,45 @@ prefix : <http://bruy.at/prec/shape#>
 
 # ==== Short rules
 
+prec:IRIOfEdgeLabel
+  rdfs:label "Map an edge label to an IRI" ;
+  rdfs:comment
+  """
+  Maps the edge label named on object position to the IRI in subject position.
+
+  `?s prec:IRIOfEdgeLabel ?o` is a  a shorthand for
+  `[] rdf:type prec:EdgeRule ; prec:edgeLabel ?o ; prec:edgeIRI ?s .`
+  """ .
+
+prec:IRIOfProperty
+  rdfs:label "Map a property name to an IRI" ;
+  rdfs:comment 
+  """
+  Maps the property name named on object position to the IRI in subject position.
+  
+  `?s prec:IRIOfProperty ?o` is a  a shorthand for
+  `[] rdf:type prec:PropertyRule ; prec:propertyName ?o ; prec:propertyIRI ?s .`
+  """ .
+
+prec:IRIOfNodeLabel
+  rdfs:label "Map a node label to an IRI" ;
+  rdfs:comment
+  """
+  Maps the property name named on object position to the IRI in subject position.
+  
+  `?s prec:IRIOfNodeLabel ?o` is a  a shorthand for
+  `[] rdf:type prec:NodeLabelRule ; prec:nodeLabel ?o ; prec:nodeLabelIRI ?s .`
+  """ .
+
 :ShortEdgeRule a sh:NodeShape ;
   sh:targetSubjectsOf prec:IRIOfEdgeLabel ;
   sh:nodeKind sh:IRI ;
   sh:property [
     sh:path prec:IRIOfEdgeLabel ;
     sh:nodeKind sh:Literal ;
-    sh:datatype xsd:string
+    sh:datatype xsd:string ;
+    sh:name "Edge Label" ;
+    sh:description "Edge label that is mapped by this rule"
   ] .
 
 :ShortPropertyRule a sh:NodeShape ;
@@ -26,7 +58,9 @@ prefix : <http://bruy.at/prec/shape#>
   sh:property [
     sh:path prec:IRIOfProperty ;
     sh:nodeKind sh:Literal ;
-    sh:datatype xsd:string
+    sh:datatype xsd:string ;
+    sh:name "Property name" ;
+    sh:description "Name of the property that is mapped by this rule"
   ] .
 
 :ShortNodeLabelRule a sh:NodeShape ;
@@ -35,7 +69,9 @@ prefix : <http://bruy.at/prec/shape#>
   sh:property [
     sh:path prec:IRIOfNodeLabel ;
     sh:nodeKind sh:Literal ;
-    sh:datatype xsd:string
+    sh:datatype xsd:string ;
+    sh:name "Node Label" ;
+    sh:description "Node label that is mapped by this rule"
   ] .
 
 
@@ -46,28 +82,39 @@ prefix : <http://bruy.at/prec/shape#>
   sh:property [
     sh:path prec:priority ;
     sh:maxCount 1 ;
-    sh:datatype xsd:integer
+    sh:datatype xsd:integer ;
+    sh:name "Priority" ;
+    sh:description "Priority of the rule. Rules with explicit priority are applied before rules with implicit priority. Higher priority rules are applied first. "
   ]
   # + path with substitution term as predicate and iri as object
 .
 
 
+prec:NodeLabelRule 
+  rdfs:label "Node Label Rule" ;
+  rdfs:comment "A node label rule: specifies how to represent a node label" .
+
 :NodeLabelRule a sh:NodeShape ;
   sh:targetClass prec:NodeLabelRule ;
-  sh:comment "A node label rule: specifies how to represent a node label" ;
   sh:node :GeneralRule ;
   sh:property [
     sh:path prec:nodeLabel ;
     sh:minCount 1 ; sh:maxCount 1 ;
     sh:nodeKind sh:Literal ; sh:datatype xsd:string ;
+    sh:name "PG node label" ;
     sh:comment "The node label focused by the rule"
   ] ;
   sh:property [
     sh:path prec:nodeLabelIRI ;
     sh:minCount 1 ; sh:maxCount 1 ;
     sh:nodeKind sh:IRI ;
+    sh:name "RDF target IRI" ;
     sh:comment "The IRI used to represent the node label"
   ] .
+
+prec:PropertyRule
+  rdfs:label "Property Rule" ;
+  rdfs:comment "A property rule: specifies how to represent a property key-value pair." .
 
 :PropertyRule a sh:NodeShape ;
   sh:targetClass prec:PropertyRule ;
@@ -75,19 +122,40 @@ prefix : <http://bruy.at/prec/shape#>
     sh:path prec:propertyName ;
     sh:minCount 1 ; sh:maxCount 1 ;
     sh:nodeKind sh:Literal ; sh:datatype xsd:string ;
+    sh:name "PG property name" ;
+    sh:comment "The name of the property in the Property Graph"
   ] ;
   sh:property [
     sh:path prec:propertyIRI ;
     sh:minCount 1 ; sh:maxCount 1 ;
-    sh:nodeKind sh:IRI
+    sh:nodeKind sh:IRI ;
+    sh:name "RDF property IRI" ;
+    sh:comment "The IRI used in the destination RDF graph for this property name"
   ] ;
   sh:property [
     sh:path prec:nodeLabel ;
     sh:or (
       [ sh:in ( prec:any ) ]
       [ sh:nodeKind sh:Literal ; sh:datatype xsd:string ]
-    )
-  ] .
+    ) ;
+    sh:name "Target node label" ;
+    sh:comment "Restrict this rule to only the nodes with one of the specified labels."
+  ] ;
+  sh:property [
+    sh:path prec:edgeLabel ;
+    sh:or (
+      [ sh:in ( prec:any ) ]
+      [ sh:nodeKind sh:Literal ; sh:datatype xsd:string ]
+    ) ;
+    sh:name "Target edge label" ;
+    sh:comment "Restrict this rule to only the edges with one of the specified labels."
+  ]
+.
+
+prec:EdgeRule
+  rdfs:label "Edge Rule" ;
+  rdfs:comment "An edge rule: specifies how to transform an edge depending on its label" .
+
 
 :EdgeRule a sh:NodeShape ;
   sh:targetClass prec:EdgeRule ;
@@ -95,24 +163,56 @@ prefix : <http://bruy.at/prec/shape#>
   sh:property [
     sh:path prec:edgeLabel ;
     sh:minCount 1 ; sh:maxCount 1 ;
-    sh:nodeKind sh:Literal ; sh:datatype xsd:string
+    sh:nodeKind sh:Literal ; sh:datatype xsd:string ;
+    sh:name "PG edge label" ;
+    sh:description "Edge label targeted by the rule"
   ] ;
   sh:property [
     sh:path prec:edgeIRI ;
     sh:minCount 1 ; sh:maxCount 1 ;
-    sh:nodeKind sh:IRI
+    sh:nodeKind sh:IRI ;
+    sh:name "Edge label IRI" ;
+    sh:description "IRI that describes the edge label in RDF."
   ] ;
   sh:property [
     sh:path prec:sourceLabel ;
-    sh:nodeKind sh:Literal ; sh:datatype xsd:string
+    sh:nodeKind sh:Literal ; sh:datatype xsd:string ;
+    sh:name "Label of the source node" ;
+    sh:description "If specified, the rule only applies to edges whose source node has at least one of the specified labels"
   ] ;
   sh:property [
     sh:path prec:destinationLabel ;
-    sh:nodeKind sh:Literal ; sh:datatype xsd:string
+    sh:nodeKind sh:Literal ; sh:datatype xsd:string ;
+    sh:name "Label of the destination node" ;
+    sh:description "If specified, the rule only applies to edges whose destination node has at least one of the specified labels"
   ] .
 
 
 # ==== Template
+
+prec:Properties
+  rdfs:label "All properties" ;
+  rdfs:comment "A meta rule that targets all properties. Used to modify their default representation with prec:templatedBy." .
+
+prec:NodeProperties
+  rdfs:label "All node properties" ;
+  rdfs:comment "A meta rule that targets all node properties. Used to modify their default representation with prec:templatedBy. Has a higher priority then prec:Properties" .
+
+prec:EdgeProperties
+  rdfs:label "All edge properties" ;
+  rdfs:comment "A meta rule that targets all edge properties. Used to modify their default representation with prec:templatedBy. Has a higher priority then prec:Properties" .
+
+prec:MetaProperties
+  rdfs:label "All meta properties" ;
+  rdfs:comment "A meta rule that targets all meta properties. Used to modify their default representation with prec:templatedBy. Has a higher priority then prec:Properties" .
+
+prec:Edges
+  rdfs:label "All edges" ;
+  rdfs:comment "A meta rule that targets all edges. Used to modify their default representation with prec:templatedBy." .
+
+prec:NodeLabels
+  rdfs:label "All node labels" ;
+  rdfs:comment "A meta rule that targets all node labels. Used to modify their default representation with prec:templatedBy." .
 
 :TemplatedByGroups a sh:NodeShape ;
   sh:targetNode
@@ -127,7 +227,9 @@ prefix : <http://bruy.at/prec/shape#>
 :PathToTemplate a sh:PropertyShape ;
   sh:path prec:templatedBy ;
   sh:node :Template ;
-  sh:maxCount 1 .
+  sh:maxCount 1 ;
+  sh:name "Used template" ;
+  sh:description "The template used to represent the target of the rule in RDF" .
 
 # Only one value for templated by
 :TemplatedBy a sh:NodeShape ;
@@ -136,12 +238,16 @@ prefix : <http://bruy.at/prec/shape#>
     sh:path prec:templatedBy ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
-    sh:node :Template
+    sh:node :Template ;
+    sh:name "Used template" ;
+    sh:description "The template used to represent the target of the rule in RDF"
   ] ;
   sh:property [
     sh:path prec:templatedBy ;
     sh:maxCount 1
   ] .
+
+
 
 
 # ==== Template
@@ -155,15 +261,43 @@ prefix : <http://bruy.at/prec/shape#>
   sh:property [
     sh:path prec:composedOf ;
     # sh:nodeKind sh:TripleStar
-    sh:minCount 0
+    sh:minCount 0 ;
+    sh:name "Produced triple" ;
+    sh:description "A template triple that composes the template. Each triple template will produce a triple in the destination graph. IRIs in the pvar namespace will be mapped to terms that depends on the input PG."
   ] ;
   sh:property [
     sh:path prec:entityIs ;
-    sh:maxCount 1
+    sh:maxCount 1 ;
+    sh:name "Entity identity" ;
+    sh:description "Enables to explicit the identity of pvar:self / pvar:node / pvar:edge. It is used for edge properties and meta properties to bind them to the correct RDF entity. If not specified, PREC considers that pvar:edge"
   ]
 .
 
 # ==== Substitution term
+
+prec:SubstitutionTerm
+  rdfs:label "Substitution Term" ;
+  rdfs:comment
+  """
+  A substitution term is used to substitute some terms in a template with others.
+
+  Example of usage :
+  # prec:edgeIRI is a substitution term for pvar:edge
+  prec:edgeIRI a prec:SubstitutionTerm ;
+    prec:substitutionTarget pvar:edge .
+
+  # Use of prec:edgeIRI
+  :knowsrule a prec:EdgeRule ;
+    # prec:edgeIRI is a substitution term: if its target, pvar:edge
+    # is found in the used template, it will be replaced with the object
+    # of this triple: ex:knows.
+    prec:edgeIRI ex:knows ;
+    prec:templatedBy [ prec:composedOf << pvar:source pvar:edgeIRI pvar:destination >> ]
+
+  # :knowsrule and :knowsrules2 have the same semantic
+  :knowsrule a prec:EdgeRule ;
+    prec:templatedBy [ prec:composedOf << pvar:sourec ex:knows pvar:destination >> ] .
+  """ .
 
 :SubstitutionTerm a sh:NodeShape ;
   sh:targetClass prec:SubstitutionTerm ;
@@ -178,6 +312,10 @@ prefix : <http://bruy.at/prec/shape#>
 
 
 # ==== KeepProvenance / flagState
+
+:KeepProvenance
+  rdfs:label "Keep the PGO types in the RDF graph" ;
+  rdfs:comment "Subject for the configuration triples to tell if PGO types should be included in the produced graph" .
 
 :KeepProvenance a sh:NodeShape ;
   sh:targetNode prec:KeepProvenance ;
@@ -194,22 +332,27 @@ prefix : <http://bruy.at/prec/shape#>
 
 :MapBlankNodesToPrefix_nodeCentric a sh:NodeShape ;
   sh:targetNode pgo:Node, pgo:Edge, prec:PropertyKey ;
-  sh:property [
-    sh:path prec:mapBlankNodesToPrefix ;
-    sh:nodeKind sh:Literal ;
-    sh:maxCount 1
-  ] .
+  sh:property :PropertyMapBNToPrefix .
+
+:PropertyMapBNToPrefix
+  sh:path prec:mapBlankNodesToPrefix ;
+  sh:nodeKind sh:IRI ;
+  sh:maxCount 1 ;
+  sh:name "Prefix IRI of the generated elements" ;
+  sh:description
+    "Specifies a base IRI to use to map the source to an IRI. An element may be mapped to any IRI within the specified namespace, and no guarantee is given whetever the same element will be mapped to the same IRI on subsequent use of PREC. If not specified, the element will be mapped to blank nodes instead."
+.
 
 :MapBlankNodesToPrefix_predicateCentric a sh:NodeShape ;
   sh:targetSubjectsOf prec:mapBlankNodesToPrefix ;
-  sh:property [
-    sh:path prec:mapBlankNodesToPrefix ;
-    sh:nodeKind sh:IRI ;
-    sh:maxCount 1
-  ]
+  sh:property :PropertyMapBNToPrefix
 .
 
 # ==== PRSC
+
+prec:prsc_node
+  rdfs:label "PRSC node type" ;
+  rdfs:comment "A PRSC node type. All PG nodes that conforms to this type will be mapped to the fixed representation for this type." .
 
 :PrscNode a sh:NodeShape ;
   sh:targetClass prec:prsc_node ;
@@ -220,24 +363,37 @@ prefix : <http://bruy.at/prec/shape#>
   ] ;
   sh:property [
     sh:path prec:nodeLabel ;
-    sh:nodeKind sh:Literal ; sh:datatype xsd:string
+    sh:nodeKind sh:Literal ; sh:datatype xsd:string ;
+    sh:name "Required label of the node" ;
+    sh:description "A label required on the PG nodes to conform to this node type. "
   ] ;
   sh:property [
     sh:path prec:propertyName ;
-    sh:nodeKind sh:Literal ; sh:datatype xsd:string
+    sh:nodeKind sh:Literal ; sh:datatype xsd:string ;
+    sh:name "Required property of the node" ;
+    sh:description "A property required on the PG nodes to conform to this node type. "
   ] ;
   sh:property [
-    sh:path prec:composedOf
+    sh:path prec:composedOf ;
+    sh:name "Represented with" ;
+    sh:describes "A template triple that will be used to translate this node type into RDF"
   ] ;
   sh:node :PRSCTestable
 .
+
+
+prec:prsc_edge
+  rdfs:label "PRSC edge type" ;
+  rdfs:comment "A PRSC edge type. All PG edges that conforms to this type will be mapped to the fixed representation for this type." .
 
 :PrscEdge a sh:NodeShape ;
   sh:targetClass prec:prsc_edge ;
   sh:node :PRSCTestable ;
   sh:closed true ;
   sh:property [
-    sh:path prec:composedOf
+    sh:path prec:composedOf ;
+    sh:name "Represented with" ;
+    sh:describes "A template triple that will be used to translate this edge type into RDF"
   ] ;
   sh:property [
     sh:path rdf:type ;
@@ -245,11 +401,15 @@ prefix : <http://bruy.at/prec/shape#>
   ] ;
   sh:property [
     sh:path prec:edgeLabel ;
-    sh:nodeKind sh:Literal ; sh:datatype xsd:string
+    sh:nodeKind sh:Literal ; sh:datatype xsd:string ;
+    sh:name "Required label of the edge" ;
+    sh:description "A label required on the PG edges to conform to this edge type. "
   ] ;
   sh:property [
     sh:path prec:propertyName ;
-    sh:nodeKind sh:Literal ; sh:datatype xsd:string
+    sh:nodeKind sh:Literal ; sh:datatype xsd:string ;
+    sh:name "Required property of the edge" ;
+    sh:description "A property required on the PG edges to conform to this edge type. "
   ] ;
   sh:property [
     sh:path prec:prscSource ;
