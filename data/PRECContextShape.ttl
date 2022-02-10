@@ -376,7 +376,7 @@ prec:prsc_node
   sh:property [
     sh:path prec:composedOf ;
     sh:name "Represented with" ;
-    sh:describes "A template triple that will be used to translate this node type into RDF"
+    sh:description "A template triple that will be used to translate this node type into RDF"
   ] ;
   sh:node :PRSCTestable
 .
