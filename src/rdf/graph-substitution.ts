@@ -1,5 +1,5 @@
 import * as N3 from 'n3';
-import { BlankNode, Quad, Quad_Graph, Quad_Object, Quad_Predicate, Quad_Subject, Term } from '@rdfjs/types';
+import * as RDF from '@rdfjs/types';
 
 //! This file contains a (slow) graph substitution implementation. It is used for
 //! PREC unit tests
@@ -12,7 +12,7 @@ import { BlankNode, Quad, Quad_Graph, Quad_Object, Quad_Predicate, Quad_Subject,
  * nodes of the pattern graph to the terms of the other graph exists, in which
  * every blank node is mapped to a different term.
  */
-export function isSubstituableGraph(actualQuads: Quad[], pattern: Quad[]) {
+export function isSubstituableGraph(actualQuads: RDF.Quad[], pattern: RDF.Quad[]) {
   // Ensure that the blank nodes used in the two lists of quads are different
   let [rebuiltActualQuads, endNumber] = rebuildBlankNodes(actualQuads, 0);
   let [rebuiltPattern    , trueEnd  ] = rebuildBlankNodes(pattern    , endNumber);
@@ -34,7 +34,7 @@ export function isSubstituableGraph(actualQuads: Quad[], pattern: Quad[]) {
  * @param listOfQuads The list of quads
  * @param nextBlankNodeId The first number of blank node, default is 1
  */
-export function rebuildBlankNodes(listOfQuads: Quad[], nextBlankNodeId: number = 1): [Quad[], number] {
+export function rebuildBlankNodes(listOfQuads: RDF.Quad[], nextBlankNodeId: number = 1): [RDF.Quad[], number] {
   // Make the list of blank nodes in list of quads
   let newBlankNodes: {[newName: string]: string} = {};
   let oldBlankNodes: {[oldName: string]: string} = {};
@@ -85,10 +85,10 @@ export function rebuildBlankNodes(listOfQuads: Quad[], nextBlankNodeId: number =
 }
 
 /** Computes the list of blank nodes that composes the quad */
-export function findBlankNodes(quad: Term): Set<string> {
+export function findBlankNodes(quad: RDF.Term): Set<string> {
   let m = new Set<string>();
 
-  function read(term: Term) {
+  function read(term: RDF.Term) {
     if (term.termType === "Quad") {
       read(term.subject);
       read(term.predicate);
@@ -113,7 +113,7 @@ export function findBlankNodes(quad: Term): Set<string> {
  * @param term The term-star to explore
  * @returns True if the term is or contains a blank node
  */
-function hasBlankNode(term: Term): boolean {
+function hasBlankNode(term: RDF.Term): boolean {
   if (term.termType === "BlankNode") return true;
   if (term.termType !== "Quad") return false;
 
@@ -129,7 +129,7 @@ function hasBlankNode(term: Term): boolean {
  * @param term The term
  * @returns The term if it doesn't contain any blank node, null if it does.
  */
-function bNodeLess<T extends Term>(term: T): T | null {
+function bNodeLess<T extends RDF.Term>(term: T): T | null {
   return hasBlankNode(term) ? null : term;
 }
 
@@ -142,7 +142,7 @@ class BlankNodeExplorer {
 
   /** Next node to explore */ i = 0;
   blankNodesDetails: Details;
-  blankNodes: BlankNode[];
+  blankNodes: RDF.BlankNode[];
 
 
   /**
@@ -158,9 +158,9 @@ class BlankNodeExplorer {
    * numbered blank node + 1. Only blank nodes in this range will be
    * substitued.
    */
-  constructor(patternQuads: Quad[], range: [number, number]) {
+  constructor(patternQuads: RDF.Quad[], range: [number, number]) {
     let scores: {[name: string]: number} = {}; // Blank node name -> number of non nested occurrences
-    let values: BlankNode[] = [];              // The list of blank nodes
+    let values: RDF.BlankNode[] = [];          // The list of blank nodes
 
     const patternStore = new N3.Store(patternQuads);
 
@@ -202,7 +202,7 @@ class BlankNodeExplorer {
     return !store.getQuads(null, null, null, null).every(quad => hasBlankNode(quad));
   }
 
-  nextListOfSubstitution(target: N3.Store): [BlankNode, Term[]] {
+  nextListOfSubstitution(target: N3.Store): [RDF.BlankNode, RDF.Term[]] {
     const blankNode = this.blankNodes[this.i];
     const [subject, predicate, object, graph, filter, finder] = this.blankNodesDetails[blankNode.value];
   
@@ -230,7 +230,7 @@ class BlankNodeExplorer {
    */
   forEachPossibleSubstitution(
     actualStore: N3.Store,
-    substituableChecker: (source: BlankNode, target: Term) => boolean
+    substituableChecker: (source: RDF.BlankNode, target: RDF.Term) => boolean
   ) {
     // Find a list of candidates
     const [blankNode, listOfSubstitutions] = this.nextListOfSubstitution(actualStore);
@@ -258,12 +258,12 @@ class BlankNodeExplorer {
 type Details = {[blankNodeName: string]: Detail};
 
 type Detail = [
-  Quad_Subject | null,
-  Quad_Predicate | null,
-  Quad_Object | null,
-  Quad_Graph | null,
-  (quad: Quad) => boolean,
-  (quad: Quad) => Term
+  RDF.Quad_Subject | null,
+  RDF.Quad_Predicate | null,
+  RDF.Quad_Object | null,
+  RDF.Quad_Graph | null,
+  (quad: RDF.Quad) => boolean,
+  (quad: RDF.Quad) => RDF.Term
 ];
 
 
@@ -298,7 +298,7 @@ function makeDetails(store: N3.Store): Details {
 }
 
 function makeDetail_exploreNewQuad(
-  details: Details, quad: Quad,
+  details: Details, quad: RDF.Quad,
   where: 'subject' | 'predicate' | 'object' | 'graph'
 ) {
   if (quad[where].termType === "Quad") {
@@ -326,13 +326,13 @@ function makeDetail_exploreNewQuad(
 
 function mergeIntoDetails(
   details: Details,
-  term: Term,
-  s: Quad_Subject | null,
-  p: Quad_Predicate | null,
-  o: Quad_Object | null,
-  g: Quad_Graph | null,
-  zzz: (quad: Quad) => Term,
-  conditions: ((quad: Quad) => boolean)[]
+  term: RDF.Term,
+  s: RDF.Quad_Subject | null,
+  p: RDF.Quad_Predicate | null,
+  o: RDF.Quad_Object | null,
+  g: RDF.Quad_Graph | null,
+  zzz: (quad: RDF.Quad) => RDF.Term,
+  conditions: ((quad: RDF.Quad) => boolean)[]
 ) {
   if (term.termType === "BlankNode") {
     if (details[term.value] === undefined) {
@@ -343,12 +343,11 @@ function mergeIntoDetails(
       ];
     }
   } else if (term.termType === "Quad") {
-    for (const tt of ["subject", "predicate", "object", "graph"]) {
+    for (const tt of ["subject", "predicate", "object", "graph"] as const) {
       const copy = [...conditions];
 
-      for (const tt_ of ["subject", "predicate", "object", "graph"]) {
+      for (const tt_ of ["subject", "predicate", "object", "graph"] as const) {
         if (tt != tt_) {
-          // @ts-ignore
           const bl = bNodeLess(term[tt_]);
           // @ts-ignore
           copy.push(quad => bl === null || zzz(quad)[tt_].equals(bl));
@@ -357,7 +356,6 @@ function mergeIntoDetails(
 
       mergeIntoDetails(
         details,
-        // @ts-ignore
         term[tt],
         s, p, o, g,
         // @ts-ignore
@@ -369,34 +367,29 @@ function mergeIntoDetails(
 }
 
 /** Replace the components of the quad equals to source with destination */
-function deepSubstituteOneQuad(quad: Quad, source: Term, destination: Term): Quad {
-  function r(term: Term): Term {
+function deepSubstituteOneQuad(quad: RDF.BaseQuad, source: RDF.Term, destination: RDF.Term): RDF.Quad {
+  function r(term: RDF.Term): RDF.Term {
     if (source.equals(term)) {
       return destination;
     } else if (term.termType === "Quad") {
-      return deepSubstituteOneQuad(term as Quad, source, destination);
+      return deepSubstituteOneQuad(term, source, destination);
     } else {
       return term;
     }
   }
 
-  return N3.DataFactory.quad(
-    r(quad.subject) as Quad_Subject,
-    r(quad.predicate) as Quad_Predicate,
-    r(quad.object) as Quad_Object,
-    r(quad.graph) as Quad_Graph
-  );
+  return remapQuad(quad, r);
 }
 
 /**
  * Build a new list of quads for which the quads in listOfQuads have the member
  * equals to source replaced with destination
  */
-function deepSubstitute(listOfQuads: Quad[], source: Term, destination: Term): Quad[] {
+function deepSubstitute(listOfQuads: RDF.Quad[], source: RDF.Term, destination: RDF.Term): RDF.Quad[] {
   return listOfQuads.map(quad => deepSubstituteOneQuad(quad, source, destination));
 }
 
-function _isSubstituableGraph(actualQuads: Quad[], pattern: Quad[], blankNodeExplorer: BlankNodeExplorer): boolean {
+function _isSubstituableGraph(actualQuads: RDF.Quad[], pattern: RDF.Quad[], blankNodeExplorer: BlankNodeExplorer): boolean {
   // 1) Transform the list of quads into N3 stores
   const actualStore = new N3.Store(actualQuads);
   const patternStore = new N3.Store(pattern);
@@ -447,15 +440,10 @@ function _isSubstituableGraph(actualQuads: Quad[], pattern: Quad[], blankNodeExp
  * @returns A quad for which every blank node is remapped to a new blank node
  * according to mapping
  */
-function _renameBlankNodesOfQuad(quad: Quad, mapping: {[oldName: string]: string}): Quad {
-  function renameBlankNodesOfTerm(term: Term): Term {
+function _renameBlankNodesOfQuad(quad: RDF.Quad, mapping: {[oldName: string]: string}): RDF.Quad {
+  function renameBlankNodesOfTerm(term: RDF.Term): RDF.Term {
     if (term.termType === "Quad") {
-      return N3.DataFactory.quad(
-        renameBlankNodesOfTerm(term.subject) as Quad_Subject,
-        renameBlankNodesOfTerm(term.predicate) as Quad_Predicate,
-        renameBlankNodesOfTerm(term.object) as Quad_Object,
-        renameBlankNodesOfTerm(term.graph) as Quad_Graph
-      );
+      return remapQuad(term, renameBlankNodesOfTerm);
     } else if (term.termType === "BlankNode") {
       return N3.DataFactory.blankNode(mapping[term.value]);
     } else {
@@ -463,7 +451,14 @@ function _renameBlankNodesOfQuad(quad: Quad, mapping: {[oldName: string]: string
     }
   }
 
-  return renameBlankNodesOfTerm(quad) as Quad;
+  return renameBlankNodesOfTerm(quad) as RDF.Quad;
 }
 
-
+function remapQuad(quad: RDF.BaseQuad, mapper: (term: RDF.Term) => RDF.Term): RDF.Quad {
+  return N3.DataFactory.quad(
+    mapper(quad.subject) as RDF.Quad_Subject,
+    mapper(quad.predicate) as RDF.Quad_Predicate,
+    mapper(quad.object) as RDF.Quad_Object,
+    mapper(quad.graph) as RDF.Quad_Graph
+  );
+}

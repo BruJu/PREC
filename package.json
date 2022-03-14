@@ -36,7 +36,6 @@
         "@rdfjs/namespace": "^1.1.0",
         "@rdfjs/term-map": "^1.1.0",
         "@rdfjs/term-set": "^1.1.0",
-        "@rdfjs/types": "^1.0.1",
         "@types/gremlin": "^3.4.6",
         "commander": "^8.1.0",
         "gremlin": "^3.4.10",
@@ -46,6 +45,7 @@
         "rdf-string": "^1.6.0"
     },
     "devDependencies": {
+        "@rdfjs/types": "^1.1.0",
         "@types/mocha": "^9.0.0",
         "@types/n3": "^1.10.3",
         "@types/rdfjs__namespace": "^1.1.5",
