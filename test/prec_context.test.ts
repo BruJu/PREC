@@ -1,8 +1,7 @@
 import * as utility from "./utility";
+import { checkOutput } from "./utility";
 import * as graphBuilder from '../src/prec/graph-builder';
 import graphReducer from "../src/prec/graph-reducer";
-import assert from 'assert';
-import { isomorphic } from "rdf-isomorphic";
 import { PropertyGraph } from "./mock-pg/pg-implem";
 
 function runATest_(
@@ -17,12 +16,7 @@ function runATest_(
     graphReducer(store, context);
 
     const expectedStore = utility.turtleToDStar(expected);
-    const r = isomorphic(store.getQuads(), expectedStore.getQuads());
-    let msg = ""
-    if (!r) {
-      msg = utility.generateMessage(dict[graphName], dict[contextName], store, expectedStore);
-    }
-    assert.ok(r, msg);
+    checkOutput(dict[graphName], dict[contextName], store, expectedStore);
   });
 }
 
@@ -33,13 +27,7 @@ function test(name: string, source: string, context: string, expected: string) {
     graphReducer(store, ctx);
 
     const expectedStore = utility.turtleToDStar(expected);
-    const r = isomorphic(store.getQuads(), expectedStore.getQuads());
-    let msg = "";
-    if (!r) {
-      msg = utility.generateMessage(source, context, store, expectedStore);
-    }
-    
-    assert.ok(r, msg);
+    checkOutput(source, context, store, expectedStore);
   });
 }
 
@@ -51,13 +39,7 @@ function testFromMockPG(name: string, source: PropertyGraph, context: string, ex
     graphReducer(store, ctx);
 
     const expectedStore = utility.turtleToDStar(expected);
-    const r = isomorphic(store.getQuads(), expectedStore.getQuads());
-    let msg = "";
-    if (!r) {
-      msg = utility.generateMessage("", context, store, expectedStore);
-    }
-
-    assert.ok(r, msg);
+    checkOutput("", context, store, expectedStore);
   });
 }
 

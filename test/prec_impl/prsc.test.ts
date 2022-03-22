@@ -1,10 +1,9 @@
 import { PropertyGraph, PGBuild } from "../mock-pg/pg-implem";
 import { fromTinkerPop } from '../../src/prec/graph-builder';
-import { turtleToQuads, turtleToDStar, generateMessage } from "../utility";
+import { turtleToQuads, turtleToDStar, checkOutput } from "../utility";
 import graphReducer from "../../src/prec/graph-reducer";
 import assert from 'assert';
 import { revertPrecC } from "../../src/prsc/PrscContext";
-import { isomorphic } from "rdf-isomorphic";
 
 enum RevertableType {
   ShouldThrow,
@@ -24,23 +23,11 @@ function test(
     graphReducer(store, ctx);
 
     const expectedStore = turtleToDStar(expected);
-    const r = isomorphic(store.getQuads(), expectedStore.getQuads());
-    let msg = "";
-    if (!r) {
-      msg = generateMessage("", context, store, expectedStore);
-    }
-
-    assert.ok(r, msg);
+    checkOutput("", context, store, expectedStore);
 
     if (revertable === true) {
       const o = revertPrecC(expectedStore, ctx);
-
-      const iso = isomorphic(o.dataset.getQuads(), cleanSource.getQuads());
-      let msg = "";
-      if (!iso) {
-        msg = generateMessage("PRSC reversiblity", context, o.dataset, cleanSource);
-      }
-      assert.ok(iso, msg);
+      checkOutput("PRSC reversiblity", context, o.dataset, cleanSource);
     } else if (revertable === RevertableType.ShouldThrow
       || revertable === RevertableType.ShouldThrowForNow) {
       assert.throws(() => revertPrecC(expectedStore, ctx));

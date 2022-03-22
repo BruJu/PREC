@@ -1,9 +1,10 @@
-import { Quad } from '@rdfjs/types';
+import * as RDF from '@rdfjs/types';
 import { Parser } from 'n3';
 import DStar from '../src/dataset/index';
-import { badToString, approximateIsomorphism } from '../src/rdf/utils';
+import checkIsomorphism, { quadsToString } from "@bruju/rdf-test-util";
+import assert from "assert";
 
-function readQuads(turtleContent: string): Quad[] {
+function readQuads(turtleContent: string): RDF.Quad[] {
   const prefixes =
   `
     @prefix     : <http://test/>                                .
@@ -31,43 +32,28 @@ export function turtleToDStar(content: string) {
   return new DStar(readQuads(content));
 }
 
-export function toStringWithDiffColor(quads1: Quad[], quads2: Quad[], indent: number = 8) {
-  function toStringWithColor(quads: Quad[], match: (number | undefined)[], indent: number) {
-    let asString = badToString(quads, indent).split(/\r?\n/);
+export function checkOutput(
+  input: DStar | string,
+  context: RDF.Quad[] | string,
+  output: RDF.Quad[] | RDF.DatasetCore,
+  expected: RDF.Quad[] | RDF.DatasetCore
+) {
+  if (!Array.isArray(output)) output = [...output];
+  if (!Array.isArray(expected)) expected = [...expected];
 
-    for (let i = 0 ; i != quads.length ; ++i) {
-      if (match[i] === undefined) continue;
+  const isoResult = checkIsomorphism(output, expected);
 
-      if (match[i]! >= 0) asString[i] = "\x1b[36m" + asString[i] + "\x1b[0m";
-    }
-  
-    return asString.join("\n");
+  let msg = "";
+  if (isoResult.areIsomorphic === false) {
+    msg = '\x1b[0m' + "• Base Graph:";
+    msg += '\n' + (typeof input === 'string' ? input : quadsToString(input.getQuads()).join("\n"));
+    msg += '\n' + "• Context:";
+    msg += '\n' + (typeof context === 'string' ? context : quadsToString(context).join("\n"));
+    msg += '\n' + `• Result (${isoResult.output.size} quads):`;
+    msg += '\n' + isoResult.output.text;
+    msg += '\n' + `• Expected (${isoResult.expected.size} quads):`;
+    msg += '\n' + isoResult.expected.text;
   }
 
-  let [s1, s2] = approximateIsomorphism(quads1, quads2)
-  return [
-    toStringWithColor(quads1, s1, indent),
-    toStringWithColor(quads2, s2, indent)
-  ];
+  assert.ok(isoResult.areIsomorphic, msg);
 }
-
-export function generateMessage(
-  input: DStar | string,
-  context: Quad[] | string,
-  output: DStar,
-  expected: DStar
-) {
-  let msg = '\x1b[0m' + "• Base Graph:";
-  msg += '\n' + (typeof input === 'string' ? input : badToString(input.getQuads(), 2));
-  msg += '\n' + "• Context:";
-  msg += '\n' + (typeof context === 'string' ? context : badToString(context, 2));
-
-  const [r, e] = toStringWithDiffColor(output.getQuads(), expected.getQuads(), 2);
-
-  msg += '\n' + `• Result (${output.size} quads):`;
-  msg += '\n' + r;
-  msg += '\n' + `• Expected (${expected.size} quads):`;
-  msg += '\n' + e;
-  return msg;
-}
-

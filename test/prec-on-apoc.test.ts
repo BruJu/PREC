@@ -3,16 +3,15 @@ import * as N3 from 'n3';
 import path from 'path';
 
 import { apocToRDF, stringToApocDocuments } from '../prec';
-import { isSubstituableGraph } from '../src/rdf/graph-substitution';
 import assert from 'assert';
 import { filenameToArrayOfQuads } from '../src/rdf/parsing';
 
-import { badToString } from '../src/rdf/utils';
 import { Quad, Quad_Graph, Quad_Predicate, Quad_Subject, Term } from 'rdf-js';
 
 const testFolder = './test/prec/';
 
 import { rdf, prec, $quad, $literal, $defaultGraph } from '../src/PRECNamespace';
+import checkIsomorphism from '@bruju/rdf-test-util';
 
 function get(store: N3.Store, subject: Quad_Subject, predicate: Quad_Predicate) {
   const quads = store.getQuads(subject, predicate, null, N3.DataFactory.defaultGraph());
@@ -117,14 +116,6 @@ function checkIfcorrectOutput(graphContent: string, context: Quad[], expected: N
   const apocDocuments = stringToApocDocuments(graphContent);
   const result = apocToRDF(apocDocuments, context);
 
-  const r = isSubstituableGraph(result.getQuads(), expected.getQuads(null, null, null, null));
-
-  if (!r) {
-    console.error("• Result:");
-    console.error(badToString(result.getQuads(), 7));
-    console.error("• Expected:");
-    console.error(badToString(expected.getQuads(null, null, null, null), 8));
-  }
-
-  assert.ok(r);
+  const isoResult = checkIsomorphism([...result], [...expected]);
+  assert.ok(isoResult.areIsomorphic, isoResult.text);
 }

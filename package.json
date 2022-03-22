@@ -45,6 +45,7 @@
         "rdf-string": "^1.6.0"
     },
     "devDependencies": {
+        "@bruju/rdf-test-util": "^1.0.1",
         "@rdfjs/types": "^1.1.0",
         "@types/mocha": "^9.0.0",
         "@types/n3": "^1.10.3",
