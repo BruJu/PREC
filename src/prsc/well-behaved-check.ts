@@ -6,7 +6,7 @@ import { characterizeTemplateTriple, haveSameStrings, PRSCSchema } from './PrscC
 import { PRSCRule, findSignatureOfRules } from './PrscRule';
 import { precValueOf, pvarDestination, pvarEdge, pvarNode, pvarSelf, pvarSource } from "../PRECNamespace";
 import * as QuadStar from '../rdf/quad-star';
-import { findBlankNodes } from '../../build/src/rdf/graph-substitution';
+import { findBlankNodes } from '@bruju/rdf-test-util/dist/src/graph-substitution';
 
 
 /** A violation for a Well Behaved Context */
