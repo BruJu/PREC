@@ -6,15 +6,16 @@ PREC enables to convert PG into RDF. Unlike other tools, PREC enables the user t
 ## Quick example
 
 
-<table>
+### Example 1
 
-<tr>
-<td>
+Let us consider that we have the following property graph:
+
 <img src="docs/img/annlikesdan.svg" />
-</td>
 
-<td>
+PREC enables to convert the PG depending of a mapping.
 
+For example, by using this mapping:
+            
 ```ttl
 PREFIX prec: <http://bruy.at/prec#>
 PREFIX pvar: <http://bruy.at/prec-trans#>
@@ -40,22 +41,9 @@ ex:LovesForm a prec:prsc_edge ;
     << pvar:edge ex:content_producer pvar:destination >> .
 ```
 
-</td>
-</tr>
-
-<tr>
-<td colspan="2">
-Produces the RDF graph:
+This RDF graph is produced:
 
 ```ttl
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
-@prefix pgo: <http://ii.uwb.edu.pl/pgo#>.
-@prefix prec: <http://bruy.at/prec#>.
-@prefix nodeLabel: <http://www.example.org/vocab/node/label/>.
-@prefix nodeProperty: <http://www.example.org/vocab/node/property/>.
-@prefix edgeLabel: <http://www.example.org/vocab/edge/label/>.
-@prefix edgeProperty: <http://www.example.org/vocab/edge/property/>.
 
 _:node9 <http://example.org/hasLabel> <http://example.org/person>;
     <http://example.org/name> "Ann".
@@ -64,20 +52,26 @@ _:node10 <http://example.org/hasLabel> <http://example.org/person>;
 _:edge12 a <http://example.org/Like>;
     <http://example.org/from> _:node9;
     <http://example.org/content_producer> _:node10.
+
 ```
 
-</td>
-</tr>
-<table>
+Note that the Ann node has been mapped to `_:node9`, the Dan node has been mapped to `_:node10` and the edge has been mapped to `_:edge12`.
 
-"Yeah but this is very verbose"
+Some users may consider that this mapping is not very interesting.
 
-<table>
-    <tr>
-        <td><img src="docs/img/annlikesdan.svg" /> </td>
-        <td>
 
-<pre>
+
+### Example 2: Less triples
+
+For the same PG
+
+
+<img src="docs/img/annlikesdan.svg" />
+
+We will use instead this property graph:
+
+
+```ttl
 PREFIX prec: <http://bruy.at/prec#>
 PREFIX pvar: <http://bruy.at/prec-trans#>
 PREFIX ex:   <http://example.org/>
@@ -95,35 +89,10 @@ ex:PersonForm a prec:prsc_node ;
 ex:LovesForm a prec:prsc_edge ;
   prec:edgeLabel "Likes" ;
   prec:composedOf
-    << pvar:source ex:likes pvar:destination >> ,
-    << << pvar:source ex:likes pvar:destination >> ex:producedBy prec: >> .
-</pre>
-        </td>
-
-
-
-    </tr>
-    <tr>
-        <td colspan="2">
-        
-```ttl
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
-@prefix pgo: <http://ii.uwb.edu.pl/pgo#>.
-@prefix prec: <http://bruy.at/prec#>.
-@prefix nodeLabel: <http://www.example.org/vocab/node/label/>.
-@prefix nodeProperty: <http://www.example.org/vocab/node/property/>.
-@prefix edgeLabel: <http://www.example.org/vocab/edge/label/>.
-@prefix edgeProperty: <http://www.example.org/vocab/edge/property/>.
-
-_:node9 a <http://example.org/Person>;
-    <http://example.org/name> "Ann";
-    <http://example.org/likes> _:node10.
-_:node10 a <http://example.org/Person>;
-    <http://example.org/name> "Dan".
-<<_:node9 <http://example.org/likes> _:node10>> <http://example.org/producedBy> <http://bruy.at/prec#>.
+    << pvar:source ex:likes pvar:destination >> .
 ```
 
-        </td>
-    </tr>
-</table>
+Note that 
+
+
+
