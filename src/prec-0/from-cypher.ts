@@ -6,11 +6,27 @@ import { isNode } from 'neo4j-driver-core';
 export type ActualRecord = QueryResult['records'][number];
 
 /**
- * 
+ * Return all the node and edges in the PG that can be accessed through the
+ * given driver.
  * @param driver The driver that has the connection to the Neo4j database
- * @returns All the node and edges
+ * @returns All the nodes and edges
  */
 export async function extractFromNeo4jProtocole(driver: Driver): Promise<{
+  nodes: IdentityTo<CypherNode>,
+  edges: IdentityTo<CypherEdge>
+}> {
+  return runNeo4jQuery(driver, 'match (src)-[edge]->(dest) return src, edge, dest;');
+}
+
+
+/**
+ * Run the given Cypher Query and return the list of all returned nodes and
+ * edges.
+ * @param driver The driver that holds the connection to the Neo4j database
+ * @param query The query to run
+ * @returns The list of nodes and edges
+ */
+export async function runNeo4jQuery(driver: Driver, query: string): Promise<{
   nodes: IdentityTo<CypherNode>,
   edges: IdentityTo<CypherEdge>
 }> {
@@ -38,7 +54,7 @@ export async function extractFromNeo4jProtocole(driver: Driver): Promise<{
   const session = driver.session();
 
   try {
-    const result = await session.run('match (src)-[edge]->(dest) return src, edge, dest;');
+    const result = await session.run(query);
 
     for (const singleRecord of result.records) {
       const length = singleRecord.length;
