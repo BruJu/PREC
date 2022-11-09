@@ -1,45 +1,56 @@
 
 import { IdentityTo, CypherNode, CypherEdge } from './PGDefinitions';
 import { Driver, QueryResult } from 'neo4j-driver'
+import { isNode } from 'neo4j-driver-core';
 
 export type ActualRecord = QueryResult['records'][number];
 
+/**
+ * 
+ * @param driver The driver that has the connection to the Neo4j database
+ * @returns All the node and edges
+ */
 export async function extractFromNeo4jProtocole(driver: Driver): Promise<{
-    nodes: IdentityTo<CypherNode>,
-    edges: IdentityTo<CypherEdge>
+  nodes: IdentityTo<CypherNode>,
+  edges: IdentityTo<CypherEdge>
 }> {
-    let result = {
-        nodes: {} as IdentityTo<CypherNode>,
-        edges: {} as IdentityTo<CypherEdge>
-    };
+  let result = {
+    nodes: {} as IdentityTo<CypherNode>,
+    edges: {} as IdentityTo<CypherEdge>
+  };
 
-    function addNode(record: ActualRecord) {
-        const jsElement = recordToNode(record);
-        result.nodes[jsElement.identity] = jsElement;
+  function addElement(record: ActualRecord & any) {
+    const id = record.identity.toNumber();
+
+    if (isNode(record)) {
+      if (result.nodes[id]) return;
+
+      const jsElement = recordToNode(record);
+      result.nodes[jsElement.identity] = jsElement;
+    } else {
+      if (result.edges[id]) return;
+
+      const jsElement = recordToEdge(record);
+      result.edges[jsElement.identity] = jsElement;
     }
+  }
 
-    function addEdge(record: ActualRecord) {
-        const jsElement = recordToEdge(record);
-        result.edges[jsElement.identity] = jsElement;
+  const session = driver.session();
+
+  try {
+    const result = await session.run('match (src)-[edge]->(dest) return src, edge, dest;');
+
+    for (const singleRecord of result.records) {
+      const length = singleRecord.length;
+      for (let i = 0; i != length; ++i) {
+        addElement(singleRecord.get(i));
+      }
     }
+  } finally {
+    await session.close();
+  }
 
-    const session = driver.session();
-
-    try {
-        const result = await session.run(
-            'match (src)-[edge]->(dest) return src, edge, dest;'
-        );
-
-        for (let singleRecord of result.records) {
-            addNode(singleRecord.get(0 /* "src"  */));
-            addEdge(singleRecord.get(1 /* "edge" */));
-            addNode(singleRecord.get(2 /* "dest" */));
-        };
-    } finally {
-        await session.close();
-    }
-
-    return result;
+  return result;
 }
 
 
@@ -60,7 +71,6 @@ export function recordToEdge(record: ActualRecord | any): CypherEdge {
     properties: transformProperties(record.properties)
   };
 }
-
 
 export function transformProperties(properties: {[key: string]: any}) {
   let result: (CypherNode['properties'] & CypherEdge['properties']) = {};
