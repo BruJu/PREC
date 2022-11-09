@@ -1,0 +1,40 @@
+PREFIX prec: <http://bruy.at/prec#>
+PREFIX pvar: <http://bruy.at/prec-trans#>
+PREFIX schema:   <https://schema.org/>
+PREFIX ex:   <http://www.example.org/>
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+prec:this_is a prec:prscContext .
+
+ex:Person a prec:prsc_node ;
+  prec:nodeLabel "Person" ;
+  prec:propertyName "givenname", "familyname", "age" ;
+  prec:composedOf
+    << pvar:node rdf:type schema:Person >> ,
+    << pvar:node schema:givenName  "givenname"^^prec:_valueOf  >> ,
+    << pvar:node schema:familyName "familyname"^^prec:_valueOf >> .
+
+ex:Company a prec:prsc_node ;
+  prec:nodeLabel "Company" ;
+  prec:propertyName "name" ;
+  prec:composedOf
+    << pvar:node rdf:type schema:Organization >> ,
+    << pvar:node schema:name "name"^^prec:_valueOf >> .
+
+ex:Married a prec:prsc_edge ;
+  prec:edgeLabel "Married" ;
+  prec:propertyName "since" ;
+  prec:composedOf
+    << pvar:source schema:spouse pvar:destination >> ,
+    << << pvar:source schema:spouse pvar:destination >>
+          schema:startDate "since"^^prec:_valueOf >> .
+
+ex:WorksAt a prec:prsc_edge ;
+  prec:edgeLabel "WorksAt" ;
+  prec:propertyName "since", "salary" ;
+  prec:composedOf
+    << pvar:destination schema:employee pvar:edge >> ,
+    << pvar:edge rdf:type schema:EmployeeRole >> ,
+    << pvar:edge schema:baseSalary "salary"^^prec:_valueOf >> ,
+    << pvar:edge schema:startDate  "since"^^prec:_valueOf >> ,
+    << pvar:edge schema:employee   pvar:source >> .

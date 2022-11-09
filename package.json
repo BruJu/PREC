@@ -28,6 +28,7 @@
     },
     "homepage": "https://github.com/BruJu/PREC#readme",
     "dependencies": {
+        "@bruju/pg-to-dot": "^1.0.0",
         "@bruju/wasm-tree": "^0.3.0",
         "@graphy/content.ttl.write": "^4.3.3",
         "@graphy/core.data.factory": "^4.3.3",
@@ -38,11 +39,15 @@
         "@rdfjs/term-set": "^1.1.0",
         "@types/gremlin": "^3.4.6",
         "commander": "^8.1.0",
+        "graphviz-wasm": "^3.0.0",
         "gremlin": "^3.4.10",
+        "misc-utils-of-mine-typescript": "^0.0.12",
         "n3": "^1.9.0",
         "neo4j-driver": "^4.3.3",
         "rdf-isomorphic": "^1.2.0",
-        "rdf-string": "^1.6.0"
+        "rdf-string": "^1.6.0",
+        "render-dot": "^0.0.7",
+        "viz.js": "^2.1.2"
     },
     "devDependencies": {
         "@bruju/rdf-test-util": "^1.0.1",

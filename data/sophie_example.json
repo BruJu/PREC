@@ -1,0 +1,5 @@
+{"type":"node","id":"1","labels":["Person"],"properties":{"givenname":"Sophie","familyname":"Dupont", "age":37}}
+{"type":"node","id":"2","labels":["Person"],"properties":{"givenname":"Michel","familyname":"Durant", "age":42}}
+{"type":"node","id":"3","labels":["Company"],"properties":{"name":"ACME Incorporation"}}
+{"id":"4","type":"relationship","label":"Married","start":{"id":"1"}, "end":{"id":"2"},"properties":{"since":"2010"}}
+{"id":"5","type":"relationship","label":"WorksAt","start":{"id":"1"},"end":{"id":"3"},"properties":{"since": "2007", "salary":"50000$"}}
