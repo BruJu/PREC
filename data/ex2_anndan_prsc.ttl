@@ -16,6 +16,4 @@ ex:PersonForm a prec:prsc_node ;
 
 ex:LovesForm a prec:prsc_edge ;
   prec:edgeLabel "Likes" ;
-  prec:prscSource      ex:PersonForm ;
-  prec:prscDestination ex:PersonForm ;
   prec:composedOf << pvar:source ex:loves pvar:destination >> .
