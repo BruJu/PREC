@@ -24,7 +24,7 @@ import {
   fromTinkerPop
 } from "./prec/graph-builder";
 
-import { extractFromNeo4jProtocole } from './prec-0/from-cypher';
+import { extractFromNeo4jProtocole, runNeo4jQuery } from './prec-0/from-cypher';
 import { getNodesOfType } from './rdf/path-travelling';
 import PseudoPGBuilder, { insertIntoGremlin, makeCypherQuery, PseudoPGEdge, PseudoPGNode } from './prec-0-1/proto-pg';
 import DStar from './dataset';
@@ -40,6 +40,7 @@ import gremlin from 'gremlin';
 import { Driver } from 'neo4j-driver';
 import DriverRemoteConnection = gremlin.driver.DriverRemoteConnection;
 import wellBehavedCheck from './prsc/well-behaved-check';
+import * as SparqlingCypher from './prsc/sparqling-cypher';
 
 
 export async function main() {
@@ -50,7 +51,7 @@ export async function main() {
     .description("Converts the Neo4j graph connected to the Cypher API to an RDF graph")
     .argument('<username>', 'The username (neo4j by default)')
     .argument('<password>', 'The password')
-    .argument('[uri]', 'The URI to the Neo4j instance', 'bolt://localhost:7687/neo4j')
+    .argument('[uri]', 'The URI to the Neo4j instance', 'neo4j://localhost:7687/neo4j')
     .option('-c, --context <context-path>', 'The path to the context')
     .action((username: string, password: string, uri: string, options: any) => {
       const auth = neo4j.auth.basic(username, password);
@@ -63,6 +64,51 @@ export async function main() {
       })
       .finally(async () => await driver.close());
     });
+
+  program.command('sparqlcypher')
+    .argument('<username>', 'The username (neo4j by default)')
+    .argument('<password>', 'The password')
+    .argument('[uri]', 'The URI to the Neo4j instance', 'neo4j://localhost:7687/neo4j')
+    .option('-q, --query <query-path>', 'The path to the SPARQL query')
+    .option('-c, --context <context-path>', 'The path to the context')
+    .action((username: string, password: string, uri: string, options: any) => {
+
+      if (options.query === udnefined) {
+        console.error("This command requires to specify a query file");
+        return;
+      }
+
+      if (options.context === undefined) {
+        console.error("This command requires to specify a context file");
+        return;
+      }
+
+
+      const auth = neo4j.auth.basic(username, password);
+      const driver = neo4j.driver(uri, auth);
+
+
+      const contextQuads = filenameToArrayOfQuads(options.context);
+      const queryQuads = filenameToArrayOfQuads(options.quad);      
+      const query = SparqlingCypher.buildQuery(contextQuads, queryQuads);
+
+      if (query === null) {
+        console.error("Bad query or context");;
+        return;
+      }
+
+      runNeo4jQuery(driver, query)
+      .then(result => {
+        let [dataset, prefixes] = neo4JProtocoleToStore(result.nodes, result.edges);
+        // 
+        graphReducer(dataset, contextQuads);
+        outputDStar(dataset, prefixes);
+        applyContextIfAnyAndPrint(dataset, prefixes, options.context);
+      })
+      .finally(async () => await driver.close());
+    });
+
+
 
   // ==== GREMLIN API
 
