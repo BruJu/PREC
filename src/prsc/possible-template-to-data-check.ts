@@ -4,20 +4,40 @@ import { prec, pvar } from '../PRECNamespace';
 
 /** A small TermMap backed by an array */
 export class SmallTermMap {
-  #pairs: { key: RDF.Term, value: RDF.Term }[] = [];
+  private pairs: { key: RDF.Term, value: RDF.Term }[] = [];
 
   tryAdd(key: RDF.Term, value: RDF.Term): boolean {
-    const it = this.#pairs.find(pair => pair.key.equals(key));
+    const it = this.pairs.find(pair => pair.key.equals(key));
     if (it === undefined) {
-      this.#pairs.push({ key, value });
+      this.pairs.push({ key, value });
       return true;
     } else {
       return it.value.equals(value);
     }
   }
+
+  get(key: RDF.Term): RDF.Term | undefined {
+    const it = this.pairs.find(pair => pair.key.equals(key));
+    return it !== undefined ? it.value : undefined;
+  }
 }
 
-function checkConsistency_(variablesState: SmallTermMap, template: RDF.Term, data: RDF.Term): boolean {
+/**
+ * Compute an affectation of the placeholders in the template triple by using
+ * the terms in the data triple.
+ * @param template The template triple
+ * @param data The data triple
+ * @returns An affectation of the placeholders (pvar and literal of datatype
+ * prec:valueOf) in the template triple with the terms in the data triple, or
+ * null if not possible.
+ */
+export function computeAffectation(template: RDF.Term, data: RDF.Term): SmallTermMap | null {
+  const variableValues = new SmallTermMap();
+  const r = computeAffectationInPlace(variableValues, template, data);
+  return r ? variableValues : null;
+}
+
+function computeAffectationInPlace(variablesState: SmallTermMap, template: RDF.Term, data: RDF.Term): boolean {
   if (template.termType === 'DefaultGraph') {
     // Data must be the default graph
     return template.equals(data);
@@ -58,18 +78,12 @@ function checkConsistency_(variablesState: SmallTermMap, template: RDF.Term, dat
     if (data.termType !== 'Quad') return false;
 
     // Consistent nested triples
-    return checkConsistency_(variablesState, template.subject, data.subject)
-      && checkConsistency_(variablesState, template.predicate, data.predicate)
-      && checkConsistency_(variablesState, template.object, data.object)
-      && checkConsistency_(variablesState, template.graph, data.graph);
+    return computeAffectationInPlace(variablesState, template.subject, data.subject)
+      && computeAffectationInPlace(variablesState, template.predicate, data.predicate)
+      && computeAffectationInPlace(variablesState, template.object, data.object)
+      && computeAffectationInPlace(variablesState, template.graph, data.graph);
   }
 
   // Template's termType is blankNode or variable -> both are invalid
   return false;
-}
-
-export function unifyTemplateWithData(template: RDF.Term, data: RDF.Term): SmallTermMap | null {
-  const variableValues = new SmallTermMap();
-  const r = checkConsistency_(variableValues, template, data);
-  return r ? variableValues : null;
 }

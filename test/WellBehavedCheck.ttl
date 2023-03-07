@@ -311,7 +311,7 @@ GRAPH this:animal_context {
     prec:no_value_loss true .
 }
 
-GRAPH this:ok_monoedge {
+GRAPH this:ok_edgeuniqueedge {
   this:all prec:well_behaved true .
 
   ex:human a prec:prsc_node ;
@@ -321,7 +321,7 @@ GRAPH this:ok_monoedge {
     prec:composedOf << pvar:source ex:knows pvar:destination >> .
 }
 
-GRAPH this:bad_monoedge {
+GRAPH this:bad_edgeuniqueedge {
   this:all prec:well_behaved false .
 
   ex:philosoph a prec:prsc_node ;
@@ -331,7 +331,7 @@ GRAPH this:bad_monoedge {
     prec:composedOf << pvar:source ex:knows pvar:destination >> .
 }
 
-GRAPH this:bad_monoedges {
+GRAPH this:bad_edgeuniqueedges {
   this:all prec:well_behaved false .
 
   ex:human a prec:prsc_node ;
@@ -346,7 +346,7 @@ GRAPH this:bad_monoedges {
     prec:composedOf << pvar:source ex:knows pvar:destination >> .
 }
 
-GRAPH this:good_monoedges {
+GRAPH this:good_edgeuniqueedges {
   this:all prec:well_behaved true .
 
   ex:human a prec:prsc_node ;

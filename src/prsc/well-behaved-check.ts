@@ -2,7 +2,7 @@ import TermMap from '@rdfjs/term-map';
 import TermSet from "@rdfjs/term-set";
 import * as RDF from "@rdfjs/types";
 import * as RDFString from 'rdf-string';
-import { characterizeTemplateTriple, haveSameStrings, PRSCSchema } from './PrscContext';
+import { characterizeTemplateTriple, haveSameStrings, PRSCContext } from './PrscContext';
 import { PRSCRule, findSignatureOfRules } from './PrscRule';
 import { precValueOf, pvarDestination, pvarEdge, pvarNode, pvarSelf, pvarSource } from "../PRECNamespace";
 import * as QuadStar from '../rdf/quad-star';
@@ -10,15 +10,12 @@ import { findBlankNodes } from '@bruju/rdf-test-util/dist/src/graph-substitution
 
 
 /** A violation for a Well Behaved Context */
-export type WellBehavedViolation = {
-  rule: PRSCRule,
-  reason: string
-};
+export type WellBehavedViolation = { rule: PRSCRule, reason: string };
 
 /**
  * Answer for `elementIdentification`
  */
-export enum ElementIdentificationAnswer { FullyIdentifiable, MonoEdge, No }
+export enum ElementIdentificationAnswer { FullyIdentifiable, EdgeUnique, No }
 
 /**
  * Checks if pvar:self is in all triples of the template
@@ -31,24 +28,22 @@ export function elementIdentification(rule: PRSCRule): ElementIdentificationAnsw
   // The template must contain no blank node: as pvar:self will be mapped to blank node,
   // if a blank node is produced by another source, we can not identify every
   // blank node as a PG element trivially.
-  const hasABlankNode = undefined !== rule.template.find(templateTriple => findBlankNodes(templateTriple).size !== 0);
+  const hasABlankNode = rule.template.some(templateTriple => findBlankNodes(templateTriple).size !== 0);
   if (hasABlankNode) {
     return ElementIdentificationAnswer.No;
   }
 
-  const isFull = undefined === rule.template.find(templateTriple =>
-    !(QuadStar.containsTerm(templateTriple, pvarSelf)
-    || QuadStar.containsTerm(templateTriple, other))
+  const isFull = rule.template.every(templateTriple =>
+    QuadStar.containsOneOfTerm(templateTriple, pvarSelf, other)
   );
 
   if (isFull) return ElementIdentificationAnswer.FullyIdentifiable;
 
   if (rule.kind === 'edge') {
-    const areAllPartial = undefined === rule.template.find(templateTriple =>
-      !(QuadStar.containsTerm(templateTriple, pvarSource)
-      && QuadStar.containsTerm(templateTriple, pvarDestination))
+    const areAllPartial = rule.template.every(templateTriple =>
+      QuadStar.containsAllTerms(templateTriple, pvarSource, pvarDestination)
     );
-    if (areAllPartial) return ElementIdentificationAnswer.MonoEdge;
+    if (areAllPartial) return ElementIdentificationAnswer.EdgeUnique;
   }
 
   return ElementIdentificationAnswer.No;
@@ -60,7 +55,7 @@ export function elementIdentification(rule: PRSCRule): ElementIdentificationAnsw
  * @param rules List of rules 
  * @returns The list of rules that do not have a signature template
  */
-export function signatureTriple(rules: PRSCRule[]): PRSCRule[] {
+export function filterRulesWithoutSignature(rules: PRSCRule[]): PRSCRule[] {
   // 1) Find which rules have a signature
   const signatures = findSignatureOfRules(rules);
 
@@ -75,7 +70,7 @@ export function signatureTriple(rules: PRSCRule[]): PRSCRule[] {
   return rules.filter(rule => !withSignature.has(rule.identity));
 }
 
-enum SpecialArg { Source, Destination }
+enum NodePlaceholder { Source, Destination }
 
 /**
  * Checks if no value can be lost during the PG to RDF conversion
@@ -83,47 +78,46 @@ enum SpecialArg { Source, Destination }
  * @returns True if no value can be lost during the PG to RDF conversion
  */
 export function noValueLoss(rule: PRSCRule): boolean {
-  let m = new TermMap<RDF.Quad, null | { quad: RDF.Quad, values: (string | SpecialArg)[] }>();
+  const kappaToTriple = new TermMap<RDF.Quad, RDF.Quad | null>();
 
   for (const templateTriple of rule.template) {
+    const kappaValue = characterizeTemplateTriple(templateTriple);
+
+    if (kappaToTriple.has(kappaValue)) {
+      kappaToTriple.set(kappaValue, null);
+    } else {
+      kappaToTriple.set(kappaValue, templateTriple);
+    }
+  }
+
+  let foundValues = { src: false, dest: false, labels: new Set<string>() };
+
+  for (const templateTriple of kappaToTriple.values()) {
+    if (templateTriple === null) continue;
+
     const args = extractArgs(templateTriple);
 
-    if (args.length !== 0) {
-      const characterized = characterizeTemplateTriple(templateTriple);
-      const mappedTo = m.get(characterized);
-      if (mappedTo === undefined) {
-        m.set(characterized, { quad: templateTriple, values: args });
-      } else if (mappedTo !== null) {
-        m.set(characterized, null);
+    for (const arg of args) {
+      if (arg === NodePlaceholder.Source) {
+        foundValues.src = true;
+      } else if (arg === NodePlaceholder.Destination) {
+        foundValues.dest = true;
+      } else {
+        foundValues.labels.add(arg);
       }
     }
   }
 
-  let foundSrc = false;
-  let foundDest = false;
-  let foundPropertyValues = new Set<string>();
-
-  for (const uniqueProperties of m.values()) {
-    if (uniqueProperties === null) continue;
-
-    const { values } = uniqueProperties;
-    for (const value of values) {
-      if (value === SpecialArg.Source) foundSrc = true;
-      else if (value === SpecialArg.Destination) foundDest = true;
-      else foundPropertyValues.add(value);
-    }
-  }
-
-  if (foundSrc !== foundDest) return false;
-  if (foundSrc !== (rule.kind === 'edge')) return false;
-  if (!haveSameStrings([...foundPropertyValues], rule.properties)) return false;
+  const isEdge = rule.kind === "edge";
+  if (foundValues.src !== isEdge || foundValues.dest !== isEdge) return false;
+  if (!haveSameStrings([...foundValues.labels], rule.properties)) return false;
   return true;
 }
 
 
 /** Extract the list of placeholders in the template triple */
-function extractArgs(templateTriple: RDF.Quad): (string | SpecialArg)[] {
-  let result: (string | SpecialArg)[] = [];
+function extractArgs(templateTriple: RDF.Quad): (string | NodePlaceholder)[] {
+  let result: (string | NodePlaceholder)[] = [];
 
   function visit(term: RDF.Term) {
     if (term.termType === 'Quad') {
@@ -132,8 +126,8 @@ function extractArgs(templateTriple: RDF.Quad): (string | SpecialArg)[] {
       visit(term.object);
       visit(term.graph);
     } else if (term.termType === 'NamedNode') {
-      if (term.equals(pvarSource)) result.push(SpecialArg.Source);
-      if (term.equals(pvarDestination)) result.push(SpecialArg.Destination);
+      if (term.equals(pvarSource)) result.push(NodePlaceholder.Source);
+      if (term.equals(pvarDestination)) result.push(NodePlaceholder.Destination);
     } else if (term.termType === 'Literal') {
       if (term.datatype.equals(precValueOf)) {
         result.push(term.value);
@@ -146,32 +140,37 @@ function extractArgs(templateTriple: RDF.Quad): (string | SpecialArg)[] {
   return result;
 }
 
-type MonoEdgeViolation = {
-  monoedge: PRSCRule;
+type EdgeUniqueViolation = {
+  edgeUnique: PRSCRule;
   clashingRules: PRSCRule[];
 };
 
-function findMonoedgeViolations(monoedges: PRSCRule[], all: PRSCRule[]): MonoEdgeViolation[] {
-  const detecter = new MonoEdgeViolationDetector();
+function findEdgeUniqueViolations(edgeUniqueRules: PRSCRule[], all: PRSCRule[]): EdgeUniqueViolation[] {
+  const detecter = new EdgeUniqueViolationDetector();
 
-  monoedges.forEach(monoedge => detecter.addSignature(monoedge));
+  for (const edgeUniqueRule of edgeUniqueRules) {
+    detecter.addSignature(edgeUniqueRule);
+  }
 
-  all.filter(rule => !monoedges.includes(rule))
-    .forEach(rule => detecter.addOtherRule(rule));
+  for (const rule of all) {
+    if (!edgeUniqueRules.includes(rule)) {
+      detecter.addOtherRule(rule);
+    }
+  }
 
   return detecter.getViolations();
 }
 
-class MonoEdgeViolationDetector {
-  #signatureOfMonoedge = new TermMap<RDF.Quad, PRSCRule[]>();
-  #detectedViolations = new TermMap<RDF.Term, MonoEdgeViolation>();
+class EdgeUniqueViolationDetector {
+  private signatureOfEdgeUniqueType = new TermMap<RDF.Quad, PRSCRule[]>();
+  private detectedViolations = new TermMap<RDF.Term, EdgeUniqueViolation>();
 
-  /** Adds the fact that the given monoedge rule is violated by the clasher */
-  #addViolation(monoedgeRule: PRSCRule, clasher: PRSCRule) {
-    let violationList = this.#detectedViolations.get(monoedgeRule.identity);
+  /** Adds the fact that the given edgeUnique rule is violated by the clasher */
+  private addViolation(edgeUniqueRule: PRSCRule, clasher: PRSCRule) {
+    let violationList = this.detectedViolations.get(edgeUniqueRule.identity);
     if (violationList === undefined) {
-      violationList = { monoedge: monoedgeRule, clashingRules: [] };
-      this.#detectedViolations.set(monoedgeRule.identity, violationList);
+      violationList = { edgeUnique: edgeUniqueRule, clashingRules: [] };
+      this.detectedViolations.set(edgeUniqueRule.identity, violationList);
     }
 
     if (!violationList.clashingRules.includes(clasher)) {
@@ -179,25 +178,25 @@ class MonoEdgeViolationDetector {
     }
   }
 
-  /** Consider that every template triple of monoedge must be signature */
-  addSignature(monoEdge: PRSCRule) {
+  /** Consider that every template triple of edgeUnique must be signature */
+  addSignature(edgeUnique: PRSCRule) {
     const alreadyClashesWith = new TermSet<RDF.Term>();
 
-    monoEdge.template.forEach(templateTriple => {
+    edgeUnique.template.forEach(templateTriple => {
       const kappa = characterizeTemplateTriple(templateTriple);
 
-      const sign = this.#signatureOfMonoedge.get(kappa);
+      const sign = this.signatureOfEdgeUniqueType.get(kappa);
       if (sign === undefined) {
-        this.#signatureOfMonoedge.set(kappa, [monoEdge]);
-      } else if (!sign.includes(monoEdge)) {
+        this.signatureOfEdgeUniqueType.set(kappa, [edgeUnique]);
+      } else if (!sign.includes(edgeUnique)) {
         sign.forEach(sign1 => {
           if (!alreadyClashesWith.has(sign1.identity)) {
             alreadyClashesWith.add(sign1.identity);
-            this.#addViolation(monoEdge, sign1);
-            this.#addViolation(sign1, monoEdge);
+            this.addViolation(edgeUnique, sign1);
+            this.addViolation(sign1, edgeUnique);
           }
         });
-        sign.push(monoEdge);
+        sign.push(edgeUnique);
       }
     });
   }
@@ -207,20 +206,20 @@ class MonoEdgeViolationDetector {
 
     rule.template.forEach(templateTriple => {
       const kappa = characterizeTemplateTriple(templateTriple);
-      const signatureOf = this.#signatureOfMonoedge.get(kappa);
+      const signatureOf = this.signatureOfEdgeUniqueType.get(kappa);
       if (signatureOf === undefined) return;
 
-      signatureOf.forEach(monoedge => {
-        if (!alreadyClashesWith.has(monoedge.identity)) {
-          alreadyClashesWith.add(monoedge.identity);
-          this.#addViolation(monoedge, rule);
+      signatureOf.forEach(rule => {
+        if (!alreadyClashesWith.has(rule.identity)) {
+          alreadyClashesWith.add(rule.identity);
+          this.addViolation(rule, rule);
         }
       });
     })
   }
 
-  getViolations(): MonoEdgeViolation[] {
-    return [...this.#detectedViolations.values()];
+  getViolations(): EdgeUniqueViolation[] {
+    return [...this.detectedViolations.values()];
   }
 }
 
@@ -242,18 +241,18 @@ function addViolation(map: WellBehavedViolation[], rule: PRSCRule, message: stri
  * @returns True if the context is well behaved, else the list of detected
  * violations
  */
-export default function wellBehavedCheck(context: PRSCSchema): true | WellBehavedViolation[] {
+export default function wellBehavedCheck(context: PRSCContext): true | WellBehavedViolation[] {
   let violations: WellBehavedViolation[] = [];
 
-  let monoedgeRules: PRSCRule[] = [];
+  let edgeUniqueRules: PRSCRule[] = [];
   
   for (const rule of context.prscRules) {
     const identifiable = elementIdentification(rule);
 
     if (identifiable === ElementIdentificationAnswer.No) {
       addViolation(violations, rule, "pvar:self is not in all triples");
-    } else if (identifiable === ElementIdentificationAnswer.MonoEdge) {
-      monoedgeRules.push(rule);
+    } else if (identifiable === ElementIdentificationAnswer.EdgeUnique) {
+      edgeUniqueRules.push(rule);
     }
 
     if (!noValueLoss(rule)) {
@@ -261,17 +260,17 @@ export default function wellBehavedCheck(context: PRSCSchema): true | WellBehave
     }
   }
 
-  const rulesWithoutSignature = signatureTriple(context.prscRules);
+  const rulesWithoutSignature = filterRulesWithoutSignature(context.prscRules);
   rulesWithoutSignature.forEach(ruleWithoutSignature =>
     addViolation(violations, ruleWithoutSignature, "No signature")
   );
 
-  if (monoedgeRules.length !== 0) {
-    const newViolations = findMonoedgeViolations(monoedgeRules, context.prscRules);
+  if (edgeUniqueRules.length !== 0) {
+    const newViolations = findEdgeUniqueViolations(edgeUniqueRules, context.prscRules);
     for (const newViolation of newViolations) {
       addViolation(
-        violations, newViolation.monoedge,
-        'is a monoedge but its triples clashes with'
+        violations, newViolation.edgeUnique,
+        'is a edge unique edge but its triples clashes with'
         + newViolation.clashingRules.map(rule => RDFString.termToString(rule.identity)).join(" and ")
       );
     }

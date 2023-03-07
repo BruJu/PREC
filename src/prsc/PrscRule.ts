@@ -8,7 +8,7 @@ import DStar from "../dataset";
 import { $defaultGraph, $quad, prec, pvar, rdf } from '../PRECNamespace';
 import { followAll, followThrough } from "../rdf/path-travelling";
 import * as QuadStar from '../rdf/quad-star';
-import { characterizeTemplateTriple, extractBnsIn, PRSCSchemaViolation } from "./PrscContext";
+import { characterizeTemplateTriple, extractBnsIn, PRSCContextViolation } from "./PrscContext";
 import { SignatureTripleOf } from './reversion-type-identification';
 
 
@@ -41,8 +41,8 @@ export type PRSCRule = {
  * @returns Either an object with the rule details or a list of violations.
  */
 export function buildRule(context: DStar, identity: RDF.Quad_Subject)
-: { rule: PRSCRule } | { violations: PRSCSchemaViolation[] } {
-  let violations: PRSCSchemaViolation[] = [];
+: { rule: PRSCRule } | { violations: PRSCContextViolation[] } {
+  let violations: PRSCContextViolation[] = [];
 
   let nodeOrEdge: 'node' | 'edge' | undefined = undefined;
 
@@ -69,7 +69,7 @@ export function buildRule(context: DStar, identity: RDF.Quad_Subject)
 
   const listOfInvalidPropNames = getInvalidPropNames(template, properties);
   if (listOfInvalidPropNames !== null) {
-    const errors: PRSCSchemaViolation[] = listOfInvalidPropNames.map(invalidPropName =>
+    const errors: PRSCContextViolation[] = listOfInvalidPropNames.map(invalidPropName =>
       ({ type: 'template_has_invalid_prop_name', identity: identity, propName: invalidPropName })
     );
     violations.push(...errors);
@@ -179,34 +179,41 @@ export function findSignatureOfRules(rules: PRSCRule[]): SignatureTripleOf[] {
   // 1) Build a map characterization -> rule
   const found = new TermMap<RDF.Quad, PRSCRule | null>();
 
-  rules.forEach(rule => rule.template.forEach(templateTriple => {
-    const characterized = characterizeTemplateTriple(templateTriple);
+  for (const rule of rules) {
+    for (const templateTriple of rule.template) {
+      const characterized = characterizeTemplateTriple(templateTriple);
 
-    const f = found.get(characterized);
-    if (f === undefined) {
-      found.set(characterized, rule);
-    } else if (f === rule) {
-      // ok: multiple signature templates within the same rule can produce the
-      // same triples
-    } else if (f !== null) {
-      // not ok: This template triple is shared by several rules
-      found.set(characterized, null);
-    } else {
-      // f === null, we know this template triple is not signature
-    }
-  }));
+      const f = found.get(characterized);
+      if (f === undefined) {
+        found.set(characterized, rule);
+      } else if (f === rule) {
+        // ok: multiple signature templates within the same rule can produce the
+        // same triples
+      } else if (f !== null) {
+        // not ok: This template triple is shared by several rules
+        found.set(characterized, null);
+      } else {
+        // f === null, we know this template triple is not signature
+      }
+    };
+  }
 
-  // Monoedges: All triples must be "signature" + at least one must not have a
+  // Edge unique: All triples must be "signature" + at least one must not have a
   // triple with inverted pvar:source and pvar:destination
-  rules.filter(rule => isMonoedgeTemplate(rule.template))
-  .forEach(rule => {
+  const edgeUniques = new TermSet<RDF.Term>();
+  for (const rule of rules) {
+    if (rule.kind === "node") continue;
+    if (!isEdgeUniqueTemplate(rule.template)) continue;
+
+    edgeUniques.add(rule.identity);
+
     const kappaTemplateGraph = rule.template.map(t => characterizeTemplateTriple(t));
 
     // All triples must be signature
     const notSignature = kappaTemplateGraph.find(triple => found.get(triple) !== rule);
     if (notSignature !== undefined) {
       kappaTemplateGraph.forEach(t => found.set(t, null));
-      return;
+      continue;
     }
 
     // Triples with the same kappa-value must have pvar:source and
@@ -216,26 +223,29 @@ export function findSignatureOfRules(rules: PRSCRule[]): SignatureTripleOf[] {
         if (i === j) continue;
         if (!kappaTemplateGraph[i].equals(kappaTemplateGraph[j])) continue;
 
-        if (!isSrcDestCompatible(rule.template[i], rule.template[j])) {
+        if (!areSrcDestCompatible(rule.template[i], rule.template[j])) {
           found.set(kappaTemplateGraph[i], null);
           found.set(kappaTemplateGraph[j], null);
         }
       }
     }
-  });
+  }
 
   // Build the result
   let result: SignatureTripleOf[] = [];
 
   for (const rule of rules) {
     const signature = rule.template.find(template => {
-      const kappa = characterizeTemplateTriple(template);
-      const signatureOf = found.get(kappa);
+      const kappaValue = characterizeTemplateTriple(template);
+      const signatureOf = found.get(kappaValue);
       return signatureOf === rule;
     });
 
     if (signature !== undefined) {
-      result.push({ rule: rule, signature: signature });
+      const kind = rule.kind === "node" ? "node" :
+        edgeUniques.has(rule.identity) ? "edge-unique" : "edge";
+
+      result.push({ rule, kind, signature });
     }
   }
 
@@ -246,21 +256,19 @@ export function findSignatureOfRules(rules: PRSCRule[]): SignatureTripleOf[] {
  * Returns true if all triples in the template graph misses pvar:self but have
  * both pvar:source and pvar:destination
  */
-function isMonoedgeTemplate(template: RDF.Quad[]) {
-  return template.find(triple => QuadStar.containsTerm(triple, pvar.self)) === undefined
-    && (
-      template.find(triple =>
-        !(QuadStar.containsTerm(triple, pvar.source)
-        && QuadStar.containsTerm(triple, pvar.destination))
-      ) === undefined
-    );
+export function isEdgeUniqueTemplate(template: RDF.Quad[]) {
+  return template.every(
+    templateTriple => 
+      !QuadStar.containsOneOfTerm(templateTriple, pvar.self, pvar.node)
+      && QuadStar.containsAllTerms(templateTriple, pvar.source, pvar.destination)
+  );
 }
 
 /**
  * Assuming that they have the same kappa, returns true if every pvar:source
  * and pvar:destination are at the same place in both templates.
  */
-export function isSrcDestCompatible(template1: RDF.Term, template2: RDF.Term) {
+function areSrcDestCompatible(template1: RDF.Term, template2: RDF.Term) {
   function visit(t1: RDF.Term, t2: RDF.Term): boolean {
     if (t1.termType !== t2.termType) return false;
 

@@ -83,6 +83,26 @@ export function containsTerm(term: Term, searched: Term): boolean {
 }
 
 /**
+ * Returns true if the term is or contains one of the searched term.
+ * @param term A RDF/JS term
+ * @param searched The searched RDF/JS terms
+ * @returns True if term is or contains one of the `searched` terms
+ */
+export function containsOneOfTerm(term: Term, ...searched: Term[]): boolean {
+  return searched.some(oneSearchedTerm => containsTerm(term, oneSearchedTerm));
+}
+
+/**
+ * Returns true if the term all of the searched term.
+ * @param term A RDF/JS term
+ * @param searched The searched RDF/JS terms
+ * @returns True if term contains all of the `searched` terms
+ */
+export function containsAllTerms(term: Term, ...searched: Term[]): boolean {
+  return searched.every(oneSearchedTerm => containsTerm(term, oneSearchedTerm));
+}
+
+/**
  * Checks if realQuad and patternQuad are equals. `null` and `undefined` are
  * considered wildcards: any term matches it in the pattern quad.
  * 

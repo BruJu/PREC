@@ -489,7 +489,7 @@ module.exports = () => {
       );
 
       test(
-        "Monoedge should be translated back correctly",
+        "Edge unique edges should be translated back correctly",
         pgNodeEdgeNode,
         `
           prec:this_is a prec:prscContext .

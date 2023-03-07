@@ -10,6 +10,7 @@ import * as QuadStar from '../rdf/quad-star';
 /** A pair with a rule and (one of) its signature triple. */
 export type SignatureTripleOf = {
   rule: PRSCRule;
+  kind: 'node' | 'edge' | 'edge-unique';
   signature: RDF.Quad;
 };
 

@@ -13,7 +13,7 @@ import {
 
 import { followThrough } from "../rdf/path-travelling";
 import { eventuallyRebuildQuad } from "../rdf/quad-star";
-import { unifyTemplateWithData } from "./possible-template-to-data-check";
+import { computeAffectation } from "./possible-template-to-data-check";
 import findPGTypeOfAllBlankNodesIn, { SignatureTripleOf } from "./reversion-type-identification";
 import { buildRule, findSignatureOfRules, PRSCRule } from "./PrscRule";
 export { PRSCRule };
@@ -31,30 +31,25 @@ const pvarPrefix = "http://bruy.at/prec-trans#";
  */
 export function haveSameStrings(lhs: string[], rhs: string[]): boolean {
   if (lhs.length !== rhs.length) return false;
-
-  for (const label of lhs) {
-    if (!rhs.includes(label)) return false;
-  }
-
-  return true;
+  return lhs.every(label => rhs.includes(label));
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 // Schema detection
 
-export class PRSCSchema {
+export class PRSCContext {
   prscRules: PRSCRule[] = [];
 
-  static build(contextQuads: RDF.Quad[]): { schema: PRSCSchema } | { violations: PRSCSchemaViolation[] } {
+  static build(contextQuads: RDF.Quad[]): { context: PRSCContext } | { violations: PRSCContextViolation[] } {
     const rules: PRSCRule[] = [];
-    const violations: PRSCSchemaViolation[] = [];
+    const violations: PRSCContextViolation[] = [];
     const dataset = new DStar(contextQuads);
     const alreadySeenTypes = new TermSet();
 
     for (const type of [prec.prsc_node, prec.prsc_edge]) {
       for (const ruleQuad of dataset.match(null, rdf.type, type, $defaultGraph)) {
-        // 
+        // Do not process duplicates
         if (alreadySeenTypes.has(ruleQuad.subject)) continue;
         alreadySeenTypes.add(ruleQuad.subject);
 
@@ -70,30 +65,30 @@ export class PRSCSchema {
 
     if (violations.length !== 0) {
       return { violations };
-    } else {
-      return { schema: new PRSCSchema(rules) };
     }
+    
+    return { context: new PRSCContext(rules) };
   }
 
   private constructor(rules: PRSCRule[]) {
     this.prscRules = rules;
   }
 
-  applyContext(dataset: DStar): DStar {
+  apply(dataset: DStar): DStar {
     let result = new DStar();
 
     for (const pgElement of dataset.match(null, rdf.type, pgo.Node, $defaultGraph)) {
-      this.#produceQuads(dataset, pgElement.subject, 'node', result);
+      this.produceQuads(dataset, pgElement.subject, 'node', result);
     }
 
     for (const pgElement of dataset.match(null, rdf.type, pgo.Edge, $defaultGraph)) {
-      this.#produceQuads(dataset, pgElement.subject, 'edge', result);
+      this.produceQuads(dataset, pgElement.subject, 'edge', result);
     }
 
     return result;
   }
 
-  #produceQuads(dataset: DStar, element: RDF.Quad_Subject, t: 'node' | 'edge', result: DStar) {
+  private produceQuads(dataset: DStar, element: RDF.Quad_Subject, t: 'node' | 'edge', result: DStar) {
     const toLabel = t === 'node' ? rdf.type : rdf.predicate;
 
     let pgElement = {
@@ -143,17 +138,17 @@ export class PRSCSchema {
   }
 }
 
-export type PRSCSchemaViolation = { identity: RDF.Quad_Subject } & (
+export type PRSCContextViolation = { identity: RDF.Quad_Subject } & (
   { type: 'rule_bad_type_qtt', message: string }
   | { type: 'rule_given_bad_type', foundType: RDF.Quad_Object }
   | { type: 'template_has_invalid_prop_name', propName: string }
 );
 
-export function violationsToString(violations: PRSCSchemaViolation[], delimiter: string = " ; "): string {
+export function violationsToString(violations: PRSCContextViolation[], delimiter: string = " ; "): string {
   return violations.map(violation => violationToString(violation)).join(delimiter);
 }
 
-export function violationToString(violation: PRSCSchemaViolation): string {
+export function violationToString(violation: PRSCContextViolation): string {
   if (violation.type === 'rule_bad_type_qtt') {
     return `${RDFString.termToString(violation.identity)} does not have exactly one type`;
   } else if (violation.type === 'rule_given_bad_type') {
@@ -168,12 +163,12 @@ export function violationToString(violation: PRSCSchemaViolation): string {
   }
 }
 
-export function assertSchema(r: { schema: PRSCSchema } | { violations: PRSCSchemaViolation[] }): PRSCSchema {
+export function unwrapContext(r: { context: PRSCContext } | { violations: PRSCContextViolation[] }): PRSCContext {
   if ('violations' in r) {
     throw Error("The given schema is invalid: " + violationsToString(r.violations));
   }
 
-  return r.schema;
+  return r.context;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -186,8 +181,8 @@ export function isPrscContext(contextQuads: RDF.Quad[]) {
 }
 
 export default function precCwithPRSC(dataset: DStar, contextQuads: RDF.Quad[]): DStar {
-  const schema = assertSchema(PRSCSchema.build(contextQuads));
-  return schema.applyContext(dataset);
+  const context = unwrapContext(PRSCContext.build(contextQuads));
+  return context.apply(dataset);
 }
 
 /**
@@ -220,8 +215,10 @@ function buildRdfTriplesFromRule(
       if (term.equals(pvar.node) || term.equals(pvar.edge) || term.equals(pvar.self)) {
         return pgElement;
       } else if (term.equals(pvar.source)) {
-        return source!;
+        if (source === undefined) throw Error("Using pvar:source but no source value was provided");
+        return source;
       } else if (term.equals(pvar.destination)) {
+        if (destination === undefined) throw Error("Using pvar:destination but no destination value was provided");
         return destination!;
       } else if (term.termType === 'Literal' && term.datatype.equals(prec._valueOf)) {
         return properties[term.value];
@@ -247,8 +244,8 @@ function buildRdfTriplesFromRule(
 export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): { dataset: DStar, complete: boolean } {
   dataset = dataset.match();
 
-  const schema = assertSchema(PRSCSchema.build(contextQuads));
-  const signatures = schema.getAllSignatures();
+  const context = unwrapContext(PRSCContext.build(contextQuads));
+  const signatures = context.getAllSignatures();
 
   const usedQuads = new DStar();
 
@@ -348,9 +345,11 @@ function revertFromPrec0(this: PRSCRule, dataGraph: DStar, self: RDF.Term, nodes
 }
 
 /**
- * Return the unified form of the triple.
+ * Characterize the triple
  * 
- * The unified form is the triple with pvar nodes and ^^prec:_valueOf merged
+ * IRI -> IRI
+ * Blank Node and pvar -> B (the literal "BlankNode")
+ * Literals and Literals datatyped precValueOf -> L (the literal "Literal")
  */
 export function characterizeTemplateTriple(quad: RDF.Quad) {
   return eventuallyRebuildQuad(quad, term => {
@@ -367,7 +366,7 @@ export function characterizeTemplateTriple(quad: RDF.Quad) {
 }
 
 export function canTemplateProduceData(pattern: RDF.Quad, data: RDF.Quad): boolean {
-  return unifyTemplateWithData(pattern, data) !== null;
+  return computeAffectation(pattern, data) !== null;
 }
 
 
