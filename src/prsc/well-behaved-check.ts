@@ -70,7 +70,7 @@ export function filterRulesWithoutSignature(rules: PRSCRule[]): PRSCRule[] {
   return rules.filter(rule => !withSignature.has(rule.identity));
 }
 
-enum NodePlaceholder { Source, Destination }
+export enum NodePlaceholder { Source, Destination }
 
 /**
  * Checks if no value can be lost during the PG to RDF conversion

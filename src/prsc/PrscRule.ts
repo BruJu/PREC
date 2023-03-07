@@ -259,7 +259,7 @@ export function findSignatureOfRules(rules: PRSCRule[]): SignatureTripleOf[] {
 export function isEdgeUniqueTemplate(template: RDF.Quad[]) {
   return template.every(
     templateTriple => 
-      !QuadStar.containsOneOfTerm(templateTriple, pvar.self, pvar.node)
+      !QuadStar.containsOneOfTerm(templateTriple, pvar.self, pvar.node, pvar.edge)
       && QuadStar.containsAllTerms(templateTriple, pvar.source, pvar.destination)
   );
 }

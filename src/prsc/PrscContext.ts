@@ -16,6 +16,7 @@ import { eventuallyRebuildQuad } from "../rdf/quad-star";
 import { computeAffectation } from "./possible-template-to-data-check";
 import findPGTypeOfAllBlankNodesIn, { SignatureTripleOf } from "./reversion-type-identification";
 import { buildRule, findSignatureOfRules, PRSCRule } from "./PrscRule";
+import { rdfToPREC0 } from "./prsc-reversion";
 export { PRSCRule };
 
 const ex   = namespace("http://www.example.org/"                    , { factory: DataFactory });
@@ -242,28 +243,37 @@ function buildRdfTriplesFromRule(
 // ==== Structural description graph <- Idiomatic Graph
 
 export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): { dataset: DStar, complete: boolean } {
-  dataset = dataset.match();
+  let used_algorithm = "proved";
 
-  const context = unwrapContext(PRSCContext.build(contextQuads));
-  const signatures = context.getAllSignatures();
-
-  const usedQuads = new DStar();
-
-  const blankNodesToType = findPGTypeOfAllBlankNodesIn(
-    dataset, signatures, usedQuads
-  );
-
-  const prec0Graph = new DStar();
-  for (const [self, { linkedNodes, rule }] of blankNodesToType.entries()) {
-    const { used, prec0 } = revertFromPrec0.call(rule, dataset, self, linkedNodes);
-    prec0Graph.addAll(prec0);
-    usedQuads.addAll(used);
+  if (used_algorithm === "proved") {
+    dataset = dataset.match();
+    const context = unwrapContext(PRSCContext.build(contextQuads));
+    const output = rdfToPREC0(dataset, context);
+    return { dataset: output, complete: true };
+  } else {
+    dataset = dataset.match();
+  
+    const context = unwrapContext(PRSCContext.build(contextQuads));
+    const signatures = context.getAllSignatures();
+  
+    const usedQuads = new DStar();
+  
+    const blankNodesToType = findPGTypeOfAllBlankNodesIn(
+      dataset, signatures, usedQuads
+    );
+  
+    const prec0Graph = new DStar();
+    for (const [self, { linkedNodes, rule }] of blankNodesToType.entries()) {
+      const { used, prec0 } = revertFromPrec0.call(rule, dataset, self, linkedNodes);
+      prec0Graph.addAll(prec0);
+      usedQuads.addAll(used);
+    }
+  
+    return {
+      dataset: prec0Graph,
+      complete: usedQuads.size === dataset.size
+    };
   }
-
-  return {
-    dataset: prec0Graph,
-    complete: usedQuads.size === dataset.size
-  };
 }
 
 
@@ -356,7 +366,7 @@ export function characterizeTemplateTriple(quad: RDF.Quad) {
     if (term.termType === 'Literal') {
       return $literal("Literal", prec._valueOf);
     } else if (term.termType === 'BlankNode') {
-      throw Error("A template quad should not contain any blank node");
+      return $literal('BlankNode', prec._placeholder);
     } else if (term.termType === 'NamedNode' && term.value.startsWith(pvarPrefix)) {
       return $literal('BlankNode', prec._placeholder);
     } else {
