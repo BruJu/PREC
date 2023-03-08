@@ -12,7 +12,6 @@ import {
 
 import { followThrough } from "../rdf/path-travelling";
 import { eventuallyRebuildQuad } from "../rdf/quad-star";
-import { computeAffectation } from "./possible-template-to-data-check";
 import { buildRule, findSignatureOfRules, PRSCRule } from "./PrscRule";
 import { rdfToPREC0 } from "./prsc-reversion";
 export { PRSCRule };
@@ -272,11 +271,6 @@ export function characterizeTriple(quad: RDF.Quad) {
     }
   });
 }
-
-export function canTemplateProduceData(pattern: RDF.Quad, data: RDF.Quad): boolean {
-  return computeAffectation(pattern, data) !== null;
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 

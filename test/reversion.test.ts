@@ -3,9 +3,9 @@ import * as RDF from "@rdfjs/types";
 import assert from 'assert';
 import { DataFactory } from "n3";
 import * as RDFString from 'rdf-string';
-import { canTemplateProduceData } from "../src/prsc/PrscContext";
 
 import { prec, pvar, $quad, $literal, $blankNode } from '../src/PRECNamespace';
+import { characterizeTriple } from '../src/prsc/PrscContext';
 
 const ex   = namespace("http://example.org/"       , { factory: DataFactory });
 
@@ -16,59 +16,64 @@ const precValueOf = prec._valueOf;
 const propVal = (name: string) => DataFactory.literal(name, precValueOf);
 
 
-describe("Template - Data reversion", () => {
-  function isFrom(template: RDF.Quad, data: RDF.Quad) {
+function areKappaEqual(template: RDF.Quad, data: RDF.Quad): boolean {
+  const templateKappa = characterizeTriple(template);
+  const dataKappa = characterizeTriple(data);
+  return templateKappa.equals(dataKappa);
+}
+
+describe("Template and Data kappa-value sharing", () => {
+  function shareKappa(template: RDF.Quad, data: RDF.Quad) {
     it(RDFString.termToString(template) + " |> " + RDFString.termToString(data), () => {
-      const r = canTemplateProduceData(template, data);
+      const r = areKappaEqual(template, data);
       assert.ok(r, "should be produced");
     });
   }
 
-// @ts-ignore
-  function isNotFrom(template: RDF.Quad, data: RDF.Quad) {
+  function doNotShareKappa(template: RDF.Quad, data: RDF.Quad) {
     it(RDFString.termToString(template) + " not |> " + RDFString.termToString(data), () => {
-      const r = canTemplateProduceData(template, data);
+      const r = areKappaEqual(template, data);
       assert.ok(!r, "should not be produced");
     });
   }
 
   describe("Without variables", () => {
     // Regular triple
-    isFrom(
+    shareKappa(
       $quad(ex.subject, ex.predicate, ex.object),
       $quad(ex.subject, ex.predicate, ex.object)
     );
 
     // RDF-star
-    isFrom(
+    shareKappa(
       $quad($quad(ex.s, ex.p, ex.o), ex.predicate, ex.object),
       $quad($quad(ex.s, ex.p, ex.o), ex.predicate, ex.object)
     );
 
     // Bad RDF-star
-    isNotFrom(
+    doNotShareKappa(
       $quad($quad(ex.s, ex.p, ex.o), ex.predicate, ex.object),
       $quad(ex.subject, ex.predicate, ex.object)
     );
 
     // Literal
-    isFrom(
+    shareKappa(
       $quad(ex.subject, ex.predicate, $literal(3)),
       $quad(ex.subject, ex.predicate, $literal(3))
     );
 
-    isFrom(
+    shareKappa(
       $quad(ex.subject, ex.predicate, $literal("3")),
       $quad(ex.subject, ex.predicate, $literal("3"))
     );
 
-    isNotFrom(
+    shareKappa(
       $quad(ex.subject, ex.predicate, $literal("3")),
       $quad(ex.subject, ex.predicate, $literal(3))
     );
 
     // Mismatch
-    isNotFrom(
+    doNotShareKappa(
       $quad(ex.subject, ex.predicate, ex.three),
       $quad(ex.subject, ex.predicate, $literal(3))
     );
@@ -76,44 +81,44 @@ describe("Template - Data reversion", () => {
 
   describe("With variables", () => {
     // Trivially possible
-    isFrom(
+    shareKappa(
       $quad(pvarSelf   , ex.rdftype, ex.Person),
       $quad($blankNode("toto"), ex.rdftype, ex.Person)
     );
 
-    isFrom(
+    shareKappa(
       $quad(pvarSource , ex.knows, pvarDest),
       $quad($blankNode("toto"), ex.knows, $blankNode("titi"))
     );
 
-    isFrom(
+    shareKappa(
       $quad(ex.toto, ex.age, propVal("age")),
       $quad(ex.toto, ex.age, $literal(5))
     )
 
-    isFrom(
+    shareKappa(
       $quad(pvarSelf   , ex.age, propVal("age")),
       $quad($blankNode("toto"), ex.age, $literal(5))
     )
 
     // Trivially impossible
-    isNotFrom(
+    doNotShareKappa(
       $quad(pvarSelf   , ex.age, propVal("age")),
       $quad($blankNode("toto"), ex.age, $blankNode("three"))
     );
 
-    isNotFrom(
+    doNotShareKappa(
       $quad(pvarSelf, ex.age, propVal("age")),
       $quad(ex.toto , ex.age, $literal(3))
     );
 
     // Variable evaluation consistency
-    isFrom(
+    shareKappa(
       $quad(pvarSelf   , ex.knows, pvarSelf),
       $quad($blankNode("toto"), ex.knows, $blankNode("toto"))
     );
 
-    isNotFrom(
+    shareKappa(
       $quad(pvarSelf   , ex.knows, pvarSelf),
       $quad($blankNode("toto"), ex.knows, $blankNode("titi"))
     );
