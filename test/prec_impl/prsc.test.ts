@@ -26,8 +26,8 @@ function test(
     checkOutput("", context, store, expectedStore);
 
     if (revertable === true) {
-      const o = revertPrecC(expectedStore, ctx);
-      checkOutput("PRSC reversiblity", context, o.dataset, cleanSource);
+      const prec0Graph = revertPrecC(expectedStore, ctx);
+      checkOutput("PRSC reversiblity", context, prec0Graph, cleanSource);
     } else if (revertable === RevertableType.ShouldThrow
       || revertable === RevertableType.ShouldThrowForNow) {
       assert.throws(() => revertPrecC(expectedStore, ctx));

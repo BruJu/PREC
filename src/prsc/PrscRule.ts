@@ -8,12 +8,9 @@ import DStar from "../dataset";
 import { $defaultGraph, $quad, prec, pvar, rdf } from '../PRECNamespace';
 import { followAll, followThrough } from "../rdf/path-travelling";
 import * as QuadStar from '../rdf/quad-star';
-import { characterizeTriple, extractBnsIn, PRSCContextViolation } from "./PrscContext";
-import { SignatureTripleOf } from './reversion-type-identification';
-
+import { characterizeTriple, extractBnsIn, PRSCContextViolation, SignatureTripleOf } from "./PrscContext";
 
 const xsdString = DataFactory.namedNode("http://www.w3.org/2001/XMLSchema#string");
-
 
 /**
  * A PRSC rule, corresponding to a PG type and the template required by the

@@ -409,12 +409,8 @@ function revertRdfGraphToPseudoPg(rdfPath: string, options: any) {
     }
 
     const dstar = new DStar(quads);
-    const { dataset, complete } = revertPrecC(dstar, ctxQuads);
-    quads = [...dataset];
-
-    if (complete === false) {
-      console.error("Not all triples were read from the source dataset");
-    }
+    const prec0Graph = revertPrecC(dstar, ctxQuads);
+    quads = [...prec0Graph];
   }
 
   const dataset = new WasmTree.Dataset(quads);

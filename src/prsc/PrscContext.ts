@@ -1,5 +1,4 @@
 import * as RDF from "@rdfjs/types";
-import namespace from '@rdfjs/namespace';
 import TermMap from "@rdfjs/term-map";
 import TermSet from '@rdfjs/term-set';
 import { DataFactory } from "n3";
@@ -14,12 +13,10 @@ import {
 import { followThrough } from "../rdf/path-travelling";
 import { eventuallyRebuildQuad } from "../rdf/quad-star";
 import { computeAffectation } from "./possible-template-to-data-check";
-import findPGTypeOfAllBlankNodesIn, { SignatureTripleOf } from "./reversion-type-identification";
 import { buildRule, findSignatureOfRules, PRSCRule } from "./PrscRule";
 import { rdfToPREC0 } from "./prsc-reversion";
 export { PRSCRule };
 
-const ex   = namespace("http://www.example.org/"                    , { factory: DataFactory });
 const pvarPrefix = "http://bruy.at/prec-trans#";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,6 +136,13 @@ export class PRSCContext {
   }
 }
 
+/** A pair with a rule and (one of) its signature triple. */
+export type SignatureTripleOf = {
+  rule: PRSCRule;
+  kind: 'node' | 'edge' | 'edge-unique';
+  signature: RDF.Quad;
+};
+
 export type PRSCContextViolation = { identity: RDF.Quad_Subject } & (
   { type: 'rule_bad_type_qtt', message: string }
   | { type: 'rule_given_bad_type', foundType: RDF.Quad_Object }
@@ -242,117 +246,11 @@ function buildRdfTriplesFromRule(
 ////////////////////////////////////////////////////////////////////////////////
 // ==== Structural description graph <- Idiomatic Graph
 
-export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): { dataset: DStar, complete: boolean } {
-  let used_algorithm = "proved";
-
-  if (used_algorithm === "proved") {
-    dataset = dataset.match();
-    const context = unwrapContext(PRSCContext.build(contextQuads));
-    const output = rdfToPREC0(dataset, context);
-    return { dataset: output, complete: true };
-  } else {
-    dataset = dataset.match();
-  
-    const context = unwrapContext(PRSCContext.build(contextQuads));
-    const signatures = context.getAllSignatures();
-  
-    const usedQuads = new DStar();
-  
-    const blankNodesToType = findPGTypeOfAllBlankNodesIn(
-      dataset, signatures, usedQuads
-    );
-  
-    const prec0Graph = new DStar();
-    for (const [self, { linkedNodes, rule }] of blankNodesToType.entries()) {
-      const { used, prec0 } = revertFromPrec0.call(rule, dataset, self, linkedNodes);
-      prec0Graph.addAll(prec0);
-      usedQuads.addAll(used);
-    }
-  
-    return {
-      dataset: prec0Graph,
-      complete: usedQuads.size === dataset.size
-    };
-  }
+export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): DStar {
+  const context = unwrapContext(PRSCContext.build(contextQuads));
+  return rdfToPREC0(dataset, context);
 }
 
-
-function revertFromPrec0(this: PRSCRule, dataGraph: DStar, self: RDF.Term, nodesOfEdge: [RDF.Term, RDF.Term] | null): { used: RDF.Quad[], prec0: RDF.Quad[] } {
-  let matchPattern: RDF.Quad[] = [];
-
-  this.template.forEach(templateQuad => {
-    matchPattern.push(eventuallyRebuildQuad(
-      templateQuad,
-      term => {
-        if (term.equals(pvar.node) || term.equals(pvar.edge) || term.equals(pvar.self)) return self;
-        else if (term.equals(pvar.source)) return nodesOfEdge ? nodesOfEdge[0] : $variable("edge_source");
-        else if (term.equals(pvar.destination)) return nodesOfEdge ? nodesOfEdge[1] : $variable("edge_destination");
-        else if (term.termType === 'Literal' && term.datatype.equals(prec._valueOf))
-          return $variable("property_" + term.value);
-        else return term;
-      }
-    ));
-  });
-
-  const matchResult = dataGraph.matchAndBind(matchPattern);
-  if (matchResult.length !== 1) {
-    console.error(matchPattern.map(t => RDFString.termToString(t)).join("\n"));
-    throw Error("Not exactly one result: " + matchResult.length);
-  }
-
-  const matchResult1 = matchResult[0];
-
-  if (nodesOfEdge !== null) {
-    matchResult1['edge_source']      ||= nodesOfEdge[0];
-    matchResult1['edge_destination'] ||= nodesOfEdge[1];
-  }
-  
-  let toAdd: RDF.Quad[] = [
-    $quad(self as RDF.Quad_Subject, rdf.type, this.kind === 'node' ? pgo.Node : pgo.Edge)
-  ];
-
-  if (this.kind === 'edge') {
-    toAdd.push(
-      $quad(self as RDF.Quad_Subject, rdf.subject, matchResult1['edge_source']      as RDF.Quad_Object),
-      $quad(self as RDF.Quad_Subject, rdf.object , matchResult1['edge_destination'] as RDF.Quad_Object)
-    );
-  }
-
-  this.labels.forEach(label => {
-    let labelBlankNode = ex["vocab/" + this.kind + "/label/" + label];
-    let labelType = this.kind === 'node' ? prec.CreatedNodeLabel : prec.CreatedEdgeLabel;
-    toAdd.push(
-      $quad(self as RDF.Quad_Subject, this.kind === 'node' ? rdf.type : rdf.predicate, labelBlankNode),
-      $quad(labelBlankNode, rdfs.label, $literal(label)),
-      $quad(labelBlankNode, rdf.type, labelType),
-      $quad(labelType, rdfs.subClassOf, prec.CreatedVocabulary)
-    );
-  });
-
-  let labelsM = this.labels.map(x => x).sort().join("-");
-
-  this.properties.forEach(propertyName => {
-    let pn = ex["vocab/" + this.kind + "/property/" + propertyName + "/" + labelsM];
-    let bn = DataFactory.blankNode();
-
-    let v = matchResult1["property_" + propertyName];
-    if (v === undefined) throw Error("Invalid code logic in thePatternBecomesAMatch");
-
-    toAdd.push(
-      $quad(self as RDF.Quad_Subject, pn, bn),
-      $quad(pn, rdfs.label, $literal(propertyName)),
-      $quad(bn, rdf.value, v as RDF.Quad_Object),
-      $quad(bn, rdf.type, prec.PropertyKeyValue),
-      $quad(pn, rdf.type, prec.PropertyKey),
-      $quad(pn, rdf.type, prec.CreatedPropertyKey),
-      $quad(prec.CreatedPropertyKey, rdfs.subClassOf, prec.CreatedVocabulary)
-    );
-  });
-
-  const used = matchResult1["@quads"];
-
-  return { used, prec0: toAdd };
-}
 
 /**
  * Characterize the triple
