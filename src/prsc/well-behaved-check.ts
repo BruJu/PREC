@@ -2,7 +2,7 @@ import TermMap from '@rdfjs/term-map';
 import TermSet from "@rdfjs/term-set";
 import * as RDF from "@rdfjs/types";
 import * as RDFString from 'rdf-string';
-import { characterizeTemplateTriple, haveSameStrings, PRSCContext } from './PrscContext';
+import { characterizeTriple, haveSameStrings, PRSCContext } from './PrscContext';
 import { PRSCRule, findSignatureOfRules } from './PrscRule';
 import { precValueOf, pvarDestination, pvarEdge, pvarNode, pvarSelf, pvarSource } from "../PRECNamespace";
 import * as QuadStar from '../rdf/quad-star';
@@ -81,7 +81,7 @@ export function noValueLoss(rule: PRSCRule): boolean {
   const kappaToTriple = new TermMap<RDF.Quad, RDF.Quad | null>();
 
   for (const templateTriple of rule.template) {
-    const kappaValue = characterizeTemplateTriple(templateTriple);
+    const kappaValue = characterizeTriple(templateTriple);
 
     if (kappaToTriple.has(kappaValue)) {
       kappaToTriple.set(kappaValue, null);
@@ -183,7 +183,7 @@ class EdgeUniqueViolationDetector {
     const alreadyClashesWith = new TermSet<RDF.Term>();
 
     edgeUnique.template.forEach(templateTriple => {
-      const kappa = characterizeTemplateTriple(templateTriple);
+      const kappa = characterizeTriple(templateTriple);
 
       const sign = this.signatureOfEdgeUniqueType.get(kappa);
       if (sign === undefined) {
@@ -205,7 +205,7 @@ class EdgeUniqueViolationDetector {
     const alreadyClashesWith = new TermSet<RDF.Term>();
 
     rule.template.forEach(templateTriple => {
-      const kappa = characterizeTemplateTriple(templateTriple);
+      const kappa = characterizeTriple(templateTriple);
       const signatureOf = this.signatureOfEdgeUniqueType.get(kappa);
       if (signatureOf === undefined) return;
 

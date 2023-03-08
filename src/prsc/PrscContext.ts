@@ -361,7 +361,7 @@ function revertFromPrec0(this: PRSCRule, dataGraph: DStar, self: RDF.Term, nodes
  * Blank Node and pvar -> B (the literal "BlankNode")
  * Literals and Literals datatyped precValueOf -> L (the literal "Literal")
  */
-export function characterizeTemplateTriple(quad: RDF.Quad) {
+export function characterizeTriple(quad: RDF.Quad) {
   return eventuallyRebuildQuad(quad, term => {
     if (term.termType === 'Literal') {
       return $literal("Literal", prec._valueOf);

@@ -8,7 +8,7 @@ import DStar from "../dataset";
 import { $defaultGraph, $quad, prec, pvar, rdf } from '../PRECNamespace';
 import { followAll, followThrough } from "../rdf/path-travelling";
 import * as QuadStar from '../rdf/quad-star';
-import { characterizeTemplateTriple, extractBnsIn, PRSCContextViolation } from "./PrscContext";
+import { characterizeTriple, extractBnsIn, PRSCContextViolation } from "./PrscContext";
 import { SignatureTripleOf } from './reversion-type-identification';
 
 
@@ -181,7 +181,7 @@ export function findSignatureOfRules(rules: PRSCRule[]): SignatureTripleOf[] {
 
   for (const rule of rules) {
     for (const templateTriple of rule.template) {
-      const characterized = characterizeTemplateTriple(templateTriple);
+      const characterized = characterizeTriple(templateTriple);
 
       const f = found.get(characterized);
       if (f === undefined) {
@@ -207,7 +207,7 @@ export function findSignatureOfRules(rules: PRSCRule[]): SignatureTripleOf[] {
 
     edgeUniques.add(rule.identity);
 
-    const kappaTemplateGraph = rule.template.map(t => characterizeTemplateTriple(t));
+    const kappaTemplateGraph = rule.template.map(t => characterizeTriple(t));
 
     // All triples must be signature
     const notSignature = kappaTemplateGraph.find(triple => found.get(triple) !== rule);
@@ -236,7 +236,7 @@ export function findSignatureOfRules(rules: PRSCRule[]): SignatureTripleOf[] {
 
   for (const rule of rules) {
     const signature = rule.template.find(template => {
-      const kappaValue = characterizeTemplateTriple(template);
+      const kappaValue = characterizeTriple(template);
       const signatureOf = found.get(kappaValue);
       return signatureOf === rule;
     });
