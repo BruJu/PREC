@@ -34,7 +34,7 @@ import { filenameToArrayOfQuads, outputTheStore } from './rdf/parsing';
 import { APOCDocument, CypherEntry } from "./prec-0/PGDefinitions";
 import fromGremlin from './prec-0/from-gremlin';
 
-import { isPrscContext, PRSCSchema, revertPrecC, violationToString } from './prsc/PrscContext';
+import { isPrscContext, PRSCContext, revertPrecC, violationToString } from './prsc/PrscContext';
 
 import gremlin from 'gremlin';
 import { Driver } from 'neo4j-driver';
@@ -189,14 +189,14 @@ export async function main() {
     .argument("<path-to-the-context>", "Path to the PRSC context")
     .action((pathToPrscContext: string) => {
       const quads = filenameToArrayOfQuads(pathToPrscContext);
-      const r = PRSCSchema.build(quads);
+      const r = PRSCContext.build(quads);
       if ('violations' in r) {
         console.log("bad: invalid context");
         r.violations.forEach(violation => console.log(violationToString(violation)));
         return;
       }
 
-      const wellBehaved = wellBehavedCheck(r.schema);
+      const wellBehaved = wellBehavedCheck(r.context);
       // TODO: print error in turtle format
       if (wellBehaved === true) {
         console.log("ok");
@@ -409,12 +409,8 @@ function revertRdfGraphToPseudoPg(rdfPath: string, options: any) {
     }
 
     const dstar = new DStar(quads);
-    const { dataset, complete } = revertPrecC(dstar, ctxQuads);
-    quads = [...dataset];
-
-    if (complete === false) {
-      console.error("Not all triples were read from the source dataset");
-    }
+    const prec0Graph = revertPrecC(dstar, ctxQuads);
+    quads = [...prec0Graph];
   }
 
   const dataset = new WasmTree.Dataset(quads);

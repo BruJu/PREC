@@ -4,7 +4,7 @@ import path from 'path';
 import * as RDF from '@rdfjs/types';
 import * as N3 from 'n3';
 import fs from 'fs';
-import { assertSchema, PRSCSchema } from '../src/prsc/PrscContext';
+import { unwrapContext, PRSCContext } from '../src/prsc/PrscContext';
 import { buildRule } from '../src/prsc/PrscRule';
 import TermMap from '@rdfjs/term-map';
 import * as RDFString from 'rdf-string';
@@ -45,11 +45,11 @@ describe('WellBehavedCheck', () => {
     it(RDFString.termToString(test.name), () => {
       let atLeastOneCheck = false;
 
-      const schema = assertSchema(PRSCSchema.build(test.quads));
+      const context = unwrapContext(PRSCContext.build(test.quads));
 
       for (const [ident, conditions] of test.testRules) {
         if (conditions.elementIdentification !== undefined) {
-          const rule = schema.prscRules.find(r => r.identity.equals(ident));
+          const rule = context.prscRules.find(r => r.identity.equals(ident));
           assert.ok(rule !== undefined);
           const r = WBC.elementIdentification(rule);
           const expected = conditions.elementIdentification
@@ -68,7 +68,7 @@ describe('WellBehavedCheck', () => {
         }
 
         if (conditions.noValueLoss !== undefined) {
-          const rule = schema.prscRules.find(r => r.identity.equals(ident));
+          const rule = context.prscRules.find(r => r.identity.equals(ident));
           assert.ok(rule !== undefined);
           const r = WBC.noValueLoss(rule);
           assert.ok(
@@ -86,9 +86,9 @@ describe('WellBehavedCheck', () => {
       if (test.signatureTriple !== undefined) {
 
         for (const signatureTest of test.signatureTriple) {
-          const rules = signatureTest.rules === undefined ? schema.prscRules
+          const rules = signatureTest.rules === undefined ? context.prscRules
             : signatureTest.rules.map(ruleName => {
-              const x = schema.prscRules.find(rule => rule.identity.equals(ruleName));
+              const x = context.prscRules.find(rule => rule.identity.equals(ruleName));
               if (x === undefined) {
                 throw Error(
                   `Did not find the rule ${RDFString.termToString(ruleName)}`
@@ -99,7 +99,7 @@ describe('WellBehavedCheck', () => {
             });
 
           assert.ok(
-            (WBC.signatureTriple(rules).length === 0) === signatureTest.expectedResult,
+            (WBC.filterRulesWithoutSignature(rules).length === 0) === signatureTest.expectedResult,
             "The context should have "
             + (test.signatureTriple ? "all rules with " : "some rules without ")
             + "a signature within " + RDFString.termToString(signatureTest.name)
@@ -110,7 +110,7 @@ describe('WellBehavedCheck', () => {
       }
 
       if (test.isWellBehaved !== undefined) {
-        const r = WBC.default(schema);
+        const r = WBC.default(context);
         if (test.isWellBehaved) {
           assert.ok(r === true,
             "The context should be consider well behaved "
