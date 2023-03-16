@@ -503,8 +503,9 @@ export class EntitiesManager {
    */
   refineRules(dataset: DStar) {
     this.iriRemapper.forEach(rule => {
-      const { source, conditions, destination } = rule.getFilter();
-      dataset.findFilterReplace(source, conditions, destination);
+      for (const { source, conditions, destination } of rule.getFilters()) {
+        dataset.findFilterReplace(source, conditions, destination);
+      }
     });
   }
 }
@@ -573,7 +574,6 @@ export function replaceSynonyms(dataset: DStar) {
     let dict = new TermMap<Term, Term>();
     dict.set(prec.RelationshipRule      , prec.EdgeRule);
     dict.set(prec.RelationshipTemplate  , prec.EdgeTemplate);
-    dict.set(prec.relationshipLabel     , prec.edgeLabel);
     dict.set(prec.Relationships         , prec.Edges);
     dict.set(prec.RelationshipProperties, prec.EdgeProperties);
     dict.set(prec.IRIOfRelationshipLabel, prec.IRIOfEdgeLabel);

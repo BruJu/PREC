@@ -47,7 +47,7 @@ export interface FilterProviderConstructor {
 }
 
 export interface FilterProvider extends Priorisable {
-  getFilter(): { source: Quad[], conditions: Quad[][], destination: Quad[]};
+  getFilters(): { source: Quad[], conditions: Quad[][], destination: Quad[]}[];
 }
 
 export interface RuleType {

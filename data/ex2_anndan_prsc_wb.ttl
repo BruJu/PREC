@@ -6,14 +6,14 @@ PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prec:this_is a prec:prscContext .
 
 ex:PersonForm a prec:prsc_node ;
-  prec:nodeLabel "Person" ;
+  prec:label "Person" ;
   prec:propertyName "name" ;
   prec:composedOf
     << pvar:node ex:hasLabel ex:person >> ,
     << pvar:node ex:name [ prec:prsc_valueOf "name" ] >> .
 
 ex:LovesForm a prec:prsc_edge ;
-  prec:edgeLabel "Likes" ;
+  prec:label "Likes" ;
   prec:prscSource      ex:PersonForm ;
   prec:prscDestination ex:PersonForm ;
   prec:composedOf

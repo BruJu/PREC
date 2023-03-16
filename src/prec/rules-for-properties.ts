@@ -13,6 +13,7 @@ import {
   rdf, rdfs, prec, pvar, pgo,
   $quad, $variable
 } from '../PRECNamespace';
+import { termToString } from 'rdf-string';
 
 const $defaultGraph = DataFactory.defaultGraph;
 
@@ -21,11 +22,11 @@ class PropertiesRuleClass implements RuleType {
     RuleType          : prec.PropertyRule,
     DefaultTemplate   : prec.Prec0Property,
     MainLabel         : prec.propertyName,
-    PossibleConditions: [prec.nodeLabel, prec.edgeLabel],
+    PossibleConditions: [prec.label, prec.onKind],
     TemplateBases: [
-      [prec.NodeProperties, [prec.edgeLabel]                ],
-      [prec.EdgeProperties, [                prec.nodeLabel]],
-      [prec.MetaProperties, [prec.edgeLabel, prec.nodeLabel]]
+      [prec.NodeProperties, []                ],
+      [prec.EdgeProperties, []],
+      [prec.MetaProperties, []]
     ],
     ShortcutIRI       : prec.IRIOfProperty,
     SubstitutionTerm  : prec.propertyIRI,
@@ -65,7 +66,8 @@ export default instance;
 
 /** An individual property rule */
 class PropertyRule implements FilterProvider {
-  conditions: Quad[][];
+  conditions: Quad[][] | null;
+  conditionsAlternative: Quad[][] | null;
   ruleNode: Quad_Subject;
   priority: [number | undefined, string];
 
@@ -90,42 +92,51 @@ class PropertyRule implements FilterProvider {
       throw Error(`Error for the property rule ${ruleNode.value} : ${predicate.value} ${message}`);
     }
 
-    // prec:nodeLabel, prec:edgeLabel
-    let reservedFor = 'None';
+    this.conditionsAlternative = [...this.conditions];
+
+    // prec:label
+    let reservedFor = { node: false, edge: false };
     for (const [key, value] of conditions.other) {
-      if (prec.nodeLabel.equals(key)) {
-        if (reservedFor == 'Edge') {
-          throwError(key, "Found a node as object but this property rule is reserved for edges by previous rule");
+      if (prec.label.equals(key)) {
+        PropertyRule._processRestrictionOnEntity(value, this.conditions, rdf.type, throwError);
+        PropertyRule._processRestrictionOnEntity(value, this.conditionsAlternative, rdf.predicate, throwError);
+      } else if (prec.onKind.equals(key)) {
+        if (value.equals(prec.Node)) {
+          reservedFor.node = true;
+        } else if (value.equals(prec.Edge)) {
+          reservedFor.edge = true;
+        } else {
+          throwError(key, "Invalid target, found " + termToString(value) + " but expected either prec:Node or prec:Edge");
         }
-
-        PropertyRule._processRestrictionOnEntity(value, this.conditions, pgo.Node, rdf.type, throwError);
-        reservedFor = 'Node';
-      } else if (prec.edgeLabel.equals(key)) {
-        if (reservedFor == 'Node') {
-          throwError(key, "Found an edge as object but this property rule is reserved for nodes by previous rule");
-        }
-
-        PropertyRule._processRestrictionOnEntity(value, this.conditions, pgo.Edge, rdf.predicate, throwError);
-        reservedFor = 'Edge';
       } else {
         throw Error(
           "Invalid state: found a condition of type " + key.value + " but it should already have been filtered out"
         );
       }
     }
+
+    if (reservedFor.node && reservedFor.edge) {
+      this.conditions.push([$quad($variable("entity"), rdf.type, pgo.Node)]);
+      this.conditionsAlternative.push([$quad($variable("entity"), rdf.type, pgo.Edge)]);
+    } else if (reservedFor.node) {
+      this.conditions.push([$quad($variable("entity"), rdf.type, pgo.Node)]);
+      this.conditionsAlternative = null;
+    } else if (reservedFor.edge) {
+      this.conditionsAlternative.push([$quad($variable("entity"), rdf.type, pgo.Edge)]);
+      this.conditions = null;
+    } else {
+      this.conditionsAlternative = null;
+    }
   }
 
-  /** Adds the condition for a prec:nodeLabel / prec:edgeLabel restriction */
+  /** Adds the condition for a prec:label restriction */
   static _processRestrictionOnEntity(
-    object: Term, conditions: Quad[][], type_: Quad_Object, labelType: Quad_Predicate,
+    object: Term, conditions: Quad[][], labelType: Quad_Predicate,
     throwError: (labelType: Quad_Predicate, text: string) => never
   ) {
-    if (prec.any.equals(object)) {
-      conditions.push([$quad($variable("entity"), rdf.type, type_)]);
-    } else if (object.termType === 'Literal') {
+    if (object.termType === 'Literal') {
       conditions.push([
         $quad($variable("entity"), labelType , $variable("label")),
-        $quad($variable("entity"), rdf.type  , type_            ),
         $quad($variable("label") , rdfs.label, object           )
       ]);
     } else {
@@ -137,18 +148,20 @@ class PropertyRule implements FilterProvider {
    * Return the arguments to pass to `StoreAlterer::findFilterReplace` to tag
    * the properties that match this manager with its rule node.
    */
-  getFilter() {
-    return {
+  getFilters() {
+    return [this.conditions, this.conditionsAlternative]
+    .filter(c => c !== null)
+    .map(conditions => ({
       source: [
         $quad($variable("property"), prec.__appliedPropertyRule, prec._NoPropertyRuleFound),
         $quad($variable("entity")  , $variable("propertyKey")   , $variable("property")     )
       ],
-      conditions: this.conditions,
+      conditions: conditions!,
       destination: [
         $quad($variable("property"), prec.__appliedPropertyRule, this.ruleNode        ),
         $quad($variable("entity")  , $variable("propertyKey")  , $variable("property"))
       ]
-    };
+    }))
   }
 }
 

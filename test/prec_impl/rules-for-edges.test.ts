@@ -60,7 +60,7 @@ module.exports = (test: PrecCApplicationTester) => {
           prec:Edges prec:templatedBy prec:RdfStarOccurrence .
           [] a prec:EdgeRule ;
               prec:edgeIRI   :type1 ;
-              prec:edgeLabel "type1" ;
+              prec:label "type1" ;
               prec:templatedBy prec:RdfStarUnique .
       `,
     }
@@ -122,7 +122,7 @@ module.exports = (test: PrecCApplicationTester) => {
         basicGraphs.edgeDiff,
         `
           prec:Edges prec:templatedBy prec:RdfStarUnique .
-          [] a prec:EdgeRule ; prec:edgeIRI :type1 ; prec:edgeLabel "type1" .
+          [] a prec:EdgeRule ; prec:edgeIRI :type1 ; prec:label "type1" .
         `,
         `:s1 :type1 :o1 . << :s1 :type1 :o1  >> a pgo:Edge .
 
@@ -146,7 +146,7 @@ module.exports = (test: PrecCApplicationTester) => {
           [] a prec:EdgeRule ;
               prec:edgeIRI :NewPredicate ;
               prec:templatedBy prec:RdfStarUnique ;
-              prec:edgeLabel "Predicate" ;
+              prec:label "Predicate" ;
               prec:sourceLabel "Person"
           .
         `,
@@ -168,13 +168,13 @@ module.exports = (test: PrecCApplicationTester) => {
         `
         [] a prec:EdgeRule ;
           prec:edgeIRI :type1 ;
-          prec:edgeLabel "type1" ;
+          prec:label "type1" ;
           prec:templatedBy prec:RdfStarUnique
         .
         
         [] a prec:EdgeRule ;
           prec:edgeIRI :type2 ;
-          prec:edgeLabel "type2" ;
+          prec:label "type2" ;
           prec:templatedBy prec:RdfStarUnique
         .
         `,

@@ -82,12 +82,12 @@ module.exports = () => {
         prec:this_is a prec:prscContext .
 
         :person a prec:prsc_node ;
-          prec:nodeLabel "person" .
+          prec:label "person" .
 
         [] a prec:prsc_edge ;
           prec:prscSource :person ;
           prec:prscDestination :person ;
-          prec:edgeLabel "knows" ;
+          prec:label "knows" ;
           prec:composedOf << pvar:source :knows pvar:destination >>,
             << pvar:edge :is :discarded  >> .
         `,
@@ -121,13 +121,13 @@ module.exports = () => {
         prec:this_is a prec:prscContext .
 
         :person a prec:prsc_node ;
-          prec:nodeLabel "person" ;
+          prec:label "person" ;
           prec:composedOf << pvar:self a :Person >> .
 
         [] a prec:prsc_edge ;
           prec:prscSource :person ;
           prec:prscDestination :person ;
-          prec:edgeLabel "knows" ;
+          prec:label "knows" ;
           prec:propertyName "since" ;
           prec:composedOf << pvar:source :knows pvar:destination >>,
             << << pvar:destination :isStalkedBy pvar:source >> :since "since"^^prec:_valueOf >> .
@@ -148,14 +148,14 @@ module.exports = () => {
         prec:this_is a prec:prscContext .
 
         :PersonPGType a prec:prsc_node ;
-          prec:nodeLabel "person" ;
+          prec:label "person" ;
           prec:propertyName "name" ;
           prec:composedOf
             << pvar:node rdf:type :Person >> ,
             << pvar:node :name "name"^^prec:_valueOf >> .
         
         :KnightPGType a prec:prsc_node ;
-          prec:nodeLabel "knight" ;
+          prec:label "knight" ;
           prec:propertyName "name" ;
           prec:propertyName "number" ;
           prec:composedOf
@@ -164,7 +164,7 @@ module.exports = () => {
             << pvar:node :number "number"^^prec:_valueOf >> .
         
         :KnowsPGEdge a prec:prsc_edge ;
-          prec:edgeLabel "knows" ;
+          prec:label "knows" ;
           prec:propertyName "since" ;
           prec:composedOf
                << pvar:source :knows pvar:destination >> ,
@@ -205,7 +205,7 @@ module.exports = () => {
         prec:this_is a prec:prscContext .
 
         [] a prec:prsc_node ;
-          prec:nodeLabel "Letter" ;
+          prec:label "Letter" ;
           prec:propertyName "value" ;
           prec:composedOf << pvar:node :isTheLetter "value"^^prec:_valueOf >> .
         `,
@@ -221,7 +221,7 @@ module.exports = () => {
         prec:this_is a prec:prscContext .
 
         [] a prec:prsc_node ;
-          prec:nodeLabel "Letter", "Vowel" ;
+          prec:label "Letter", "Vowel" ;
           prec:propertyName "value" ;
           prec:composedOf << pvar:node :isTheLetter "value"^^prec:_valueOf >> .
         `,
@@ -238,7 +238,7 @@ module.exports = () => {
         prec:this_is a prec:prscContext .
 
         [] a prec:prsc_node ;
-          prec:nodeLabel "Letter" ;
+          prec:label "Letter" ;
           prec:propertyName "value" ;
           prec:composedOf << pvar:node :isTheLetter "value"^^prec:_valueOf >> .
         `,
@@ -270,7 +270,7 @@ module.exports = () => {
         prec:this_is a prec:prscContext .
 
         [] a prec:prsc_node ;
-          prec:nodeLabel "You need a label" ;
+          prec:label "You need a label" ;
           prec:composedOf << pvar:node :exists :inthepg >> .
         `
       );
@@ -287,7 +287,7 @@ module.exports = () => {
         prec:this_is a prec:prscContext .
 
         [] a prec:prsc_node ;
-          prec:nodeLabel "First Label" ;
+          prec:label "First Label" ;
           prec:composedOf << pvar:node :exists :inthepg >> .
         `
       );
@@ -304,7 +304,7 @@ module.exports = () => {
         prec:this_is a prec:prscContext .
 
         [] a prec:prsc_node ;
-          prec:nodeLabel "person" .
+          prec:label "person" .
 
         :otherSchema a prec:prsc_node .
 
@@ -325,12 +325,12 @@ module.exports = () => {
         prec:this_is a prec:prscContext .
 
         :person a prec:prsc_node ;
-          prec:nodeLabel "person" .
+          prec:label "person" .
 
         [] a prec:prsc_edge ;
           prec:prscSource :person ;
           prec:prscDestination :person ;
-          prec:edgeLabel "connait" .
+          prec:label "connait" .
         `
       );
 
@@ -429,11 +429,11 @@ module.exports = () => {
         :node a prec:prsc_node ; prec:composedOf << pvar:node a :node >> .
 
         :edgeHey a prec:prsc_edge ;
-          prec:edgeLabel "hey" ;
+          prec:label "hey" ;
           prec:composedOf << << pvar:edge :src pvar:source >> :to pvar:destination >> .
 
         :edgeTo a prec:prsc_edge ;
-          prec:edgeLabel "to" ;
+          prec:label "to" ;
           prec:composedOf << << pvar:source :src pvar:edge >> :to pvar:destination >> .
         `,
         `
@@ -461,7 +461,7 @@ module.exports = () => {
           :node a prec:prsc_node ; prec:composedOf << pvar:self a :node >> .
 
           :edgeTo a prec:prsc_edge ;
-            prec:edgeLabel "to" ;
+            prec:label "to" ;
             prec:composedOf
               << pvar:source :to pvar:self >> ,
               << pvar:self :to pvar:destination >> ,
@@ -470,7 +470,7 @@ module.exports = () => {
 
             
           :edgeFrom a prec:prsc_edge ;
-            prec:edgeLabel "from" ;
+            prec:label "from" ;
             prec:composedOf
               << pvar:destination :from pvar:self >> ,
               << pvar:self :from pvar:source >> ,
@@ -496,7 +496,7 @@ module.exports = () => {
           :node a prec:prsc_node ; prec:composedOf << pvar:self a :node >> .
 
           :edgeTo a prec:prsc_edge ;
-            prec:edgeLabel "to" ;
+            prec:label "to" ;
             prec:composedOf
               << pvar:source :connected_to pvar:destination >> ,
               << pvar:destination :connected_to pvar:source >> ,

@@ -180,7 +180,7 @@
               [] a prec:PropertyRule ;
                 prec:propertyName "name" ;
                 prec:propertyIRI <http://schema.org/familyName> ;
-                prec:nodeLabel "Person" .
+                prec:label "Person" ; prec:onKind prec:Node .
               
               [] a prec:PropertyRule ;
                 prec:propertyName "firstName" ;
@@ -209,7 +209,7 @@
               # is that is expect the serie as the subject and the character as
               # an object, but we can fix the order!
               [] a prec:EdgeRule ;
-                prec:edgeLabel "appears" ;
+                prec:label "appears" ;
                 # We want the destination to be the source and the destination
                 # to be the source so let's write our own template!
                 prec:templatedBy [
@@ -914,7 +914,7 @@
               [] a prec:EdgeRule ;
                 # - Filtering
                 # Like must be the edge label
-                prec:edgeLabel "Like" ;
+                prec:label "Like" ;
                 # The source node must have the label Person
                 prec:sourceLabel      "Person" ;
                 # The destination node must have the label Person
@@ -940,7 +940,7 @@
           </section>
           
           <section>
-            <h5><dfn data-lt="prec:edgeLabel">http://bruy.at/prec#edgeLabel</dfn></h5>
+            <h5><dfn data-lt="prec:label">http://bruy.at/prec#label</dfn></h5>
 
             <p>
               States that the edge must have the given label to match
@@ -996,13 +996,13 @@
 
                 # Matches (a)
                 :firstRule a prec:EdgeRule ;
-                  prec:edgeLabel "Like" ;
+                  prec:label "Like" ;
                   prec:sourceLabel "Person" ;
                   prec:edgeIRI ex:likes .
                 
                 # Matches (b)
                 :secondRule a prec:EdgeRule ;
-                  prec:edgeLabel "Like" ;
+                  prec:label "Like" ;
                   prec:sourceLabel "Cat" ;
                   prec:edgeIRI ex:eats .
                 -->
@@ -1061,7 +1061,7 @@
               >
                 <!--
                 [] a prec:EdgeRule ;
-                  prec:edgeLabel "Label" ;
+                  prec:label "Label" ;
                   prec:edgeIRI :iri .
                 -->
               </pre>
@@ -1126,7 +1126,7 @@
               :humanNameRule a prec:PropertyRule ;
                 prec:propertyName "name" ;
                 prec:propertyIRI <http://schema.org/familyName> ;
-                prec:nodeLabel "Person" .
+                prec:label "Person" .
               
               # A rule for the name property of other things
               :otherNameRule a prec:PropertyRule ;
@@ -1203,49 +1203,23 @@
           </section>
 
           <section>
-            <h5><dfn data-lt="prec:nodeLabel">http://bruy.at/prec#nodeLabel</dfn></h5>
+            <h5><dfn data-lt="prec:label">http://bruy.at/prec#label</dfn></h5>
 
             <p>
-              States the label that the node must have for the rule to apply. If
-              there are several values for [= prec:nodeLabel =], the node must
-              have every labels. This predicate is incompatible with
-              [= prec:edgeLabel (used in a property rule) =]. The value
-              must be either a literal or [= prec:any =]. If the value is
-              [= prec:any =], then any node, and no edges, can be matched
-              (even the one without labels).
+              States the label that the node or edge must have for the rule to
+              apply. If there are several values for [= prec:label =], the node
+              must have every labels. The value must be a literal.
             </p>
           </section>
 
           <section>
-            <h5><dfn data-lt="prec:edgeLabel (used in a property rule)">http://bruy.at/prec#edgeLabel (in a property Rule)</dfn></h5>
+            <h5><dfn data-lt="prec:any">http://bruy.at/prec#onKind</dfn></h5>
 
             <p>
-              States the label that the edge must have for the rule to
-              apply. The value must be either a literal or [= prec:any =]. If
-              the value is [= prec:any =], then any edge, and no node
-              can be matched. Because edges can only have one label, if
-              there are several `prec:edgeLabel` clauses, the rule won't
-              be able to be matched with any edge.
+              The property rule can only be applied if it is a property on a
+              node (prec:Node as the object) or an edge (prec:Edge as the
+              object).
             </p>
-          </section>
-
-          <section>
-            <h5><dfn data-lt="prec:any">http://bruy.at/prec#any</dfn></h5>
-
-            <p>
-              Special value for [= prec:nodeLabel =] and
-              [= prec:edgeLabel (used in a property rule) =] that can be
-              states that the rule can be matched with any node or edge.
-            </p>
-
-            <aside class="warning">
-              <p>
-                As the semantic for [= prec:any =] used on a
-                [= prec:nodeLabel =] is strange (it can match a node that does
-                not have any label), [= prec:any =] may be deleted in a future
-                version of the ontology.
-              </p>
-            </aside>
           </section>
 
           <section>
@@ -1314,13 +1288,13 @@
             >
               <!--
               :personLike a prec:EdgeRule ;
-                prec:edgeLabel "Like" ;
+                prec:label "Like" ;
                 prec:sourceLabel "Person" ;
                 prec:priority 2 ;
                 prec:edgeIRI ex:likes .
                 
               :catLike a prec:EdgeRule ;
-                prec:edgeLabel "Like" ;
+                prec:label "Like" ;
                 prec:sourceLabel "Animal" ;
                 prec:priority 1 ;
                 prec:edgeIRI ex:kind_of_accepts .
@@ -1435,7 +1409,7 @@
                 The type of rules that applies to node / node label pairs.
               </li>
               <li>
-                <dfn data-lt="prec:nodeLabel (node label rule)">http://bruy.at/prec#nodeLabel (in node label rules)</dfn>:
+                <dfn data-lt="prec:label (node label rule)">http://bruy.at/prec#label (in node label rules)</dfn>:
                 Condition on the label of the node. Mandatory.
               </li>
               <li>
@@ -1705,14 +1679,14 @@
       <strong>List of valid IRIS for node schema:</strong>
       <ul>
         <li>`prec:prsc_node` - Type of node schema</li>
-        <li>`prec:nodeLabel` - A label the node must have</li>
+        <li>`prec:label` - A label the node must have</li>
         <li>`prec:composedOf` - describes how to represent the nodes that complies to the schema</li>
       </ul>
 
       <strong>List of valid IRIS for edge schema:</strong>
       <ul>
         <li>`prec:prsc_edge` - Type of edge schema</li>
-        <li>`prec:edgeLabel` - A label the edge must have</li>
+        <li>`prec:label` - A label the edge must have</li>
         <li>`prec:prscSource` - The schema the source node must have, optional</li>
         <li>`prec:prscDestination` - The schema the destination node must have, optional</li>
         <li>`prec:composedOf` - describes how to represent the edges that complies to the schema</li>
@@ -1747,14 +1721,14 @@
             prec:this_is a prec:prscContext .
 
             ex:PersonForm a prec:prsc_node ;
-              prec:nodeLabel "Person" ;
+              prec:label "Person" ;
               prec:propertyName "name" ;
               prec:composedOf
                 << pvar:node ex:hasLabel ex:person >> ,
                 << pvar:node ex:name "name"^^prec:_valueOf >> .
 
             ex:LovesForm a prec:prsc_edge ;
-              prec:edgeLabel "Likes" ;
+              prec:label "Likes" ;
               prec:prscSource      ex:PersonForm ;
               prec:prscDestination ex:PersonForm ;
               prec:composedOf << pvar:source ex:loves pvar:destination >> .

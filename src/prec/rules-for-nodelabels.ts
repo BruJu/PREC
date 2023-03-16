@@ -19,7 +19,7 @@ class NLRuleClass implements RuleType {
   readonly domain: RuleDomain = {
     RuleType          : prec.NodeLabelRule,
     DefaultTemplate   : prec.NodeLabelsTypeOfLabelIRI,
-    MainLabel         : prec.nodeLabel,
+    MainLabel         : prec.label,
     PossibleConditions: [],
     TemplateBases     : [[prec.NodeLabels, []]],
     ShortcutIRI       : prec.IRIOfNodeLabel,
@@ -103,7 +103,6 @@ class NodeLabelRule implements FilterProvider {
     this.conditions = [];
     this.ruleNode = ruleNode;
 
-    // prec:nodeLabel
     if (conditions.label !== undefined) {
       this.conditions.push([
         $quad($variable("node")     , rdf.type  , $variable("nodeLabel")),
@@ -123,14 +122,14 @@ class NodeLabelRule implements FilterProvider {
    * Return the arguments to pass to `DStar::findFilterReplace` to tag
    * the nodes that matches this rule with its rule node.
    */
-  getFilter() {
+  getFilters() {
     const markedTriple = $quad($variable("node"), rdf.type, $variable("nodeLabel"));
 
-    return {
+    return [{
       source: [$quad(markedTriple, prec.__appliedNodeRule, prec.NodeLabels)],
       conditions: this.conditions,
       destination: [$quad(markedTriple, prec.__appliedNodeRule, this.ruleNode)]
-    };
+    }];
   }
 }
 

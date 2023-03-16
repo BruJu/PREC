@@ -121,21 +121,21 @@ describe("Property convertion", () => {
       [] a prec:PropertyRule ;
         prec:propertyIRI  :knows ;
         prec:propertyName "PropertyA" ; 
-        prec:nodeLabel    prec:any
+        prec:onKind prec:Node
       .
     `,
     contextForPASubjectNodes: `
       [] a prec:PropertyRule ;
         prec:propertyIRI  :mappedA ;
         prec:propertyName "PropertyA" ;
-        prec:nodeLabel    "Subject"
+        prec:onKind prec:Node ; prec:label "Subject"
       .
     `,
     contextForPAOnLabelOfEdge: `
       [] a prec:PropertyRule ;
         prec:propertyIRI  :mappedA ;
         prec:propertyName "PropertyA" ;
-        prec:edgeLabel    "LabelOfEdge"
+        prec:label    "LabelOfEdge" ; prec:onKind prec:Edge
       .
     `
   };
@@ -331,7 +331,7 @@ describe('Synonyms', function () {
       :whoKnows prec:IRIOfRelationshipLabel "WhoKnows" .
 
       :doesntRule a prec:RelationshipRule ;
-        prec:relationshipLabel "DoesntKnow" ;
+        prec:label "DoesntKnow" ;
         prec:relationshipIRI :imlost ;
         prec:templatedBy prec:RdfStarUnique .
     `,

@@ -20,7 +20,7 @@ class EdgesRuleClass implements RuleType {
   readonly domain: RuleDomain = {
     RuleType          : prec.EdgeRule,
     DefaultTemplate   : prec.RDFReification,
-    MainLabel         : prec.edgeLabel,
+    MainLabel         : prec.label,
     PossibleConditions: [prec.sourceLabel, prec.destinationLabel],
     TemplateBases     : [[prec.Edges, []]],
     ShortcutIRI       : prec.IRIOfEdgeLabel,
@@ -116,7 +116,7 @@ class EdgeRule implements FilterProvider {
     this.conditions = [];
     this.ruleNode = ruleNode;
 
-    // prec:edgeLabel
+    // prec:label
     if (conditions.label !== undefined) {
       this.conditions.push([
         $quad($variable("edge")     , rdf.predicate, $variable("edgeLabel")),
@@ -158,12 +158,12 @@ class EdgeRule implements FilterProvider {
    * Return the arguments to pass to `DStar::findFilterReplace` to tag
    * the edges that match this manager with its rule node.
    */
-  getFilter() {
-    return {
+  getFilters() {
+    return [{
       source: [$quad($variable("edge"), prec.__appliedEdgeRule, prec.Edges)],
       conditions: this.conditions,
       destination: [$quad($variable("edge"), prec.__appliedEdgeRule, this.ruleNode)]
-    };
+    }];
   }
 }
 

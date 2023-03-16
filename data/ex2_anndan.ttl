@@ -10,7 +10,7 @@ prec:KeepProvenance prec:flagState false .
 
 [] a prec:EdgeRule ;
     prec:sourceLabel "Person" ;
-    prec:edgeLabel   "Likes"  ;
+    prec:label   "Likes"  ;
     prec:edgeIRI     <https://example.org/likes> ;
     prec:templatedBy prec:RDFReification ;
     prec:subject   ex:likedBy ;

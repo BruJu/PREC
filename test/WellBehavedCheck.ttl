@@ -175,31 +175,31 @@ GRAPH this:signature_triple_check {
   ex:bad_a_alike prec:all_signed false, ex:node_a, ex:node_alike .
 
   ex:node_a a prec:prsc_node ;
-    prec:nodeLabel "A" ;
+    prec:label "A" ;
     prec:composedOf << pvar:self a ex:A >> .
 
   ex:node_b a prec:prsc_node ;
-    prec:nodeLabel "B" ;
+    prec:label "B" ;
     prec:composedOf << pvar:self a ex:B >> .
 
   ex:node_alike a prec:prsc_node ;
-    prec:nodeLabel "A-like" ;
+    prec:label "A-like" ;
     prec:composedOf << pvar:self a ex:A >> .
 
   # Literal production
 
   ex:node_named_c a prec:prsc_node ;
-    prec:nodeLabel "C" ;
+    prec:label "C" ;
     prec:propertyName "name" ;
     prec:composedOf << pvar:self ex:name "name"^^prec:_valueOf >> .
   
   ex:node_firstnamed_d a prec:prsc_node ;
-    prec:nodeLabel "D" ;
+    prec:label "D" ;
     prec:propertyName "firstname" ;
     prec:composedOf << pvar:self ex:name "firstname"^^prec:_valueOf >> .
   
   ex:node_firstnamed_e a prec:prsc_node ;
-    prec:nodeLabel "E" ;
+    prec:label "E" ;
     prec:propertyName "firstname" ;
     prec:composedOf << pvar:self ex:firstname "firstname"^^prec:_valueOf >> .
   
@@ -210,22 +210,22 @@ GRAPH this:signature_triple_check {
   # With edges
 
   ex:reflexive_node a prec:prsc_node ;
-    prec:nodeLabel "Philosoph" ;
+    prec:label "Philosoph" ;
     prec:composedOf << pvar:self ex:knows pvar:self >> .
   
   ex:not_so_reflexive_node a prec:prsc_node ;
-    prec:nodeLabel "CarefulPhilosoph" ;
+    prec:label "CarefulPhilosoph" ;
     prec:composedOf << pvar:self ex:knows ex:themself >> .
 
   ex:edge_knows a prec:prsc_edge ;
-    prec:edgeLabel "Knows" ;
+    prec:label "Knows" ;
     prec:composedOf << pvar:source ex:knows pvar:destination >> .
   
   ex:bad_knows prec:all_signed false, ex:reflexive_node, ex:edge_knows .
   ex:ok_knows prec:all_signed true, ex:not_so_reflexive_node, ex:edge_knows .
 
   ex:edge_double_knows a prec:prsc_edge ;
-    prec:edgeLabel "DoubleKnows" ;
+    prec:label "DoubleKnows" ;
     prec:composedOf
       << pvar:source ex:dknows pvar:destination >> ,
       << pvar:destination ex:dknows pvar:source >> .
@@ -233,7 +233,7 @@ GRAPH this:signature_triple_check {
   ex:double_knows_is_bad prec:all_signed false, ex:node_a, ex:edge_double_knows .
 
   ex:edge_triple_knows a prec:prsc_edge ;
-    prec:edgeLabel "TripleKnows" ;
+    prec:label "TripleKnows" ;
     prec:composedOf
       # Not (local) signature
       << pvar:source ex:dknows pvar:destination >> ,
@@ -270,7 +270,7 @@ GRAPH this:signature_triple_check {
       << pvar:self a ex:Dog >> .
   
   ex:cat a prec:prsc_node ;
-    prec:nodeLabel "Cat" ;
+    prec:label "Cat" ;
     prec:composedOf
       << pvar:self a pgo:node >> ,
       << pvar:self a ex:Cat >> .
@@ -282,7 +282,7 @@ GRAPH this:animal_context {
   this:all prec:well_behaved true .
 
   ex:cat a prec:prsc_node ;
-    prec:nodeLabel "Cat" ;
+    prec:label "Cat" ;
     prec:propertyName "name" ;
     prec:composedOf
       << pvar:self a pgo:node >> ,
@@ -290,18 +290,18 @@ GRAPH this:animal_context {
       << pvar:self a ex:Cat >> .
     
   ex:dog a prec:prsc_node ;
-    prec:nodeLabel "Dog" ;
+    prec:label "Dog" ;
     prec:propertyName "name" ;
     prec:composedOf
       << pvar:self ex:name "name"^^prec:_valueOf >> ,
       << pvar:self ex:oncesaid "Wouf" >> .
     
   ex:human a prec:prsc_node ;
-    prec:nodeLabel "Human" ;
+    prec:label "Human" ;
     prec:composedOf << pvar:self a ex:Human >> .
   
   ex:ownership a prec:prsc_edge ;
-    prec:edgeLabel "Owns" ;
+    prec:label "Owns" ;
     prec:propertyName "declaration_date" ;
     prec:composedOf
       << pvar:self a ex:ownership_declaration >> ,
@@ -338,11 +338,11 @@ GRAPH this:bad_edgeuniqueedges {
     prec:composedOf << pvar:self a ex:Human >> .
   
   ex:knows a prec:prsc_edge ;
-    prec:edgeLabel "knows" ;
+    prec:label "knows" ;
     prec:composedOf << pvar:source ex:knows pvar:destination >> .
     
   ex:heard_about a prec:prsc_edge ;
-    prec:edgeLabel "heard_about" ;
+    prec:label "heard_about" ;
     prec:composedOf << pvar:source ex:knows pvar:destination >> .
 }
 
@@ -353,10 +353,10 @@ GRAPH this:good_edgeuniqueedges {
     prec:composedOf << pvar:self a ex:Human >> .
   
   ex:knows a prec:prsc_edge ;
-    prec:edgeLabel "knows" ;
+    prec:label "knows" ;
     prec:composedOf << pvar:source ex:knows pvar:destination >> .
     
   ex:heard_about a prec:prsc_edge ;
-    prec:edgeLabel "heard_about" ;
+    prec:label "heard_about" ;
     prec:composedOf << pvar:source ex:heard_about pvar:destination >> .
 }

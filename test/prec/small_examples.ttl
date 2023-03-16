@@ -38,7 +38,7 @@ prec:testMetaData prec:kind "SmallExamples" .
 
     :LongRule a prec:EdgeRule ;
         prec:edgeIRI :knows ;
-        prec:edgeLabel "Knows" ;
+        prec:label "Knows" ;
         prec:destinationLabel  "Person" .
 
     :knowsAbout prec:IRIOfEdgeLabel "Knows" .
@@ -89,12 +89,12 @@ prec:testMetaData prec:kind "SmallExamples" .
     :prop_food_name a prec:PropertyRule ;
                     prec:propertyIRI :food_name ;
                     prec:propertyName "name" ;
-                    prec:nodeLabel "Food" .
+                    prec:onKind prec:Node ; prec:label "Food" .
 
     :prop_animal_name a prec:PropertyRule ;
                     prec:propertyIRI :animal_name;
                     prec:propertyName "name" ;
-                    prec:nodeLabel "Animal" .
+                    prec:onKind prec:Node ; prec:label "Animal" .
 
     :prop_all_name a prec:PropertyRule ;
                     prec:propertyIRI :all_name;
