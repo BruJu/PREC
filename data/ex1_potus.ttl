@@ -15,13 +15,13 @@ prec:KeepProvenance prec:flagState false .
 # Property IRI different depending on the node label
 [] a prec:PropertyRule ;
   prec:propertyIRI <https://schema.org/familyName> ;
-  prec:propertyName "name" ;
+  prec:propertyKey "name" ;
   prec:label    "PERSON" ; prec:onKind prec:Node
 .
 
 [] a prec:PropertyRule ;
   prec:propertyIRI <http://example.org/countryName> ;
-  prec:propertyName "name" ;
+  prec:propertyKey "name" ;
   prec:label    "COUNTRY" ; prec:onKind prec:Node
 .
 

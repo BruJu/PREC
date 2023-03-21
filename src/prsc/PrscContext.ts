@@ -94,8 +94,8 @@ export class PRSCContext {
         $quad($variable('labelIRI'), rdfs.label, $variable('label'))
       ]).map(binding => (binding.label as RDF.Term).value),
       properties: dataset.matchAndBind([
-        $quad(element, $variable('propertyName'), $variable('blankNode')),
-        $quad($variable('propertyName'), rdfs.label, $variable('propertyNameLabel')),
+        $quad(element, $variable('propertyKey'), $variable('blankNode')),
+        $quad($variable('propertyKey'), rdfs.label, $variable('propertyNameLabel')),
         $quad($variable('blankNode'), rdf.value, $variable('value'))
       ]).reduce((accumulator, bindings) => {
         const key = (bindings.propertyNameLabel as RDF.Term).value;

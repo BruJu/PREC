@@ -28,12 +28,12 @@ module.exports = function (test: PrecCApplicationTester) {
       longP1isKnows: `
         [] a prec:PropertyRule ;
           prec:propertyIRI :knows ;
-          prec:propertyName "P1"  .
+          prec:propertyKey "P1"  .
       `,
 
       PGOProperty: `
         prec:Properties prec:templatedBy [
-          prec:composedOf
+          prec:produces
             << pvar:entity       pgo:hasProperty pvar:propertyNode  >> ,
             << pvar:propertyNode pgo:key         pvar:label         >> ,
             << pvar:propertyNode pgo:value       pvar:propertyValue >>

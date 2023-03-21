@@ -120,21 +120,21 @@ describe("Property convertion", () => {
     contextForNodes: `
       [] a prec:PropertyRule ;
         prec:propertyIRI  :knows ;
-        prec:propertyName "PropertyA" ; 
+        prec:propertyKey "PropertyA" ; 
         prec:onKind prec:Node
       .
     `,
     contextForPASubjectNodes: `
       [] a prec:PropertyRule ;
         prec:propertyIRI  :mappedA ;
-        prec:propertyName "PropertyA" ;
+        prec:propertyKey "PropertyA" ;
         prec:onKind prec:Node ; prec:label "Subject"
       .
     `,
     contextForPAOnLabelOfEdge: `
       [] a prec:PropertyRule ;
         prec:propertyIRI  :mappedA ;
-        prec:propertyName "PropertyA" ;
+        prec:propertyKey "PropertyA" ;
         prec:label    "LabelOfEdge" ; prec:onKind prec:Edge
       .
     `
@@ -260,7 +260,7 @@ describe('Node label rules', () => {
       `,
       `
         prec:NodeLabels prec:templatedBy [
-          prec:composedOf
+          prec:produces
             << pvar:node :somePGsaysThatTheyAreA pvar:nodeLabelIRI >> ,
             << pvar:nodeLabelIRI :labelsTheNode pvar:node  >> ,
             << << pvar:node pvar:node pvar:node >> rdf:type :rdfstartriple >>
@@ -288,7 +288,7 @@ describe('Node label rules', () => {
       `,
       `
         prec:NodeLabels prec:templatedBy [
-            prec:composedOf << pvar:node :isLabeled pvar:label >>
+            prec:produces << pvar:node :isLabeled pvar:label >>
         ] .
       `,
       `
@@ -321,7 +321,7 @@ describe('Synonyms', function () {
     `,
     `
       :worstTemplate a prec:RelationshipTemplate ;
-        prec:composedOf
+        prec:produces
           << pvar:source          :startArrow pvar:relationship >> ,
           << pvar:relationship    :endArrow   pvar:destination  >> ,
           << pvar:relationshipIRI :labels     pvar:relationship >> .

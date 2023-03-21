@@ -21,12 +21,12 @@ class PropertiesRuleClass implements RuleType {
   readonly domain: RuleDomain = {
     RuleType          : prec.PropertyRule,
     DefaultTemplate   : prec.Prec0Property,
-    MainLabel         : prec.propertyName,
+    MainLabel         : prec.propertyKey,
     PossibleConditions: [prec.label, prec.onKind],
     TemplateBases: [
-      [prec.NodeProperties, []                ],
-      [prec.EdgeProperties, []],
-      [prec.MetaProperties, []]
+      prec.NodeProperties,
+      prec.EdgeProperties,
+      prec.MetaProperties
     ],
     ShortcutIRI       : prec.IRIOfProperty,
     SubstitutionTerm  : prec.propertyIRI,
@@ -266,8 +266,7 @@ function instanciateProperty(
       [$variable("individualValue") , pvar.individualValue ],
       [$variable("metaPropertyNode"), pvar.metaPropertyNode],
     ]
-  )) as Quad[])
-  .filter(quad => !quad.predicate.equals(prec._forPredicate));
+  )) as Quad[]);
 
   // Split the template into 4 parts
   const pattern = r.reduce(
@@ -377,9 +376,8 @@ function deepResolve(termToResolve: Quad_Subject, inputDataset: DStar, context: 
       inputDataset.getQuads(termToResolve, prec.__appliedEdgeRule, null, $defaultGraph())[0]
       .object as Quad_Subject;
     
-    return context.findEdgeTemplate(ruleNode).entityIs!
-      .map(quad => {
-        const theEntityTemplate = quad.subject;
+    return context.findEdgeTemplate(ruleNode).entityIs
+      .map(theEntityTemplate => {
         const trueEntityTemplate = QuadStar.remapPatternWithVariables(
           theEntityTemplate,
           [
@@ -405,8 +403,8 @@ function deepResolve(termToResolve: Quad_Subject, inputDataset: DStar, context: 
     const propertyNode = binding.propertyNode as Quad_Subject;
 
     return context.findPropertyTemplate(ruleNode, findTypeOfEntity(inputDataset, binding.entity as Quad_Subject))
-      .entityIs!
-      .map(quad => $quad(quad.subject, prec._, prec._))
+      .entityIs
+      .map(term => $quad(term as Quad_Subject, prec._, prec._))
       .map(me => instanciateProperty(inputDataset, propertyNode, [me], context).produced)
       .flatMap(producedQuads => producedQuads.map(quad => quad.subject));
   } else {

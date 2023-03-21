@@ -178,17 +178,17 @@
 
               # The name of a person is its family name
               [] a prec:PropertyRule ;
-                prec:propertyName "name" ;
+                prec:propertyKey "name" ;
                 prec:propertyIRI <http://schema.org/familyName> ;
                 prec:label "Person" ; prec:onKind prec:Node .
               
               [] a prec:PropertyRule ;
-                prec:propertyName "firstName" ;
+                prec:propertyKey "firstName" ;
                 prec:propertyIRI <http://schema.org/givenName> .
 
               # Other names are names
               [] a prec:PropertyRule ;
-                prec:propertyName "name" ;
+                prec:propertyKey "name" ;
                 prec:propertyIRI <http://schema.org/name> .
               
               # We use an IRI from dbpedia for the since property
@@ -214,14 +214,14 @@
                 # to be the source so let's write our own template!
                 prec:templatedBy [
                   a prec:EdgeTemplate ;
-                  prec:composedOf
+                  prec:produces
                     # Assert the triple
                     <<    pvar:destination pvar:edgeIRI pvar:source               >> ,
                     # Keep the provenance
-                    << << pvar:destination pvar:edgeIRI pvar:source >> a pgo:Edge >> ,
-                    # Keep the properties
-                    << << pvar:destination pvar:edgeIRI pvar:source >> pvar:propertyPredicate pvar:propertyObject >> 
+                    << << pvar:destination pvar:edgeIRI pvar:source >> a pgo:Edge >>
                 ] ;
+                # Properties will use the following term as their subject
+                prec:edgeIs << pvar:destination pvar:edgeIRI pvar:source >> ;
                 # prec:edgeIRI will actually replace pvar:edge with schema:character
                 prec:edgeIRI <http://schema.org/character> .
             -->
@@ -700,7 +700,7 @@
           </aside>
 
           <section>
-            <h5><dfn data-lt="prec:composedOf">http://bruy.at/prec#composedOf</dfn></h5>
+            <h5><dfn data-lt="prec:produces">http://bruy.at/prec#produces</dfn></h5>
 
             <p>
               Used to state the list of RDF triples that composes the template.
@@ -723,8 +723,7 @@
               <li>`pvar:destination`: The RDF node that represents the PG destination edge.</li>
               <li>`pvar:edgeIRI`: The RDF node that represents the label of the edge.</li>
               <li>`pvar:label`: The label of the edge, as a string literal.</li>
-              <li>`pvar:propertyPredicate`: matches every other predicates, which most likely concerns already transformed properties.</li>
-              <li>`pvar:propertyObject`: matches every other objects, which most likely concerns already transformed properties.</li>
+              <li>`prec:edgeIs`: enables to specify to which term bind the properties of the edge.</li>
             </ul>
 
             <p>
@@ -738,12 +737,12 @@
               >
                 <!--
                 prec:RDFReification a prec:EdgeTemplate ;
-                  prec:composedOf
+                  prec:produces
                     << pvar:edge a pgo:Edge >> ,
                     << pvar:edge rdf:subject      pvar:source          >> ,
                     << pvar:edge rdf:predicate    pvar:edgeIRI >> ,
-                    << pvar:edge rdf:object       pvar:destination     >> ,
-                    << pvar:edge pvar:propertyPredicate pvar:propertyObject >>
+                    << pvar:edge rdf:object       pvar:destination     >> ;
+                  prec:edgeIs pvar:edge
                 .
                 -->
               </pre>
@@ -766,10 +765,11 @@
               >
                 <!--
                 prec:RdfStarUnique a prec:EdgeTemplate ;
-                  prec:composedOf
+                  prec:produces
                     <<    pvar:source pvar:edgeIRI pvar:destination               >> , # (a)
-                    << << pvar:source pvar:edgeIRI pvar:destination >> a pgo:Edge >> , # (b)
-                    << << pvar:source pvar:edgeIRI pvar:destination >> pvar:propertyPredicate pvar:propertyObject >>  # (c)
+                    << << pvar:source pvar:edgeIRI pvar:destination >> a pgo:Edge >> ; # (b)
+                  prec:edgeIs
+                    << pvar:source pvar:edgeIRI pvar:destination >> .                  # (c)
                 .
                 -->
               </pre>
@@ -798,13 +798,13 @@
                 <tr><td> `pvar:source`                </td><td> `_:src`            </td></tr>
                 <tr><td> `pvar:destination`           </td><td> `_:dest`           </td></tr>
                 <tr><td> `pvar:edgeIRI        `       </td><td> `_:label`          </td></tr>
-                <tr><td> `pvar:propertyPredicate` (1) </td><td> `_:propPlace`      </td></tr>
-                <tr><td> `pvar:propertyObject` (2)    </td><td> `_:propValuePlace` </td></tr>
-                <tr><td> `pvar:propertyPredicate` (2) </td><td> `_:propTime`       </td></tr>
-                <tr><td> `pvar:propertyObject`(2)     </td><td> `_:propValueTime`  </td></tr>
               </table>
+
+              <p>The triples `_:edge1 _:propPlace _:propValuePlace (1)` and 
+              `_:edge1 _:propTime  _:propValueTime (2)` are related to
+              properties.</p>
               
-              <p>And the produced graph will be the following:</p>
+              <p>The produced graph will be the following:</p>
               <pre data-transform="updateExample"
                  data-content-type="text/turtle"
                  class="nohighlight"
@@ -812,8 +812,8 @@
                 <!--
                 _:src _:label _:dest .                  # From (a)
                 << _:src _:label _:dest >> a pgo:Edge . # From (b)
-                << _:src _:label _:dest >> _:propPlace _:propValuePlace . # From (c) using (1) bindings
-                << _:src _:label _:dest >> _:propTime  _:propValueTime  . # From (c) using (2) bindings
+                << _:src _:label _:dest >> _:propPlace _:propValuePlace . # From (c) using (1)
+                << _:src _:label _:dest >> _:propTime  _:propValueTime  . # From (c) using (2)
                 -->
               </pre>
             </aside>
@@ -833,8 +833,7 @@
               <li>`pvar:propertyValue`: The literal that contains the property value.</li>
               <li>`pvar:individualValue`: Most of the time equals to `propertyValue`. If `propertyValue` is an rdf list, `individualValue` will match each individual literal contained in the list instead of the list itself.</li>
               <li>`pvar:metaPropertyNode`: The blank node that contains every meta property, as described in [= prec:hasMetaProperties =]</li>
-              <li>`pvar:metaPropertyPredicate`: The predicate of a meta property triple.</li>
-              <li>`pvar:metaPropertyObject`: The object of a meta property triple.</li>
+              <li>`prec:entityIs`: The term to which the meta properties must be bound.</li>
             </ul>
 
             <p>
@@ -855,11 +854,6 @@
                 </li>
                 <li>
                   Every embedded triple must be asserted by the template.
-                </li>
-                <li>
-                  `pvar:metaPropertyPredicate` and `pvar:metaPropertyObject`, if they
-                  appear, must appear both at the same time, and as repectively
-                  the predicate and the object.
                 </li>
               </ul>
             </p>
@@ -1124,22 +1118,22 @@
 
               # A rule for the name property of nodes of type Person
               :humanNameRule a prec:PropertyRule ;
-                prec:propertyName "name" ;
+                prec:propertyKey "name" ;
                 prec:propertyIRI <http://schema.org/familyName> ;
                 prec:label "Person" .
               
               # A rule for the name property of other things
               :otherNameRule a prec:PropertyRule ;
-                prec:propertyName "name" ;
+                prec:propertyKey "name" ;
                 prec:propertyIRI <http://schema.org/name> .
               
               # Other rules
               :givenNameRule a prec:PropertyRule ;
-                prec:propertyName "givenName" ;
+                prec:propertyKey "givenName" ;
                 prec:propertyIRI <http://schema.org/givenName> .
               
               # The following could have been written
-              # [] a prec:PropertyRule ; prec:propertyName "since" ; prec:propertyIRI :since
+              # [] a prec:PropertyRule ; prec:propertyKey "since" ; prec:propertyIRI :since
               :since prec:IRIOfProperty "since" .
               -->
             </pre>
@@ -1185,7 +1179,7 @@
           </section>
 
           <section>
-            <h5><dfn data-lt="prec:propertyName">http://bruy.at/prec#propertyName</dfn></h5>
+            <h5><dfn data-lt="prec:propertyKey">http://bruy.at/prec#propertyKey</dfn></h5>
 
             <p>
               The key / the name of the matched properties. The value must be a
@@ -1246,7 +1240,7 @@
               >
                 <!--
                 [] a prec:PropertyRule ;
-                  prec:propertyName "APropertyName" ;
+                  prec:propertyKey "APropertyName" ;
                   prec:propertyIRI :someIRI
                 -->
               </pre>
@@ -1680,7 +1674,7 @@
       <ul>
         <li>`prec:prsc_node` - Type of node schema</li>
         <li>`prec:label` - A label the node must have</li>
-        <li>`prec:composedOf` - describes how to represent the nodes that complies to the schema</li>
+        <li>`prec:produces` - describes how to represent the nodes that complies to the schema</li>
       </ul>
 
       <strong>List of valid IRIS for edge schema:</strong>
@@ -1689,10 +1683,10 @@
         <li>`prec:label` - A label the edge must have</li>
         <li>`prec:prscSource` - The schema the source node must have, optional</li>
         <li>`prec:prscDestination` - The schema the destination node must have, optional</li>
-        <li>`prec:composedOf` - describes how to represent the edges that complies to the schema</li>
+        <li>`prec:produces` - describes how to represent the edges that complies to the schema</li>
       </ul>
 
-      <strong>Placeholders for the template part (objects of prec:composedOf)</strong>
+      <strong>Placeholders for the template part (objects of prec:produces)</strong>
       <ul>
         <li>`pvar:node` - Node only, the identifier for the node</li>
         <li>`pvar:edge` - Edges only, the identifier for the edge</li>
@@ -1722,8 +1716,8 @@
 
             ex:PersonForm a prec:prsc_node ;
               prec:label "Person" ;
-              prec:propertyName "name" ;
-              prec:composedOf
+              prec:propertyKey "name" ;
+              prec:produces
                 << pvar:node ex:hasLabel ex:person >> ,
                 << pvar:node ex:name "name"^^prec:_valueOf >> .
 
@@ -1731,7 +1725,7 @@
               prec:label "Likes" ;
               prec:prscSource      ex:PersonForm ;
               prec:prscDestination ex:PersonForm ;
-              prec:composedOf << pvar:source ex:loves pvar:destination >> .
+              prec:produces << pvar:source ex:loves pvar:destination >> .
           -->
         </pre>
 

@@ -16,10 +16,9 @@ export type RuleDomain = {
   /** The possible conditions */
   readonly PossibleConditions: Term[];
   /**
-   * The list of domain nodes, paired with the list of conditions they are
-   * incompatible with
+   * The list of domain nodes
    */
-  readonly TemplateBases     : [NamedNode | BlankNode, Term[]][]
+  readonly TemplateBases     : (NamedNode | BlankNode)[]
   /** The term used for short rules (`:name prec:IRIOFProperty "Name".`) */
   readonly ShortcutIRI       : NamedNode;
   /** The substitution term for the label */
@@ -35,7 +34,7 @@ export type RuleDomain = {
 
 export type Template = {
   quads: Quad[];
-  entityIs: Quad[] | null;
+  entityIs: Term[];
 }
 
 export interface Priorisable {

@@ -7,8 +7,8 @@ prec:this_is a prec:prscContext .
 
 ex:PersonForm a prec:prsc_node ;
   prec:label "Person" ;
-  prec:propertyName "name" ;
-  prec:composedOf
+  prec:propertyKey "name" ;
+  prec:produces
     << pvar:node ex:hasLabel ex:person >> ,
     << pvar:node ex:name [ prec:prsc_valueOf "name" ] >> .
 
@@ -16,7 +16,7 @@ ex:LovesForm a prec:prsc_edge ;
   prec:label "Likes" ;
   prec:prscSource      ex:PersonForm ;
   prec:prscDestination ex:PersonForm ;
-  prec:composedOf
+  prec:produces
     << pvar:edge rdf:type ex:Like >>,
     << pvar:edge ex:from pvar:source >>,
     << pvar:edge ex:content_producer pvar:destination >> .

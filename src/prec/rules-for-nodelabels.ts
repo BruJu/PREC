@@ -21,7 +21,7 @@ class NLRuleClass implements RuleType {
     DefaultTemplate   : prec.NodeLabelsTypeOfLabelIRI,
     MainLabel         : prec.label,
     PossibleConditions: [],
-    TemplateBases     : [[prec.NodeLabels, []]],
+    TemplateBases     : [prec.NodeLabels],
     ShortcutIRI       : prec.IRIOfNodeLabel,
     SubstitutionTerm  : prec.nodeLabelIRI,
   

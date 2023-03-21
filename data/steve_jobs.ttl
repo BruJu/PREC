@@ -40,12 +40,12 @@ prec:KeepProvenance        prec:flagState false .
 
 [] a prec:PropertyRule ;
     prec:propertyIRI <http://schema.org/familyName> ;
-    prec:propertyName "name" ;
+    prec:propertyKey "name" ;
     prec:label   "PERSON" ; prec:onKind prec:Node .
 
 [] a prec:PropertyRule ;
     prec:propertyIRI <http://schema.org/name> ;
-    prec:propertyName "name" ;
+    prec:propertyKey "name" ;
     prec:label   "COMPANY" ; prec:onKind prec:Node .
 
 # TODO: target: transform to date

@@ -201,7 +201,7 @@ module.exports = (test: PrecCApplicationTester) => {
           
       test("One edge with an user defined template", 
         basicGraphs.oneEdge,    
-        `prec:Edges prec:templatedBy [ prec:composedOf
+        `prec:Edges prec:templatedBy [ prec:produces
             << rdf:subject rdf:predicate rdf:object >> ,
             << pvar:destination pvar:edgeIRI pvar:source >>
         ] .`,
@@ -210,7 +210,7 @@ module.exports = (test: PrecCApplicationTester) => {
         
       test("One edge with an user defined template and with substitutions",
         basicGraphs.oneEdge,
-        `prec:Edges prec:templatedBy [ prec:composedOf
+        `prec:Edges prec:templatedBy [ prec:produces
           << rdf:subject rdf:predicate rdf:object >> ,
           << pvar:destination pvar:edgeIRI pvar:source >>
         ] ;
@@ -246,7 +246,7 @@ module.exports = (test: PrecCApplicationTester) => {
       test('Use the label in an edge template',
         basicGraphs.edgeDiff,
         `
-        prec:Edges prec:templatedBy [ prec:composedOf
+        prec:Edges prec:templatedBy [ prec:produces
           << :anEdge :holdsTheLabel pvar:label  >>
         ] .
         `,

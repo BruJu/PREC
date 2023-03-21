@@ -28,12 +28,11 @@ module.exports = function (testFromPREC0: TestFromPREC0) {
         prec:KeepProvenance prec:flagState false .
     
         prec:CartesianProduct a prec:PropertyTemplate ;
-          prec:composedOf
-               << pvar:entity pvar:propertyKey pvar:individualValue >> ,
-            << << pvar:entity pvar:propertyKey pvar:individualValue >> pvar:metaPropertyPredicate pvar:metaPropertyObject >> .
-            
+          prec:produces << pvar:entity pvar:propertyKey pvar:individualValue >> ;
+          prec:entityIs << pvar:entity pvar:propertyKey pvar:individualValue >> .
+        
         [] a prec:PropertyRule ;
-          prec:propertyName "Property" ;
+          prec:propertyKey "Property" ;
           prec:propertyIRI :element .
       `,
       `
@@ -67,9 +66,9 @@ module.exports = function (testFromPREC0: TestFromPREC0) {
 
     const templatedBy = function (template: string) {
       return `
-        prec:Properties prec:templatedBy [ prec:composedOf ${template} ] .
+        prec:Properties prec:templatedBy [ prec:produces ${template} ] .
         [] a prec:PropertyRule ;
-          prec:propertyName "key" ;
+          prec:propertyKey "key" ;
           prec:propertyIRI :k .
       `;
     };
@@ -151,11 +150,11 @@ module.exports = function (testFromPREC0: TestFromPREC0) {
         prec:KeepProvenance prec:flagState false .
 
         [] a prec:PropertyRule ;
-          prec:propertyName "Property 1" ;
+          prec:propertyKey "Property 1" ;
           prec:propertyIRI  :Z_FIRST .
         
         [] a prec:PropertyRule ;
-          prec:propertyName "Property 2" ;
+          prec:propertyKey "Property 2" ;
           prec:propertyIRI  :Z_SECOND .
       `,
       `

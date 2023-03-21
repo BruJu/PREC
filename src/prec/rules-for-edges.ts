@@ -22,7 +22,7 @@ class EdgesRuleClass implements RuleType {
     DefaultTemplate   : prec.RDFReification,
     MainLabel         : prec.label,
     PossibleConditions: [prec.sourceLabel, prec.destinationLabel],
-    TemplateBases     : [[prec.Edges, []]],
+    TemplateBases     : [prec.Edges],
     ShortcutIRI       : prec.IRIOfEdgeLabel,
     SubstitutionTerm  : prec.edgeIRI,
   
@@ -89,9 +89,7 @@ class EdgesRuleClass implements RuleType {
         [$variable('label')    , pvar.label      ],
         [$variable('object')   , pvar.destination],
       ]
-    ))
-    // Remove metadata
-    .filter(quad => !QuadStar.containsTerm(quad, prec._forPredicate)) as Quad[];
+    )) as Quad[];
   
     // Replace non property dependant quads
     bindings['@quads'] = [];

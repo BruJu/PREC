@@ -60,7 +60,7 @@ export function buildRule(context: DStar, identity: RDF.Quad_Subject)
   }
 
   const labels = followAllXSDStrings(context, identity, prec.label);
-  const properties = followAllXSDStrings(context, identity, prec.propertyName);
+  const properties = followAllXSDStrings(context, identity, prec.propertyKey);
   const template = readTemplate(context, identity);
 
   const listOfInvalidPropNames = getInvalidPropNames(template, properties);
@@ -102,9 +102,9 @@ export function buildRule(context: DStar, identity: RDF.Quad_Subject)
  * graph.
  * 
  * A triple is in the template graph if:
- * - it is a quoted triple in the object position of (identity, prec:composedOf, -)
- * - it is in a graph whose name is in object position of (identity, prec:composedOf, -)
- * - There exists a path between a blank node used in a quoted triple of prec:composedOf
+ * - it is a quoted triple in the object position of (identity, prec:produces, -)
+ * - it is in a graph whose name is in object position of (identity, prec:produces, -)
+ * - There exists a path between a blank node used in a quoted triple of prec:produces
  * and a blank node used in the default graph in object position.
  * @param context The template graph
  * @param identity The rule identifier
@@ -115,7 +115,7 @@ function readTemplate(context: DStar, identity: RDF.Quad_Subject): RDF.Quad[] {
 
   const template: RDF.Quad[] = [];
 
-  for (const object of followAll(context, identity, prec.composedOf)) {
+  for (const object of followAll(context, identity, prec.produces)) {
     if (object.termType === 'Quad') {
       if (alreadySeenQuads.has(object)) continue;
 
@@ -144,7 +144,7 @@ function readTemplate(context: DStar, identity: RDF.Quad_Subject): RDF.Quad[] {
       const graphContent = context.getQuads(null, null, null, object);
       if (graphContent.length === 0) {
         const TTS = RDFString.termToString;
-        throw Error(`${TTS(identity)} prec:composedOf ${TTS(object)} has been found but the graph ${TTS(object)} is empty.`);
+        throw Error(`${TTS(identity)} prec:produces ${TTS(object)} has been found but the graph ${TTS(object)} is empty.`);
       }
 
       for (const quad of graphContent) {
@@ -152,7 +152,7 @@ function readTemplate(context: DStar, identity: RDF.Quad_Subject): RDF.Quad[] {
         template.push(quadInDefaultGraph);
       }
     } else {
-      throw Error(`Invalid object for prec:composedOf found in rule ${RDFString.termToString(identity)}`);
+      throw Error(`Invalid object for prec:produces found in rule ${RDFString.termToString(identity)}`);
     }
   }
 

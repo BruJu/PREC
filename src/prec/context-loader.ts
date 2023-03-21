@@ -2,7 +2,8 @@ import DStar from '../dataset/index';
 
 import fs from 'fs';
 import * as N3 from 'n3';
-import { Quad, NamedNode, Term, Quad_Subject, Literal } from 'rdf-js';
+import { Quad, NamedNode, Term, Quad_Subject, Literal, Quad_Object } from 'rdf-js';
+import * as RDF from 'rdf-js';
 import TermMap from '@rdfjs/term-map';
 import TermSet from '@rdfjs/term-set';
 import * as QuadStar from '../rdf/quad-star';
@@ -13,6 +14,7 @@ import {
   rdf, xsd, prec, pvar, pgo,
   $quad, $blankNode
 } from '../PRECNamespace';
+import { termToString } from 'rdf-string';
 
 const variable      = N3.DataFactory.variable;
 const $defaultGraph = N3.DataFactory.defaultGraph;
@@ -274,65 +276,46 @@ class SplitNamespace {
 }
 
 export function readRawTemplate(dataset: DStar, template: Term, ruleDomain: RuleDomain)
-: { composedOf: Quad[], entityIs: null | Quad[] }
+: { templateGraph: Quad[], entityIs: Term[] }
 {
   // Load the abstract template
-  let composedOf = dataset.getQuads(template, prec.composedOf, null, $defaultGraph())
+  let templateGraph = dataset.getQuads(template, prec.produces, null, $defaultGraph())
     .map(quad => quad.object) as Quad[];
   
-  // Backward compatibility
-  const toRemove: Quad[] = [];
-  for (const templateQuad of composedOf) {
-    let po = false;
+  // Non Backward compatibility
+  const forbiddenTerms = new TermSet<RDF.Term>([
+    pvar.propertyPredicate, pvar.propertyObject,
+    pvar.metaPropertyPredicate, pvar.metaPropertyObject
+  ]);
 
+  const allPositions = ['subject', 'predicate', 'object', 'graph'] as const;
+  
+  for (const templateQuad of templateGraph) {
     if (templateQuad.termType !== 'Quad') {
       throw Error('Object of template quad must be a quad');
     }
 
-    if (templateQuad.predicate.equals(pvar.propertyPredicate)) {
-      if (!templateQuad.object.equals(pvar.propertyObject)) {
-        throw Error('Invalid template');
-      }
-      
-      po = true;
-    } else if (templateQuad.predicate.equals(pvar.metaPropertyPredicate)) {
-      if (!templateQuad.object.equals(pvar.metaPropertyObject)) {
-        throw Error('Invalid template');
-      }
+    if (allPositions.some(position => forbiddenTerms.has(templateQuad[position]))) {
+      const str = "Invalid template, pvar:(metaP|p)roperty(Object|Predicate) are obsolete. Use [] "
+        + termToString(ruleDomain.PropertyHolderSubstitutionTerm) + " instead."
 
-      po = true;
-    } else {
-      if (QuadStar.containsTerm(templateQuad, pvar.propertyPredicate)
-        || QuadStar.containsTerm(templateQuad, pvar.propertyObject)
-        || QuadStar.containsTerm(templateQuad, pvar.metaPropertyPredicate)
-        || QuadStar.containsTerm(templateQuad, pvar.metaPropertyObject)) {
-        throw Error('Invalid template');
-      }
-    }
-
-    if (po) {
-      toRemove.push(templateQuad);
+      throw Error(str);
     }
   }
-
-  composedOf = composedOf.filter(q => !toRemove.includes(q));
     
-  let entityIs: Quad[] | null = toRemove.map(q => $quad(q.subject, prec._forPredicate, prec._forPredicate));
+  let entityIs: Term[] = [];
       
   if (ruleDomain.PropertyHolderSubstitutionTerm !== null) {
-    entityIs.push(...
-      dataset.getQuads(template, ruleDomain.PropertyHolderSubstitutionTerm, null, $defaultGraph())
-        .map(q => $quad(q.object as Quad_Subject, prec._forPredicate, prec._forPredicate))
-    );
+    entityIs = dataset
+      .getQuads(template, ruleDomain.PropertyHolderSubstitutionTerm, null, $defaultGraph())
+      .map(q => q.object);
 
     if (entityIs.length === 0) {
-      entityIs = findImplicitEntity(ruleDomain.EntityIsHeuristic || [], composedOf)
-        ?.map(t => $quad(t, prec._forPredicate, prec._forPredicate))
-        || null;
+      entityIs = findImplicitEntity(ruleDomain.EntityIsHeuristic || [], templateGraph) || [];
     }
   }
 
-  return { composedOf, entityIs };
+  return { templateGraph, entityIs };
 }
 
 /**
@@ -361,7 +344,7 @@ function _buildTemplate(dataset: DStar, materializations: SplitDefMaterializatio
     }
   }
     
-  const { composedOf, entityIs } = readRawTemplate(dataset, template, ruleDomain);
+  const { templateGraph, entityIs } = readRawTemplate(dataset, template, ruleDomain);
 
   function remapFunc(term: Quad) {
     return QuadStar.eventuallyRebuildQuad(
@@ -371,8 +354,8 @@ function _buildTemplate(dataset: DStar, materializations: SplitDefMaterializatio
   }
 
   return {
-    quads: composedOf.map(remapFunc),
-    entityIs: entityIs === null ? null : entityIs.map(remapFunc)
+    quads: templateGraph.map(remapFunc),
+    entityIs: entityIs.map(term => remapFunc($quad(prec._, prec._, term as Quad_Object)).object)
   };
 }
 
@@ -436,7 +419,7 @@ export class EntitiesManager {
     // Load the base templates
     let baseTemplates = new TermMap<Quad_Subject, SplitDefMaterialization>();
 
-    for (let [templateName, _] of domain.TemplateBases) {
+    for (const templateName of domain.TemplateBases) {
       // Read the node, ensure it just have a template
       const splitted = SplitNamespace.splitDefinition(contextDataset, templateName, domain, substitutionTerms);
       SplitNamespace.throwIfNotMaterializationOnly(splitted, templateName);
@@ -468,15 +451,8 @@ export class EntitiesManager {
       // Read remapping=
       this.iriRemapper.push(Cls.makeOneRuleFilter(splitted.conditions, conditions, quad.subject));
 
-      for (const [templateName, forbiddenPredicates] of domain.TemplateBases) {
-        // Check if this template x the current base template are compatible
-        let forbidden = forbiddenPredicates.find(forbiddenPredicate =>
-          splitted.conditions.other.find(c => c[0].equals(forbiddenPredicate)) !== undefined
-        ) !== undefined;
-        
-        if (forbidden) continue;
-
-        // Add the pair
+      for (const templateName of domain.TemplateBases) {
+        // Add the pair template name - template
         const template = makeTemplate([splitted.materialization, baseTemplates.get(templateName)!])
         this.templatess.get(templateName)!.set(quad.subject, template);
       }
