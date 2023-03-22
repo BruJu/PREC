@@ -1,4 +1,3 @@
-import { Quad, Term, DatasetCore } from "rdf-js";
 import * as RDF from '@rdfjs/types';
 
 import * as N3 from 'n3';
@@ -6,10 +5,10 @@ import * as QuadStar from '../rdf/quad-star';
 
 type PathComponent = 'subject' | 'predicate' | 'object' | 'graph';
 
-export type Bindings = {[blankNodeName: string]: Term};
+export type Bindings = {[blankNodeName: string]: RDF.Term};
 
 /** Return true if the quad contains a nested quad */
-function isRdfStarQuad(quad: Quad) {
+function isRdfStarQuad(quad: RDF.Quad) {
   return quad.subject.termType === 'Quad'
     || quad.object.termType === 'Quad';
 }
@@ -19,26 +18,26 @@ function isLikeNone<T>(something: T | null | undefined) {
   return something === null || something === undefined;
 }
 
-type VariablesInstanciation = {[key: string]: Term | Quad[]};
-export type MatchResult = VariablesInstanciation & { '@quads': Quad[] };
-type MatchOneResult = VariablesInstanciation & { '@quad': Quad };
+type VariablesInstanciation = {[key: string]: RDF.Term | RDF.Quad[]};
+export type MatchResult = VariablesInstanciation & { '@quads': RDF.Quad[] };
+type MatchOneResult = VariablesInstanciation & { '@quad': RDF.Quad };
 
 /**
  * Return the term at the position described by path in the quad
  * 
  * path is an array of 'subject' | 'predicate' | 'object' | 'graph'
  */
-function getTermAtPosition(quad: Quad, path: PathComponent[]): Term {
-  let term: Term = quad;
-  for (let p of path) term = (term as Quad)[p];
+function getTermAtPosition(quad: RDF.Quad, path: PathComponent[]): RDF.Term {
+  let term: RDF.Term = quad;
+  for (let p of path) term = (term as RDF.Quad)[p];
   return term;
 }
 
-type QuadOrArrayOfQuad = Quad | QuadOrArrayOfQuad[];
+type QuadOrArrayOfQuad = RDF.Quad | QuadOrArrayOfQuad[];
 
-export function bindVariables(bindings: Bindings, quad: Quad): Quad;
-export function bindVariables(bindings: Bindings, quad: Quad[]): Quad[];
-export function bindVariables(bindings: Bindings, quad: Quad[][]): Quad[][];
+export function bindVariables(bindings: Bindings, quad: RDF.Quad): RDF.Quad;
+export function bindVariables(bindings: Bindings, quad: RDF.Quad[]): RDF.Quad[];
+export function bindVariables(bindings: Bindings, quad: RDF.Quad[][]): RDF.Quad[][];
 export function bindVariables(bindings: Bindings, quad: QuadOrArrayOfQuad): QuadOrArrayOfQuad;
 
 /**
@@ -59,7 +58,7 @@ export function bindVariables(bindings: Bindings, quad: QuadOrArrayOfQuad): Quad
     return quad.map((q: QuadOrArrayOfQuad) => bindVariables(bindings, q));
   }
 
-  return QuadStar.eventuallyRebuildQuad(quad, (term: Term) => {
+  return QuadStar.eventuallyRebuildQuad(quad, (term: RDF.Term) => {
     if (term.termType !== 'Variable') return term;
 
     const variableValue = bindings[term.value];
@@ -76,14 +75,14 @@ export function bindVariables(bindings: Bindings, quad: QuadOrArrayOfQuad): Quad
  * a certain pattern with quads that match another pattern
  * (see `findFilterReplace`).
  */
-export default class DStar implements DatasetCore {
+export default class DStar implements RDF.DatasetCore {
   store: N3.Store;
-  starQuads: Quad[];
+  starQuads: RDF.Quad[];
 
   // =========================================================================
 
   /** Build a dataset. If quads are provided, they are added to the dataset. */
-  constructor(quads?: Quad[]) {
+  constructor(quads?: RDF.Quad[]) {
     // A store that contains the non rdf star quads
     this.store = new N3.Store();
     // A list of RDF-star quads
@@ -112,7 +111,7 @@ export default class DStar implements DatasetCore {
   }
 
   /** Add the quad to the dataset */
-  add(quad: Quad) {
+  add(quad: RDF.Quad) {
     if (isRdfStarQuad(quad)) {
       if (!this.has(quad)) this.starQuads.push(quad);
     } else {
@@ -123,7 +122,7 @@ export default class DStar implements DatasetCore {
   }
 
   /** Removes the quad from the dataset */
-  delete(quad: Quad) {
+  delete(quad: RDF.Quad) {
     if (isRdfStarQuad(quad)) {
       let q = this.starQuads.findIndex(here => quad.equals(here));
       if (q !== -1) {
@@ -137,9 +136,9 @@ export default class DStar implements DatasetCore {
   }
 
   /** Return true if the quad is in the datset */
-  has(quad: Quad) {
+  has(quad: RDF.Quad) {
     if (isRdfStarQuad(quad)) {
-      return this.starQuads.find(here => here.equals(quad)) !== undefined;
+      return this.starQuads.some(here => here.equals(quad));
     } else {
       return this.store.countQuads(quad.subject, quad.predicate, quad.object, quad.graph) === 1;
     }
@@ -149,7 +148,7 @@ export default class DStar implements DatasetCore {
    * Return a dataset with the quads of this dataset that matches the given
    * filter
    */
-  match(subject?: Term | null, predicate?: Term | null, object?: Term | null, graph?: Term | null) {
+  match(subject?: RDF.Term | null, predicate?: RDF.Term | null, object?: RDF.Term | null, graph?: RDF.Term | null) {
     return new DStar(this.getQuads(subject, predicate, object, graph));
   }
 
@@ -165,21 +164,24 @@ export default class DStar implements DatasetCore {
   }
 
   /** Calls the function of each of dataset */
-  forEach(callback: (quad: Quad) => void) {
+  forEach(callback: (quad: RDF.Quad) => void) {
     for (const quad of this) {
       callback(quad);
     }
   }
 
   /** Add all the quads of the given iterable to this dataset */
-  addAll(quads: Quad[]) {
+  addAll(quads: RDF.Quad[]) {
     for (const quad of quads) {
       this.add(quad);
     }
   }
     
   /** Delete all quads that matches the given pattern */
-  deleteMatches(subject?: Term | null, predicate?: Term | null, object?: Term | null, graph?: Term | null) {
+  deleteMatches(
+    subject?: RDF.Term | null, predicate?: RDF.Term | null,
+    object?: RDF.Term | null, graph?: RDF.Term | null
+    ) {
     let quads = this.getQuads(subject, predicate, object, graph);
     this.removeQuads(quads);
     return this;
@@ -212,10 +214,10 @@ export default class DStar implements DatasetCore {
    * if all of them matches one of the given pattern. null if at least one
    * does not match any of the patterns
    */
-  allUsageOfAre(term: Term, authorizedPatterns: Quad[]): Quad[] | null {
+  allUsageOfAre(term: RDF.Term, authorizedPatterns: RDF.Quad[]): RDF.Quad[] | null {
     let matches = [];
 
-    function isAuthorized(quad: Quad) {
+    function isAuthorized(quad: RDF.Quad) {
       const x = authorizedPatterns.find(pattern => QuadStar.matches(quad, pattern));
       return x !== undefined;
     }
@@ -252,7 +254,10 @@ export default class DStar implements DatasetCore {
   // ==== Mimic a part of the N3.Store interface
 
   /** Return an array with all the quads that matches the given filter */
-  getQuads(subject?: Term | null, predicate?: Term | null, object?: Term | null, graph?: Term | null) {
+  getQuads(
+    subject?: RDF.Term | null, predicate?: RDF.Term | null,
+    object?: RDF.Term | null, graph?: RDF.Term | null
+    ) {
     let inStore = this.store.getQuads(subject || null, predicate || null, object || null, graph || null);
 
     let inArray = this.starQuads.filter(quad =>
@@ -271,7 +276,7 @@ export default class DStar implements DatasetCore {
   }
     
   /** Removes */
-  removeQuads(quads: Quad[]) {
+  removeQuads(quads: RDF.Quad[]) {
     for (const quad of quads) {
       this.delete(quad);
     }
@@ -302,9 +307,9 @@ export default class DStar implements DatasetCore {
    * 
    * @param {*} pattern A quad that contains variables
    */
-  matchPattern(pattern: Quad) {
+  matchPattern(pattern: RDF.Quad) {
     let extractVariableEvaluationsPaths: { variable: string, path: PathComponent[] }[] = [];
-    function extractVariableEvaluations(quad: Quad) {
+    function extractVariableEvaluations(quad: RDF.Quad) {
       let d: MatchOneResult = { "@quad": quad };
 
       for (let path of extractVariableEvaluationsPaths) {
@@ -314,8 +319,8 @@ export default class DStar implements DatasetCore {
       return d;
     }
 
-    let extraFilterExpected: { term: Term, path: PathComponent[] }[] = [];
-    function extraFilter(quad: Quad) {
+    let extraFilterExpected: { term: RDF.Term, path: PathComponent[] }[] = [];
+    function extraFilter(quad: RDF.Quad) {
         for (let expected of extraFilterExpected) {
             let term = getTermAtPosition(quad, expected.path);
             if (!term.equals(expected.term)) return false;
@@ -324,7 +329,7 @@ export default class DStar implements DatasetCore {
         return true;
     }
 
-    function decomposeNested(term: Term, path: PathComponent[]) {
+    function decomposeNested(term: RDF.Term, path: PathComponent[]) {
       if (term.termType === 'Variable') {
         extractVariableEvaluationsPaths.push({ variable: term.value, path: path });
         return null;
@@ -423,7 +428,7 @@ export default class DStar implements DatasetCore {
    * @param destination The destination pattern, an array of quads
    * @returns The result of `matchAndBind` on `source`
    */
-  findFilterReplace(source: Quad[], conditions: Quad[][], destination: Quad[]) {
+  findFilterReplace(source: RDF.Quad[], conditions: RDF.Quad[][], destination: RDF.Quad[]) {
     // Find
     let binds = this.matchAndBind(source);
 
@@ -455,7 +460,7 @@ export default class DStar implements DatasetCore {
    * @param pattern The pattern, a list of quads that may contain
    * variables.
    */
-  matchAndBind(patterns: Quad[]) {
+  matchAndBind(patterns: RDF.Quad[]) {
     return this._matchAndBind(patterns, 0, [ { "@quads": [] }]);
   }
 
@@ -463,7 +468,7 @@ export default class DStar implements DatasetCore {
    * Recursive implementation of matchAndBind, that process
    * `patterns[iPattern:]`
    */
-  _matchAndBind(patterns: Quad[], iPattern: number, results: MatchResult[]): MatchResult[] {
+  _matchAndBind(patterns: RDF.Quad[], iPattern: number, results: MatchResult[]): MatchResult[] {
     if (iPattern == patterns.length) return results;
 
     const pattern = patterns[iPattern];
@@ -504,7 +509,7 @@ export default class DStar implements DatasetCore {
    * @param destinationPatterns The new pattern that is used to replaces
    * the matched quads.
    */
-  _replaceFromBindings(bindings: MatchResult[], destinationPatterns: Quad[]) {
+  _replaceFromBindings(bindings: MatchResult[], destinationPatterns: RDF.Quad[]) {
     bindings.forEach(binding => this.replaceOneBinding(binding, destinationPatterns));
   }
   
@@ -514,7 +519,7 @@ export default class DStar implements DatasetCore {
    * @param bindings A member of the list returned by `matchAndBind`
    * @param destinationPatterns The new pattern to replace the quads with
    */
-  replaceOneBinding(bindings: MatchResult, destinationPatterns: Quad[]) {
+  replaceOneBinding(bindings: MatchResult, destinationPatterns: RDF.Quad[]) {
     bindings['@quads'].forEach(quad => this.delete(quad));
     
     for (const destinationPattern of destinationPatterns) {

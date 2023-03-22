@@ -1,26 +1,19 @@
 import fs from 'fs';
 import * as N3 from 'n3';
 import path from 'path';
+import * as RDF from "@rdfjs/types";
 
 import { apocToRDF, stringToApocDocuments } from '../prec';
 import assert from 'assert';
 import { filenameToArrayOfQuads } from '../src/rdf/parsing';
 
-import { Quad, Quad_Graph, Quad_Predicate, Quad_Subject, Term } from 'rdf-js';
-
 const testFolder = './test/prec/';
 
 import { rdf, prec, $quad, $literal, $defaultGraph } from '../src/PRECNamespace';
 import checkIsomorphism from '@bruju/rdf-test-util';
+import { followThrough } from '../src/rdf/path-travelling';
 
-function get(store: N3.Store, subject: Quad_Subject, predicate: Quad_Predicate) {
-  const quads = store.getQuads(subject, predicate, null, N3.DataFactory.defaultGraph());
-
-  if (quads.length != 1) return null;
-  else return quads[0].object;
-}
-
-function extractGraph(store: N3.Store, graph: Quad_Graph) {
+function extractGraph(store: N3.Store, graph: RDF.Quad_Graph) {
   const result = new N3.Store(
     store.getQuads(null, null, null, graph)
       .map(quad => $quad(quad.subject, quad.predicate, quad.object))
@@ -37,9 +30,9 @@ function extractGraph(store: N3.Store, graph: Quad_Graph) {
   return result;
 }
 
-function getContent(store: N3.Store, term: Term) {
+function getContent(store: N3.Store, term: RDF.Term) {
   while (term.termType !== "Literal") {
-    const next = get(store, term as Quad_Subject, prec.testContent);
+    const next = followThrough(store, term as RDF.Quad_Subject, prec.testContent);
     if (next === null) assert.ok(false, "Malformed test");
     term = next;
   }
@@ -66,9 +59,9 @@ describe("prec", () => {
         const meta = expected.getQuads(prec.testMetaData, null, null, $defaultGraph);
         assert.ok(meta.length === 3);
 
-        const pgPath      = get(expected, prec.testMetaData, prec.pgPath)!;
-        const pgSource    = get(expected, prec.testMetaData, prec.pgSource)!;
-        const contextPath = get(expected, prec.testMetaData, prec.contextPath)!;
+        const pgPath      = followThrough(expected, prec.testMetaData, prec.pgPath)!;
+        const pgSource    = followThrough(expected, prec.testMetaData, prec.pgSource)!;
+        const contextPath = followThrough(expected, prec.testMetaData, prec.contextPath)!;
 
         expected.removeQuads(meta);
 
@@ -89,11 +82,11 @@ describe("prec", () => {
 function smallExample(store: N3.Store) {
   for (const unitTest of store.getQuads(null, rdf.type, prec.unitTest, $defaultGraph)) {
     const node = unitTest.subject;
-    const context = get(store, node, prec.context)! as Quad_Predicate;
+    const context = followThrough(store, node, prec.context)! as RDF.Quad_Predicate;
 
     it(context.value, () => {
-      const output        = get(store, node, prec.output) as Quad_Predicate;
-      const propertyGraph = get(store, node, prec.propertyGraph) as Quad_Predicate;
+      const output        = followThrough(store, node, prec.output) as RDF.Quad_Predicate;
+      const propertyGraph = followThrough(store, node, prec.propertyGraph) as RDF.Quad_Predicate;
 
       assert.notStrictEqual(context, null);
       assert.notStrictEqual(output, null);
@@ -112,7 +105,7 @@ function smallExample(store: N3.Store) {
   }
 }
 
-function checkIfcorrectOutput(graphContent: string, context: Quad[], expected: N3.Store) {
+function checkIfcorrectOutput(graphContent: string, context: RDF.Quad[], expected: N3.Store) {
   const apocDocuments = stringToApocDocuments(graphContent);
   const result = apocToRDF(apocDocuments, context);
 

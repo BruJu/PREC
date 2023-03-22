@@ -5,7 +5,7 @@ import RulesForNodeLabels from './rules-for-nodelabels';
 import RulesForProperties from './rules-for-properties';
 import * as XX from './context-loader';
 
-import { NamedNode, Quad, Quad_Subject } from '@rdfjs/types';
+import * as RDF from '@rdfjs/types';
 import { Template } from './RuleType';
 
 import { prec } from '../PRECNamespace';
@@ -26,7 +26,7 @@ export default class Context {
   keepProvenance: boolean;
   blankNodeMapping: { [domain: string]: string; };
 
-  constructor(contextQuads: Quad[]) {
+  constructor(contextQuads: RDF.Quad[]) {
     const dataset = new DStar(contextQuads);
     XX.addBuiltIn(dataset, __dirname + "/../builtin_rules.ttl");
     XX.replaceSynonyms(dataset);
@@ -75,7 +75,7 @@ export default class Context {
    * `storeAlterer.findFilterReplace` function as the destination pattern
    * after replacing the variables with actual terms.
    */
-  findEdgeTemplate(ruleNode: Quad_Subject): Template {
+  findEdgeTemplate(ruleNode: RDF.Quad_Subject): Template {
     return this.edges.getTemplateFor(ruleNode, prec.Edges)!;
   }
 
@@ -83,11 +83,11 @@ export default class Context {
    * Same as `findEdgeTemplate` but for properties.
    * `type` should be `prec:(Node|Edge|Meta)Properties`
    */
-  findPropertyTemplate(ruleNode: Quad_Subject, type: NamedNode): Template {
+  findPropertyTemplate(ruleNode: RDF.Quad_Subject, type: RDF.NamedNode): Template {
     return this.properties.getTemplateFor(ruleNode, type)!;
   }
 
-  getNodeLabelTemplateQuads(ruleNode: Quad_Subject) {
+  getNodeLabelTemplateQuads(ruleNode: RDF.Quad_Subject) {
     return this.nodeLabels.getTemplateFor(ruleNode, prec.NodeLabels)!.quads;
   }
 }

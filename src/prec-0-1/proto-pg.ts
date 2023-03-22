@@ -1,6 +1,5 @@
 import * as WasmTree from "@bruju/wasm-tree";
-import { DatasetCore, Quad_Subject, NamedNode, BlankNode } from "@rdfjs/types";
-import { DataFactory } from "n3";
+import * as RDF from "@rdfjs/types";
 import { extractAndDeletePropertyValue, ExtractedPropertyValue, getRealLabel, readPropertyName } from "../prec-0/Prec0DatasetUtil";
 import { hasNamedGraph, isRdfStar, areDisjointTypes, getNodesOfType, getPathsFrom, RDFPathPartial, followThrough, hasExpectedPaths, RDFPath } from "../rdf/path-travelling";
 
@@ -8,7 +7,7 @@ import gremlin from 'gremlin';
 const traversal = gremlin.process.AnonymousTraversalSource.traversal;
 import DriverRemoteConnection = gremlin.driver.DriverRemoteConnection;
 
-import { rdf, rdfs, prec, pgo, $quad } from '../PRECNamespace';
+import { rdf, rdfs, prec, pgo, $quad, $defaultGraph } from '../PRECNamespace';
 
 
 export type PseudoPGNode = {
@@ -113,15 +112,15 @@ export default class PseudoPGBuilder {
       // Edges may have some other things that are properties
       for (let rdfEdge of getNodesOfType(dataset, pgo.Edge)) {
         // rdf:subject/predicate/object
-        let [source, destination, label] = extractEdgeSPO(dataset, rdfEdge as NamedNode | BlankNode);
+        let [source, destination, label] = extractEdgeSPO(dataset, rdfEdge as RDF.NamedNode | RDF.BlankNode);
         let pgEdge = builder.addEdge(source.value, destination.value)
         pgEdge.label = label[1]!;
 
         // Remove from the RDF graph to be able to check if we consumed
         // the whole graph.
-        dataset.delete(DataFactory.quad(rdfEdge, rdf.subject  , source     ));
-        dataset.delete(DataFactory.quad(rdfEdge, rdf.predicate, label[0]   ));
-        dataset.delete(DataFactory.quad(rdfEdge, rdf.object   , destination));
+        dataset.delete($quad(rdfEdge, rdf.subject  , source     ));
+        dataset.delete($quad(rdfEdge, rdf.predicate, label[0]   ));
+        dataset.delete($quad(rdfEdge, rdf.object   , destination));
 
         // Some other things that are properties
         pgEdge.properties = extractProperties(dataset, rdfEdge, "Edge");
@@ -134,7 +133,7 @@ export default class PseudoPGBuilder {
       for (let rdfNode of getNodesOfType(dataset, pgo.Node)) {
         // The node itself
         let pgNode = builder.addNode(rdfNode.value);
-        dataset.delete(DataFactory.quad(rdfNode, rdf.type, pgo.Node));
+        dataset.delete($quad(rdfNode, rdf.type, pgo.Node));
 
         // Labels and properties
         pgNode.labels = extractLabels(dataset, rdfNode);
@@ -143,7 +142,7 @@ export default class PseudoPGBuilder {
 
       // Delete from the RDF graph the triples that are "prec related".
 
-      function noMoreInContext(dataset: DatasetCore, subject: Quad_Subject) {
+      function noMoreInContext(dataset: RDF.DatasetCore, subject: RDF.Quad_Subject) {
         return dataset.match(null, subject, null).size == 0 &&
         dataset.match(null, null, subject).size == 0;
       }
@@ -196,8 +195,8 @@ export default class PseudoPGBuilder {
 // - propBN rdf:type propBN
 // - propBN is only used here
 // => We currently don't support meta properties
-function extractProperties(dataset: DatasetCore, rdfNode: Quad_Subject, type: 'Node' | 'Edge') {
-  let ignoreList: NamedNode[];
+function extractProperties(dataset: RDF.DatasetCore, rdfNode: RDF.Quad_Subject, type: 'Node' | 'Edge') {
+  let ignoreList: RDF.NamedNode[];
   if (type == "Node") {
     ignoreList = [rdf.type];
   } else if (type == "Edge") {
@@ -216,16 +215,16 @@ function extractProperties(dataset: DatasetCore, rdfNode: Quad_Subject, type: 'N
 
     dataset.delete(path);
 
-    const propertyValue = extractAndDeletePropertyValue(dataset, path.object as Quad_Subject);
+    const propertyValue = extractAndDeletePropertyValue(dataset, path.object as RDF.Quad_Subject);
     if (propertyValue === null || propertyValue === undefined)
-        throw "Invalid RDF Graph - Invalid Property Value - " + path.object.value;
+        throw Error("Invalid RDF Graph - Invalid Property Value - " + path.object.value);
 
     if (properties[propertyKey] !== undefined) {
       // Note : we could relax this so several times the same
       // predicate name means it was a list.
       // But this wouldn't catch the case of empty and one
       // element lists.
-      throw "Invalid RDF graph: several times the same property " + propertyKey;
+      throw Error("Invalid RDF graph: several times the same property " + propertyKey);
     }
 
     properties[propertyKey] = propertyValue;
@@ -234,15 +233,15 @@ function extractProperties(dataset: DatasetCore, rdfNode: Quad_Subject, type: 'N
   return properties;
 }
 
-function extractLabels(dataset: DatasetCore, node: Quad_Subject) {
+function extractLabels(dataset: RDF.DatasetCore, node: RDF.Quad_Subject) {
   let otherTypes = dataset.match(node, rdf.type);
 
   let result = [...otherTypes].map(quad => quad.object);
   for (let r of result) {
-    dataset.delete(DataFactory.quad(node, rdf.type, r));
+    dataset.delete($quad(node, rdf.type, r));
   }
 
-  return result.map(term => getRealLabel(dataset, term as Quad_Subject, prec.CreatedNodeLabel)!);
+  return result.map(term => getRealLabel(dataset, term as RDF.Quad_Subject, prec.CreatedNodeLabel)!);
 }
 
 
@@ -261,24 +260,24 @@ function extractLabels(dataset: DatasetCore, node: Quad_Subject) {
  * Returns null on error.
  * @returns [subject node, object node, [ predicate node, predicate label ]]
  */
-function extractEdgeSPO(dataset: DatasetCore, rdfEdge: NamedNode | BlankNode)
-: [Quad_Subject, Quad_Subject, [Quad_Subject, string | null]] {
-  function extractConnectedNodeToEdge(dataset: DatasetCore, rdfEdge: Quad_Subject, predicate: NamedNode) {
+function extractEdgeSPO(dataset: RDF.DatasetCore, rdfEdge: RDF.NamedNode | RDF.BlankNode)
+: [RDF.Quad_Subject, RDF.Quad_Subject, [RDF.Quad_Subject, string | null]] {
+  function extractConnectedNodeToEdge(dataset: RDF.DatasetCore, rdfEdge: RDF.Quad_Subject, predicate: RDF.NamedNode) {
     let result = followThrough(dataset, rdfEdge, predicate);
     if (!result) throw "Edge has no " + predicate.value + " " + rdfEdge.value;
-    if (!dataset.has($quad(result as Quad_Subject, rdf.type, pgo.Node))) {
+    if (!dataset.has($quad(result as RDF.Quad_Subject, rdf.type, pgo.Node))) {
       throw "Edge connected to something that is not a node";
     }
-    return result as Quad_Subject;
+    return result as RDF.Quad_Subject;
   }
 
-  function extractLabel(dataset: DatasetCore, rdfEdge: Quad_Subject, predicate: NamedNode)
-  : [Quad_Subject, string | null] {
+  function extractLabel(dataset: RDF.DatasetCore, rdfEdge: RDF.Quad_Subject, predicate: RDF.NamedNode)
+  : [RDF.Quad_Subject, string | null] {
     let result = followThrough(dataset, rdfEdge, predicate);
     if (!result) throw "Edge has no " + predicate.value;
     return [
-      result as Quad_Subject,
-      getRealLabel(dataset, result as Quad_Subject, prec.CreatedEdgeLabel)
+      result as RDF.Quad_Subject,
+      getRealLabel(dataset, result as RDF.Quad_Subject, prec.CreatedEdgeLabel)
     ];
   }
 
@@ -293,22 +292,22 @@ function extractEdgeSPO(dataset: DatasetCore, rdfEdge: NamedNode | BlankNode)
  * Remove all subject that have the given paths and match the given predicate.
  */
 function removeSubjectIfMatchPaths(
-  dataset: DatasetCore,
+  dataset: RDF.DatasetCore,
   requiredPaths: RDFPathPartial[],
   optionalPaths: RDFPathPartial[] = [],
-  extraPredicate: (dataset: DatasetCore, subject: Quad_Subject) => boolean = () => true
+  extraPredicate: (dataset: RDF.DatasetCore, subject: RDF.Quad_Subject) => boolean = () => true
 ) {
   if (requiredPaths.length == 0) {
     throw "Empty required path is not yet implemented";
   }
 
-  function removePaths(dataset: DatasetCore, subject: Quad_Subject, paths: RDFPath[]) {
-    paths.map(path => DataFactory.quad(subject, path[0], path[1]))
+  function removePaths(dataset: RDF.DatasetCore, subject: RDF.Quad_Subject, paths: RDFPath[]) {
+    paths.map(path => $quad(subject, path[0], path[1]))
       .forEach(q => dataset.delete(q));
   }
 
   // Find subjects that match the first pattern
-  let match = dataset.match(null, requiredPaths[0][0], requiredPaths[0][1], DataFactory.defaultGraph());
+  let match = dataset.match(null, requiredPaths[0][0], requiredPaths[0][1], $defaultGraph);
 
   let old01 = requiredPaths[0][1];
 

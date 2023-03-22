@@ -1,11 +1,12 @@
-import { DatasetCore, Quad, Quad_Graph, Quad_Object, Quad_Predicate, Quad_Subject, Term } from "@rdfjs/types";
+import * as RDF from "@rdfjs/types";
 import TermSet from "@rdfjs/term-set";
 import * as PrecUtils from './utils';
 
 import { rdf, $quad, $defaultGraph } from '../PRECNamespace';
+import { termToString } from "rdf-string";
 
-export type RDFPath = [Quad_Predicate, Quad_Object];
-export type RDFPathPartial = [Quad_Predicate, Quad_Object | null];
+export type RDFPath = [RDF.Quad_Predicate, RDF.Quad_Object];
+export type RDFPathPartial = [RDF.Quad_Predicate, RDF.Quad_Object | null];
 
 
 /*
@@ -16,7 +17,7 @@ export type RDFPathPartial = [Quad_Predicate, Quad_Object | null];
  */
 
 /** Returns true if one of the quad is not in the default graph */
-export function hasNamedGraph(dataset: DatasetCore) {
+export function hasNamedGraph(dataset: RDF.DatasetCore) {
   for (const quad of dataset) {
     if (!$defaultGraph.equals(quad.graph)) {
       return true;
@@ -27,7 +28,7 @@ export function hasNamedGraph(dataset: DatasetCore) {
 }
 
 /** Returns true if one of the quad has a embedded quad */
-export function isRdfStar(dataset: DatasetCore) {
+export function isRdfStar(dataset: RDF.DatasetCore) {
   for (const quad of dataset) {
     if (quad.subject.termType === 'Quad') return true;
     if (quad.object.termType === 'Quad') return true;
@@ -40,8 +41,8 @@ export function isRdfStar(dataset: DatasetCore) {
  * Returns true if the given types are disjoints, ie if all nodes that have
  * one of them as a type doesn't have the others as type.
  */
-export function areDisjointTypes(dataset: DatasetCore, types: Quad_Object[]) {
-  const typedObjects = new TermSet<Term>();
+export function areDisjointTypes(dataset: RDF.DatasetCore, types: RDF.Quad_Object[]) {
+  const typedObjects = new TermSet<RDF.Term>();
 
   for (const type of types) {
     const thisType = dataset.match(null, rdf.type, type);
@@ -60,7 +61,7 @@ export function areDisjointTypes(dataset: DatasetCore, types: Quad_Object[]) {
  * @param type The type of the wanted nodes
  * @returns The list of nodes that have the given type
  */
-export function getNodesOfType(dataset: DatasetCore, type: Quad_Object, graph?: Quad_Graph) {
+export function getNodesOfType(dataset: RDF.DatasetCore, type: RDF.Quad_Object, graph?: RDF.Quad_Graph) {
   return [...dataset.match(null, rdf.type, type, graph)]
     .map(quad => quad.subject);
 }
@@ -73,7 +74,7 @@ export function getNodesOfType(dataset: DatasetCore, type: Quad_Object, graph?: 
  * @returns The list of quads that has the given subject and for which the
  * predicate is not in ignoreList
  */
-export function getPathsFrom(dataset: DatasetCore, subject: Quad_Subject, ignoreList?: Quad_Predicate[]) {
+export function getPathsFrom(dataset: RDF.DatasetCore, subject: RDF.Quad_Subject, ignoreList?: RDF.Quad_Predicate[]) {
   return [...dataset.match(subject)]
     .filter(quad => !PrecUtils.termIsIn(quad.predicate, ignoreList || []));
 }
@@ -88,7 +89,7 @@ export function getPathsFrom(dataset: DatasetCore, subject: Quad_Subject, ignore
  * @param predicate The predicate
  * @returns The corresponding object if it exists and is unique
  */
-export function followThrough(dataset: DatasetCore, subject: Quad_Subject, predicate: Quad_Predicate) {
+export function followThrough(dataset: RDF.DatasetCore, subject: RDF.Quad_Subject, predicate: RDF.Quad_Predicate) {
   let match = dataset.match(subject, predicate, null, $defaultGraph);
   if (match.size !== 1) return null;
 
@@ -106,13 +107,13 @@ export function followThrough(dataset: DatasetCore, subject: Quad_Subject, predi
  * @returns null if no value has been found, the value if one.
  */
 export function followOrNull(
-  dataset: DatasetCore,
-  subject: Quad_Subject, predicate: Quad_Predicate
-): Quad_Object | null {
+  dataset: RDF.DatasetCore,
+  subject: RDF.Quad_Subject, predicate: RDF.Quad_Predicate
+): RDF.Quad_Object | null {
   const triples = dataset.match(subject, predicate, null, $defaultGraph);
   if (triples.size === 0) return null;
   else if (triples.size === 1) return [...triples][0].object;
-  else throw Error("More than one path");
+  else throw Error(`More than one path for ${termToString(subject)} ${termToString(predicate)} ?o`);
 }
 
 /**
@@ -123,9 +124,9 @@ export function followOrNull(
  * @returns The list of objects
  */
 export function followAll(
-  dataset: DatasetCore,
-  subject: Quad_Subject, predicate: Quad_Predicate
-): Quad_Object[] {
+  dataset: RDF.DatasetCore,
+  subject: RDF.Quad_Subject, predicate: RDF.Quad_Predicate
+): RDF.Quad_Object[] {
   return [
     ...dataset.match(subject, predicate, null, $defaultGraph)
   ].map(quad => quad.object);
@@ -154,8 +155,8 @@ export function followAll(
  * that is not either in requiredPaths or optionalPaths.
  */
 export function hasExpectedPaths(
-  dataset: DatasetCore,
-  subject: Quad_Subject,
+  dataset: RDF.DatasetCore,
+  subject: RDF.Quad_Subject,
   requiredPaths: RDFPathPartial[],
   optionalPaths: RDFPathPartial[],
   outFoundPaths?: RDFPath[]
@@ -171,7 +172,7 @@ export function hasExpectedPaths(
   let optPaths = [...optionalPaths];
 
   // Helper function to check and remove from the list of accepted paths
-  function findInListOfPaths(quad: Quad, paths: RDFPathPartial[]) {
+  function findInListOfPaths(quad: RDF.Quad, paths: RDFPathPartial[]) {
     let iPath = paths.findIndex(path =>
       quad.predicate.equals(path[0])
       && (path[1] === null || quad.object.equals(path[1]))
@@ -214,9 +215,9 @@ export function hasExpectedPaths(
  * extra unspecified paths were found.
  */
 export function checkAndFollow(
-  dataset: DatasetCore,
-  subject: Quad_Subject,
-  predicate: Quad_Predicate,
+  dataset: RDF.DatasetCore,
+  subject: RDF.Quad_Subject,
+  predicate: RDF.Quad_Predicate,
   requiredPaths: RDFPath[],
   optionalPaths: RDFPath[]
 ) {
@@ -242,7 +243,9 @@ export function checkAndFollow(
  * Throws an error if the list is not a valid RDF list or one of its node is
  * connected to another part of the graph.
  */
-export function extractAndDeleteRdfList(dataset: DatasetCore, currentNode: Quad_Subject): Quad_Object[] {
+export function extractAndDeleteRdfList(
+  dataset: RDF.DatasetCore, currentNode: RDF.Quad_Subject
+  ): RDF.Quad_Object[] {
   let result = [];
 
   while (!rdf.nil.equals(currentNode)) {
@@ -269,7 +272,7 @@ export function extractAndDeleteRdfList(dataset: DatasetCore, currentNode: Quad_
     dataset.delete($quad(currentNode, rdf.first, value   ));
     dataset.delete($quad(currentNode, rdf.rest , next    ));
 
-    currentNode = next as Quad_Subject;
+    currentNode = next as RDF.Quad_Subject;
   }
 
   return result;

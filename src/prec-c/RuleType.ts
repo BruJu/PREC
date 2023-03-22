@@ -1,4 +1,4 @@
-import { Term, Quad, NamedNode, BlankNode, Quad_Subject } from "rdf-js";
+import * as RDF from "@rdfjs/types";
 import { SplitDefConditions } from "./context-loader";
 import DStar from '../dataset/index';
 import Context from "./Context";
@@ -8,33 +8,33 @@ import Context from "./Context";
  */
 export type RuleDomain = {
   /** The type of the rules */
-  readonly RuleType          : NamedNode;
+  readonly RuleType          : RDF.NamedNode;
   /** The default template for the data affected by this rule */
-  readonly DefaultTemplate   : Term;
+  readonly DefaultTemplate   : RDF.Term;
   /** The predicate to address the label of the element */
-  readonly MainLabel         : NamedNode;
+  readonly MainLabel         : RDF.NamedNode;
   /** The possible conditions */
-  readonly PossibleConditions: Term[];
+  readonly PossibleConditions: RDF.Term[];
   /**
    * The list of domain nodes
    */
-  readonly TemplateBases     : (NamedNode | BlankNode)[]
+  readonly TemplateBases     : (RDF.NamedNode | RDF.BlankNode)[]
   /** The term used for short rules (`:name prec:IRIOFProperty "Name".`) */
-  readonly ShortcutIRI       : NamedNode;
+  readonly ShortcutIRI       : RDF.NamedNode;
   /** The substitution term for the label */
-  readonly SubstitutionTerm  : NamedNode;
+  readonly SubstitutionTerm  : RDF.NamedNode;
   
   /** Property holder substitution term (where are the properties going?) */
-  readonly PropertyHolderSubstitutionTerm: Term | null;
+  readonly PropertyHolderSubstitutionTerm: RDF.Term | null;
 
   // TODO: Use real substitutions instead of this
 
-  readonly EntityIsHeuristic: NamedNode[][] | null;
+  readonly EntityIsHeuristic: RDF.NamedNode[][] | null;
 }
 
 export type Template = {
-  quads: Quad[];
-  entityIs: Term[];
+  quads: RDF.Quad[];
+  entityIs: RDF.Term[];
 }
 
 export interface Priorisable {
@@ -42,25 +42,25 @@ export interface Priorisable {
 }
 
 export interface FilterProviderConstructor {
-  new (conditions: SplitDefConditions, hash: string, ruleNode: Quad_Subject): FilterProvider;
+  new (conditions: SplitDefConditions, hash: string, ruleNode: RDF.Quad_Subject): FilterProvider;
 }
 
 export interface FilterProvider extends Priorisable {
-  getFilters(): { source: Quad[], conditions: Quad[][], destination: Quad[]}[];
+  getFilters(): { source: RDF.Quad[], conditions: RDF.Quad[][], destination: RDF.Quad[]}[];
 }
 
 export interface RuleType {
   get domain(): RuleDomain;
-  get mark(): NamedNode;
+  get mark(): RDF.NamedNode;
 
-  makeOneRuleFilter(conditions: SplitDefConditions, hash: string, ruleNode: Quad_Subject): FilterProvider;
+  makeOneRuleFilter(conditions: SplitDefConditions, hash: string, ruleNode: RDF.Quad_Subject): FilterProvider;
 
   addInitialMarks(dataset: DStar): void;
 
   applyMark(
     destination: DStar,
-    mark: Quad,
+    mark: RDF.Quad,
     input: DStar,
     context: Context
-  ): Term[];
+  ): RDF.Term[];
 }

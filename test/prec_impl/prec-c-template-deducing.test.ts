@@ -4,10 +4,10 @@ import * as N3 from "n3";
 import * as RDF from "@rdfjs/types";
 
 import DStar from '../../src/dataset/index';
-import EdgeRules from '../../src/prec/rules-for-edges';
-import PropertyRules from '../../src/prec/rules-for-properties';
-import { readRawTemplate } from '../../src/prec/context-loader';
-import { RuleDomain } from '../../src/prec/RuleType';
+import EdgeRules from '../../src/prec-c/rules-for-edges';
+import PropertyRules from '../../src/prec-c/rules-for-properties';
+import { readRawTemplate } from '../../src/prec-c/context-loader';
+import { RuleDomain } from '../../src/prec-c/RuleType';
 import { $quad, prec } from '../../src/PRECNamespace';
 import { termToString } from 'rdf-string';
 
