@@ -294,14 +294,14 @@
 
       <section>
         <h2>PRSC - Schema driven mapping</h3>
+
+          <p>
+            PRSC contexts are contexts that transform all nodes and edges that
+            share a common type by using a given RDF representation.
+            A type is defined as whenever the element is an edge or a node,
+            the list of labels and the list of properties of the element.
+          </p>
   
-          <!--
-        <p>
-          So far, the context maps individually edges, nodes and properties and
-          PREC-C manages for you the interaction between them. It is
-          possible to use another type of context: schema driven contexts.        
-        </p>
-        -->
   
         <p>
           This kind of context identify every node and edges to a schema, and the
@@ -316,26 +316,18 @@
         </p>
       -->
   
-        <strong>List of valid IRIS for node schema:</strong>
+        <strong>List of valid IRIS for a PRSC rule are:</strong>
         <ul>
-          <li>`prec:PRSCNodeRule` - Type of node schema</li>
+          <li>`prec:PRSCNodeRule` - Type for rules that target nodes</li>
+          <li>`prec:PRSCEdgeRule` - Type for rules that target edges.</li>
           <li>`prec:label` - A label the node must have</li>
-          <li>`prec:produces` - describes how to represent the nodes that complies to the schema</li>
-        </ul>
-  
-        <strong>List of valid IRIS for edge schema:</strong>
-        <ul>
-          <li>`prec:PRSCEdgeRule` - Type of edge schema</li>
-          <li>`prec:label` - A label the edge must have</li>
-          <li>`prec:prscSource` - The type the source node must have, optional</li>
-          <li>`prec:prscDestination` - The type the destination node must have, optional</li>
-          <li>`prec:produces` - describes how to represent the edges that complies to the schema</li>
+          <li>`prec:propertyKey` - A property the node must have</li>
+          <li>`prec:produces` - describes how to represent the elements that complies to the rule</li>
         </ul>
   
         <strong>Placeholders for the template part (objects of prec:produces)</strong>
         <ul>
-          <li>`pvar:node` - Node only, the identifier for the node</li>
-          <li>`pvar:edge` - Edges only, the identifier for the edge</li>
+          <li>`pvar:self` - The identifier for the element (node or edge)</li>
           <li>`pvar:source` - Edges only, source of the edge</li>
           <li>`pvar:destination` - Edges only, destination of the edge</li>
           <li>`"property key"^^prec:valueOf` - Placeholder for the value of the property "property name"</li>
@@ -367,8 +359,6 @@
   
               ex:LovesForm a prec:PRSCEdgeRule ;
                 prec:label "Likes" ;
-                prec:prscSource      ex:PersonForm ;
-                prec:prscDestination ex:PersonForm ;
                 prec:produces << pvar:source ex:loves pvar:destination >> .
             -->
           </pre>
@@ -376,6 +366,12 @@
         </aside>
       </section>
   
+
+      
+        <p>
+          Unlike PRSC context that only have rules for nodes and edges, PREC-C
+          context ruleset can target node, edges and properties.
+        </p>
 
       <section>
         <h3>Types</h3>
@@ -454,10 +450,10 @@
       <section>
         <h3>Reserved IRIs</h4>
 
-        <p>IRIs in the `prec` namespace are reserved for the ontology (obviously).</p>
+        <p>IRIs in the `prec` namespace are reserved for the ontology.</p>
 
         <p><a href="https://github.com/BruJu/PREC/">The default implementation</a>
-          reserves for itself the IRIs prefixed with `_` and `__`.  Therefore,
+          reserves for itself the IRIs prefixed with `_` and `__`. Therefore,
           as they are reserved for implementation, using them in a context
           results in undefined behaviour.</p>
       </section>

@@ -12,8 +12,6 @@ ex:PersonForm a prec:PRSCNodeRule ;
 
 ex:LovesForm a prec:PRSCEdgeRule ;
   prec:label "Likes" ;
-  prec:prscSource      ex:PersonForm ;
-  prec:prscDestination ex:PersonForm ;
   prec:produces
     << pvar:edge rdf:type ex:Like >>,
     << pvar:edge ex:from pvar:source >>,

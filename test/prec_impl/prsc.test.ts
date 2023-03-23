@@ -91,8 +91,6 @@ module.exports = () => {
           prec:label "person" .
 
         [] a prec:PRSCEdgeRule ;
-          prec:prscSource :person ;
-          prec:prscDestination :person ;
           prec:label "knows" ;
           prec:produces << pvar:source :knows pvar:destination >>,
             << pvar:edge :is :discarded  >> .
@@ -128,8 +126,6 @@ module.exports = () => {
           prec:produces << pvar:self a :Person >> .
 
         [] a prec:PRSCEdgeRule ;
-          prec:prscSource :person ;
-          prec:prscDestination :person ;
           prec:label "knows" ;
           prec:propertyKey "since" ;
           prec:produces << pvar:source :knows pvar:destination >>,
@@ -290,13 +286,9 @@ module.exports = () => {
           return pg;
         })(),
         `
-        [] a prec:PRSCNodeRule ;
-          prec:label "person" .
-
-        :otherSchema a prec:PRSCNodeRule .
-
-        [] a prec:PRSCEdgeRule ;
-          prec:prscSource :otherSchema .
+        :emptyNodeType a prec:PRSCNodeRule ; prec:label "person" .
+        :otherNodeType a prec:PRSCNodeRule .
+        :emptyEdgeType a prec:PRSCEdgeRule .
         `
       );
 
@@ -313,8 +305,6 @@ module.exports = () => {
           prec:label "person" .
 
         [] a prec:PRSCEdgeRule ;
-          prec:prscSource :person ;
-          prec:prscDestination :person ;
           prec:label "connait" .
         `
       );
