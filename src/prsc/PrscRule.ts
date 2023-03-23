@@ -46,9 +46,9 @@ export function buildRule(context: DStar, identity: RDF.Quad_Subject)
   const type = followThrough(context, identity, rdf.type);
   if (type === null) {
     violations.push({ type: 'rule_bad_type_qtt', identity: identity, message: "must have exactly one type" });
-  } else if (type.equals(prec.prsc_node)) {
+  } else if (type.equals(prec.PRSCNodeRule)) {
     nodeOrEdge = 'node';
-  } else if (type.equals(prec.prsc_edge)) {
+  } else if (type.equals(prec.PRSCEdgeRule)) {
     nodeOrEdge = 'edge';
   } else {
     violations.push({ type: 'rule_given_bad_type', identity: identity, foundType: type });

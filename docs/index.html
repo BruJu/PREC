@@ -323,14 +323,14 @@
   
         <strong>List of valid IRIS for node schema:</strong>
         <ul>
-          <li>`prec:prsc_node` - Type of node schema</li>
+          <li>`prec:PRSCNodeRule` - Type of node schema</li>
           <li>`prec:label` - A label the node must have</li>
           <li>`prec:produces` - describes how to represent the nodes that complies to the schema</li>
         </ul>
   
         <strong>List of valid IRIS for edge schema:</strong>
         <ul>
-          <li>`prec:prsc_edge` - Type of edge schema</li>
+          <li>`prec:PRSCEdgeRule` - Type of edge schema</li>
           <li>`prec:label` - A label the edge must have</li>
           <li>`prec:prscSource` - The schema the source node must have, optional</li>
           <li>`prec:prscDestination` - The schema the destination node must have, optional</li>
@@ -365,14 +365,14 @@
   
               prec:this_is a prec:prscContext .
   
-              ex:PersonForm a prec:prsc_node ;
+              ex:PersonForm a prec:PRSCNodeRule ;
                 prec:label "Person" ;
                 prec:propertyKey "name" ;
                 prec:produces
                   << pvar:node ex:hasLabel ex:person >> ,
                   << pvar:node ex:name "name"^^prec:_valueOf >> .
   
-              ex:LovesForm a prec:prsc_edge ;
+              ex:LovesForm a prec:PRSCEdgeRule ;
                 prec:label "Likes" ;
                 prec:prscSource      ex:PersonForm ;
                 prec:prscDestination ex:PersonForm ;

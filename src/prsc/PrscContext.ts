@@ -44,7 +44,7 @@ export class PRSCContext {
     const dataset = new DStar(contextQuads);
     const alreadySeenTypes = new TermSet();
 
-    for (const type of [prec.prsc_node, prec.prsc_edge]) {
+    for (const type of [prec.PRSCNodeRule, prec.PRSCEdgeRule]) {
       for (const ruleQuad of dataset.match(null, rdf.type, type, $defaultGraph)) {
         // Do not process duplicates
         if (alreadySeenTypes.has(ruleQuad.subject)) continue;
@@ -157,7 +157,7 @@ export function violationToString(violation: PRSCContextViolation): string {
     return `${RDFString.termToString(violation.identity)} does not have exactly one type`;
   } else if (violation.type === 'rule_given_bad_type') {
     return `${RDFString.termToString(violation.identity)} has the type ${RDFString.termToString(violation.foundType)} `
-      + 'which is different from the expected types prec:prsc_node and prec:prsc_edge.'
+      + 'which is different from the expected types prec:PRSCNodeRule and prec:PRSCEdgeRule.'
   } else if (violation.type === 'template_has_invalid_prop_name') {
     return RDFString.termToString(violation.identity)
       + " uses the property name " + violation.propName

@@ -30,7 +30,7 @@ export default function applyContext(dataset: DStar, contextQuads: RDF.Quad[]) {
  * @param dataset The PREC-0 graph
  * @param contextQuads The PRSC context
  */
-function applyPRSC(dataset: DStar, contextQuads: RDF.Quad[]) {
+export function applyPRSC(dataset: DStar, contextQuads: RDF.Quad[]) {
   const dstar = prsc(dataset, contextQuads);
   dataset.deleteMatches();
   if (dstar !== null) dataset.addAll([...dstar]);
@@ -41,7 +41,7 @@ function applyPRSC(dataset: DStar, contextQuads: RDF.Quad[]) {
  * @param dataset The PREC-0 graph
  * @param contextQuads The PREC-C context
  */
-function applyPRECC(dataset: DStar, contextQuads: RDF.Quad[]) {
+export function applyPRECC(dataset: DStar, contextQuads: RDF.Quad[]) {
   const context = new Context(contextQuads);
 
   // -- Blank nodes transformation

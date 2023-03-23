@@ -8,42 +8,42 @@ PREFIX :      <http://test/>
 
 # This file describes PRSC rules for which the validity will be checked.
 
-:empty_node_template a prec:prsc_node ;
+:empty_node_template a prec:PRSCNodeRule ;
   prec:is_valid_template true . 
 
-:empty_edge_template a prec:prsc_edge ;
+:empty_edge_template a prec:PRSCEdgeRule ;
   prec:is_valid_template true .
 
-:node_with_all_properties a prec:prsc_node ;
+:node_with_all_properties a prec:PRSCNodeRule ;
   prec:propertyKey "name", "age" ;
   prec:produces
     << pvar:self ex:name "name"^^prec:_valueOf >> ,
     << pvar:self ex:age  "age"^^prec:_valueOf >> ;
   prec:is_valid_template true .
 
-:node_with_source a prec:prsc_node ;
+:node_with_source a prec:PRSCNodeRule ;
   prec:produces
     << pvar:self ex:from pvar:source >> ;
   prec:is_valid_template false .
 
-:node_with_destination a prec:prsc_node ;
+:node_with_destination a prec:PRSCNodeRule ;
   prec:produces
     << pvar:self ex:from pvar:destination >> ;
   prec:is_valid_template false .
 
 
-:node_with_missing_property a prec:prsc_node ;
+:node_with_missing_property a prec:PRSCNodeRule ;
   prec:propertyKey "name", "age" ;
   prec:produces << pvar:self ex:name "name"^^prec:_valueOf >> ;
   prec:is_valid_template true .
 
 
-:node_with_all_missing_properties a prec:prsc_node ;
+:node_with_all_missing_properties a prec:PRSCNodeRule ;
   prec:propertyKey "name", "age" ;
   prec:produces << :thereIsANode :in :thegraph >> ;
   prec:is_valid_template true .
 
-:node_with_absent_property a prec:prsc_node ;
+:node_with_absent_property a prec:PRSCNodeRule ;
   prec:propertyKey "name" ;
   prec:produces << pvar:self :name "surname"^^prec:_valueOf >> ;
   prec:is_valid_template: false .
