@@ -316,11 +316,6 @@
         </p>
       -->
   
-        <p>
-          The `prec:this_is a prec:prscContext` triple is mandatory in such contexts.
-        </p>
-  
-  
         <strong>List of valid IRIS for node schema:</strong>
         <ul>
           <li>`prec:PRSCNodeRule` - Type of node schema</li>
@@ -332,8 +327,8 @@
         <ul>
           <li>`prec:PRSCEdgeRule` - Type of edge schema</li>
           <li>`prec:label` - A label the edge must have</li>
-          <li>`prec:prscSource` - The schema the source node must have, optional</li>
-          <li>`prec:prscDestination` - The schema the destination node must have, optional</li>
+          <li>`prec:prscSource` - The type the source node must have, optional</li>
+          <li>`prec:prscDestination` - The type the destination node must have, optional</li>
           <li>`prec:produces` - describes how to represent the edges that complies to the schema</li>
         </ul>
   
@@ -362,8 +357,6 @@
               PREFIX pvar: <http://bruy.at/prec-trans#>
               PREFIX ex:   <http://example.org/>
               PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-  
-              prec:this_is a prec:prscContext .
   
               ex:PersonForm a prec:PRSCNodeRule ;
                 prec:label "Person" ;

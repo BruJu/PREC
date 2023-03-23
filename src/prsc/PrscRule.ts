@@ -54,11 +54,6 @@ export function buildRule(context: DStar, identity: RDF.Quad_Subject)
     violations.push({ type: 'rule_given_bad_type', identity: identity, foundType: type });
   }
 
-  if (context.match(identity, prec.nodeLabel).size !== 0
-  || context.match(identity, prec.edgeLabel).size !== 0) {
-    throw Error("prec:nodeLabel or prec:edgeLabel was used but this term is now obsolete: use prec:label instead");
-  }
-
   const labels = followAllXSDStrings(context, identity, prec.label);
   const properties = followAllXSDStrings(context, identity, prec.propertyKey);
   const template = readTemplate(context, identity);

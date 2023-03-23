@@ -21,6 +21,8 @@ module.exports = (test_: (name: string, pg: PropertyGraph, _: string, rdf: strin
         nl:Person rdfs:label "Person" ; a prec:CreatedNodeLabel .
         nl:President rdfs:label "President" ; a prec:CreatedNodeLabel .
         nl:Father rdfs:label "Father" ; a prec:CreatedNodeLabel .
+
+        prec:CreatedNodeLabel rdfs:subClassOf prec:CreatedVocabulary .
       `
     );
 
@@ -39,6 +41,8 @@ module.exports = (test_: (name: string, pg: PropertyGraph, _: string, rdf: strin
         ] .
         
         np:name\\/Person a prec:PropertyKey, prec:CreatedPropertyKey ; rdfs:label "name" .
+        prec:CreatedPropertyKey rdfs:subClassOf prec:CreatedVocabulary .
+        prec:CreatedNodeLabel rdfs:subClassOf prec:CreatedVocabulary .
       `
     );
 

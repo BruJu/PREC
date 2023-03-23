@@ -178,12 +178,6 @@ export function unwrapContext(r: { context: PRSCContext } | { violations: PRSCCo
 ////////////////////////////////////////////////////////////////////////////////
 // ==== Structural description graph -> Idiomatic Graph
 
-
-export function isPrscContext(contextQuads: RDF.Quad[]) {
-  const searched = $quad(prec.this_is, rdf.type, prec.prscContext);
-  return contextQuads.find(q => q.equals(searched)) !== undefined;
-}
-
 export default function precCwithPRSC(dataset: DStar, contextQuads: RDF.Quad[]): DStar {
   const context = unwrapContext(PRSCContext.build(contextQuads));
   return context.apply(dataset);

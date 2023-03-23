@@ -28,13 +28,13 @@ import { extractFromNeo4jProtocole } from './prec-0/from-cypher';
 import { getNodesOfType } from './rdf/path-travelling';
 import PseudoPGBuilder, { insertIntoGremlin, makeCypherQuery, PseudoPGEdge, PseudoPGNode } from './prec-0-1/proto-pg';
 import DStar from './dataset';
-import graphReducer from './prec/graph-reducer';
+import graphReducer, { ContextType, getContextType } from './prec/graph-reducer';
 import { filenameToArrayOfQuads, outputTheStore } from './rdf/parsing';
 
 import { APOCDocument, CypherEntry } from "./prec-0/PGDefinitions";
 import fromGremlin from './prec-0/from-gremlin';
 
-import { isPrscContext, PRSCContext, revertPrecC, violationToString } from './prsc/PrscContext';
+import { PRSCContext, revertPrecC, violationToString } from './prsc/PrscContext';
 
 import gremlin from 'gremlin';
 import { Driver } from 'neo4j-driver';
@@ -403,8 +403,10 @@ function revertRdfGraphToPseudoPg(rdfPath: string, options: any) {
 
   if (options['context'] !== undefined) {
     const ctxQuads = parser.parse(fs.readFileSync(options['context'], "utf8"));
-    if (!isPrscContext(ctxQuads)) {
-      console.error("Error: The given context must be a PRSC context");
+
+    const contextType = getContextType(ctxQuads);
+    if (contextType !== ContextType.PRSC) {
+      console.error("Error: The given context must be a non empty PRSC context");
       return false;
     }
 

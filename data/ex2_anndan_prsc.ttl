@@ -5,8 +5,6 @@ PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 # PRSC = Presque = Almost
 
-prec:this_is a prec:prscContext .
-
 ex:PersonForm a prec:PRSCNodeRule ;
   prec:label "Person" ;
   prec:propertyKey "name" ;

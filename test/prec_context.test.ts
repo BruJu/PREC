@@ -299,8 +299,9 @@ describe('Node label rules', () => {
   });
 });
 
-describe('Synonyms', function () {
-  test('should properly map relationship to edge', 
+// TODO: place somewhere else this test
+describe('Another test', function () {
+  test('another test', 
     `
       :edge1 a pgo:Edge ;
         rdf:subject :nodes ;
@@ -320,19 +321,19 @@ describe('Synonyms', function () {
       :ignores a prec:CreatedEdgeLabel ; rdfs:label "DoesntKnow" .
     `,
     `
-      :worstTemplate a prec:RelationshipTemplate ;
+      :worstTemplate a prec:EdgeTemplate ;
         prec:produces
-          << pvar:source          :startArrow pvar:relationship >> ,
-          << pvar:relationship    :endArrow   pvar:destination  >> ,
-          << pvar:relationshipIRI :labels     pvar:relationship >> .
+          << pvar:source          :startArrow pvar:edge >> ,
+          << pvar:edge    :endArrow   pvar:destination  >> ,
+          << pvar:edgeIRI :labels     pvar:edge >> .
         
-      prec:Relationships prec:templatedBy :worstTemplate .
+      prec:Edges prec:templatedBy :worstTemplate .
 
-      :whoKnows prec:IRIOfRelationshipLabel "WhoKnows" .
+      :whoKnows prec:IRIOfEdgeLabel "WhoKnows" .
 
-      :doesntRule a prec:RelationshipRule ;
+      :doesntRule a prec:EdgeRule ;
         prec:label "DoesntKnow" ;
-        prec:relationshipIRI :imlost ;
+        prec:edgeIRI :imlost ;
         prec:templatedBy prec:RdfStarUnique .
     `,
     `
