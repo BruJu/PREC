@@ -78,10 +78,11 @@
       <p><a href="https://github.com/BruJu/PREC/">PREC</a> is composed of two modules:</p>
       <ul>
         <li><dfn>PREC-0</dfn>, a Property Graph to RDF graph converter</li>
-        <li><dfn>PREC-Context</dfn>, an RDF Graph generated from PREC-0 to more readable graphs converter</li>
+        <li><dfn>PRSC</dfn> (PG to RDF, Schema-based Converter), an RDF Graph generated from PREC-0 to more readable graphs converter, based on schemas</li>
+        <li><dfn>PREC-C</dfn> (PREC-Context), an RDF Graph generated from PREC-0 to more readable graphs converter</li>
       </ul>
       
-      <p>To define the transformations to apply, PREC-Context uses a <em>Context</em> provided
+      <p>To define the transformations to apply, PRSC and PREC-Context uses a <em>Context</em> provided
       by the user in <a href="https://w3c.github.io/rdf-star/cg-spec/editors_draft.html#turtle-star">Turtle-Star</a> format.
       </p>
 
@@ -89,18 +90,31 @@
         <p>This ontology is currently very tentative and is subject to change.</p>
       </aside>
 
-      <aside class="note" title="Edges and relationships">
+      <aside class="note" title="Terminology">
         <p>
-          In PREC, edge and relationship can be used interchangeably.
-          We prefer the term edge as it is shorter and it has the same number
-          of letters as node. The IRI described in this document that contains
-          the word edge also exist in a relationship fashion, e.g.
-          prec:relationshipIRI can be used instead of [= prec:edgeIRI =].
-        </p>
+          The following terms are used to describe Property Graphs:
+          <ul>
+            <li><em>Node</em>, sometimes called <em>Vertex</em> in other works.</li>
+            <li><em>Edge</em>, sometimes called <em>Relationship</em> in other works.</li>
+            <li><em>Element</em>, something that is either a node or an edge.</li>
+            <li>
+              <em>Source node</em>, the node from which an edge starts.
+              Sometimes called <em>start node</em> in other works.
+            </li>
+            <li>
+              <em>Destination node</em>, the node from which an edge ends.
+              Sometimes called <em>end node</em> or <em>target node</em> in
+              other works.
+            </li>
+          </ul>
       </aside>
 
       <section>
         <h3>Schema of the PREC-0 graphs</h3>
+        <p>
+          The current schema of PREC-0 graphs is as follows:<br>
+          <img src="prec0schema.png" alt="The schema of PREC-0 graphs" style="width: 100%; height: auto;"/>
+        </p>
         <p>
           A partial SHACL Shapes Graph is available at
           <a href="https://github.com/BruJu/PREC/blob/master/docs/prec0shape.ttl">
@@ -276,6 +290,99 @@
 
     <section>
       <h2>The PREC ontology</h2>
+
+
+      <section>
+        <h2>PRSC - Schema driven mapping</h3>
+  
+          <!--
+        <p>
+          So far, the context maps individually edges, nodes and properties and
+          PREC-C manages for you the interaction between them. It is
+          possible to use another type of context: schema driven contexts.        
+        </p>
+        -->
+  
+        <p>
+          This kind of context identify every node and edges to a schema, and the
+          transformation of every schema from PG to RDF must be defined.
+        </p>
+  
+          <!--
+        <p>
+          This is heavily inspired from the presentation of the
+          <em>Property Graph Schema Working Group</em> at 
+          <em>the 1st workshop on Squaring the circle on graphs</em>.
+        </p>
+      -->
+  
+        <p>
+          The `prec:this_is a prec:prscContext` triple is mandatory in such contexts.
+        </p>
+  
+  
+        <strong>List of valid IRIS for node schema:</strong>
+        <ul>
+          <li>`prec:prsc_node` - Type of node schema</li>
+          <li>`prec:label` - A label the node must have</li>
+          <li>`prec:produces` - describes how to represent the nodes that complies to the schema</li>
+        </ul>
+  
+        <strong>List of valid IRIS for edge schema:</strong>
+        <ul>
+          <li>`prec:prsc_edge` - Type of edge schema</li>
+          <li>`prec:label` - A label the edge must have</li>
+          <li>`prec:prscSource` - The schema the source node must have, optional</li>
+          <li>`prec:prscDestination` - The schema the destination node must have, optional</li>
+          <li>`prec:produces` - describes how to represent the edges that complies to the schema</li>
+        </ul>
+  
+        <strong>Placeholders for the template part (objects of prec:produces)</strong>
+        <ul>
+          <li>`pvar:node` - Node only, the identifier for the node</li>
+          <li>`pvar:edge` - Edges only, the identifier for the edge</li>
+          <li>`pvar:source` - Edges only, source of the edge</li>
+          <li>`pvar:destination` - Edges only, destination of the edge</li>
+          <li>`"property name"^^prec:_valueOf` - Placeholder for the value of the property "property name"</li>
+        </ul>
+  
+        
+        <aside class="example" title="Example of a PRSC context">
+  
+          <p>
+            After cloning the repo, test it by running
+            `npx ts-node apoc2rdf prec.ts data\ex2_annlikesdan1.json -c data\ex2_anndan_prsc.ttl`
+          </p>
+          <pre data-transform="updateExample"
+            data-content-type="text/turtle"
+            class="nohighlight"
+          >
+            <!--
+              PREFIX prec: <http://bruy.at/prec#>
+              PREFIX pvar: <http://bruy.at/prec-trans#>
+              PREFIX ex:   <http://example.org/>
+              PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+  
+              prec:this_is a prec:prscContext .
+  
+              ex:PersonForm a prec:prsc_node ;
+                prec:label "Person" ;
+                prec:propertyKey "name" ;
+                prec:produces
+                  << pvar:node ex:hasLabel ex:person >> ,
+                  << pvar:node ex:name "name"^^prec:_valueOf >> .
+  
+              ex:LovesForm a prec:prsc_edge ;
+                prec:label "Likes" ;
+                prec:prscSource      ex:PersonForm ;
+                prec:prscDestination ex:PersonForm ;
+                prec:produces << pvar:source ex:loves pvar:destination >> .
+            -->
+          </pre>
+  
+        </aside>
+      </section>
+  
 
       <section>
         <h3>Types</h3>
@@ -1636,100 +1743,6 @@
           </p>
         </section>
       </section>
-    </section>
-
-    <section>
-      <h2>PRSC - Schema driven mapping</h3>
-      
-      <aside class="warning" title="Not yet supported">
-        <p>This section is only supported in the developpement branch of PREC.
-          <br>This feature is a POC and might disappear at any time.
-          <br>IRI used are not stable.
-        </p>
-      </aside>
-
-      <p>
-        So far, the context maps individually edges, nodes and properties and
-        PREC-C manages for you the interaction between them. It is
-        possible to use another type of context: schema driven contexts.        
-      </p>
-
-      <p>
-        This kind of context identify every node and edges to a schema, and the
-        transformation of every schema from PG to RDF must be defined.
-      </p>
-
-      <p>
-        This is heavily inspired from the presentation of the
-        <em>Property Graph Schema Working Group</em> at 
-        <em>the 1st workshop on Squaring the circle on graphs</em>.
-      </p>
-
-      <p>
-        The `prec:this_is a prec:prscContext` triple is mandatory in such contexts.
-      </p>
-
-
-      <strong>List of valid IRIS for node schema:</strong>
-      <ul>
-        <li>`prec:prsc_node` - Type of node schema</li>
-        <li>`prec:label` - A label the node must have</li>
-        <li>`prec:produces` - describes how to represent the nodes that complies to the schema</li>
-      </ul>
-
-      <strong>List of valid IRIS for edge schema:</strong>
-      <ul>
-        <li>`prec:prsc_edge` - Type of edge schema</li>
-        <li>`prec:label` - A label the edge must have</li>
-        <li>`prec:prscSource` - The schema the source node must have, optional</li>
-        <li>`prec:prscDestination` - The schema the destination node must have, optional</li>
-        <li>`prec:produces` - describes how to represent the edges that complies to the schema</li>
-      </ul>
-
-      <strong>Placeholders for the template part (objects of prec:produces)</strong>
-      <ul>
-        <li>`pvar:node` - Node only, the identifier for the node</li>
-        <li>`pvar:edge` - Edges only, the identifier for the edge</li>
-        <li>`pvar:source` - Edges only, source of the edge</li>
-        <li>`pvar:destination` - Edges only, destination of the edge</li>
-        <li>`"property name"^^prec:_valueOf` - Placeholder for the value of the property "property name"</li>
-      </ul>
-
-      
-      <aside class="example" title="Example of a PRSC context">
-
-        <p>
-          After cloning the repo, test it by running
-          `npx ts-node apoc2rdf prec.ts data\ex2_annlikesdan1.json -c data\ex2_anndan_prsc.ttl`
-        </p>
-        <pre data-transform="updateExample"
-          data-content-type="text/turtle"
-          class="nohighlight"
-        >
-          <!--
-            PREFIX prec: <http://bruy.at/prec#>
-            PREFIX pvar: <http://bruy.at/prec-trans#>
-            PREFIX ex:   <http://example.org/>
-            PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-
-            prec:this_is a prec:prscContext .
-
-            ex:PersonForm a prec:prsc_node ;
-              prec:label "Person" ;
-              prec:propertyKey "name" ;
-              prec:produces
-                << pvar:node ex:hasLabel ex:person >> ,
-                << pvar:node ex:name "name"^^prec:_valueOf >> .
-
-            ex:LovesForm a prec:prsc_edge ;
-              prec:label "Likes" ;
-              prec:prscSource      ex:PersonForm ;
-              prec:prscDestination ex:PersonForm ;
-              prec:produces << pvar:source ex:loves pvar:destination >> .
-          -->
-        </pre>
-
-      </aside>
     </section>
 
     <section class="informative">
