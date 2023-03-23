@@ -107,7 +107,7 @@ module.exports = () => {
         `
         [] a prec:PRSCNodeRule ;
           prec:propertyKey "name" ;
-          prec:produces << pvar:node :name "name"^^prec:_valueOf >> .
+          prec:produces << pvar:node :name "name"^^prec:valueOf >> .
         `,
         '_:toto :name "toto" . ',
         true
@@ -133,7 +133,7 @@ module.exports = () => {
           prec:label "knows" ;
           prec:propertyKey "since" ;
           prec:produces << pvar:source :knows pvar:destination >>,
-            << << pvar:destination :isStalkedBy pvar:source >> :since "since"^^prec:_valueOf >> .
+            << << pvar:destination :isStalkedBy pvar:source >> :since "since"^^prec:valueOf >> .
         `,
         ' _:toto :knows _:titi . \n ' +
         '<< _:titi :isStalkedBy _:toto >> :since "yesterday" . \n' +
@@ -153,7 +153,7 @@ module.exports = () => {
           prec:propertyKey "name" ;
           prec:produces
             << pvar:node rdf:type :Person >> ,
-            << pvar:node :name "name"^^prec:_valueOf >> .
+            << pvar:node :name "name"^^prec:valueOf >> .
         
         :KnightPGType a prec:PRSCNodeRule ;
           prec:label "knight" ;
@@ -161,15 +161,15 @@ module.exports = () => {
           prec:propertyKey "number" ;
           prec:produces
             << pvar:node rdf:type :Knight >> ,
-            << pvar:node :name   "name"^^prec:_valueOf >> ,
-            << pvar:node :number "number"^^prec:_valueOf >> .
+            << pvar:node :name   "name"^^prec:valueOf >> ,
+            << pvar:node :number "number"^^prec:valueOf >> .
         
         :KnowsPGEdge a prec:PRSCEdgeRule ;
           prec:label "knows" ;
           prec:propertyKey "since" ;
           prec:produces
                << pvar:source :knows pvar:destination >> ,
-            << << pvar:source :knows pvar:destination >> :since "since"^^prec:_valueOf >> .
+            << << pvar:source :knows pvar:destination >> :since "since"^^prec:valueOf >> .
         `,
         `
           _:toto a :Person ; :name "Toto" .
@@ -190,7 +190,7 @@ module.exports = () => {
         `
         [] a prec:PRSCNodeRule ;
           prec:propertyKey "name" ;
-          prec:produces << pvar:node :name "name"^^prec:_valueOf  >> .
+          prec:produces << pvar:node :name "name"^^prec:valueOf  >> .
         `,
         ' _:tintin :name "Tintin" . _:milou :name "Mille Loups" .',
         true
@@ -204,7 +204,7 @@ module.exports = () => {
         [] a prec:PRSCNodeRule ;
           prec:label "Letter" ;
           prec:propertyKey "value" ;
-          prec:produces << pvar:node :isTheLetter "value"^^prec:_valueOf >> .
+          prec:produces << pvar:node :isTheLetter "value"^^prec:valueOf >> .
         `,
         ` _:a :isTheLetter "A" . `,
         true
@@ -218,7 +218,7 @@ module.exports = () => {
         [] a prec:PRSCNodeRule ;
           prec:label "Letter", "Vowel" ;
           prec:propertyKey "value" ;
-          prec:produces << pvar:node :isTheLetter "value"^^prec:_valueOf >> .
+          prec:produces << pvar:node :isTheLetter "value"^^prec:valueOf >> .
         `,
         ` _:a :isTheLetter "A" . `,
         true
@@ -233,7 +233,7 @@ module.exports = () => {
         [] a prec:PRSCNodeRule ;
           prec:label "Letter" ;
           prec:propertyKey "value" ;
-          prec:produces << pvar:node :isTheLetter "value"^^prec:_valueOf >> .
+          prec:produces << pvar:node :isTheLetter "value"^^prec:valueOf >> .
         `,
         ` _:a :isTheLetter "A" . _:b :isTheLetter "B" . `,
         true
@@ -344,7 +344,7 @@ module.exports = () => {
         `
         [] a prec:PRSCNodeRule ;
           prec:propertyKey "name" ;
-          prec:produces << pvar:node :has_prop [ :name "name"^^prec:_valueOf ] >> .
+          prec:produces << pvar:node :has_prop [ :name "name"^^prec:valueOf ] >> .
         `,
         `
         _:toto :has_prop [ :name "toto" ] .
@@ -360,7 +360,7 @@ module.exports = () => {
         })(),
         `
         [] a prec:PRSCNodeRule ;
-          prec:produces << pvar:node a "name"^^prec:_valueOf >> .
+          prec:produces << pvar:node a "name"^^prec:valueOf >> .
         `
       );
       
@@ -373,7 +373,7 @@ module.exports = () => {
         `
         [] a prec:PRSCNodeRule ;
           prec:propertyKey "name" ;
-          prec:produces << pvar:node a "name"^^prec:_valueOf >> .
+          prec:produces << pvar:node a "name"^^prec:valueOf >> .
         `
       );
 
@@ -389,7 +389,7 @@ module.exports = () => {
         :something a prec:PRSCNodeRule ;
           prec:propertyKey "name" ;
           prec:produces
-            << pvar:node :is_named "name"^^prec:_valueOf >> ,
+            << pvar:node :is_named "name"^^prec:valueOf >> ,
             << pvar:node :is_named "Grove" >> .
         `,
         ' _:thomas :is_named "Thomas", "Grove" . ',

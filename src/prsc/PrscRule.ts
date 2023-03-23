@@ -5,7 +5,7 @@ import { DataFactory } from "n3";
 import * as RDFString from 'rdf-string';
 
 import DStar from "../dataset";
-import { $defaultGraph, $quad, prec, pvar, rdf } from '../PRECNamespace';
+import { $defaultGraph, $quad, prec, precValueOf, pvar, rdf } from '../PRECNamespace';
 import { followAll, followThrough } from "../rdf/path-travelling";
 import * as QuadStar from '../rdf/quad-star';
 import { characterizeTriple, extractBnsIn, PRSCContextViolation, SignatureTripleOf } from "./PrscContext";
@@ -310,7 +310,7 @@ function followAllXSDStrings(
 
 
 /**
- * Search in the template graph the list of terms of type prec:_valueOf and check
+ * Search in the template graph the list of terms of type prec:valueOf and check
  * if they are all in allowedKeys.
  * @param templateGraph The template graph
  * @param allowedKeys The list of allowed property names
@@ -327,7 +327,7 @@ function followAllXSDStrings(
       searchBadKeys(templateTerm.object);
       searchBadKeys(templateTerm.graph);
     } else if (templateTerm.termType === 'Literal') {
-      if (templateTerm.datatype.equals(prec._valueOf)) {
+      if (templateTerm.datatype.equals(precValueOf)) {
         const key = templateTerm.value;
 
         if (!allowedKeys.includes(key)) {

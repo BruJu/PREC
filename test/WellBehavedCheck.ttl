@@ -99,7 +99,7 @@ GRAPH this:no_value_loss_check {
 
   ex:node_with_name a prec:PRSCNodeRule ;
     prec:propertyKey "name" ;
-    prec:produces << pvar:self ex:name "name"^^prec:_valueOf >> ;
+    prec:produces << pvar:self ex:name "name"^^prec:valueOf >> ;
     prec:no_value_loss true .
   
   ex:missing_label a prec:PRSCNodeRule ;
@@ -110,31 +110,31 @@ GRAPH this:no_value_loss_check {
   ex:two_good a prec:PRSCNodeRule ;
     prec:propertyKey "name", "age" ;
     prec:produces
-      << pvar:self ex:name "name"^^prec:_valueOf >>,
-      << pvar:self ex:age "age"^^prec:_valueOf >> ;
+      << pvar:self ex:name "name"^^prec:valueOf >>,
+      << pvar:self ex:age "age"^^prec:valueOf >> ;
     prec:no_value_loss true .
   
   ex:one_good_one_bad a prec:PRSCNodeRule ;
     prec:propertyKey "name", "age" ;
     prec:produces
-      << pvar:self ex:name "name"^^prec:_valueOf >> ,
-      << pvar:self ex:age "name"^^prec:_valueOf >> ;
+      << pvar:self ex:name "name"^^prec:valueOf >> ,
+      << pvar:self ex:age "name"^^prec:valueOf >> ;
     prec:no_value_loss false .
 
   ex:drowned_values a prec:PRSCNodeRule ;
     prec:propertyKey "firstname", "lastname" ;
     prec:produces
-      << pvar:self ex:name "firstname"^^prec:_valueOf >> ,
-      << pvar:self ex:name "lastname"^^prec:_valueOf >> ;
+      << pvar:self ex:name "firstname"^^prec:valueOf >> ,
+      << pvar:self ex:name "lastname"^^prec:valueOf >> ;
     prec:no_value_loss false .
 
   ex:both_drowned_and_identifiable_values a prec:PRSCNodeRule ;
     prec:propertyKey "firstname", "lastname" ;
     prec:produces
-      << pvar:self ex:first "firstname"^^prec:_valueOf >> ,
-      << pvar:self ex:last "lastname"^^prec:_valueOf >> ,
-      << pvar:self ex:name "firstname"^^prec:_valueOf >> ,
-      << pvar:self ex:name "lastname"^^prec:_valueOf >> ;
+      << pvar:self ex:first "firstname"^^prec:valueOf >> ,
+      << pvar:self ex:last "lastname"^^prec:valueOf >> ,
+      << pvar:self ex:name "firstname"^^prec:valueOf >> ,
+      << pvar:self ex:name "lastname"^^prec:valueOf >> ;
     prec:no_value_loss true .
 
   ex:rdf_star_prop a prec:PRSCEdgeRule ;
@@ -143,7 +143,7 @@ GRAPH this:no_value_loss_check {
       <<
         << pvar:source ex:connected_to pvar:destination >> 
         ex:since
-        "since"^^prec:_valueOf
+        "since"^^prec:valueOf
       >> ;
     prec:no_value_loss true .
 
@@ -151,8 +151,8 @@ GRAPH this:no_value_loss_check {
     prec:propertyKey "familyname", "givenname" ;
     prec:produces
       <<
-        << pvar:self ex:member_of_family "familyname"^^prec:_valueOf >>
-        ex:givenname "givenname"^^prec:_valueOf
+        << pvar:self ex:member_of_family "familyname"^^prec:valueOf >>
+        ex:givenname "givenname"^^prec:valueOf
       >> ;
     prec:no_value_loss true .
 }
@@ -191,17 +191,17 @@ GRAPH this:signature_triple_check {
   ex:node_named_c a prec:PRSCNodeRule ;
     prec:label "C" ;
     prec:propertyKey "name" ;
-    prec:produces << pvar:self ex:name "name"^^prec:_valueOf >> .
+    prec:produces << pvar:self ex:name "name"^^prec:valueOf >> .
   
   ex:node_firstnamed_d a prec:PRSCNodeRule ;
     prec:label "D" ;
     prec:propertyKey "firstname" ;
-    prec:produces << pvar:self ex:name "firstname"^^prec:_valueOf >> .
+    prec:produces << pvar:self ex:name "firstname"^^prec:valueOf >> .
   
   ex:node_firstnamed_e a prec:PRSCNodeRule ;
     prec:label "E" ;
     prec:propertyKey "firstname" ;
-    prec:produces << pvar:self ex:firstname "firstname"^^prec:_valueOf >> .
+    prec:produces << pvar:self ex:firstname "firstname"^^prec:valueOf >> .
   
   ex:bad_c_d prec:all_signed false, ex:node_named_c, ex:node_firstnamed_d .
   ex:ok_c_e prec:all_signed true, ex:node_named_c, ex:node_firstnamed_e .
@@ -249,8 +249,8 @@ GRAPH this:signature_triple_check {
     prec:nodelLabel "FanOfNames" ;
     prec:propertyKey "name", "name2" ;
     prec:produces
-      << pvar:self ex:name "name"^^prec:_valueOf >> ,
-      << pvar:self ex:name "name2"^^prec:_valueOf >> .
+      << pvar:self ex:name "name"^^prec:valueOf >> ,
+      << pvar:self ex:name "name2"^^prec:valueOf >> .
   
   ex:only_me_use_names_because_im_alone prec:all_signed true,
     ex:fan_of_names .
@@ -286,14 +286,14 @@ GRAPH this:animal_context {
     prec:propertyKey "name" ;
     prec:produces
       << pvar:self a pgo:node >> ,
-      << pvar:self ex:name "name"^^prec:_valueOf >> ,
+      << pvar:self ex:name "name"^^prec:valueOf >> ,
       << pvar:self a ex:Cat >> .
     
   ex:dog a prec:PRSCNodeRule ;
     prec:label "Dog" ;
     prec:propertyKey "name" ;
     prec:produces
-      << pvar:self ex:name "name"^^prec:_valueOf >> ,
+      << pvar:self ex:name "name"^^prec:valueOf >> ,
       << pvar:self ex:oncesaid "Wouf" >> .
     
   ex:human a prec:PRSCNodeRule ;
@@ -307,7 +307,7 @@ GRAPH this:animal_context {
       << pvar:self a ex:ownership_declaration >> ,
       << pvar:self ex:owner pvar:source >> ,
       << pvar:self ex:about pvar:destination >> ,
-      << pvar:self ex:filledOn "declaration_date"^^prec:_valueOf >> ;
+      << pvar:self ex:filledOn "declaration_date"^^prec:valueOf >> ;
     prec:no_value_loss true .
 }
 

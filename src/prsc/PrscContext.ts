@@ -7,7 +7,8 @@ import * as RDFString from 'rdf-string';
 import DStar from "../dataset";
 import {
   rdf, rdfs, pgo, prec, pvar,
-  $quad, $literal, $variable, $defaultGraph
+  $quad, $literal, $variable, $defaultGraph,
+  precValueOf
 } from '../PRECNamespace';
 
 import { followThrough } from "../rdf/path-travelling";
@@ -218,7 +219,7 @@ function buildRdfTriplesFromRule(
       } else if (term.equals(pvar.destination)) {
         if (destination === undefined) throw Error("Using pvar:destination but no destination value was provided");
         return destination!;
-      } else if (term.termType === 'Literal' && term.datatype.equals(prec._valueOf)) {
+      } else if (term.termType === 'Literal' && term.datatype.equals(precValueOf)) {
         return properties[term.value];
       } else if (term.termType === 'BlankNode') {
         if (blankNodeInstantiations.has(term)) {
@@ -255,7 +256,7 @@ export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): DStar {
 export function characterizeTriple(quad: RDF.Quad) {
   return eventuallyRebuildQuad(quad, term => {
     if (term.termType === 'Literal') {
-      return $literal("Literal", prec._valueOf);
+      return $literal("Literal", precValueOf);
     } else if (term.termType === 'BlankNode') {
       return $literal('BlankNode', prec._placeholder);
     } else if (term.termType === 'NamedNode' && term.value.startsWith(pvarPrefix)) {

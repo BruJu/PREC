@@ -338,7 +338,7 @@
           <li>`pvar:edge` - Edges only, the identifier for the edge</li>
           <li>`pvar:source` - Edges only, source of the edge</li>
           <li>`pvar:destination` - Edges only, destination of the edge</li>
-          <li>`"property name"^^prec:_valueOf` - Placeholder for the value of the property "property name"</li>
+          <li>`"property key"^^prec:valueOf` - Placeholder for the value of the property "property name"</li>
         </ul>
   
         
@@ -363,7 +363,7 @@
                 prec:propertyKey "name" ;
                 prec:produces
                   << pvar:node ex:hasLabel ex:person >> ,
-                  << pvar:node ex:name "name"^^prec:_valueOf >> .
+                  << pvar:node ex:name "name"^^prec:valueOf >> .
   
               ex:LovesForm a prec:PRSCEdgeRule ;
                 prec:label "Likes" ;

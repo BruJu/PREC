@@ -17,8 +17,8 @@ PREFIX :      <http://test/>
 :node_with_all_properties a prec:PRSCNodeRule ;
   prec:propertyKey "name", "age" ;
   prec:produces
-    << pvar:self ex:name "name"^^prec:_valueOf >> ,
-    << pvar:self ex:age  "age"^^prec:_valueOf >> ;
+    << pvar:self ex:name "name"^^prec:valueOf >> ,
+    << pvar:self ex:age  "age"^^prec:valueOf >> ;
   prec:is_valid_template true .
 
 :node_with_source a prec:PRSCNodeRule ;
@@ -34,7 +34,7 @@ PREFIX :      <http://test/>
 
 :node_with_missing_property a prec:PRSCNodeRule ;
   prec:propertyKey "name", "age" ;
-  prec:produces << pvar:self ex:name "name"^^prec:_valueOf >> ;
+  prec:produces << pvar:self ex:name "name"^^prec:valueOf >> ;
   prec:is_valid_template true .
 
 
@@ -45,5 +45,5 @@ PREFIX :      <http://test/>
 
 :node_with_absent_property a prec:PRSCNodeRule ;
   prec:propertyKey "name" ;
-  prec:produces << pvar:self :name "surname"^^prec:_valueOf >> ;
+  prec:produces << pvar:self :name "surname"^^prec:valueOf >> ;
   prec:is_valid_template: false .

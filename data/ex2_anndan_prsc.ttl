@@ -10,7 +10,7 @@ ex:PersonForm a prec:PRSCNodeRule ;
   prec:propertyKey "name" ;
   prec:produces
     << pvar:node ex:hasLabel ex:person >> ,
-    << pvar:node ex:name "name"^^prec:_valueOf >> .
+    << pvar:node ex:name "name"^^prec:valueOf >> .
 
 ex:LovesForm a prec:PRSCEdgeRule ;
   prec:label "Likes" ;

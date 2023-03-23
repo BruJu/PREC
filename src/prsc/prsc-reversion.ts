@@ -4,7 +4,11 @@ import * as RDF from "@rdfjs/types";
 import DStar from "../dataset";
 import { characterizeTriple, extractBnsIn, haveSameStrings, PRSCContext, PRSCRule, SignatureTripleOf } from "./PrscContext";
 import * as RDFString from 'rdf-string';
-import { $blankNode, prec, pvarDestination, pvarSource, rdf, rdfs, pgo, $quad, $literal } from "../PRECNamespace";
+import {
+  $blankNode, $quad, $literal,
+  prec, rdf, rdfs, pgo,
+  pvarDestination, pvarSource, precValueOf
+} from "../PRECNamespace";
 import { NodePlaceholder } from "./well-behaved-check";
 import namespace from "@rdfjs/namespace";
 import { DataFactory } from "n3";
@@ -435,7 +439,7 @@ class Accessor {
       } else if (templateTerm.termType === 'DefaultGraph') {
         return [];
       } else if (templateTerm.termType === 'Literal') {
-        if (templateTerm.datatype.equals(prec._valueOf)) {
+        if (templateTerm.datatype.equals(precValueOf)) {
           return [new Accessor(templateTerm.value, [])];
         } else {
           return [];

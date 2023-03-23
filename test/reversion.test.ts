@@ -4,15 +4,14 @@ import assert from 'assert';
 import { DataFactory } from "n3";
 import * as RDFString from 'rdf-string';
 
-import { prec, pvar, $quad, $literal, $blankNode } from '../src/PRECNamespace';
+import {
+  $quad, $literal, $blankNode,
+  precValueOf, pvarSelf, pvarSource, pvarDestination
+} from '../src/PRECNamespace';
 import { characterizeTriple } from '../src/prsc/PrscContext';
 
 const ex   = namespace("http://example.org/"       , { factory: DataFactory });
 
-const pvarSelf    = pvar.self;
-const pvarSource  = pvar.source;
-const pvarDest    = pvar.destination;
-const precValueOf = prec._valueOf;
 const propVal = (name: string) => DataFactory.literal(name, precValueOf);
 
 
@@ -87,7 +86,7 @@ describe("Template and Data kappa-value sharing", () => {
     );
 
     shareKappa(
-      $quad(pvarSource , ex.knows, pvarDest),
+      $quad(pvarSource , ex.knows, pvarDestination),
       $quad($blankNode("toto"), ex.knows, $blankNode("titi"))
     );
 
