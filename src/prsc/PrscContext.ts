@@ -7,7 +7,8 @@ import * as RDFString from 'rdf-string';
 import DStar from "../dataset";
 import {
   rdf, rdfs, pgo, prec, pvar,
-  $quad, $literal, $variable, $defaultGraph
+  $quad, $literal, $variable, $defaultGraph,
+  precValueOf
 } from '../PRECNamespace';
 
 import { followThrough } from "../rdf/path-travelling";
@@ -44,7 +45,7 @@ export class PRSCContext {
     const dataset = new DStar(contextQuads);
     const alreadySeenTypes = new TermSet();
 
-    for (const type of [prec.prsc_node, prec.prsc_edge]) {
+    for (const type of [prec.PRSCNodeRule, prec.PRSCEdgeRule]) {
       for (const ruleQuad of dataset.match(null, rdf.type, type, $defaultGraph)) {
         // Do not process duplicates
         if (alreadySeenTypes.has(ruleQuad.subject)) continue;
@@ -94,8 +95,8 @@ export class PRSCContext {
         $quad($variable('labelIRI'), rdfs.label, $variable('label'))
       ]).map(binding => (binding.label as RDF.Term).value),
       properties: dataset.matchAndBind([
-        $quad(element, $variable('propertyName'), $variable('blankNode')),
-        $quad($variable('propertyName'), rdfs.label, $variable('propertyNameLabel')),
+        $quad(element, $variable('propertyKey'), $variable('blankNode')),
+        $quad($variable('propertyKey'), rdfs.label, $variable('propertyNameLabel')),
         $quad($variable('blankNode'), rdf.value, $variable('value'))
       ]).reduce((accumulator, bindings) => {
         const key = (bindings.propertyNameLabel as RDF.Term).value;
@@ -157,7 +158,7 @@ export function violationToString(violation: PRSCContextViolation): string {
     return `${RDFString.termToString(violation.identity)} does not have exactly one type`;
   } else if (violation.type === 'rule_given_bad_type') {
     return `${RDFString.termToString(violation.identity)} has the type ${RDFString.termToString(violation.foundType)} `
-      + 'which is different from the expected types prec:prsc_node and prec:prsc_edge.'
+      + 'which is different from the expected types prec:PRSCNodeRule and prec:PRSCEdgeRule.'
   } else if (violation.type === 'template_has_invalid_prop_name') {
     return RDFString.termToString(violation.identity)
       + " uses the property name " + violation.propName
@@ -177,12 +178,6 @@ export function unwrapContext(r: { context: PRSCContext } | { violations: PRSCCo
 
 ////////////////////////////////////////////////////////////////////////////////
 // ==== Structural description graph -> Idiomatic Graph
-
-
-export function isPrscContext(contextQuads: RDF.Quad[]) {
-  const searched = $quad(prec.this_is, rdf.type, prec.prscContext);
-  return contextQuads.find(q => q.equals(searched)) !== undefined;
-}
 
 export default function precCwithPRSC(dataset: DStar, contextQuads: RDF.Quad[]): DStar {
   const context = unwrapContext(PRSCContext.build(contextQuads));
@@ -224,7 +219,7 @@ function buildRdfTriplesFromRule(
       } else if (term.equals(pvar.destination)) {
         if (destination === undefined) throw Error("Using pvar:destination but no destination value was provided");
         return destination!;
-      } else if (term.termType === 'Literal' && term.datatype.equals(prec._valueOf)) {
+      } else if (term.termType === 'Literal' && term.datatype.equals(precValueOf)) {
         return properties[term.value];
       } else if (term.termType === 'BlankNode') {
         if (blankNodeInstantiations.has(term)) {
@@ -261,7 +256,7 @@ export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): DStar {
 export function characterizeTriple(quad: RDF.Quad) {
   return eventuallyRebuildQuad(quad, term => {
     if (term.termType === 'Literal') {
-      return $literal("Literal", prec._valueOf);
+      return $literal("Literal", precValueOf);
     } else if (term.termType === 'BlankNode') {
       return $literal('BlankNode', prec._placeholder);
     } else if (term.termType === 'NamedNode' && term.value.startsWith(pvarPrefix)) {

@@ -21,7 +21,7 @@ module.exports = function (test: PrecCApplicationTester) {
         `,
         `
           [] a prec:PropertyRule ;
-            prec:propertyName "Subject" ;
+            prec:propertyKey "Subject" ;
             prec:propertyIRI rdf:subject ;
             prec:templatedBy prec:DirectTriples .
 
@@ -39,67 +39,60 @@ module.exports = function (test: PrecCApplicationTester) {
         `
       );
 
-      const timidOldSyntax = 'prec:composedOf << << pvar:destination pvar:edgeIRI pvar:source >> pvar:propertyPredicate pvar:propertyObject >>';
-      const timidNewSyntax = 'prec:edgeIs        << pvar:destination pvar:edgeIRI pvar:source >> ';
+      test('A very timid translation with a lot of nesting',
+      `
+        :edge a pgo:Edge ;
+          rdf:subject   :s ;
+          rdf:object    :o ;
+          rdf:predicate :p .
 
-      for (const [rdf, name] of [
-          [timidOldSyntax, ' (old syntax)'],
-          [timidNewSyntax, ' (new syntax)']
-      ]) {
-        test('A very timid translation with a lot of nesting' + name,
-        `
-          :edge a pgo:Edge ;
-            rdf:subject   :s ;
-            rdf:object    :o ;
-            rdf:predicate :p .
+        :s a pgo:Node .
+        :o a pgo:Node .
+        :p rdfs:label "TheEdge" ; a prec:CreatedEdgeLabel .
+      
+        :edge :flies :propertyNode .
+        :flies a prec:CreatedPropertyKey, prec:PropertyKey ; rdfs:label "theProp" .
 
-          :s a pgo:Node .
-          :o a pgo:Node .
-          :p rdfs:label "TheEdge" ; a prec:CreatedEdgeLabel .
-        
-          :edge :flies :propertyNode .
-          :flies a prec:CreatedPropertyKey, prec:PropertyKey ; rdfs:label "theProp" .
+        :propertyNode a prec:PropertyKeyValue ; rdf:value "Hey" .
+      `,
+      `
+        prec:Edges prec:templatedBy [
+          prec:produces << << pvar:source pvar:edgeIRI pvar:destination >> :isA :triple >> ;
+          prec:edgeIs        << pvar:destination pvar:edgeIRI pvar:source >>
+        ] .
 
-          :propertyNode a prec:PropertyKeyValue ; rdf:value "Hey" .
-        `,
-        `
-          prec:Edges prec:templatedBy [
-            prec:composedOf << << pvar:source pvar:edgeIRI pvar:destination >> :isA :triple >> ;
-            ${rdf}
-          ] .
-
-          prec:Properties prec:templatedBy [
-            prec:composedOf
+        prec:Properties prec:templatedBy [
+          prec:produces
+            <<
               <<
-                <<
-                  << pvar:propertyKey :isA :property >>
-                  :withTheValue
-                  << :thatIs :valued pvar:propertyValue >>
-                >>
-                :isOnTheReversed
-                << :theThing :named pvar:entity >>
+                << pvar:propertyKey :isA :property >>
+                :withTheValue
+                << :thatIs :valued pvar:propertyValue >>
               >>
-          ] .
-        `,
-        `
-          << :s :p :o >> :isA :triple .
+              :isOnTheReversed
+              << :theThing :named pvar:entity >>
+            >>
+        ] .
+      `,
+      `
+        << :s :p :o >> :isA :triple .
 
-          <<
-            << :flies :isA :property >>
-            :withTheValue
-            << :thatIs :valued "Hey" >>
-          >>
-          :isOnTheReversed
-          << :theThing :named << :o :p :s >> >> .
+        <<
+          << :flies :isA :property >>
+          :withTheValue
+          << :thatIs :valued "Hey" >>
+        >>
+        :isOnTheReversed
+        << :theThing :named << :o :p :s >> >> .
+      
+        :flies a prec:CreatedPropertyKey, prec:PropertyKey ; rdfs:label "theProp" .
         
-          :flies a prec:CreatedPropertyKey, prec:PropertyKey ; rdfs:label "theProp" .
-          
-          :s a pgo:Node .
-          :o a pgo:Node .
-          :p rdfs:label "TheEdge" ; a prec:CreatedEdgeLabel .
-        `
-        );
-      }
+        :s a pgo:Node .
+        :o a pgo:Node .
+        :p rdfs:label "TheEdge" ; a prec:CreatedEdgeLabel .
+      `
+      );
+        
 
     });
 

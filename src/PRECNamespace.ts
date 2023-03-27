@@ -17,7 +17,7 @@ export const pvarNode        = pvar.node;
 export const pvarEdge        = pvar.edge;
 export const pvarSource      = pvar.source;
 export const pvarDestination = pvar.destination;
-export const precValueOf     = prec._valueOf;
+export const precValueOf     = DataFactory.namedNode('http://bruy.at/prec#valueOf');
 
 
 export const $quad         = DataFactory.quad;

@@ -1,15 +1,21 @@
 import { PropertyGraph, PGBuild } from "../mock-pg/pg-implem";
 import { fromTinkerPop } from '../../src/prec/graph-builder';
 import { turtleToQuads, turtleToDStar, checkOutput } from "../utility";
-import graphReducer from "../../src/prec/graph-reducer";
+import { applyPRSC, ContextType, getContextType } from "../../src/prec/graph-reducer";
 import assert from 'assert';
 import { revertPrecC } from "../../src/prsc/PrscContext";
+import * as RDF from "@rdfjs/types";
 
 enum RevertableType {
   ShouldThrow,
   /** Operations that could be reverted with a better algorithm */
   ShouldThrowForNow
 };
+
+function isPrscContext(contextQuads: RDF.Quad[]) {
+  const type = getContextType(contextQuads);
+  return type === ContextType.PRSC || type === ContextType.Empty;
+}
 
 function test(
   name: string, source: PropertyGraph, context: string, expected: string,
@@ -20,7 +26,10 @@ function test(
     const store = fromTinkerPop(nodes, edges)[0];
     const cleanSource = store.match();
     const ctx = turtleToQuads(context);
-    graphReducer(store, ctx);
+
+    assert.ok(isPrscContext(ctx), "The context should be a PRSC context");
+
+    applyPRSC(store, ctx);
 
     const expectedStore = turtleToDStar(expected);
     checkOutput("", context, store, expectedStore);
@@ -40,7 +49,8 @@ function badPGToRDF(name: string, source: PropertyGraph, context: string) {
       const { nodes, edges } = source.convertToProductFromTinkerProp();
       const store = fromTinkerPop(nodes as any, edges as any)[0];
       const ctx = turtleToQuads(context);
-      assert.throws(() => graphReducer(store, ctx));
+      assert.ok(isPrscContext(ctx), "The context should be a PRSC context");
+      assert.throws(() => applyPRSC(store, ctx));
   });
 }
 
@@ -50,7 +60,7 @@ module.exports = () => {
     describe("Simple cases", () => {
 
       test("Empty all", new PropertyGraph(),
-        "prec:this_is a prec:prscContext .",
+        "",
         "",
         true
       );
@@ -63,10 +73,8 @@ module.exports = () => {
           return pg;
         })(),
         `
-        prec:this_is a prec:prscContext .
-
-        [] a prec:prsc_node ;
-          prec:composedOf << pvar:node :exists :inthepg >> .
+        [] a prec:PRSCNodeRule ;
+          prec:produces << pvar:node :exists :inthepg >> .
         `,
         ` _:thenode :exists :inthepg . `,
         true
@@ -79,16 +87,12 @@ module.exports = () => {
         .addEdge("toto", "knows", "titi")
         .build(),
         `
-        prec:this_is a prec:prscContext .
+        :person a prec:PRSCNodeRule ;
+          prec:label "person" .
 
-        :person a prec:prsc_node ;
-          prec:nodeLabel "person" .
-
-        [] a prec:prsc_edge ;
-          prec:prscSource :person ;
-          prec:prscDestination :person ;
-          prec:edgeLabel "knows" ;
-          prec:composedOf << pvar:source :knows pvar:destination >>,
+        [] a prec:PRSCEdgeRule ;
+          prec:label "knows" ;
+          prec:produces << pvar:source :knows pvar:destination >>,
             << pvar:edge :is :discarded  >> .
         `,
         " _:toto :knows _:titi . _:theedgeblanknode :is :discarded . ",
@@ -98,11 +102,10 @@ module.exports = () => {
 
       test("A property is used",
         PGBuild().addNode(null, [], { name: "toto" }).build(),
-        `prec:this_is a prec:prscContext .
-        
-        [] a prec:prsc_node ;
-          prec:propertyName "name" ;
-          prec:composedOf << pvar:node :name "name"^^prec:_valueOf >> .
+        `
+        [] a prec:PRSCNodeRule ;
+          prec:propertyKey "name" ;
+          prec:produces << pvar:node :name "name"^^prec:valueOf >> .
         `,
         '_:toto :name "toto" . ',
         true
@@ -118,19 +121,15 @@ module.exports = () => {
           return pg;
         })(),
         `
-        prec:this_is a prec:prscContext .
+        :person a prec:PRSCNodeRule ;
+          prec:label "person" ;
+          prec:produces << pvar:self a :Person >> .
 
-        :person a prec:prsc_node ;
-          prec:nodeLabel "person" ;
-          prec:composedOf << pvar:self a :Person >> .
-
-        [] a prec:prsc_edge ;
-          prec:prscSource :person ;
-          prec:prscDestination :person ;
-          prec:edgeLabel "knows" ;
-          prec:propertyName "since" ;
-          prec:composedOf << pvar:source :knows pvar:destination >>,
-            << << pvar:destination :isStalkedBy pvar:source >> :since "since"^^prec:_valueOf >> .
+        [] a prec:PRSCEdgeRule ;
+          prec:label "knows" ;
+          prec:propertyKey "since" ;
+          prec:produces << pvar:source :knows pvar:destination >>,
+            << << pvar:destination :isStalkedBy pvar:source >> :since "since"^^prec:valueOf >> .
         `,
         ' _:toto :knows _:titi . \n ' +
         '<< _:titi :isStalkedBy _:toto >> :since "yesterday" . \n' +
@@ -145,30 +144,28 @@ module.exports = () => {
         .addEdge("toto", "knows", "alice", { since: "2021" })
         .build(),
         `
-        prec:this_is a prec:prscContext .
-
-        :PersonPGType a prec:prsc_node ;
-          prec:nodeLabel "person" ;
-          prec:propertyName "name" ;
-          prec:composedOf
+        :PersonPGType a prec:PRSCNodeRule ;
+          prec:label "person" ;
+          prec:propertyKey "name" ;
+          prec:produces
             << pvar:node rdf:type :Person >> ,
-            << pvar:node :name "name"^^prec:_valueOf >> .
+            << pvar:node :name "name"^^prec:valueOf >> .
         
-        :KnightPGType a prec:prsc_node ;
-          prec:nodeLabel "knight" ;
-          prec:propertyName "name" ;
-          prec:propertyName "number" ;
-          prec:composedOf
+        :KnightPGType a prec:PRSCNodeRule ;
+          prec:label "knight" ;
+          prec:propertyKey "name" ;
+          prec:propertyKey "number" ;
+          prec:produces
             << pvar:node rdf:type :Knight >> ,
-            << pvar:node :name   "name"^^prec:_valueOf >> ,
-            << pvar:node :number "number"^^prec:_valueOf >> .
+            << pvar:node :name   "name"^^prec:valueOf >> ,
+            << pvar:node :number "number"^^prec:valueOf >> .
         
-        :KnowsPGEdge a prec:prsc_edge ;
-          prec:edgeLabel "knows" ;
-          prec:propertyName "since" ;
-          prec:composedOf
+        :KnowsPGEdge a prec:PRSCEdgeRule ;
+          prec:label "knows" ;
+          prec:propertyKey "since" ;
+          prec:produces
                << pvar:source :knows pvar:destination >> ,
-            << << pvar:source :knows pvar:destination >> :since "since"^^prec:_valueOf >> .
+            << << pvar:source :knows pvar:destination >> :since "since"^^prec:valueOf >> .
         `,
         `
           _:toto a :Person ; :name "Toto" .
@@ -187,11 +184,9 @@ module.exports = () => {
         .addNode(null, [], { name: "Mille Loups" })
         .build(),
         `
-        prec:this_is a prec:prscContext .
-
-        [] a prec:prsc_node ;
-          prec:propertyName "name" ;
-          prec:composedOf << pvar:node :name "name"^^prec:_valueOf  >> .
+        [] a prec:PRSCNodeRule ;
+          prec:propertyKey "name" ;
+          prec:produces << pvar:node :name "name"^^prec:valueOf  >> .
         `,
         ' _:tintin :name "Tintin" . _:milou :name "Mille Loups" .',
         true
@@ -202,12 +197,10 @@ module.exports = () => {
         .addNode(null, ["Letter"], { value: "A" })
         .build(),
         `
-        prec:this_is a prec:prscContext .
-
-        [] a prec:prsc_node ;
-          prec:nodeLabel "Letter" ;
-          prec:propertyName "value" ;
-          prec:composedOf << pvar:node :isTheLetter "value"^^prec:_valueOf >> .
+        [] a prec:PRSCNodeRule ;
+          prec:label "Letter" ;
+          prec:propertyKey "value" ;
+          prec:produces << pvar:node :isTheLetter "value"^^prec:valueOf >> .
         `,
         ` _:a :isTheLetter "A" . `,
         true
@@ -218,12 +211,10 @@ module.exports = () => {
         .addNode(null, ["Letter", "Vowel"], { value: "A" })
         .build(),
         `
-        prec:this_is a prec:prscContext .
-
-        [] a prec:prsc_node ;
-          prec:nodeLabel "Letter", "Vowel" ;
-          prec:propertyName "value" ;
-          prec:composedOf << pvar:node :isTheLetter "value"^^prec:_valueOf >> .
+        [] a prec:PRSCNodeRule ;
+          prec:label "Letter", "Vowel" ;
+          prec:propertyKey "value" ;
+          prec:produces << pvar:node :isTheLetter "value"^^prec:valueOf >> .
         `,
         ` _:a :isTheLetter "A" . `,
         true
@@ -235,12 +226,10 @@ module.exports = () => {
         .addNode(null, ["Letter"], { value: "B" })
         .build(),
         `
-        prec:this_is a prec:prscContext .
-
-        [] a prec:prsc_node ;
-          prec:nodeLabel "Letter" ;
-          prec:propertyName "value" ;
-          prec:composedOf << pvar:node :isTheLetter "value"^^prec:_valueOf >> .
+        [] a prec:PRSCNodeRule ;
+          prec:label "Letter" ;
+          prec:propertyKey "value" ;
+          prec:produces << pvar:node :isTheLetter "value"^^prec:valueOf >> .
         `,
         ` _:a :isTheLetter "A" . _:b :isTheLetter "B" . `,
         true
@@ -256,7 +245,7 @@ module.exports = () => {
           pg.addEdge(toto, "knows", titi);
           return pg;
         })(),
-        "prec:this_is a prec:prscContext ."
+        ""
       );
 
       badPGToRDF(
@@ -267,11 +256,9 @@ module.exports = () => {
           return pg;
         })(),
         `
-        prec:this_is a prec:prscContext .
-
-        [] a prec:prsc_node ;
-          prec:nodeLabel "You need a label" ;
-          prec:composedOf << pvar:node :exists :inthepg >> .
+        [] a prec:PRSCNodeRule ;
+          prec:label "You need a label" ;
+          prec:produces << pvar:node :exists :inthepg >> .
         `
       );
 
@@ -284,11 +271,9 @@ module.exports = () => {
           return pg;
         })(),
         `
-        prec:this_is a prec:prscContext .
-
-        [] a prec:prsc_node ;
-          prec:nodeLabel "First Label" ;
-          prec:composedOf << pvar:node :exists :inthepg >> .
+        [] a prec:PRSCNodeRule ;
+          prec:label "First Label" ;
+          prec:produces << pvar:node :exists :inthepg >> .
         `
       );
 
@@ -301,15 +286,9 @@ module.exports = () => {
           return pg;
         })(),
         `
-        prec:this_is a prec:prscContext .
-
-        [] a prec:prsc_node ;
-          prec:nodeLabel "person" .
-
-        :otherSchema a prec:prsc_node .
-
-        [] a prec:prsc_edge ;
-          prec:prscSource :otherSchema .
+        :emptyNodeType a prec:PRSCNodeRule ; prec:label "person" .
+        :otherNodeType a prec:PRSCNodeRule .
+        :emptyEdgeType a prec:PRSCEdgeRule .
         `
       );
 
@@ -322,15 +301,11 @@ module.exports = () => {
           return pg;
         })(),
         `
-        prec:this_is a prec:prscContext .
+        :person a prec:PRSCNodeRule ;
+          prec:label "person" .
 
-        :person a prec:prsc_node ;
-          prec:nodeLabel "person" .
-
-        [] a prec:prsc_edge ;
-          prec:prscSource :person ;
-          prec:prscDestination :person ;
-          prec:edgeLabel "connait" .
+        [] a prec:PRSCEdgeRule ;
+          prec:label "connait" .
         `
       );
 
@@ -340,10 +315,9 @@ module.exports = () => {
           pg.addNode();
           return pg;
         })(),
-        `prec:this_is a prec:prscContext .
-        
-        [] a prec:prsc_node ;
-          prec:composedOf << pvar:node a [ :hello :work ] >> .
+        `
+        [] a prec:PRSCNodeRule ;
+          prec:produces << pvar:node a [ :hello :work ] >> .
         `,
         `
         _:the_node a [ :hello :work ] .
@@ -357,11 +331,10 @@ module.exports = () => {
           pg.addNode().addProperty("name", "titi");
           return pg;
         })(),
-        `prec:this_is a prec:prscContext .
-        
-        [] a prec:prsc_node ;
-          prec:propertyName "name" ;
-          prec:composedOf << pvar:node :has_prop [ :name "name"^^prec:_valueOf ] >> .
+        `
+        [] a prec:PRSCNodeRule ;
+          prec:propertyKey "name" ;
+          prec:produces << pvar:node :has_prop [ :name "name"^^prec:valueOf ] >> .
         `,
         `
         _:toto :has_prop [ :name "toto" ] .
@@ -375,10 +348,9 @@ module.exports = () => {
           pg.addNode();
           return pg;
         })(),
-        `prec:this_is a prec:prscContext .
-        
-        [] a prec:prsc_node ;
-          prec:composedOf << pvar:node a "name"^^prec:_valueOf >> .
+        `
+        [] a prec:PRSCNodeRule ;
+          prec:produces << pvar:node a "name"^^prec:valueOf >> .
         `
       );
       
@@ -388,11 +360,10 @@ module.exports = () => {
           pg.addNode();
           return pg;
         })(),
-        `prec:this_is a prec:prscContext .
-        
-        [] a prec:prsc_node ;
-          prec:propertyName "name" ;
-          prec:composedOf << pvar:node a "name"^^prec:_valueOf >> .
+        `
+        [] a prec:PRSCNodeRule ;
+          prec:propertyKey "name" ;
+          prec:produces << pvar:node a "name"^^prec:valueOf >> .
         `
       );
 
@@ -405,12 +376,10 @@ module.exports = () => {
         .addNode(null, [], { name: "Thomas" })
         .build(),
         `
-        prec:this_is a prec:prscContext .
-
-        :something a prec:prsc_node ;
-          prec:propertyName "name" ;
-          prec:composedOf
-            << pvar:node :is_named "name"^^prec:_valueOf >> ,
+        :something a prec:PRSCNodeRule ;
+          prec:propertyKey "name" ;
+          prec:produces
+            << pvar:node :is_named "name"^^prec:valueOf >> ,
             << pvar:node :is_named "Grove" >> .
         `,
         ' _:thomas :is_named "Thomas", "Grove" . ',
@@ -424,17 +393,15 @@ module.exports = () => {
         .addEdge("node", "to", "node", {})
         .build(),
         `
-        prec:this_is a prec:prscContext .
+        :node a prec:PRSCNodeRule ; prec:produces << pvar:node a :node >> .
 
-        :node a prec:prsc_node ; prec:composedOf << pvar:node a :node >> .
+        :edgeHey a prec:PRSCEdgeRule ;
+          prec:label "hey" ;
+          prec:produces << << pvar:edge :src pvar:source >> :to pvar:destination >> .
 
-        :edgeHey a prec:prsc_edge ;
-          prec:edgeLabel "hey" ;
-          prec:composedOf << << pvar:edge :src pvar:source >> :to pvar:destination >> .
-
-        :edgeTo a prec:prsc_edge ;
-          prec:edgeLabel "to" ;
-          prec:composedOf << << pvar:source :src pvar:edge >> :to pvar:destination >> .
+        :edgeTo a prec:PRSCEdgeRule ;
+          prec:label "to" ;
+          prec:produces << << pvar:source :src pvar:edge >> :to pvar:destination >> .
         `,
         `
         _:node a :node .
@@ -455,23 +422,20 @@ module.exports = () => {
         "The signature is not unique",
         pgNodeEdgeNode,
         `
+          :node a prec:PRSCNodeRule ; prec:produces << pvar:self a :node >> .
 
-          prec:this_is a prec:prscContext .
-          
-          :node a prec:prsc_node ; prec:composedOf << pvar:self a :node >> .
-
-          :edgeTo a prec:prsc_edge ;
-            prec:edgeLabel "to" ;
-            prec:composedOf
+          :edgeTo a prec:PRSCEdgeRule ;
+            prec:label "to" ;
+            prec:produces
               << pvar:source :to pvar:self >> ,
               << pvar:self :to pvar:destination >> ,
               << pvar:self rdf:subject pvar:source >> ,
               << pvar:self rdf:object pvar:destination >> .
 
             
-          :edgeFrom a prec:prsc_edge ;
-            prec:edgeLabel "from" ;
-            prec:composedOf
+          :edgeFrom a prec:PRSCEdgeRule ;
+            prec:label "from" ;
+            prec:produces
               << pvar:destination :from pvar:self >> ,
               << pvar:self :from pvar:source >> ,
               << pvar:self rdf:subject pvar:source >> ,
@@ -492,12 +456,11 @@ module.exports = () => {
         "Edge unique edges should be translated back correctly",
         pgNodeEdgeNode,
         `
-          prec:this_is a prec:prscContext .
-          :node a prec:prsc_node ; prec:composedOf << pvar:self a :node >> .
+          :node a prec:PRSCNodeRule ; prec:produces << pvar:self a :node >> .
 
-          :edgeTo a prec:prsc_edge ;
-            prec:edgeLabel "to" ;
-            prec:composedOf
+          :edgeTo a prec:PRSCEdgeRule ;
+            prec:label "to" ;
+            prec:produces
               << pvar:source :connected_to pvar:destination >> ,
               << pvar:destination :connected_to pvar:source >> ,
               << pvar:source :to pvar:destination >> .

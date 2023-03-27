@@ -8,7 +8,7 @@ prec:KeepProvenance prec:flagState false .
 <http://schema.org/actor> prec:IRIOfEdgeLabel "ACTED_IN" .
 
 [] a prec:PropertyRule ;
-  prec:propertyName "roles" ;
+  prec:propertyKey "roles" ;
   prec:propertyIRI <http://example.org/role> .
 
 # TODO: a context where a template that uses pvar:individualValue is used

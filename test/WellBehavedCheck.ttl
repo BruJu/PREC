@@ -13,146 +13,146 @@ GRAPH this:empty {
 }
 
 GRAPH this:element_identification_check {
-  ex:empty_node a prec:prsc_node ;
+  ex:empty_node a prec:PRSCNodeRule ;
     prec:element_identification true .
 
-  ex:template_1_good_ident a prec:prsc_node ;
-    prec:composedOf << pvar:self a pgo:node >> ;
+  ex:template_1_good_ident a prec:PRSCNodeRule ;
+    prec:produces << pvar:self a pgo:node >> ;
     prec:element_identification true .
 
-  ex:template_1_bad_ident a prec:prsc_node ;
-    prec:composedOf << ex:X a pgo:node >> ;
+  ex:template_1_bad_ident a prec:PRSCNodeRule ;
+    prec:produces << ex:X a pgo:node >> ;
     prec:element_identification false .
 
-  ex:template_several_good a prec:prsc_node ;
-    prec:composedOf
+  ex:template_several_good a prec:PRSCNodeRule ;
+    prec:produces
       << pvar:self a pgo:node >> ,
       << pvar:self a :element >> ;
     prec:element_identification true .
 
-  ex:object_self a prec:prsc_node ;
-    prec:composedOf << :thegraph :has pvar:self >> ;
+  ex:object_self a prec:PRSCNodeRule ;
+    prec:produces << :thegraph :has pvar:self >> ;
     prec:element_identification true .
   
-  ex:quoted_self a prec:prsc_node ;
-    prec:composedOf << << pvar:self a pgo:node >> :generatedBy :pgo >> ;
+  ex:quoted_self a prec:PRSCNodeRule ;
+    prec:produces << << pvar:self a pgo:node >> :generatedBy :pgo >> ;
     prec:element_identification true .
   
-  ex:element_ident_one_good_one_bad a prec:prsc_node ;
-    prec:composedOf
+  ex:element_ident_one_good_one_bad a prec:PRSCNodeRule ;
+    prec:produces
       << pvar:self a pgo:node >> ,
       << :thisgraph :generatedBy :prsc >> ;
     prec:element_identification false .
 
-  ex:element_ident_moving a prec:prsc_node ;
-    prec:composedOf
+  ex:element_ident_moving a prec:PRSCNodeRule ;
+    prec:produces
       << pvar:self a :A >> ,
       << :A :contains pvar:self >> ;
     prec:element_identification true .
 
-  ex:pvarnode_in_node a prec:prsc_node ;
-    prec:composedOf << pvar:node a pgo:node >> ;
+  ex:pvarnode_in_node a prec:PRSCNodeRule ;
+    prec:produces << pvar:node a pgo:node >> ;
     prec:element_identification true .
 
-  ex:pvaredge_in_node a prec:prsc_node ;
-    prec:composedOf << pvar:edge a pgo:node >> ;
+  ex:pvaredge_in_node a prec:PRSCNodeRule ;
+    prec:produces << pvar:edge a pgo:node >> ;
     prec:element_identification false .
 
-  ex:pvarnode_in_edge a prec:prsc_edge ;
-    prec:composedOf << pvar:node a pgo:edge >> ;
+  ex:pvarnode_in_edge a prec:PRSCEdgeRule ;
+    prec:produces << pvar:node a pgo:edge >> ;
     prec:element_identification false .
 
-  ex:pvaredge_in_edge a prec:prsc_edge ;
-    prec:composedOf << pvar:edge a pgo:edge >> ;
+  ex:pvaredge_in_edge a prec:PRSCEdgeRule ;
+    prec:produces << pvar:edge a pgo:edge >> ;
     prec:element_identification true .
 
-  ex:inconsitent_synonyms a prec:prsc_node ;
-    prec:composedOf
+  ex:inconsitent_synonyms a prec:PRSCNodeRule ;
+    prec:produces
       << pvar:node a pgo:node >> ,
       << pvar:self a :element >> ;
     prec:element_identification true .
   
-  ex:with_a_blank_node a prec:prsc_node ;
-    prec:composedOf
+  ex:with_a_blank_node a prec:PRSCNodeRule ;
+    prec:produces
       << pvar:node a pgo:node >> ,
       << pvar:node :has_a_friend_named _:some_blank_node >> .
 }
 
 GRAPH this:no_value_loss_check {
-  ex:empty_node a prec:prsc_node ;
+  ex:empty_node a prec:PRSCNodeRule ;
     prec:no_value_loss true .
   
-  ex:empty_edge a prec:prsc_edge ;
+  ex:empty_edge a prec:PRSCEdgeRule ;
     prec:no_value_loss false .
   
-  ex:one_triple_edge a prec:prsc_edge ;
-    prec:composedOf << pvar:source ex:connected_to pvar:destination >> ;
+  ex:one_triple_edge a prec:PRSCEdgeRule ;
+    prec:produces << pvar:source ex:connected_to pvar:destination >> ;
     prec:no_value_loss true .
   
-  ex:edge_with_source_only a prec:prsc_edge ;
-    prec:composedOf << pvar:source ex:exists ex:here >> ;
+  ex:edge_with_source_only a prec:PRSCEdgeRule ;
+    prec:produces << pvar:source ex:exists ex:here >> ;
     prec:no_value_loss false .
 
-  ex:edge_with_destination_only a prec:prsc_edge ;
-    prec:composedOf << pvar:destination ex:exists ex:here >> ;
+  ex:edge_with_destination_only a prec:PRSCEdgeRule ;
+    prec:produces << pvar:destination ex:exists ex:here >> ;
     prec:no_value_loss false .
 
-  ex:node_with_name a prec:prsc_node ;
-    prec:propertyName "name" ;
-    prec:composedOf << pvar:self ex:name "name"^^prec:_valueOf >> ;
+  ex:node_with_name a prec:PRSCNodeRule ;
+    prec:propertyKey "name" ;
+    prec:produces << pvar:self ex:name "name"^^prec:valueOf >> ;
     prec:no_value_loss true .
   
-  ex:missing_label a prec:prsc_node ;
-    prec:propertyName "name" ;
-    prec:composedOf << pvar:self ex:name "toto" >> ;
+  ex:missing_label a prec:PRSCNodeRule ;
+    prec:propertyKey "name" ;
+    prec:produces << pvar:self ex:name "toto" >> ;
     prec:no_value_loss false .
 
-  ex:two_good a prec:prsc_node ;
-    prec:propertyName "name", "age" ;
-    prec:composedOf
-      << pvar:self ex:name "name"^^prec:_valueOf >>,
-      << pvar:self ex:age "age"^^prec:_valueOf >> ;
+  ex:two_good a prec:PRSCNodeRule ;
+    prec:propertyKey "name", "age" ;
+    prec:produces
+      << pvar:self ex:name "name"^^prec:valueOf >>,
+      << pvar:self ex:age "age"^^prec:valueOf >> ;
     prec:no_value_loss true .
   
-  ex:one_good_one_bad a prec:prsc_node ;
-    prec:propertyName "name", "age" ;
-    prec:composedOf
-      << pvar:self ex:name "name"^^prec:_valueOf >> ,
-      << pvar:self ex:age "name"^^prec:_valueOf >> ;
+  ex:one_good_one_bad a prec:PRSCNodeRule ;
+    prec:propertyKey "name", "age" ;
+    prec:produces
+      << pvar:self ex:name "name"^^prec:valueOf >> ,
+      << pvar:self ex:age "name"^^prec:valueOf >> ;
     prec:no_value_loss false .
 
-  ex:drowned_values a prec:prsc_node ;
-    prec:propertyName "firstname", "lastname" ;
-    prec:composedOf
-      << pvar:self ex:name "firstname"^^prec:_valueOf >> ,
-      << pvar:self ex:name "lastname"^^prec:_valueOf >> ;
+  ex:drowned_values a prec:PRSCNodeRule ;
+    prec:propertyKey "firstname", "lastname" ;
+    prec:produces
+      << pvar:self ex:name "firstname"^^prec:valueOf >> ,
+      << pvar:self ex:name "lastname"^^prec:valueOf >> ;
     prec:no_value_loss false .
 
-  ex:both_drowned_and_identifiable_values a prec:prsc_node ;
-    prec:propertyName "firstname", "lastname" ;
-    prec:composedOf
-      << pvar:self ex:first "firstname"^^prec:_valueOf >> ,
-      << pvar:self ex:last "lastname"^^prec:_valueOf >> ,
-      << pvar:self ex:name "firstname"^^prec:_valueOf >> ,
-      << pvar:self ex:name "lastname"^^prec:_valueOf >> ;
+  ex:both_drowned_and_identifiable_values a prec:PRSCNodeRule ;
+    prec:propertyKey "firstname", "lastname" ;
+    prec:produces
+      << pvar:self ex:first "firstname"^^prec:valueOf >> ,
+      << pvar:self ex:last "lastname"^^prec:valueOf >> ,
+      << pvar:self ex:name "firstname"^^prec:valueOf >> ,
+      << pvar:self ex:name "lastname"^^prec:valueOf >> ;
     prec:no_value_loss true .
 
-  ex:rdf_star_prop a prec:prsc_edge ;
-    prec:propertyName "since" ;
-    prec:composedOf
+  ex:rdf_star_prop a prec:PRSCEdgeRule ;
+    prec:propertyKey "since" ;
+    prec:produces
       <<
         << pvar:source ex:connected_to pvar:destination >> 
         ex:since
-        "since"^^prec:_valueOf
+        "since"^^prec:valueOf
       >> ;
     prec:no_value_loss true .
 
-  ex:weird_rdf_star a prec:prsc_node ;
-    prec:propertyName "familyname", "givenname" ;
-    prec:composedOf
+  ex:weird_rdf_star a prec:PRSCNodeRule ;
+    prec:propertyKey "familyname", "givenname" ;
+    prec:produces
       <<
-        << pvar:self ex:member_of_family "familyname"^^prec:_valueOf >>
-        ex:givenname "givenname"^^prec:_valueOf
+        << pvar:self ex:member_of_family "familyname"^^prec:valueOf >>
+        ex:givenname "givenname"^^prec:valueOf
       >> ;
     prec:no_value_loss true .
 }
@@ -165,7 +165,7 @@ GRAPH this:signature_triple_check {
   [] prec:all_signed false ,
     ex:empty_node .
 
-  ex:empty_node a prec:prsc_node .
+  ex:empty_node a prec:PRSCNodeRule .
 
   # 
 
@@ -174,34 +174,34 @@ GRAPH this:signature_triple_check {
   ex:ok_a_b prec:all_signed true, ex:node_a, ex:node_b .
   ex:bad_a_alike prec:all_signed false, ex:node_a, ex:node_alike .
 
-  ex:node_a a prec:prsc_node ;
-    prec:nodeLabel "A" ;
-    prec:composedOf << pvar:self a ex:A >> .
+  ex:node_a a prec:PRSCNodeRule ;
+    prec:label "A" ;
+    prec:produces << pvar:self a ex:A >> .
 
-  ex:node_b a prec:prsc_node ;
-    prec:nodeLabel "B" ;
-    prec:composedOf << pvar:self a ex:B >> .
+  ex:node_b a prec:PRSCNodeRule ;
+    prec:label "B" ;
+    prec:produces << pvar:self a ex:B >> .
 
-  ex:node_alike a prec:prsc_node ;
-    prec:nodeLabel "A-like" ;
-    prec:composedOf << pvar:self a ex:A >> .
+  ex:node_alike a prec:PRSCNodeRule ;
+    prec:label "A-like" ;
+    prec:produces << pvar:self a ex:A >> .
 
   # Literal production
 
-  ex:node_named_c a prec:prsc_node ;
-    prec:nodeLabel "C" ;
-    prec:propertyName "name" ;
-    prec:composedOf << pvar:self ex:name "name"^^prec:_valueOf >> .
+  ex:node_named_c a prec:PRSCNodeRule ;
+    prec:label "C" ;
+    prec:propertyKey "name" ;
+    prec:produces << pvar:self ex:name "name"^^prec:valueOf >> .
   
-  ex:node_firstnamed_d a prec:prsc_node ;
-    prec:nodeLabel "D" ;
-    prec:propertyName "firstname" ;
-    prec:composedOf << pvar:self ex:name "firstname"^^prec:_valueOf >> .
+  ex:node_firstnamed_d a prec:PRSCNodeRule ;
+    prec:label "D" ;
+    prec:propertyKey "firstname" ;
+    prec:produces << pvar:self ex:name "firstname"^^prec:valueOf >> .
   
-  ex:node_firstnamed_e a prec:prsc_node ;
-    prec:nodeLabel "E" ;
-    prec:propertyName "firstname" ;
-    prec:composedOf << pvar:self ex:firstname "firstname"^^prec:_valueOf >> .
+  ex:node_firstnamed_e a prec:PRSCNodeRule ;
+    prec:label "E" ;
+    prec:propertyKey "firstname" ;
+    prec:produces << pvar:self ex:firstname "firstname"^^prec:valueOf >> .
   
   ex:bad_c_d prec:all_signed false, ex:node_named_c, ex:node_firstnamed_d .
   ex:ok_c_e prec:all_signed true, ex:node_named_c, ex:node_firstnamed_e .
@@ -209,32 +209,32 @@ GRAPH this:signature_triple_check {
 
   # With edges
 
-  ex:reflexive_node a prec:prsc_node ;
-    prec:nodeLabel "Philosoph" ;
-    prec:composedOf << pvar:self ex:knows pvar:self >> .
+  ex:reflexive_node a prec:PRSCNodeRule ;
+    prec:label "Philosoph" ;
+    prec:produces << pvar:self ex:knows pvar:self >> .
   
-  ex:not_so_reflexive_node a prec:prsc_node ;
-    prec:nodeLabel "CarefulPhilosoph" ;
-    prec:composedOf << pvar:self ex:knows ex:themself >> .
+  ex:not_so_reflexive_node a prec:PRSCNodeRule ;
+    prec:label "CarefulPhilosoph" ;
+    prec:produces << pvar:self ex:knows ex:themself >> .
 
-  ex:edge_knows a prec:prsc_edge ;
-    prec:edgeLabel "Knows" ;
-    prec:composedOf << pvar:source ex:knows pvar:destination >> .
+  ex:edge_knows a prec:PRSCEdgeRule ;
+    prec:label "Knows" ;
+    prec:produces << pvar:source ex:knows pvar:destination >> .
   
   ex:bad_knows prec:all_signed false, ex:reflexive_node, ex:edge_knows .
   ex:ok_knows prec:all_signed true, ex:not_so_reflexive_node, ex:edge_knows .
 
-  ex:edge_double_knows a prec:prsc_edge ;
-    prec:edgeLabel "DoubleKnows" ;
-    prec:composedOf
+  ex:edge_double_knows a prec:PRSCEdgeRule ;
+    prec:label "DoubleKnows" ;
+    prec:produces
       << pvar:source ex:dknows pvar:destination >> ,
       << pvar:destination ex:dknows pvar:source >> .
     
   ex:double_knows_is_bad prec:all_signed false, ex:node_a, ex:edge_double_knows .
 
-  ex:edge_triple_knows a prec:prsc_edge ;
-    prec:edgeLabel "TripleKnows" ;
-    prec:composedOf
+  ex:edge_triple_knows a prec:PRSCEdgeRule ;
+    prec:label "TripleKnows" ;
+    prec:produces
       # Not (local) signature
       << pvar:source ex:dknows pvar:destination >> ,
       << pvar:destination ex:dknows pvar:source >> ,
@@ -245,12 +245,12 @@ GRAPH this:signature_triple_check {
 
   # Multiple similar signatures
 
-  ex:fan_of_names a prec:prsc_node ;
+  ex:fan_of_names a prec:PRSCNodeRule ;
     prec:nodelLabel "FanOfNames" ;
-    prec:propertyName "name", "name2" ;
-    prec:composedOf
-      << pvar:self ex:name "name"^^prec:_valueOf >> ,
-      << pvar:self ex:name "name2"^^prec:_valueOf >> .
+    prec:propertyKey "name", "name2" ;
+    prec:produces
+      << pvar:self ex:name "name"^^prec:valueOf >> ,
+      << pvar:self ex:name "name2"^^prec:valueOf >> .
   
   ex:only_me_use_names_because_im_alone prec:all_signed true,
     ex:fan_of_names .
@@ -263,15 +263,15 @@ GRAPH this:signature_triple_check {
 
   # One signature, one non signature
 
-  ex:dog a prec:prsc_node ;
+  ex:dog a prec:PRSCNodeRule ;
     prec:nodelLabel "Dog" ;
-    prec:composedOf
+    prec:produces
       << pvar:self a pgo:node >> ,
       << pvar:self a ex:Dog >> .
   
-  ex:cat a prec:prsc_node ;
-    prec:nodeLabel "Cat" ;
-    prec:composedOf
+  ex:cat a prec:PRSCNodeRule ;
+    prec:label "Cat" ;
+    prec:produces
       << pvar:self a pgo:node >> ,
       << pvar:self a ex:Cat >> .
   
@@ -281,82 +281,82 @@ GRAPH this:signature_triple_check {
 GRAPH this:animal_context {
   this:all prec:well_behaved true .
 
-  ex:cat a prec:prsc_node ;
-    prec:nodeLabel "Cat" ;
-    prec:propertyName "name" ;
-    prec:composedOf
+  ex:cat a prec:PRSCNodeRule ;
+    prec:label "Cat" ;
+    prec:propertyKey "name" ;
+    prec:produces
       << pvar:self a pgo:node >> ,
-      << pvar:self ex:name "name"^^prec:_valueOf >> ,
+      << pvar:self ex:name "name"^^prec:valueOf >> ,
       << pvar:self a ex:Cat >> .
     
-  ex:dog a prec:prsc_node ;
-    prec:nodeLabel "Dog" ;
-    prec:propertyName "name" ;
-    prec:composedOf
-      << pvar:self ex:name "name"^^prec:_valueOf >> ,
+  ex:dog a prec:PRSCNodeRule ;
+    prec:label "Dog" ;
+    prec:propertyKey "name" ;
+    prec:produces
+      << pvar:self ex:name "name"^^prec:valueOf >> ,
       << pvar:self ex:oncesaid "Wouf" >> .
     
-  ex:human a prec:prsc_node ;
-    prec:nodeLabel "Human" ;
-    prec:composedOf << pvar:self a ex:Human >> .
+  ex:human a prec:PRSCNodeRule ;
+    prec:label "Human" ;
+    prec:produces << pvar:self a ex:Human >> .
   
-  ex:ownership a prec:prsc_edge ;
-    prec:edgeLabel "Owns" ;
-    prec:propertyName "declaration_date" ;
-    prec:composedOf
+  ex:ownership a prec:PRSCEdgeRule ;
+    prec:label "Owns" ;
+    prec:propertyKey "declaration_date" ;
+    prec:produces
       << pvar:self a ex:ownership_declaration >> ,
       << pvar:self ex:owner pvar:source >> ,
       << pvar:self ex:about pvar:destination >> ,
-      << pvar:self ex:filledOn "declaration_date"^^prec:_valueOf >> ;
+      << pvar:self ex:filledOn "declaration_date"^^prec:valueOf >> ;
     prec:no_value_loss true .
 }
 
 GRAPH this:ok_edgeuniqueedge {
   this:all prec:well_behaved true .
 
-  ex:human a prec:prsc_node ;
-    prec:composedOf << pvar:self a ex:Human >> .
+  ex:human a prec:PRSCNodeRule ;
+    prec:produces << pvar:self a ex:Human >> .
   
-  ex:knows a prec:prsc_edge ;
-    prec:composedOf << pvar:source ex:knows pvar:destination >> .
+  ex:knows a prec:PRSCEdgeRule ;
+    prec:produces << pvar:source ex:knows pvar:destination >> .
 }
 
 GRAPH this:bad_edgeuniqueedge {
   this:all prec:well_behaved false .
 
-  ex:philosoph a prec:prsc_node ;
-    prec:composedOf << pvar:self ex:knows pvar:self >> .
+  ex:philosoph a prec:PRSCNodeRule ;
+    prec:produces << pvar:self ex:knows pvar:self >> .
   
-  ex:knows a prec:prsc_edge ;
-    prec:composedOf << pvar:source ex:knows pvar:destination >> .
+  ex:knows a prec:PRSCEdgeRule ;
+    prec:produces << pvar:source ex:knows pvar:destination >> .
 }
 
 GRAPH this:bad_edgeuniqueedges {
   this:all prec:well_behaved false .
 
-  ex:human a prec:prsc_node ;
-    prec:composedOf << pvar:self a ex:Human >> .
+  ex:human a prec:PRSCNodeRule ;
+    prec:produces << pvar:self a ex:Human >> .
   
-  ex:knows a prec:prsc_edge ;
-    prec:edgeLabel "knows" ;
-    prec:composedOf << pvar:source ex:knows pvar:destination >> .
+  ex:knows a prec:PRSCEdgeRule ;
+    prec:label "knows" ;
+    prec:produces << pvar:source ex:knows pvar:destination >> .
     
-  ex:heard_about a prec:prsc_edge ;
-    prec:edgeLabel "heard_about" ;
-    prec:composedOf << pvar:source ex:knows pvar:destination >> .
+  ex:heard_about a prec:PRSCEdgeRule ;
+    prec:label "heard_about" ;
+    prec:produces << pvar:source ex:knows pvar:destination >> .
 }
 
 GRAPH this:good_edgeuniqueedges {
   this:all prec:well_behaved true .
 
-  ex:human a prec:prsc_node ;
-    prec:composedOf << pvar:self a ex:Human >> .
+  ex:human a prec:PRSCNodeRule ;
+    prec:produces << pvar:self a ex:Human >> .
   
-  ex:knows a prec:prsc_edge ;
-    prec:edgeLabel "knows" ;
-    prec:composedOf << pvar:source ex:knows pvar:destination >> .
+  ex:knows a prec:PRSCEdgeRule ;
+    prec:label "knows" ;
+    prec:produces << pvar:source ex:knows pvar:destination >> .
     
-  ex:heard_about a prec:prsc_edge ;
-    prec:edgeLabel "heard_about" ;
-    prec:composedOf << pvar:source ex:heard_about pvar:destination >> .
+  ex:heard_about a prec:PRSCEdgeRule ;
+    prec:label "heard_about" ;
+    prec:produces << pvar:source ex:heard_about pvar:destination >> .
 }

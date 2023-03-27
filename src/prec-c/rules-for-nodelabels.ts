@@ -1,27 +1,22 @@
-import { DataFactory } from 'n3';
-
 import * as QuadStar from '../rdf/quad-star';
-import { FilterProvider, RuleDomain, RuleType } from './RuleType';
-import { Quad_Subject } from 'rdf-js';
-import { SplitDefConditions } from './context-loader';
-import { Quad, Term } from '@rdfjs/types';
+import { FilterProvider, RuleDomain, RuleType } from '../prec-c/RuleType';
+import { SplitDefConditions } from '../prec-c/context-loader';
+import * as RDF from '@rdfjs/types';
 import DStar from '../dataset/index';
 import Context from './Context';
 
 import {
   rdf, rdfs, prec, pvar, pgo,
-  $quad, $variable
+  $quad, $variable, $defaultGraph
 } from '../PRECNamespace';
-
-const $defaultGraph = DataFactory.defaultGraph;
 
 class NLRuleClass implements RuleType {
   readonly domain: RuleDomain = {
     RuleType          : prec.NodeLabelRule,
     DefaultTemplate   : prec.NodeLabelsTypeOfLabelIRI,
-    MainLabel         : prec.nodeLabel,
+    MainLabel         : prec.label,
     PossibleConditions: [],
-    TemplateBases     : [[prec.NodeLabels, []]],
+    TemplateBases     : [prec.NodeLabels],
     ShortcutIRI       : prec.IRIOfNodeLabel,
     SubstitutionTerm  : prec.nodeLabelIRI,
   
@@ -31,7 +26,7 @@ class NLRuleClass implements RuleType {
 
   readonly mark = prec.__appliedNodeRule;
 
-  makeOneRuleFilter(conditions: SplitDefConditions, hash: string, ruleNode: Quad_Subject) {
+  makeOneRuleFilter(conditions: SplitDefConditions, hash: string, ruleNode: RDF.Quad_Subject) {
     return new NodeLabelRule(conditions, hash, ruleNode);
   }
 
@@ -47,7 +42,7 @@ class NLRuleClass implements RuleType {
   
       dataset.add(
         $quad(
-          $quad(binding.node as Quad_Subject, rdf.type, binding.pgLabeliri as Quad_Subject),
+          $quad(binding.node as RDF.Quad_Subject, rdf.type, binding.pgLabeliri as RDF.Quad_Subject),
           prec.__appliedNodeRule,
           prec.NodeLabels
         )
@@ -55,14 +50,14 @@ class NLRuleClass implements RuleType {
     });
   }
 
-  applyMark(destination: DStar, mark: Quad, input: DStar, context: Context): Term[] {
+  applyMark(destination: DStar, mark: RDF.Quad, input: DStar, context: Context): RDF.Term[] {
     const variableValues: any = {
-      node: (mark.subject as Quad).subject,
-      labelIRI: (mark.subject as Quad).object,
+      node: (mark.subject as RDF.Quad).subject,
+      labelIRI: (mark.subject as RDF.Quad).object,
       ruleNode: mark.object
     };
   
-    const label = input.getQuads(variableValues.labelIRI, rdfs.label, null, $defaultGraph());
+    const label = input.getQuads(variableValues.labelIRI, rdfs.label, null, $defaultGraph);
     if (label.length !== 0) {
       variableValues.label = label[0].object;
     }
@@ -79,7 +74,7 @@ class NLRuleClass implements RuleType {
         // label as a string, captured at the beginning of this loop
         [$variable("label")   , pvar.label]
       ]
-    )) as Quad[];
+    )) as RDF.Quad[];
   
     variableValues['@quads'] = [];
     destination.replaceOneBinding(variableValues, target);
@@ -94,16 +89,15 @@ class NLRuleClass implements RuleType {
 
 /** An individual node label rule */
 class NodeLabelRule implements FilterProvider {
-  conditions: Quad[][] = [];
-  ruleNode: Quad_Subject;
+  conditions: RDF.Quad[][] = [];
+  ruleNode: RDF.Quad_Subject;
   priority: [number | undefined, string];
 
   /** Build a node label rule from its definition */
-  constructor(conditions: SplitDefConditions, hash: string, ruleNode: Quad_Subject) {
+  constructor(conditions: SplitDefConditions, hash: string, ruleNode: RDF.Quad_Subject) {
     this.conditions = [];
     this.ruleNode = ruleNode;
 
-    // prec:nodeLabel
     if (conditions.label !== undefined) {
       this.conditions.push([
         $quad($variable("node")     , rdf.type  , $variable("nodeLabel")),
@@ -123,14 +117,14 @@ class NodeLabelRule implements FilterProvider {
    * Return the arguments to pass to `DStar::findFilterReplace` to tag
    * the nodes that matches this rule with its rule node.
    */
-  getFilter() {
+  getFilters() {
     const markedTriple = $quad($variable("node"), rdf.type, $variable("nodeLabel"));
 
-    return {
+    return [{
       source: [$quad(markedTriple, prec.__appliedNodeRule, prec.NodeLabels)],
       conditions: this.conditions,
       destination: [$quad(markedTriple, prec.__appliedNodeRule, this.ruleNode)]
-    };
+    }];
   }
 }
 

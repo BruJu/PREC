@@ -75,32 +75,94 @@
     <section>
       <h2>Introduction</h2>
 
-      <p><a href="https://github.com/BruJu/PREC/">PREC</a> is composed of two modules:</p>
+      <p><a href="https://github.com/BruJu/PREC/">PREC</a> is composed of three modules:</p>
       <ul>
-        <li><dfn>PREC-0</dfn>, a Property Graph to RDF graph converter</li>
-        <li><dfn>PREC-Context</dfn>, an RDF Graph generated from PREC-0 to more readable graphs converter</li>
+        <li>[= PREC-0 =], a Property Graph to RDF graph converter</li>
+        <li><dfn>PRSC</dfn> (PG to RDF, Schema-based Converter; pronounced like the french word <em>Presque</em>), an RDF Graph generated from PREC-0 to more readable graphs converter, based on schemas.</li>
+        <li><dfn data-lt="PREC-Context">PREC-C</dfn> (PREC-Context), an RDF Graph generated from PREC-0 to more readable graphs converter</li>
       </ul>
+
+      <p>
+        To convert a Property Graph (PG) into an RDF graph, PREC operates a two
+        steps conversion:
+        <ul>
+          <li>
+            First, PREC-0 transforms the PG to an RDF graph, named PREC-0 graph.
+            The PG is retrieved through usual PG APIs, like Cypher or Gremlin.
+            The PREC-0 RDF graph is a literal description of the property graph.
+          </li>
+          <li>
+            Then, if the user provided a context, the PREC-0 RDF graph is
+            transformed into an idiomatic RDF graph by using the rules described
+            in the context. There are two different rulesets: the PRSC ruleset
+            and the PREC-C ruleset.
+              <ul>
+                <li>
+                  The [= PRSC =] ruleset is easier to use and idiomatic RDF graphs can
+                  be used to revert to a PG depending on the provided PRSC
+                  context.
+                </li>
+                <li>
+                  The [= PREC-C =] ruleset allows a more fine grained
+                  control of the conversion, but is more verbose.
+                </li>
+              </ul>
+          </li>
+        </ul>
+      </p>
       
-      <p>To define the transformations to apply, PREC-Context uses a <em>Context</em> provided
-      by the user in <a href="https://w3c.github.io/rdf-star/cg-spec/editors_draft.html#turtle-star">Turtle-Star</a> format.
+      <p>
+        To define the transformations to apply, PREC uses a <em>Context</em>
+        provided by the user in
+        <a href="https://w3c.github.io/rdf-star/cg-spec/editors_draft.html#turtle-star">Turtle-Star</a>
+        format.
       </p>
 
       <aside class="warning" title="(Un)stability of the ontology">
         <p>This ontology is currently very tentative and is subject to change.</p>
       </aside>
 
-      <aside class="note" title="Edges and relationships">
+      <aside class="note" title="Terminology">
         <p>
-          In PREC, edge and relationship can be used interchangeably.
-          We prefer the term edge as it is shorter and it has the same number
-          of letters as node. The IRI described in this document that contains
-          the word edge also exist in a relationship fashion, e.g.
-          prec:relationshipIRI can be used instead of [= prec:edgeIRI =].
-        </p>
+          The following terms are used to describe Property Graphs:
+          <ul>
+            <li><em>Node</em>, sometimes called <em>Vertex</em> in other works.</li>
+            <li><em>Edge</em>, sometimes called <em>Relationship</em> in other works.</li>
+            <li><em>Element</em>, something that is either a node or an edge.</li>
+            <li>
+              <em>Source node</em>, the node from which an edge starts.
+              Sometimes called <em>start node</em> in other works.
+            </li>
+            <li>
+              <em>Destination node</em>, the node from which an edge ends.
+              Sometimes called <em>end node</em> or <em>target node</em> in
+              other works.
+            </li>
+            <li>
+              <em>Properties</em> are key-value pairs. In other works, the
+              property key is sometimes named the <em>property name</em>.
+            </li>
+          </ul>
       </aside>
+
+    </section>
+
+    <section>
+      <h2>PREC-0: From PGs to a literal transcription in RDF graph</h2>
+
+      <p>
+        The <dfn>PREC-0</dfn> module comunicates with a PG engine using an
+        already existing API, for example Cypher, Gremlin or APOC, and extract
+        the data to build a PREC-0 RDF graph: an RDF graph that describes the
+        Property Graph very literally.
+      </p>
 
       <section>
         <h3>Schema of the PREC-0 graphs</h3>
+        <p>
+          The current schema of PREC-0 graphs is as follows:<br>
+          <img src="prec0schema.png" alt="The schema of PREC-0 graphs" style="width: 100%; height: auto;"/>
+        </p>
         <p>
           A partial SHACL Shapes Graph is available at
           <a href="https://github.com/BruJu/PREC/blob/master/docs/prec0shape.ttl">
@@ -110,175 +172,9 @@
         </p>
       </section>
 
-      <section>
-        <h3>Use of a context</h3>
-
-        <p>The context can be automatically applied during the convertion of the Property Graph to RDF:</p>
-        <ul>
-          <li>For example, for a Neo4j graph for which you have already extacted
-            the content in Json format with the APOC extension, use
-            `prec apoc2rdf path_to_property_graph_content.json -c path_to_context.ttl`
-          </li>
-        </ul>
       
-        <p>If you have already generated the PREC-0 graph, you can use the ApplyContext tool:</p>
-        <ul>
-          <li>`prec applyContext path_to_prec0_graph.ttl path_to_context.ttl`</li>
-        </ul>
-
-      </section>
-
       <section>
-        <h3>Example of a context</h3>
-
-        <aside class="example">
-          <p>
-            In this section, we will present the ontology through a practical
-            example. Considering a property graph with the following data
-            (exposed in a format similar to a Cypher query):
-          </p>
-
-          <pre>
-            ( haddock   :Person { name: "Haddock", firstName: "Archibald" } ),
-            ( snowy     :Animal { name: "Snowy"  } ),
-            ( the_serie :Serie  { name: "The Adventures of Tintin" } ),
-
-            ( haddock ) -[ :appears { since: "The Crab with the Golden Claws"   } ]->( the_serie ),
-            ( snowy   ) -[ :appears { since: "Tintin in the Land of the Soviets" }]->( the_serie ),
-            ( haddock ) -[ :knows ]->( snowy )
-          </pre>
-
-          <p>
-            PREC enables us to convert this Property Graph into an RDF graph.
-            The graph generated without any context is very verbose, and will
-            not be displayed here. Instead, we are going to write a context to
-            produce a small and readable graph.
-          </p>
-
-          <pre data-transform="updateExample"
-            data-content-type="text/turtle"
-            class="nohighlight"
-          >
-            <!--
-              @prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-              @prefix prec: <http://bruy.at/prec#> .
-              @prefix pvar: <http://bruy.at/prec-trans#> .
-              @prefix pgo:  <http://ii.uwb.edu.pl/pgo#> .
-
-              # We want properties to be written in the RDF-graph as
-              # [the node or edge] [iri of the property] [the value]
-              prec:Properties prec:templatedBy prec:DirectTriples .
-
-              # We want edges to be written in the RDF-graph as
-              # [the source] [the label] [the destination]
-              # and use RDF-star for properties
-              prec:Edges prec:templatedBy prec:RdfStarUnique .
-
-              # == Properties
-
-              # The name of a person is its family name
-              [] a prec:PropertyRule ;
-                prec:propertyName "name" ;
-                prec:propertyIRI <http://schema.org/familyName> ;
-                prec:nodeLabel "Person" .
-              
-              [] a prec:PropertyRule ;
-                prec:propertyName "firstName" ;
-                prec:propertyIRI <http://schema.org/givenName> .
-
-              # Other names are names
-              [] a prec:PropertyRule ;
-                prec:propertyName "name" ;
-                prec:propertyIRI <http://schema.org/name> .
-              
-              # We use an IRI from dbpedia for the since property
-              # As writing rules for simple things is very long, we are
-              # going to use a syntactic sugar
-              <http://dbpedia.org/property/debut> prec:IRIOfProperty "since" .
-
-              # == Node labels
-              <http://dbpedia.org/resource/Person> prec:IRIOfNodeLabel "Person" .
-              <http://dbpedia.org/resource/Animal> prec:IRIOfNodeLabel "Animal" .
-              <http://dbpedia.org/class/yago/Series108457976> prec:IRIOfNodeLabel "Serie" .
-
-              # == Edges
-              <http://schema.org/knowsAbout> prec:IRIOfEdgeLabel "knows" .
-              <http://schema.org/knowsAbout> prec:IRIOfEdgeLabel "knows" .
-
-              # Map appears to schema:character. One problem of schema:character
-              # is that is expect the serie as the subject and the character as
-              # an object, but we can fix the order!
-              [] a prec:EdgeRule ;
-                prec:edgeLabel "appears" ;
-                # We want the destination to be the source and the destination
-                # to be the source so let's write our own template!
-                prec:templatedBy [
-                  a prec:EdgeTemplate ;
-                  prec:composedOf
-                    # Assert the triple
-                    <<    pvar:destination pvar:edgeIRI pvar:source               >> ,
-                    # Keep the provenance
-                    << << pvar:destination pvar:edgeIRI pvar:source >> a pgo:Edge >> ,
-                    # Keep the properties
-                    << << pvar:destination pvar:edgeIRI pvar:source >> pvar:propertyPredicate pvar:propertyObject >> 
-                ] ;
-                # prec:edgeIRI will actually replace pvar:edge with schema:character
-                prec:edgeIRI <http://schema.org/character> .
-            -->
-          </pre>
-
-          <p>
-            The produce RDF-graph will be isomorphic to be following:
-          </p>
-
-          <pre data-transform="updateExample"
-            data-content-type="text/turtle"
-            class="nohighlight"
-          >
-            <!--
-            # Note that Haddock have no http://schema.org/name
-            _:haddock a pgo:Node, <http://dbpedia.org/resource/Person>;
-                <http://schema.org/givenName> "Archibald";
-                <http://schema.org/familyName> "Haddock".
-            
-            _:snowy a pgo:Node, <http://dbpedia.org/resource/Animal>;
-                <http://schema.org/name> "Snowy".
-            
-            _:adventures_of_tintin a pgo:Node, <http://dbpedia.org/class/yago/Series108457976>;
-                <http://schema.org/name> "The Adventures of Tintin";
-                # The edge have been properly inverted
-                <http://schema.org/character> _:haddock, _:snowy.     
-
-            _:haddock <http://schema.org/knowsAbout> _:snowy.
-            <<_:haddock <http://schema.org/knowsAbout> _:snowy>> a pgo:Edge.
-              
-            # When did every character appear?
-            <<_:adventures_of_tintin <http://schema.org/character> _:haddock>> a pgo:Edge;
-                <http://dbpedia.org/property/debut> "The Crab with the Golden Claws".
-
-            <<_:adventures_of_tintin <http://schema.org/character> _:snowy>> a pgo:Edge;
-                <http://dbpedia.org/property/debut> "Tintin in the Land of the Soviets".
-            -->
-          </pre>
-
-          <p>
-            Note that in this example, while the produced output is easy to
-            read and reuse existing ontologies, we are not conforming to the DBPedia
-            usual schema, as in DBpedia, `<http://dbpedia.org/property/debut>`
-            would be used with the character as the subject and the book (and
-            not its name) as the object ; and in the current state of the
-            ontology we can not do better. This is one of the weakness of
-            the ontology: it can not conform to every schema.
-          </p>
-        </aside>
-      </section>
-    </section>
-
-    <section>
-      <h2>The PREC ontology</h2>
-
-      <section>
-        <h3>Types</h3>
+        <h3>Terms used in PREC-0 graphs</h3>
 
         <p>
           The PREC ontology introduces some new types for the graphs generated
@@ -297,9 +193,9 @@
 
           <p>Types that are subtypes of [= prec:CreatedVocabulary =] are:
             <ul>
-              <li><dfn data-lt="prec:CreatedPropertyKey">http://bruy.at/prec#CreatedPropertyKey</dfn></li>
-              <li><dfn data-lt="prec:CreatedNodeLabel">http://bruy.at/prec#CreatedNodeLabel</dfn></li>
-              <li><dfn data-lt="prec:CreatedEdgeLabel">http://bruy.at/prec#CreatedEdgeLabel</dfn></li>
+              <li><dfn class="lint-ignore" data-lt="prec:CreatedPropertyKey">http://bruy.at/prec#CreatedPropertyKey</dfn></li>
+              <li><dfn class="lint-ignore" data-lt="prec:CreatedNodeLabel">http://bruy.at/prec#CreatedNodeLabel</dfn></li>
+              <li><dfn class="lint-ignore" data-lt="prec:CreatedEdgeLabel">http://bruy.at/prec#CreatedEdgeLabel</dfn></li>
             </ul>
           </p>
 
@@ -350,14 +246,419 @@
         </section>
       </section>
 
+    </section>
+
+    <section>
+      <h2>Contexts</h2>
+
+      <p>
+        A context is a document, written in Turtle-star, that describes how to
+        convert the different entities in the property graph into an idiomatic
+        RDF graph.
+      </p>
+
+      <section>
+        <h3>Use of a context</h3>
+
+        <p>The context can be automatically applied during the convertion of the Property Graph to RDF:</p>
+        <ul>
+          <li>
+            To use a context during the extraction of a property graph, you can
+            use the `-c /path/to/context` argument of the command line interface.
+          </li>
+          <li>For example, for a Neo4j graph for which you have already extacted
+            the content in Json format with the APOC extension:
+            <ul>
+              <li>
+                The command line to build a PREC-0 graph would be
+                `prec apoc2rdf path_to_property_graph_content.json`
+              </li>
+              <li>
+                The command line to build an idiomatic graph is
+                `prec apoc2rdf path_to_property_graph_content.json -c path_to_context.ttl`
+              </li>
+            </ul>
+          </li>
+        </ul>
+      
+        <p>If you have already generated the PREC-0 graph, you can use the ApplyContext tool:</p>
+        <ul>
+          <li>`prec applyContext path_to_prec0_graph.ttl path_to_context.ttl`</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3>Rulesets</h3>
+
+        <p>
+          There are two different rulesets for contexts: PRSC and PREC-C. We
+          recommand to use the PRSC ruleset if possible as it is easier to use.
+        </p>
+
+        <p>
+          Rules usually target some entities, and have some constraints on which
+          entities it targets. Targettable entities, <em>i.e.</em> first class
+          citizen, are:
+          <ul>
+            <li>For PRSC: nodes and edges.</li>
+            <li>For PREC-C: nodes, edges and properties.</li>
+          </ul>
+        </p>
+      </section>
+
+      <section>
+        <h3>The templating system</h3>
+
+        <p>
+          PREC uses a custom templating system. Triples that should be produced
+          by a rule are the ones described by embed triples used as the object
+          of triples for which the predicate is <em>prec:produces</em>.
+        </p>
+
+        <p>
+          When the triples are produced, some terms, usually in the
+          <em>pvar</em> namespace are replaced with terms depending on the
+          data from the property graph.
+        </p>
+
+        <p>
+          Each triple that is used as an object of <em>prec:produces</em> is
+          called a <dfn>template triple</dfn>. The set of all template triples
+          of a resource, <em>i.e.</em> for a given resource, the set of all
+          objects of triples that have as the subject the resource and as the
+          predicate <em>prec:produces</em>, is named a
+          <dfn>template graph</dfn>.
+        </p>
+
+        <aside class="example" title="A template graph">
+
+          <p>
+            In the following example, the rule `ex:PersonForm` is applied for
+            the nodes that have the label "Person". For these node, one triple
+            will be produced: the one described by the triple
+            `ex:PersonForm prec:produces << pvar:self ex:hasLabel ex:Person >>`.
+            However, `pvar:self` will be replaced by a blank node or an IRI
+            specific to each node for which the rule applies.
+          </p>
+          <pre data-transform="updateExample"
+            data-content-type="text/turtle"
+            class="nohighlight"
+          >
+            <!--
+              PREFIX prec: <http://bruy.at/prec#>
+              PREFIX pvar: <http://bruy.at/prec-trans#>
+              PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+              PREFIX ex:   <http://example.org/>
+
+              ex:PersonForm a prec:PRSCNodeRule ;
+                prec:label "Person" ;
+                prec:produces
+                  << pvar:self ex:hasLabel ex:person >> .
+            -->
+          </pre>
+        </aside>
+
+        <p>
+          This templating system allows the user to write triples that are
+          very close to the one that are produced. Moreover, because there are
+          no variables, template graphs can be written in plain Turtle-star
+          files.
+        </p>
+      </section>
+    </section>
+
+    <section>
+      <h2>PRSC - Schema driven mapping</h3>
+
+        <p>
+          PRSC contexts are contexts that transform all nodes and edges that
+          share a common type by using a given RDF representation.
+          A type is defined as whenever the element is an edge or a node,
+          the list of labels and the list of properties of the element.
+        </p>
+
+        <p>
+          This kind of context identify every node and edges to a schema, and the
+          transformation of every schema from PG to RDF must be defined.
+        </p>
+
+        <section>
+          <h3>Writing PRSC rules</h3>
+
+          <strong>List of valid IRIs for a PRSC rule are:</strong>
+          <ul>
+            <li>`prec:PRSCNodeRule` - Type for rules that target nodes</li>
+            <li>`prec:PRSCEdgeRule` - Type for rules that target edges.</li>
+            <li>`prec:label` - A label the node must have</li>
+            <li>`prec:propertyKey` - A property the node must have</li>
+            <li>`prec:produces` - describes how to represent the elements that complies to the rule</li>
+          </ul>
+
+          <strong>Placeholders for the template graph</strong>
+          <ul>
+            <li>`pvar:self` - The identifier for the element (node or edge)</li>
+            <li>`pvar:source` - Edges only, source of the edge</li>
+            <li>`pvar:destination` - Edges only, destination of the edge</li>
+            <li>`"property key"^^prec:valueOf` - Placeholder for the value of the property "property name"</li>
+          </ul>
+          
+          <aside class="example" title="Example of a PRSC context">
+
+          <p>
+            After cloning the repo, test it by running
+            `npx ts-node apoc2rdf prec.ts data\ex2_annlikesdan1.json -c data\ex2_prsc.ttl`
+          </p>
+          <pre data-transform="updateExample"
+            data-content-type="text/turtle"
+            class="nohighlight"
+          >
+            <!--
+              PREFIX prec: <http://bruy.at/prec#>
+              PREFIX pvar: <http://bruy.at/prec-trans#>
+              PREFIX ex:   <http://example.org/>
+              PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+              ex:PersonForm a prec:PRSCNodeRule ;
+                prec:label "Person" ;
+                prec:propertyKey "name" ;
+                prec:produces
+                  << pvar:self ex:hasLabel ex:person >> ,
+                  << pvar:self ex:name "name"^^prec:valueOf >> .
+
+              ex:LovesForm a prec:PRSCEdgeRule ;
+                prec:label "Likes" ;
+                prec:produces << pvar:source ex:loves pvar:destination >> .
+            -->
+          </pre>
+
+          TODO: an example PG and the resulting RDF graph
+        </aside>
+      </section>
+
+
+      <section>
+        <h3>Well-behaved PRSC contexts</h3>
+
+        <p>
+          The PRSC contexts that follow the given rules are said Well-behaved:
+          <ul>
+            <li>All template triples contain the term `pvar:self`</li>
+            <li>
+              All rules have a <em>signature template triple</em>, a triple
+              whose [= characterization =] can only be found for this rule.
+            </li>
+            <li>
+              All properties must have a <em>unique template triple</em>, a
+              triple whose [= characterization =] is unique among the
+              template triples inside the template graph of the rule. If the
+              element is an edge, the source and the destination must also have
+              a unique template triple.
+            </li>
+            <li>
+              <em>Edge-unique extension:</em> Edge rules can violate the first
+              criterion if all template triples in the template graph contain
+              `pvar:source`, `pvar:destination`, are
+              <em>signature template triples</em> and
+              <em>unique template triples</em>.
+            </li>
+          </ul>
+        </p>
+
+        <p>
+          The <dfn data-lt="characterization">characterization of a template
+            triple</dfn> can be considered as being equal to the triple where:
+            <ul>
+              <li>Terms in the `pvar` namespace and blank nodes are
+                substituted with the term `pvar:element`
+              </li>
+              <li>
+                Literals, including the one whose datatype is `prec:valueOf` are
+                substituted with the literal `"Literal"`.
+              </li>
+            </ul>
+        </p>
+
+        <p>
+          If an RDF graph is generated from a PRSC well behaved context:
+          <ul>
+            <li>
+              The RDF graph conversion is guaranted to not lose any information
+              compared with the property graph.
+            </li>
+            <li>
+              The inverse operation, <em>i.e.</em> converting the RDF graph
+              back into the original PREC-0 graph, and by extension to an
+              isomorphic property graph to the one that produced it, can be
+              performed by the PREC engine.
+            </li>
+          </ul>
+        </p>
+      </section>
+    </section>
+
+    <section>
+      <h2>PREC-C - Low level mapping</h2>
+      
+        <p>
+          Unlike PRSC contexts that only have rules for nodes and edges, PREC-C
+          context ruleset can target node, edges and properties.
+        </p>
+
+
+        <section>
+          <h3>Example of a context</h3>
+  
+          <aside class="example">
+            <p>
+              In this section, we will present the ontology through a practical
+              example. Considering a property graph with the following data
+              (exposed in a format similar to a Cypher query):
+            </p>
+  
+            <pre>
+              ( haddock   :Person { name: "Haddock", firstName: "Archibald" } ),
+              ( snowy     :Animal { name: "Snowy"  } ),
+              ( the_serie :Serie  { name: "The Adventures of Tintin" } ),
+  
+              ( haddock ) -[ :appears { since: "The Crab with the Golden Claws"   } ]->( the_serie ),
+              ( snowy   ) -[ :appears { since: "Tintin in the Land of the Soviets" }]->( the_serie ),
+              ( haddock ) -[ :knows ]->( snowy )
+            </pre>
+  
+            <p>
+              PREC enables us to convert this Property Graph into an RDF graph.
+              The graph generated without any context is very verbose, and will
+              not be displayed here. Instead, we are going to write a context to
+              produce a small and readable graph.
+            </p>
+  
+            <pre data-transform="updateExample"
+              data-content-type="text/turtle"
+              class="nohighlight"
+            >
+              <!--
+                @prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+                @prefix prec: <http://bruy.at/prec#> .
+                @prefix pvar: <http://bruy.at/prec-trans#> .
+                @prefix pgo:  <http://ii.uwb.edu.pl/pgo#> .
+  
+                # We want properties to be written in the RDF-graph as
+                # [the node or edge] [iri of the property] [the value]
+                prec:Properties prec:templatedBy prec:DirectTriples .
+  
+                # We want edges to be written in the RDF-graph as
+                # [the source] [the label] [the destination]
+                # and use RDF-star for properties
+                prec:Edges prec:templatedBy prec:RdfStarUnique .
+  
+                # == Properties
+  
+                # The name of a person is its family name
+                [] a prec:PropertyRule ;
+                  prec:propertyKey "name" ;
+                  prec:propertyIRI <http://schema.org/familyName> ;
+                  prec:label "Person" ; prec:onKind prec:Node .
+                
+                [] a prec:PropertyRule ;
+                  prec:propertyKey "firstName" ;
+                  prec:propertyIRI <http://schema.org/givenName> .
+  
+                # Other names are names
+                [] a prec:PropertyRule ;
+                  prec:propertyKey "name" ;
+                  prec:propertyIRI <http://schema.org/name> .
+                
+                # We use an IRI from dbpedia for the since property
+                # As writing rules for simple things is very long, we are
+                # going to use a syntactic sugar
+                <http://dbpedia.org/property/debut> prec:IRIOfProperty "since" .
+  
+                # == Node labels
+                <http://dbpedia.org/resource/Person> prec:IRIOfNodeLabel "Person" .
+                <http://dbpedia.org/resource/Animal> prec:IRIOfNodeLabel "Animal" .
+                <http://dbpedia.org/class/yago/Series108457976> prec:IRIOfNodeLabel "Serie" .
+  
+                # == Edges
+                <http://schema.org/knowsAbout> prec:IRIOfEdgeLabel "knows" .
+                <http://schema.org/knowsAbout> prec:IRIOfEdgeLabel "knows" .
+  
+                # Map appears to schema:character. One problem of schema:character
+                # is that is expect the serie as the subject and the character as
+                # an object, but we can fix the order!
+                [] a prec:EdgeRule ;
+                  prec:label "appears" ;
+                  # We want the destination to be the source and the destination
+                  # to be the source so let's write our own template!
+                  prec:templatedBy [
+                    a prec:EdgeTemplate ;
+                    prec:produces
+                      # Assert the triple
+                      <<    pvar:destination pvar:edgeIRI pvar:source               >> ,
+                      # Keep the provenance
+                      << << pvar:destination pvar:edgeIRI pvar:source >> a pgo:Edge >>
+                  ] ;
+                  # Properties will use the following term as their subject
+                  prec:edgeIs << pvar:destination pvar:edgeIRI pvar:source >> ;
+                  # prec:edgeIRI will actually replace pvar:edge with schema:character
+                  prec:edgeIRI <http://schema.org/character> .
+              -->
+            </pre>
+  
+            <p>
+              The produce RDF-graph will be isomorphic to be following:
+            </p>
+  
+            <pre data-transform="updateExample"
+              data-content-type="text/turtle"
+              class="nohighlight"
+            >
+              <!--
+              # Note that Haddock have no http://schema.org/name
+              _:haddock a pgo:Node, <http://dbpedia.org/resource/Person>;
+                  <http://schema.org/givenName> "Archibald";
+                  <http://schema.org/familyName> "Haddock".
+              
+              _:snowy a pgo:Node, <http://dbpedia.org/resource/Animal>;
+                  <http://schema.org/name> "Snowy".
+              
+              _:adventures_of_tintin a pgo:Node, <http://dbpedia.org/class/yago/Series108457976>;
+                  <http://schema.org/name> "The Adventures of Tintin";
+                  # The edge have been properly inverted
+                  <http://schema.org/character> _:haddock, _:snowy.     
+  
+              _:haddock <http://schema.org/knowsAbout> _:snowy.
+              <<_:haddock <http://schema.org/knowsAbout> _:snowy>> a pgo:Edge.
+                
+              # When did every character appear?
+              <<_:adventures_of_tintin <http://schema.org/character> _:haddock>> a pgo:Edge;
+                  <http://dbpedia.org/property/debut> "The Crab with the Golden Claws".
+  
+              <<_:adventures_of_tintin <http://schema.org/character> _:snowy>> a pgo:Edge;
+                  <http://dbpedia.org/property/debut> "Tintin in the Land of the Soviets".
+              -->
+            </pre>
+  
+            <p>
+              Note that in this example, while the produced output is easy to
+              read and reuse existing ontologies, we are not conforming to the DBPedia
+              usual schema, as in DBpedia, `<http://dbpedia.org/property/debut>`
+              would be used with the character as the subject and the book (and
+              not its name) as the object ; and in the current state of the
+              ontology we can not do better. This is one of the weakness of
+              the ontology: it can not conform to every schema.
+            </p>
+          </aside>
+        </section>
+
+
       
       <section>
         <h3>Reserved IRIs</h4>
 
-        <p>IRIs in the `prec` namespace are reserved for the ontology (obviously).</p>
+        <p>IRIs in the `prec` namespace are reserved for the ontology.</p>
 
         <p><a href="https://github.com/BruJu/PREC/">The default implementation</a>
-          reserves for itself the IRIs prefixed with `_` and `__`.  Therefore,
+          reserves for itself the IRIs prefixed with `_` and `__`. Therefore,
           as they are reserved for implementation, using them in a context
           results in undefined behaviour.</p>
       </section>
@@ -366,7 +667,9 @@
         <h3>General directives</h3>
 
         <section>
-          <h4><dfn data-lt="prec:KeepProvenance">http://bruy.at/prec#KeepProvenance</dfn></h4>
+          <h4><dfn data-lt="prec:KeepProvenance" class="lint-ignore">http://bruy.at/prec#KeepProvenance</dfn>
+          and <dfn class="lint-ignore">http://bruy.at/prec#flagState</dfn>
+          </h4>
 
           <p>
             By default, a triple is created for each node / edge /
@@ -398,12 +701,6 @@
               -->
             </pre>
           </aside>
-        </section>
-
-        <section>
-          <h4>http://bruy.at/prec#flagState</h4>
-
-          <p>Used as the predicate of [= prec:KeepProvenance =].</p>
         </section>
       </section>
 
@@ -700,7 +997,7 @@
           </aside>
 
           <section>
-            <h5><dfn data-lt="prec:composedOf">http://bruy.at/prec#composedOf</dfn></h5>
+            <h5><dfn data-lt="prec:produces">http://bruy.at/prec#produces</dfn></h5>
 
             <p>
               Used to state the list of RDF triples that composes the template.
@@ -723,8 +1020,7 @@
               <li>`pvar:destination`: The RDF node that represents the PG destination edge.</li>
               <li>`pvar:edgeIRI`: The RDF node that represents the label of the edge.</li>
               <li>`pvar:label`: The label of the edge, as a string literal.</li>
-              <li>`pvar:propertyPredicate`: matches every other predicates, which most likely concerns already transformed properties.</li>
-              <li>`pvar:propertyObject`: matches every other objects, which most likely concerns already transformed properties.</li>
+              <li>`prec:edgeIs`: enables to specify to which term bind the properties of the edge.</li>
             </ul>
 
             <p>
@@ -738,12 +1034,12 @@
               >
                 <!--
                 prec:RDFReification a prec:EdgeTemplate ;
-                  prec:composedOf
+                  prec:produces
                     << pvar:edge a pgo:Edge >> ,
                     << pvar:edge rdf:subject      pvar:source          >> ,
                     << pvar:edge rdf:predicate    pvar:edgeIRI >> ,
-                    << pvar:edge rdf:object       pvar:destination     >> ,
-                    << pvar:edge pvar:propertyPredicate pvar:propertyObject >>
+                    << pvar:edge rdf:object       pvar:destination     >> ;
+                  prec:edgeIs pvar:edge
                 .
                 -->
               </pre>
@@ -766,10 +1062,11 @@
               >
                 <!--
                 prec:RdfStarUnique a prec:EdgeTemplate ;
-                  prec:composedOf
+                  prec:produces
                     <<    pvar:source pvar:edgeIRI pvar:destination               >> , # (a)
-                    << << pvar:source pvar:edgeIRI pvar:destination >> a pgo:Edge >> , # (b)
-                    << << pvar:source pvar:edgeIRI pvar:destination >> pvar:propertyPredicate pvar:propertyObject >>  # (c)
+                    << << pvar:source pvar:edgeIRI pvar:destination >> a pgo:Edge >> ; # (b)
+                  prec:edgeIs
+                    << pvar:source pvar:edgeIRI pvar:destination >> .                  # (c)
                 .
                 -->
               </pre>
@@ -798,13 +1095,13 @@
                 <tr><td> `pvar:source`                </td><td> `_:src`            </td></tr>
                 <tr><td> `pvar:destination`           </td><td> `_:dest`           </td></tr>
                 <tr><td> `pvar:edgeIRI        `       </td><td> `_:label`          </td></tr>
-                <tr><td> `pvar:propertyPredicate` (1) </td><td> `_:propPlace`      </td></tr>
-                <tr><td> `pvar:propertyObject` (2)    </td><td> `_:propValuePlace` </td></tr>
-                <tr><td> `pvar:propertyPredicate` (2) </td><td> `_:propTime`       </td></tr>
-                <tr><td> `pvar:propertyObject`(2)     </td><td> `_:propValueTime`  </td></tr>
               </table>
+
+              <p>The triples `_:edge1 _:propPlace _:propValuePlace (1)` and 
+              `_:edge1 _:propTime  _:propValueTime (2)` are related to
+              properties.</p>
               
-              <p>And the produced graph will be the following:</p>
+              <p>The produced graph will be the following:</p>
               <pre data-transform="updateExample"
                  data-content-type="text/turtle"
                  class="nohighlight"
@@ -812,8 +1109,8 @@
                 <!--
                 _:src _:label _:dest .                  # From (a)
                 << _:src _:label _:dest >> a pgo:Edge . # From (b)
-                << _:src _:label _:dest >> _:propPlace _:propValuePlace . # From (c) using (1) bindings
-                << _:src _:label _:dest >> _:propTime  _:propValueTime  . # From (c) using (2) bindings
+                << _:src _:label _:dest >> _:propPlace _:propValuePlace . # From (c) using (1)
+                << _:src _:label _:dest >> _:propTime  _:propValueTime  . # From (c) using (2)
                 -->
               </pre>
             </aside>
@@ -833,8 +1130,7 @@
               <li>`pvar:propertyValue`: The literal that contains the property value.</li>
               <li>`pvar:individualValue`: Most of the time equals to `propertyValue`. If `propertyValue` is an rdf list, `individualValue` will match each individual literal contained in the list instead of the list itself.</li>
               <li>`pvar:metaPropertyNode`: The blank node that contains every meta property, as described in [= prec:hasMetaProperties =]</li>
-              <li>`pvar:metaPropertyPredicate`: The predicate of a meta property triple.</li>
-              <li>`pvar:metaPropertyObject`: The object of a meta property triple.</li>
+              <li>`prec:entityIs`: The term to which the meta properties must be bound.</li>
             </ul>
 
             <p>
@@ -855,11 +1151,6 @@
                 </li>
                 <li>
                   Every embedded triple must be asserted by the template.
-                </li>
-                <li>
-                  `pvar:metaPropertyPredicate` and `pvar:metaPropertyObject`, if they
-                  appear, must appear both at the same time, and as repectively
-                  the predicate and the object.
                 </li>
               </ul>
             </p>
@@ -914,7 +1205,7 @@
               [] a prec:EdgeRule ;
                 # - Filtering
                 # Like must be the edge label
-                prec:edgeLabel "Like" ;
+                prec:label "Like" ;
                 # The source node must have the label Person
                 prec:sourceLabel      "Person" ;
                 # The destination node must have the label Person
@@ -940,7 +1231,7 @@
           </section>
           
           <section>
-            <h5><dfn data-lt="prec:edgeLabel">http://bruy.at/prec#edgeLabel</dfn></h5>
+            <h5><dfn data-lt="prec:label">http://bruy.at/prec#label</dfn></h5>
 
             <p>
               States that the edge must have the given label to match
@@ -996,13 +1287,13 @@
 
                 # Matches (a)
                 :firstRule a prec:EdgeRule ;
-                  prec:edgeLabel "Like" ;
+                  prec:label "Like" ;
                   prec:sourceLabel "Person" ;
                   prec:edgeIRI ex:likes .
                 
                 # Matches (b)
                 :secondRule a prec:EdgeRule ;
-                  prec:edgeLabel "Like" ;
+                  prec:label "Like" ;
                   prec:sourceLabel "Cat" ;
                   prec:edgeIRI ex:eats .
                 -->
@@ -1061,7 +1352,7 @@
               >
                 <!--
                 [] a prec:EdgeRule ;
-                  prec:edgeLabel "Label" ;
+                  prec:label "Label" ;
                   prec:edgeIRI :iri .
                 -->
               </pre>
@@ -1124,22 +1415,22 @@
 
               # A rule for the name property of nodes of type Person
               :humanNameRule a prec:PropertyRule ;
-                prec:propertyName "name" ;
+                prec:propertyKey "name" ;
                 prec:propertyIRI <http://schema.org/familyName> ;
-                prec:nodeLabel "Person" .
+                prec:label "Person" .
               
               # A rule for the name property of other things
               :otherNameRule a prec:PropertyRule ;
-                prec:propertyName "name" ;
+                prec:propertyKey "name" ;
                 prec:propertyIRI <http://schema.org/name> .
               
               # Other rules
               :givenNameRule a prec:PropertyRule ;
-                prec:propertyName "givenName" ;
+                prec:propertyKey "givenName" ;
                 prec:propertyIRI <http://schema.org/givenName> .
               
               # The following could have been written
-              # [] a prec:PropertyRule ; prec:propertyName "since" ; prec:propertyIRI :since
+              # [] a prec:PropertyRule ; prec:propertyKey "since" ; prec:propertyIRI :since
               :since prec:IRIOfProperty "since" .
               -->
             </pre>
@@ -1185,7 +1476,7 @@
           </section>
 
           <section>
-            <h5><dfn data-lt="prec:propertyName">http://bruy.at/prec#propertyName</dfn></h5>
+            <h5><dfn data-lt="prec:propertyKey">http://bruy.at/prec#propertyKey</dfn></h5>
 
             <p>
               The key / the name of the matched properties. The value must be a
@@ -1203,49 +1494,23 @@
           </section>
 
           <section>
-            <h5><dfn data-lt="prec:nodeLabel">http://bruy.at/prec#nodeLabel</dfn></h5>
+            <h5><dfn data-lt="prec:label">http://bruy.at/prec#label</dfn></h5>
 
             <p>
-              States the label that the node must have for the rule to apply. If
-              there are several values for [= prec:nodeLabel =], the node must
-              have every labels. This predicate is incompatible with
-              [= prec:edgeLabel (used in a property rule) =]. The value
-              must be either a literal or [= prec:any =]. If the value is
-              [= prec:any =], then any node, and no edges, can be matched
-              (even the one without labels).
+              States the label that the node or edge must have for the rule to
+              apply. If there are several values for [= prec:label =], the node
+              must have every labels. The value must be a literal.
             </p>
           </section>
 
           <section>
-            <h5><dfn data-lt="prec:edgeLabel (used in a property rule)">http://bruy.at/prec#edgeLabel (in a property Rule)</dfn></h5>
+            <h5><dfn data-lt="prec:any">http://bruy.at/prec#onKind</dfn></h5>
 
             <p>
-              States the label that the edge must have for the rule to
-              apply. The value must be either a literal or [= prec:any =]. If
-              the value is [= prec:any =], then any edge, and no node
-              can be matched. Because edges can only have one label, if
-              there are several `prec:edgeLabel` clauses, the rule won't
-              be able to be matched with any edge.
+              The property rule can only be applied if it is a property on a
+              node (prec:Node as the object) or an edge (prec:Edge as the
+              object).
             </p>
-          </section>
-
-          <section>
-            <h5><dfn data-lt="prec:any">http://bruy.at/prec#any</dfn></h5>
-
-            <p>
-              Special value for [= prec:nodeLabel =] and
-              [= prec:edgeLabel (used in a property rule) =] that can be
-              states that the rule can be matched with any node or edge.
-            </p>
-
-            <aside class="warning">
-              <p>
-                As the semantic for [= prec:any =] used on a
-                [= prec:nodeLabel =] is strange (it can match a node that does
-                not have any label), [= prec:any =] may be deleted in a future
-                version of the ontology.
-              </p>
-            </aside>
           </section>
 
           <section>
@@ -1272,7 +1537,7 @@
               >
                 <!--
                 [] a prec:PropertyRule ;
-                  prec:propertyName "APropertyName" ;
+                  prec:propertyKey "APropertyName" ;
                   prec:propertyIRI :someIRI
                 -->
               </pre>
@@ -1314,13 +1579,13 @@
             >
               <!--
               :personLike a prec:EdgeRule ;
-                prec:edgeLabel "Like" ;
+                prec:label "Like" ;
                 prec:sourceLabel "Person" ;
                 prec:priority 2 ;
                 prec:edgeIRI ex:likes .
                 
               :catLike a prec:EdgeRule ;
-                prec:edgeLabel "Like" ;
+                prec:label "Like" ;
                 prec:sourceLabel "Animal" ;
                 prec:priority 1 ;
                 prec:edgeIRI ex:kind_of_accepts .
@@ -1370,8 +1635,8 @@
               class="nohighlight"
             >
               <!--
-              _:node1 a pgo:Node, [ rdfs:label "Person" ] .
-              _:node2 a pgo:Node, [ rdfs:label "Animal" ] .
+              _:node1 a pgo:Node ; [ rdfs:label "Person" ] .
+              _:node2 a pgo:Node ; [ rdfs:label "Animal" ] .
               -->
             </pre>
 
@@ -1435,7 +1700,7 @@
                 The type of rules that applies to node / node label pairs.
               </li>
               <li>
-                <dfn data-lt="prec:nodeLabel (node label rule)">http://bruy.at/prec#nodeLabel (in node label rules)</dfn>:
+                <dfn data-lt="prec:label (node label rule)">http://bruy.at/prec#label (in node label rules)</dfn>:
                 Condition on the label of the node. Mandatory.
               </li>
               <li>
@@ -1670,98 +1935,6 @@
       </section>
     </section>
 
-    <section>
-      <h2>PRSC - Schema driven mapping</h3>
-      
-      <aside class="warning" title="Not yet supported">
-        <p>This section is only supported in the developpement branch of PREC.
-          <br>This feature is a POC and might disappear at any time.
-          <br>IRI used are not stable.
-        </p>
-      </aside>
-
-      <p>
-        So far, the context maps individually edges, nodes and properties and
-        PREC-C manages for you the interaction between them. It is
-        possible to use another type of context: schema driven contexts.        
-      </p>
-
-      <p>
-        This kind of context identify every node and edges to a schema, and the
-        transformation of every schema from PG to RDF must be defined.
-      </p>
-
-      <p>
-        This is heavily inspired from the presentation of the
-        <em>Property Graph Schema Working Group</em> at 
-        <em>the 1st workshop on Squaring the circle on graphs</em>.
-      </p>
-
-      <p>
-        The `prec:this_is a prec:prscContext` triple is mandatory in such contexts.
-      </p>
-
-
-      <strong>List of valid IRIS for node schema:</strong>
-      <ul>
-        <li>`prec:prsc_node` - Type of node schema</li>
-        <li>`prec:nodeLabel` - A label the node must have</li>
-        <li>`prec:composedOf` - describes how to represent the nodes that complies to the schema</li>
-      </ul>
-
-      <strong>List of valid IRIS for edge schema:</strong>
-      <ul>
-        <li>`prec:prsc_edge` - Type of edge schema</li>
-        <li>`prec:edgeLabel` - A label the edge must have</li>
-        <li>`prec:prscSource` - The schema the source node must have, optional</li>
-        <li>`prec:prscDestination` - The schema the destination node must have, optional</li>
-        <li>`prec:composedOf` - describes how to represent the edges that complies to the schema</li>
-      </ul>
-
-      <strong>Placeholders for the template part (objects of prec:composedOf)</strong>
-      <ul>
-        <li>`pvar:node` - Node only, the identifier for the node</li>
-        <li>`pvar:edge` - Edges only, the identifier for the edge</li>
-        <li>`pvar:source` - Edges only, source of the edge</li>
-        <li>`pvar:destination` - Edges only, destination of the edge</li>
-        <li>`"property name"^^prec:_valueOf` - Placeholder for the value of the property "property name"</li>
-      </ul>
-
-      
-      <aside class="example" title="Example of a PRSC context">
-
-        <p>
-          After cloning the repo, test it by running
-          `npx ts-node apoc2rdf prec.ts data\ex2_annlikesdan1.json -c data\ex2_anndan_prsc.ttl`
-        </p>
-        <pre data-transform="updateExample"
-          data-content-type="text/turtle"
-          class="nohighlight"
-        >
-          <!--
-            PREFIX prec: <http://bruy.at/prec#>
-            PREFIX pvar: <http://bruy.at/prec-trans#>
-            PREFIX ex:   <http://example.org/>
-            PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-
-            prec:this_is a prec:prscContext .
-
-            ex:PersonForm a prec:prsc_node ;
-              prec:nodeLabel "Person" ;
-              prec:propertyName "name" ;
-              prec:composedOf
-                << pvar:node ex:hasLabel ex:person >> ,
-                << pvar:node ex:name "name"^^prec:_valueOf >> .
-
-            ex:LovesForm a prec:prsc_edge ;
-              prec:edgeLabel "Likes" ;
-              prec:prscSource      ex:PersonForm ;
-              prec:prscDestination ex:PersonForm ;
-              prec:composedOf << pvar:source ex:loves pvar:destination >> .
-          -->
-        </pre>
-
-      </aside>
     </section>
 
     <section class="informative">
@@ -1778,64 +1951,40 @@
         <li>where are the inputs by using `prec:testMetaData` as a subject</li>
         <li>the expected triples generated by PREC. Blank nodes are used as wildcards.</li>
         </ul>
+      </p>
       
-      <h3>Unit test using external files</h3>
-      
-      <h4>http://bruy.at/prec#testMetaData</h4>
-      
-      Subject of triples that are inputs for `z_prec.js`. The triples with
-      `prec:testMetaData` as a subject won't be tested against the actual output.
-      
-      <h4>http://bruy.at/prec#pgPath</h4>
-      
-      Relative path of the expected output file to the structure of the property
-      graph.
-      
-      <h4>http://bruy.at/prec#pgSource</h4>
-      
-      An IRI that corresponds used to the method to obtain the Property Graph
-      structure.
-      
-      Only https://neo4j.com/developer/neo4j-apoc/ is currently supported.
-      It corresponds for the output of the `apoc.export.json.all` function in Neo4J.
-      
-      <h4>http://bruy.at/prec#contextPath</h4>
-      
-      Relative path of the expected output file to the used context.
-      
-      <h3>Self sufficient unit test </h3>
-      
-      <h4>http://bruy.at/prec#kind</h4>
-      
-      If the turtle fight contains `prec:testMetaData prec:kind "SmallExamples ."`,
-      it means this turtle file contains multiple tests.
-      
-      
-      <h4>http://bruy.at/prec#unitTest</h4>
-      
-      Type of a single unit test
-      
-      <h4>http://bruy.at/prec#context</h4>
-      
-      `prec:context` states what is the content of the context.
-      
-      `_:someTest prec:context _:context` means that the unit test `_:someTest` uses
-      the content of the graph `_:context` as the context.
-      
-      
-      <h4>http://bruy.at/prec#output</h4>
-      
-      `prec:output` states what is the expected output.
-      
-      `_:someTest prec:output _:output` means that the unit test `_:someTest` expects
-      the content of the graph `_:output` as the output of PREC.
-      
-      
-      <h4>http://bruy.at/prec#propertyGraph</h4>
-      
-      `prec:propertyGraph` states the content of the property graph as a string in the
-      JSON APOC export format.
+      <h3>Used IRIs</h3>
 
+      <ul>
+        <li>
+          <dfn class="lint-ignore">http://bruy.at/prec#UnitTest</dfn>:
+          Type of a single unit test
+        </li>
+        <li>
+          <dfn class="lint-ignore">http://bruy.at/prec#relativePath</dfn>:
+          Datatype used when the input / context is not the string itself but
+          located in the file described by the literal.
+        </li>
+        <li>
+          <dfn class="lint-ignore">http://bruy.at/prec#context</dfn>:
+          `prec:context` states what is the content of the context.
+          <br>
+          `_:someTest prec:context _:context` means that the unit test
+          `_:someTest` uses the content of the graph `_:context` as the context.
+        </li>
+        <li>
+          <dfn class="lint-ignore">http://bruy.at/prec#output</dfn>:
+          `prec:output` states what is the expected output.
+          <br>
+          `_:someTest prec:output _:output` means that the unit test
+          `_:someTest` expects the content of the named graph `_:output` as the
+          output of PREC.
+        </li>
+        <li>
+          <dfn class="lint-ignore">http://bruy.at/prec#propertyGraph</dfn>:
+          `prec:propertyGraph` states the content of the property graph as a
+          string in the JSON APOC export format.
+      </ul>
     </section>
   </body>
 </html>

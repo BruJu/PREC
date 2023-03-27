@@ -5,7 +5,7 @@ import { DataFactory } from "n3";
 import * as RDFString from 'rdf-string';
 
 import DStar from "../dataset";
-import { $defaultGraph, $quad, prec, pvar, rdf } from '../PRECNamespace';
+import { $defaultGraph, $quad, prec, precValueOf, pvar, rdf } from '../PRECNamespace';
 import { followAll, followThrough } from "../rdf/path-travelling";
 import * as QuadStar from '../rdf/quad-star';
 import { characterizeTriple, extractBnsIn, PRSCContextViolation, SignatureTripleOf } from "./PrscContext";
@@ -46,22 +46,16 @@ export function buildRule(context: DStar, identity: RDF.Quad_Subject)
   const type = followThrough(context, identity, rdf.type);
   if (type === null) {
     violations.push({ type: 'rule_bad_type_qtt', identity: identity, message: "must have exactly one type" });
-  } else if (type.equals(prec.prsc_node)) {
+  } else if (type.equals(prec.PRSCNodeRule)) {
     nodeOrEdge = 'node';
-  } else if (type.equals(prec.prsc_edge)) {
+  } else if (type.equals(prec.PRSCEdgeRule)) {
     nodeOrEdge = 'edge';
   } else {
     violations.push({ type: 'rule_given_bad_type', identity: identity, foundType: type });
   }
 
   const labels = followAllXSDStrings(context, identity, prec.label);
-  if (nodeOrEdge === 'node') {
-    labels.push(...followAllXSDStrings(context, identity, prec.nodeLabel));
-  } else if (nodeOrEdge === 'edge') {
-    labels.push(...followAllXSDStrings(context, identity, prec.edgeLabel));
-  }
-
-  const properties = followAllXSDStrings(context, identity, prec.propertyName);
+  const properties = followAllXSDStrings(context, identity, prec.propertyKey);
   const template = readTemplate(context, identity);
 
   const listOfInvalidPropNames = getInvalidPropNames(template, properties);
@@ -103,9 +97,9 @@ export function buildRule(context: DStar, identity: RDF.Quad_Subject)
  * graph.
  * 
  * A triple is in the template graph if:
- * - it is a quoted triple in the object position of (identity, prec:composedOf, -)
- * - it is in a graph whose name is in object position of (identity, prec:composedOf, -)
- * - There exists a path between a blank node used in a quoted triple of prec:composedOf
+ * - it is a quoted triple in the object position of (identity, prec:produces, -)
+ * - it is in a graph whose name is in object position of (identity, prec:produces, -)
+ * - There exists a path between a blank node used in a quoted triple of prec:produces
  * and a blank node used in the default graph in object position.
  * @param context The template graph
  * @param identity The rule identifier
@@ -116,7 +110,7 @@ function readTemplate(context: DStar, identity: RDF.Quad_Subject): RDF.Quad[] {
 
   const template: RDF.Quad[] = [];
 
-  for (const object of followAll(context, identity, prec.composedOf)) {
+  for (const object of followAll(context, identity, prec.produces)) {
     if (object.termType === 'Quad') {
       if (alreadySeenQuads.has(object)) continue;
 
@@ -145,7 +139,7 @@ function readTemplate(context: DStar, identity: RDF.Quad_Subject): RDF.Quad[] {
       const graphContent = context.getQuads(null, null, null, object);
       if (graphContent.length === 0) {
         const TTS = RDFString.termToString;
-        throw Error(`${TTS(identity)} prec:composedOf ${TTS(object)} has been found but the graph ${TTS(object)} is empty.`);
+        throw Error(`${TTS(identity)} prec:produces ${TTS(object)} has been found but the graph ${TTS(object)} is empty.`);
       }
 
       for (const quad of graphContent) {
@@ -153,7 +147,7 @@ function readTemplate(context: DStar, identity: RDF.Quad_Subject): RDF.Quad[] {
         template.push(quadInDefaultGraph);
       }
     } else {
-      throw Error(`Invalid object for prec:composedOf found in rule ${RDFString.termToString(identity)}`);
+      throw Error(`Invalid object for prec:produces found in rule ${RDFString.termToString(identity)}`);
     }
   }
 
@@ -316,7 +310,7 @@ function followAllXSDStrings(
 
 
 /**
- * Search in the template graph the list of terms of type prec:_valueOf and check
+ * Search in the template graph the list of terms of type prec:valueOf and check
  * if they are all in allowedKeys.
  * @param templateGraph The template graph
  * @param allowedKeys The list of allowed property names
@@ -333,7 +327,7 @@ function followAllXSDStrings(
       searchBadKeys(templateTerm.object);
       searchBadKeys(templateTerm.graph);
     } else if (templateTerm.termType === 'Literal') {
-      if (templateTerm.datatype.equals(prec._valueOf)) {
+      if (templateTerm.datatype.equals(precValueOf)) {
         const key = templateTerm.value;
 
         if (!allowedKeys.includes(key)) {

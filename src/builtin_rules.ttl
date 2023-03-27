@@ -26,7 +26,7 @@ PREFIX pgo:   <http://ii.uwb.edu.pl/pgo#>
 # target is not useful in this form.
 prec:RDFReification a prec:EdgeTemplate ;
   prec:edgeIs pvar:edge ;
-  prec:composedOf
+  prec:produces
     << pvar:edge a pgo:Edge >> ,
     << pvar:edge rdf:subject   pvar:source      >> ,
     << pvar:edge rdf:predicate pvar:edgeIRI     >> ,
@@ -35,21 +35,21 @@ prec:RDFReification a prec:EdgeTemplate ;
 # Encoding as RDF star using regular RDF triples that can be annotated
 prec:RdfStarUnique a prec:EdgeTemplate ;
   prec:edgeIs << pvar:source pvar:edgeIRI pvar:destination >> ;
-  prec:composedOf
+  prec:produces
     <<    pvar:source pvar:edgeIRI pvar:destination               >> ,
     << << pvar:source pvar:edgeIRI pvar:destination >> a pgo:Edge >> .
 
 # Encoding as RDF star using occurrences
 prec:RdfStarOccurrence a prec:EdgeTemplate ;
   prec:edgeIs pvar:edge ;
-  prec:composedOf
+  prec:produces
     << pvar:edge prec:occurrenceOf << pvar:source pvar:edgeIRI pvar:destination >> >> ,
     << pvar:edge a pgo:Edge >> .
 
 # Encoding as singleton property
 prec:SingletonProperty a prec:EdgeTemplate ;
   prec:edgeIs pvar:edge ;
-  prec:composedOf
+  prec:produces
     << pvar:source pvar:edge               pvar:destination     >> ,
     << pvar:edge   rdf:singletonPropertyOf pvar:edgeIRI >> ,
     << pvar:edge a pgo:Edge >> .
@@ -77,7 +77,8 @@ prec:propertyValue a prec:SubstitutionTerm ; prec:substitutionTarget pvar:proper
 # pvar:propertyNode     rdf:value              pvar:propertyValue
 # pvar:propertyNode     a prec:PropertyKeyValue .
 # pvar:propertyNode     prec:hasMetaProperties     pvar:MetaPropertyNode   # optional
-# pvar:metaPropertyNode pvar:metaPropertyPredicate pvar:metaPropertyObject # 0...n
+# 
+# [] prec:entityIs pvar:metaPropertyNode .
 #
 # For meta properties, the property rule is applied recursively.
 #
@@ -86,7 +87,7 @@ prec:propertyValue a prec:SubstitutionTerm ; prec:substitutionTarget pvar:proper
 
 prec:Prec0Property a prec:PropertyTemplate ;
   prec:entityIs pvar:metaPropertyNode ;
-  prec:composedOf
+  prec:produces
     << pvar:entity           pvar:propertyKey           pvar:propertyNode      >> ,
     << pvar:propertyNode     rdf:value                  pvar:propertyValue     >> ,
     << pvar:propertyNode     rdf:type                   prec:PropertyKeyValue  >> ,
@@ -94,7 +95,7 @@ prec:Prec0Property a prec:PropertyTemplate ;
 
 prec:DirectTriples a prec:PropertyTemplate ;
   prec:entityIs   << pvar:entity pvar:propertyKey pvar:propertyValue >> ;
-  prec:composedOf << pvar:entity pvar:propertyKey pvar:propertyValue >> ;
+  prec:produces << pvar:entity pvar:propertyKey pvar:propertyValue >> ;
   rdfs:comment
     """
     This template shold not be used if a node or an edge has a multi valued
@@ -104,7 +105,7 @@ prec:DirectTriples a prec:PropertyTemplate ;
 
 prec:CombinedBlankNodes a prec:PropertyTemplate ;
   prec:entityIs pvar:propertyNode ;
-  prec:composedOf
+  prec:produces
     << pvar:entity       pvar:propertyKey pvar:propertyNode     >> ,
     << pvar:propertyNode rdf:value        pvar:propertyValue    >> ,
     << pvar:propertyNode rdf:type         prec:PropertyKeyValue >> .
@@ -114,6 +115,6 @@ prec:CombinedBlankNodes a prec:PropertyTemplate ;
 # ==== Node Labels
 
 prec:NodeLabelsTypeOfLabelIRI a prec:NodeLabelTemplate ;
-  prec:composedOf << pvar:node rdf:type pvar:nodeLabelIRI >> .
+  prec:produces << pvar:node rdf:type pvar:nodeLabelIRI >> .
 
 prec:nodeLabelIRI a prec:SubstitutionTerm ; prec:substitutionTarget pvar:nodeLabelIRI .

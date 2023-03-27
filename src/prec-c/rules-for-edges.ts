@@ -4,25 +4,21 @@ import DStar from '../dataset';
 import * as QuadStar from '../rdf/quad-star';
 import { FilterProvider, RuleDomain, RuleType } from './RuleType';
 import { SplitDefConditions } from './context-loader';
-import { Quad, Quad_Subject } from '@rdfjs/types';
-import { Quad_Object } from '@rdfjs/types';
+import * as RDF from '@rdfjs/types';
 import Context from './Context';
-import { Term } from '@rdfjs/types';
 
 import {
   rdf, rdfs, prec, pvar, pgo,
-  $quad, $variable
+  $quad, $variable, $defaultGraph
 } from '../PRECNamespace';
-
-const $defaultGraph = DataFactory.defaultGraph;
 
 class EdgesRuleClass implements RuleType {
   readonly domain: RuleDomain = {
     RuleType          : prec.EdgeRule,
     DefaultTemplate   : prec.RDFReification,
-    MainLabel         : prec.edgeLabel,
+    MainLabel         : prec.label,
     PossibleConditions: [prec.sourceLabel, prec.destinationLabel],
-    TemplateBases     : [[prec.Edges, []]],
+    TemplateBases     : [prec.Edges],
     ShortcutIRI       : prec.IRIOfEdgeLabel,
     SubstitutionTerm  : prec.edgeIRI,
   
@@ -36,7 +32,7 @@ class EdgesRuleClass implements RuleType {
 
   readonly mark = prec.__appliedEdgeRule;
 
-  makeOneRuleFilter(conditions: SplitDefConditions, hash: string, ruleNode: Quad_Subject): FilterProvider {
+  makeOneRuleFilter(conditions: SplitDefConditions, hash: string, ruleNode: RDF.Quad_Subject): FilterProvider {
     return new EdgeRule(conditions, hash, ruleNode);
   }
 
@@ -53,7 +49,7 @@ class EdgesRuleClass implements RuleType {
     dataset.addAll(q);
   }
 
-  applyMark(destination: DStar, mark: Quad, input: DStar, context: Context): Term[] {
+  applyMark(destination: DStar, mark: RDF.Quad, input: DStar, context: Context): RDF.Term[] {
     const src = [
       $quad(mark.subject, rdf.type, pgo.Edge),
       $quad(mark.subject, rdf.subject  , $variable("subject")  ),
@@ -72,12 +68,12 @@ class EdgesRuleClass implements RuleType {
     bindings.edge = mark.subject;
     bindings.ruleNode = mark.object;
   
-    const label = input.getQuads(bindings.predicate as Term, rdfs.label, null, $defaultGraph());
+    const label = input.getQuads(bindings.predicate as RDF.Term, rdfs.label, null, $defaultGraph);
     if (label.length !== 0) {
       bindings.label = label[0].object;
     }
   
-    const behaviour = context.findEdgeTemplate(bindings.ruleNode as Quad_Subject).quads;
+    const behaviour = context.findEdgeTemplate(bindings.ruleNode as RDF.Quad_Subject).quads;
   
     const pattern = behaviour.map(term => QuadStar.remapPatternWithVariables(
       term,
@@ -89,34 +85,32 @@ class EdgesRuleClass implements RuleType {
         [$variable('label')    , pvar.label      ],
         [$variable('object')   , pvar.destination],
       ]
-    ))
-    // Remove metadata
-    .filter(quad => !QuadStar.containsTerm(quad, prec._forPredicate)) as Quad[];
+    )) as RDF.Quad[];
   
     // Replace non property dependant quads
     bindings['@quads'] = [];
     destination.replaceOneBinding(bindings, pattern);
   
-    const woot = pattern.find(t => 
+    const woot = pattern.some(t => 
       /* Instanciated */ QuadStar.containsTerm(t, $variable('predicate'))
-      /* Hard coded | Substituted */ || QuadStar.containsTerm(t, bindings.predicate as Term)
+      /* Hard coded | Substituted */ || QuadStar.containsTerm(t, bindings.predicate as RDF.Term)
     );
-    return woot !== undefined ? [bindings.predicate as Term] : [];
+    return woot ? [bindings.predicate as RDF.Term] : [];
   }
 }
 
 /** An individual edge rule */
 class EdgeRule implements FilterProvider {
-  conditions: Quad[][];
-  ruleNode: Quad_Subject;
+  conditions: RDF.Quad[][];
+  ruleNode: RDF.Quad_Subject;
   priority: [number | undefined, string];
 
   /** Build an edge rule from its definition */
-  constructor(conditions: SplitDefConditions, hash: string, ruleNode: Quad_Subject) {
+  constructor(conditions: SplitDefConditions, hash: string, ruleNode: RDF.Quad_Subject) {
     this.conditions = [];
     this.ruleNode = ruleNode;
 
-    // prec:edgeLabel
+    // prec:label
     if (conditions.label !== undefined) {
       this.conditions.push([
         $quad($variable("edge")     , rdf.predicate, $variable("edgeLabel")),
@@ -149,7 +143,7 @@ class EdgeRule implements FilterProvider {
       this.conditions.push([
         $quad($variable("edge") , predicate , $variable("node") ),
         $quad($variable("node") , rdf.type  , $variable("label")),
-        $quad($variable("label"), rdfs.label, value as Quad_Object)
+        $quad($variable("label"), rdfs.label, value as RDF.Quad_Object)
       ]);
     }
   }
@@ -158,12 +152,12 @@ class EdgeRule implements FilterProvider {
    * Return the arguments to pass to `DStar::findFilterReplace` to tag
    * the edges that match this manager with its rule node.
    */
-  getFilter() {
-    return {
+  getFilters() {
+    return [{
       source: [$quad($variable("edge"), prec.__appliedEdgeRule, prec.Edges)],
       conditions: this.conditions,
       destination: [$quad($variable("edge"), prec.__appliedEdgeRule, this.ruleNode)]
-    };
+    }];
   }
 }
 

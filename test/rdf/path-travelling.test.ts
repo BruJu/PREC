@@ -3,13 +3,13 @@ import assert from 'assert';
 import { DataFactory, Parser } from 'n3';
 import namespace from '@rdfjs/namespace';
 import * as WT from '@bruju/wasm-tree';
-import { DatasetCore, NamedNode, Quad, Quad_Predicate, Quad_Subject, Term } from '@rdfjs/types';
+import * as RDF from '@rdfjs/types';
 import { checkAndFollow, followAll, followOrNull, followThrough, getNodesOfType, getPathsFrom } from '../../src/rdf/path-travelling';
 
 const ex = namespace("http://ex.org/", { factory: DataFactory });
 const quad = DataFactory.quad;
 
-function toQuads(turtleContent: string): Quad[] {
+function toQuads(turtleContent: string): RDF.Quad[] {
   return new Parser({
     format: 'application/turtle',
     baseIRI: "http://ex.org/"
@@ -20,7 +20,7 @@ function toWTDataset(turtleContent: string): WT.Dataset {
   return new WT.Dataset(toQuads(turtleContent));
 }
 
-function testRdfModelSetEquality(result: Term[], expected: Term[]) {
+function testRdfModelSetEquality(result: RDF.Term[], expected: RDF.Term[]) {
   let expectedMutable = [...expected];
 
   if (result.length !== expected.length) return false;
@@ -35,7 +35,7 @@ function testRdfModelSetEquality(result: Term[], expected: Term[]) {
   return true;
 }
 
-function toStringArrayOfTerms(arraysOfTerms: Term[] | null) {
+function toStringArrayOfTerms(arraysOfTerms: RDF.Term[] | null) {
   let s = "[\n";
 
   if (arraysOfTerms != null) {
@@ -45,7 +45,7 @@ function toStringArrayOfTerms(arraysOfTerms: Term[] | null) {
   return s + "\n]";
 }
 
-function toStringArrayOfQuads(arraysOfQuads: Quad[] | DatasetCore | null) {
+function toStringArrayOfQuads(arraysOfQuads: RDF.Quad[] | RDF.DatasetCore | null) {
   let s = "[\n";
 
   if (arraysOfQuads != null) {
@@ -61,8 +61,8 @@ function toStringArrayOfQuads(arraysOfQuads: Quad[] | DatasetCore | null) {
   return s + "\n]";
 }
 
-function expectQuad(computed: Term | null, expected: Term | null) {
-  function toString(quad: Term | null) {
+function expectQuad(computed: RDF.Term | null, expected: RDF.Term | null) {
+  function toString(quad: RDF.Term | null) {
     if (quad == null) return "null";
     return quad.value;
   }
@@ -82,7 +82,7 @@ describe("Path Travelling Expansion", () => {
   }
 
   describe("getNodesOfType", () => {        
-    function testNodes(type: NamedNode, turtleContent: string, expectedResult: Term[]) {
+    function testNodes(type: RDF.NamedNode, turtleContent: string, expectedResult: RDF.Term[]) {
       let result = getNodesOfType(toDataset(turtleContent), type);
 
       assert.ok(testRdfModelSetEquality(result, expectedResult),
@@ -113,7 +113,12 @@ describe("Path Travelling Expansion", () => {
   });
 
   describe("getPathsFrom", () => {
-    function testPaths(subject: Quad_Subject, ignoreList: Quad_Predicate[] | null, turtleContent: string, expectedResult: Quad[]) {
+    function testPaths(
+      subject: RDF.Quad_Subject,
+      ignoreList: RDF.Quad_Predicate[] | null,
+      turtleContent: string,
+      expectedResult: RDF.Quad[]
+      ) {
       let result = getPathsFrom(toDataset(turtleContent), subject, ignoreList || undefined);
 
       assert.ok(testRdfModelSetEquality(result, expectedResult),

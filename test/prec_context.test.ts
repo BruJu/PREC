@@ -120,22 +120,22 @@ describe("Property convertion", () => {
     contextForNodes: `
       [] a prec:PropertyRule ;
         prec:propertyIRI  :knows ;
-        prec:propertyName "PropertyA" ; 
-        prec:nodeLabel    prec:any
+        prec:propertyKey "PropertyA" ; 
+        prec:onKind prec:Node
       .
     `,
     contextForPASubjectNodes: `
       [] a prec:PropertyRule ;
         prec:propertyIRI  :mappedA ;
-        prec:propertyName "PropertyA" ;
-        prec:nodeLabel    "Subject"
+        prec:propertyKey "PropertyA" ;
+        prec:onKind prec:Node ; prec:label "Subject"
       .
     `,
     contextForPAOnLabelOfEdge: `
       [] a prec:PropertyRule ;
         prec:propertyIRI  :mappedA ;
-        prec:propertyName "PropertyA" ;
-        prec:edgeLabel    "LabelOfEdge"
+        prec:propertyKey "PropertyA" ;
+        prec:label    "LabelOfEdge" ; prec:onKind prec:Edge
       .
     `
   };
@@ -260,7 +260,7 @@ describe('Node label rules', () => {
       `,
       `
         prec:NodeLabels prec:templatedBy [
-          prec:composedOf
+          prec:produces
             << pvar:node :somePGsaysThatTheyAreA pvar:nodeLabelIRI >> ,
             << pvar:nodeLabelIRI :labelsTheNode pvar:node  >> ,
             << << pvar:node pvar:node pvar:node >> rdf:type :rdfstartriple >>
@@ -288,7 +288,7 @@ describe('Node label rules', () => {
       `,
       `
         prec:NodeLabels prec:templatedBy [
-            prec:composedOf << pvar:node :isLabeled pvar:label >>
+            prec:produces << pvar:node :isLabeled pvar:label >>
         ] .
       `,
       `
@@ -299,8 +299,9 @@ describe('Node label rules', () => {
   });
 });
 
-describe('Synonyms', function () {
-  test('should properly map relationship to edge', 
+// TODO: place somewhere else this test
+describe('Another test', function () {
+  test('another test', 
     `
       :edge1 a pgo:Edge ;
         rdf:subject :nodes ;
@@ -320,19 +321,19 @@ describe('Synonyms', function () {
       :ignores a prec:CreatedEdgeLabel ; rdfs:label "DoesntKnow" .
     `,
     `
-      :worstTemplate a prec:RelationshipTemplate ;
-        prec:composedOf
-          << pvar:source          :startArrow pvar:relationship >> ,
-          << pvar:relationship    :endArrow   pvar:destination  >> ,
-          << pvar:relationshipIRI :labels     pvar:relationship >> .
+      :worstTemplate a prec:EdgeTemplate ;
+        prec:produces
+          << pvar:source          :startArrow pvar:edge >> ,
+          << pvar:edge    :endArrow   pvar:destination  >> ,
+          << pvar:edgeIRI :labels     pvar:edge >> .
         
-      prec:Relationships prec:templatedBy :worstTemplate .
+      prec:Edges prec:templatedBy :worstTemplate .
 
-      :whoKnows prec:IRIOfRelationshipLabel "WhoKnows" .
+      :whoKnows prec:IRIOfEdgeLabel "WhoKnows" .
 
-      :doesntRule a prec:RelationshipRule ;
-        prec:relationshipLabel "DoesntKnow" ;
-        prec:relationshipIRI :imlost ;
+      :doesntRule a prec:EdgeRule ;
+        prec:label "DoesntKnow" ;
+        prec:edgeIRI :imlost ;
         prec:templatedBy prec:RdfStarUnique .
     `,
     `

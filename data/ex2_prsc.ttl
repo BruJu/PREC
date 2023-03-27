@@ -1,0 +1,17 @@
+PREFIX prec: <http://bruy.at/prec#>
+PREFIX pvar: <http://bruy.at/prec-trans#>
+PREFIX ex:   <http://example.org/>
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+# PRSC = Presque = Almost
+
+ex:PersonForm a prec:PRSCNodeRule ;
+  prec:label "Person" ;
+  prec:propertyKey "name" ;
+  prec:produces
+    << pvar:self ex:hasLabel ex:person >> ,
+    << pvar:self ex:name "name"^^prec:valueOf >> .
+
+ex:LovesForm a prec:PRSCEdgeRule ;
+  prec:label "Likes" ;
+  prec:produces << pvar:source ex:loves pvar:destination >> .

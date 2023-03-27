@@ -23,14 +23,14 @@ PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 # -- Property Graph Ontology replication
 
 ex:pgoNodeLabel a prec:NodeLabelModel ;
-  prec:composedOf << pvar:node pgo:label pvar:label >> .
+  prec:produces << pvar:node pgo:label pvar:label >> .
 
 ex:pgoEdge a prec:EdgeModel ;
-  prec:composedOf
+  prec:produces
     << pvar:edge pgo:startNode pvar:source        >> ,
     << pvar:edge pgo:endNode   pvar:destination   >> ,
-    << pvar:edge pgo:label     pvar:label         >> ,
-    << pvar:edge pvar:propertyPredicate pvar:propertyObject >> .
+    << pvar:edge pgo:label     pvar:label         >> ;
+  prec:edgeIs pvar:edge .
 
 prec:Relationships prec:templatedBy ex:pgoEdge .
 prec:NodeLabels    prec:templatedBy ex:pgoNodeLabel .
@@ -39,7 +39,7 @@ prec:NodeLabels    prec:templatedBy ex:pgoNodeLabel .
 
 prec:NodeProperties    prec:templatedBy ex:pgoNodeProperty .
 ex:pgoNodeProperty a prec:PropertyModel ;
-  prec:composedOf
+  prec:produces
     << pvar:entity       pgo:hasNodeProperty  pvar:propertyNode     >> ,
     << pvar:propertyNode pgo:key              pvar:label             >> ,
     << pvar:propertyNode pgo:value            pvar:propertyValue     >> ,
@@ -49,7 +49,7 @@ ex:pgoNodeProperty a prec:PropertyModel ;
 
 prec:RelationshipProperties    prec:templatedBy ex:pgoEdgeProperty .
 ex:pgoEdgeProperty a prec:PropertyModel ;
-  prec:composedOf
+  prec:produces
     << pvar:entity       pgo:hasEdgeProperty  pvar:propertyNode     >> ,
     << pvar:propertyNode pgo:key              pvar:label             >> ,
     << pvar:propertyNode pgo:value            pvar:propertyValue     >> ,
@@ -59,7 +59,7 @@ ex:pgoEdgeProperty a prec:PropertyModel ;
 
 prec:MetaProperties    prec:templatedBy ex:pgoMetaProperty .
 ex:pgoMetaProperty a prec:PropertyModel ;
-  prec:composedOf
+  prec:produces
     << pvar:entity      pgo:hasProperty      pvar:propertyNode     >> ,
     << pvar:propertyNode pgo:key              pvar:label             >> ,
     << pvar:propertyNode pgo:value            pvar:propertyValue     >> ,
@@ -75,12 +75,12 @@ ex:pgoMetaProperty a prec:PropertyModel ;
 # PG and the node for node that is either labeled or is connected to another
 # node (or both).
 
-ex:pgoEdge      prec:composedOf
+ex:pgoEdge      prec:produces
   << _:thisPG pgo:hasEdge pvar:edge        >> ,
   << _:thisPG pgo:hasNode pvar:source      >> ,
   << _:thisPG pgo:hasNode pvar:destination >> ,
   << _:thisPG rdf:type pgo:PropertyGraph   >> .
 
-ex:pgoNodeLabel prec:composedOf
+ex:pgoNodeLabel prec:produces
   << _:thisPG pgo:hasNode pvar:node >> ,
   << _:thisPG rdf:type pgo:PropertyGraph >> .

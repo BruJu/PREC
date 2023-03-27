@@ -1,12 +1,15 @@
 import assert from 'assert';
 import { isomorphic } from "rdf-isomorphic";
 import * as N3 from "n3";
+import * as RDF from "@rdfjs/types";
 
 import DStar from '../../src/dataset/index';
-import EdgeRules from '../../src/prec/rules-for-edges';
-import PropertyRules from '../../src/prec/rules-for-properties';
-import { readRawTemplate } from '../../src/prec/context-loader';
-import { RuleDomain } from '../../src/prec/RuleType';
+import EdgeRules from '../../src/prec-c/rules-for-edges';
+import PropertyRules from '../../src/prec-c/rules-for-properties';
+import { readRawTemplate } from '../../src/prec-c/context-loader';
+import { RuleDomain } from '../../src/prec-c/RuleType';
+import { $quad, prec } from '../../src/PRECNamespace';
+import { termToString } from 'rdf-string';
 
 const prefixes =
 `
@@ -31,19 +34,22 @@ function loadTemplate(rule: string, domain: RuleDomain) {
   );
 }
 
+function nestTerms(terms: RDF.Term[]): RDF.Quad[] {
+  return terms.map(term => $quad(term as RDF.Quad_Subject, prec._, prec._));
+}
+
 function areEquivalentTemplates(name: string, domain: RuleDomain, rule1: string, rule2: string) {
   it(name, () => {
     const template1 = loadTemplate(rule1, domain);
     const template2 = loadTemplate(rule2, domain);
 
     assert.ok(
-      isomorphic(template1.composedOf, template2.composedOf),
+      isomorphic(template1.templateGraph, template2.templateGraph),
       'composed of should be isomorphic'
     );
 
     assert.ok(
-      (template1.entityIs === null && template2.entityIs === null)
-      || isomorphic(template1.entityIs!, template2.entityIs!),
+      isomorphic(nestTerms(template1.entityIs), nestTerms(template2.entityIs)),
       'terms should be iso'
     );
   });
@@ -56,12 +62,12 @@ function notEquivalentEntity(name: string, domain: RuleDomain, rule1: string, ru
     const template2 = loadTemplate(rule2, domain);
 
     assert.ok(
-      isomorphic(template1.composedOf, template2.composedOf),
+      isomorphic(template1.templateGraph, template2.templateGraph),
       'composed of should be isomorphic'
     );
 
     assert.ok(
-      !isomorphic(template1.entityIs!, template2.entityIs!),
+      !isomorphic(nestTerms(template1.entityIs), nestTerms(template2.entityIs)),
       'terms should not be iso'
     );
   });
@@ -72,8 +78,10 @@ function cantFindEntity(name: string, domain: RuleDomain, rule: string) {
     const template = loadTemplate(rule, domain);
 
     assert.ok(
-      template.entityIs === null,
-      'should not be able to find entity'
+      template.entityIs.length === 0,
+      'should not be able to find entity but found <' + 
+      template.entityIs.map(t => termToString(t)).join("/") +
+      ">"
     );
   })
 }
@@ -112,60 +120,60 @@ module.exports = () => {
       EdgeRules.domain,      
       `
         prec:edgeIs pvar:edge ;
-        prec:composedOf ${PrecRDFReification} .
+        prec:produces ${PrecRDFReification} .
       `,
       `
         prec:edgeIs pvar:edge ;
-        prec:composedOf ${PrecRDFReification} .
+        prec:produces ${PrecRDFReification} .
       `
     );
 
     areEquivalentTemplates(
       "Can deduce edge",
       EdgeRules.domain,
-      ` prec:composedOf ${PrecRDFReification} .`,
+      ` prec:produces ${PrecRDFReification} .`,
       `
         prec:edgeIs pvar:edge ;
-        prec:composedOf ${PrecRDFReification} .
+        prec:produces ${PrecRDFReification} .
       `
     );
 
     notEquivalentEntity(
       "Can override",
       EdgeRules.domain,
-      ` prec:composedOf ${PrecRDFReification} .`,
+      ` prec:produces ${PrecRDFReification} .`,
       `
         prec:edgeIs :toto ;
-        prec:composedOf ${PrecRDFReification} .
+        prec:produces ${PrecRDFReification} .
       `
     );
 
     areEquivalentTemplates(
       "Can deduce edge",
       EdgeRules.domain,
-      ` prec:composedOf << pvar:source pvar:edgeIRI pvar:destination >> .`,
+      ` prec:produces << pvar:source pvar:edgeIRI pvar:destination >> .`,
       `
         prec:edgeIs     << pvar:source pvar:edgeIRI pvar:destination >> ;
-        prec:composedOf << pvar:source pvar:edgeIRI pvar:destination >> .
+        prec:produces << pvar:source pvar:edgeIRI pvar:destination >> .
       `
     );
 
     areEquivalentTemplates(
       "Can deduce edge from old syntax",
       EdgeRules.domain,
-      ` prec:composedOf << pvar:source pvar:edgeIRI pvar:destination >> .`,
+      ` prec:produces << pvar:source pvar:edgeIRI pvar:destination >> .`,
       `
-        prec:composedOf << pvar:source pvar:edgeIRI pvar:destination >> ,
-        << << pvar:source pvar:edgeIRI pvar:destination >> pvar:propertyPredicate pvar:propertyObject >> .
+        prec:produces << pvar:source pvar:edgeIRI pvar:destination >> ;
+        prec:edgeIs << pvar:source pvar:edgeIRI pvar:destination >> .
       `
     );
 
     areEquivalentTemplates(
       "Can deduce in prec:Prec0Property",
       PropertyRules.domain,
-      ` prec:composedOf ${PrecZeroProperty} .`,
+      ` prec:produces ${PrecZeroProperty} .`,
       `
-        prec:composedOf ${PrecZeroProperty} ;
+        prec:produces ${PrecZeroProperty} ;
         prec:entityIs  pvar:metaPropertyNode .
       `
     );
@@ -173,9 +181,9 @@ module.exports = () => {
     areEquivalentTemplates(
       "Can deduce in prec:DirectTriples ",
       PropertyRules.domain,
-      ` prec:composedOf ${PrecDirectTriples} .`,
+      ` prec:produces ${PrecDirectTriples} .`,
       `
-        prec:composedOf ${PrecDirectTriples} ;
+        prec:produces ${PrecDirectTriples} ;
         prec:entityIs  << pvar:entity pvar:propertyKey pvar:propertyValue >> .
       `
     );
@@ -183,9 +191,9 @@ module.exports = () => {
     areEquivalentTemplates(
       "Can deduce in prec:CombinedTriples",
       PropertyRules.domain,
-      ` prec:composedOf ${PrecCombined} .`,
+      ` prec:produces ${PrecCombined} .`,
       `
-        prec:composedOf ${PrecCombined} ;
+        prec:produces ${PrecCombined} ;
         prec:entityIs   pvar:propertyNode .
       `
     );
@@ -198,9 +206,9 @@ module.exports = () => {
     cantFindEntity("should not be able to find any entity if edge is broken",
       EdgeRules.domain,
       `
-      prec:composedOf << :myGraph :hasNode        pvar:source      >> ;
-      prec:composedOf << :myGraph :hasNode        pvar:destination >> ;
-      prec:composedOf << :myGraph :hasAnEdgeLabel pvar:edgeIRI     >> .
+      prec:produces << :myGraph :hasNode        pvar:source      >> ;
+      prec:produces << :myGraph :hasNode        pvar:destination >> ;
+      prec:produces << :myGraph :hasAnEdgeLabel pvar:edgeIRI     >> .
       `
     );
   });
