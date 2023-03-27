@@ -5,15 +5,31 @@ import * as RDF from "@rdfjs/types";
 
 import { apocToRDF, stringToApocDocuments } from '../prec';
 import assert from 'assert';
-import { filenameToArrayOfQuads } from '../src/rdf/parsing';
 
 const testFolder = './test/prec/';
 
-import { rdf, prec, $quad, $literal, $defaultGraph } from '../src/PRECNamespace';
+import { rdf, prec, $quad, $defaultGraph, xsd } from '../src/PRECNamespace';
 import checkIsomorphism from '@bruju/rdf-test-util';
 import { followThrough } from '../src/rdf/path-travelling';
+import { termToString } from 'rdf-string';
 
-function extractGraph(store: N3.Store, graph: RDF.Quad_Graph) {
+function extractGraph(store: N3.Store, graph: RDF.Term) {
+  if (graph.termType === 'Literal') {
+    if (graph.datatype.equals(xsd.string)) {
+      return new N3.Store(new N3.Parser().parse(graph.value));
+    } else if (graph.datatype.equals(prec.relativePath)) {
+      const p = path.join(__dirname, 'prec', graph.value);
+      return new N3.Store(new N3.Parser().parse(fs.readFileSync(p, "utf-8")));
+    } else {
+      throw Error("Unexpected value found: " + termToString(graph));
+    }
+  }
+
+  if (graph.termType !== 'BlankNode' && graph.termType !== 'NamedNode') {
+    throw Error("Unexpected value found: " + termToString(graph));
+  }
+
+
   const result = new N3.Store(
     store.getQuads(null, null, null, graph)
       .map(quad => $quad(quad.subject, quad.predicate, quad.object))
@@ -37,7 +53,12 @@ function getContent(store: N3.Store, term: RDF.Term) {
     term = next;
   }
 
-  return term.value;
+  if (term.datatype.equals(prec.relativePath)) {
+    const p = path.join(__dirname, 'prec', term.value);
+    return fs.readFileSync(p, "utf-8");
+  } else {
+    return term.value;
+  }
 }
 
 
@@ -49,61 +70,35 @@ describe("prec", () => {
       const expected = new N3.Store(
         new N3.Parser().parse(fs.readFileSync(testFolder + file, "utf-8"))
       );
+      
+      for (const unitTest of expected.getQuads(null, rdf.type, prec.UnitTest, $defaultGraph)) {
+        const node = unitTest.subject;
+        const context = followThrough(expected, node, prec.context)!;
 
-      if (expected.has($quad(prec.testMetaData, prec.kind, $literal("SmallExamples")))) {
-        smallExample(expected);
-        return;
+        it(context.value, () => {
+          const output        = followThrough(expected, node, prec.output)!;
+          const propertyGraph = followThrough(expected, node, prec.propertyGraph)!;
+
+          assert.notStrictEqual(context, null);
+          assert.notStrictEqual(output, null);
+          assert.notStrictEqual(propertyGraph, null);
+
+          const contextGraph = extractGraph(expected, context);
+          const expectedGraph = extractGraph(expected, output);
+          const apocDocumentsAsString = getContent(expected, propertyGraph);
+
+          checkIfcorrectOutput(
+            apocDocumentsAsString,
+            contextGraph.getQuads(null, null, null, null),
+            expectedGraph
+          );
+        });
       }
 
-      it("should work", function() {
-        const meta = expected.getQuads(prec.testMetaData, null, null, $defaultGraph);
-        assert.ok(meta.length === 3);
-
-        const pgPath      = followThrough(expected, prec.testMetaData, prec.pgPath)!;
-        const pgSource    = followThrough(expected, prec.testMetaData, prec.pgSource)!;
-        const contextPath = followThrough(expected, prec.testMetaData, prec.contextPath)!;
-
-        expected.removeQuads(meta);
-
-        assert.ok(
-          pgSource.equals(N3.DataFactory.namedNode("https://neo4j.com/developer/neo4j-apoc/")),
-          "The only PG supported model is currently NEO4J APOC Json export"
-        );
-
-        const contextQuads = filenameToArrayOfQuads(path.join(__dirname, 'prec', contextPath.value));
-        const content = fs.readFileSync(path.join(__dirname, 'prec', pgPath.value), 'utf-8');
-
-        checkIfcorrectOutput(content, contextQuads, expected);
-      });
     });
   }
 });
 
-function smallExample(store: N3.Store) {
-  for (const unitTest of store.getQuads(null, rdf.type, prec.unitTest, $defaultGraph)) {
-    const node = unitTest.subject;
-    const context = followThrough(store, node, prec.context)! as RDF.Quad_Predicate;
-
-    it(context.value, () => {
-      const output        = followThrough(store, node, prec.output) as RDF.Quad_Predicate;
-      const propertyGraph = followThrough(store, node, prec.propertyGraph) as RDF.Quad_Predicate;
-
-      assert.notStrictEqual(context, null);
-      assert.notStrictEqual(output, null);
-      assert.notStrictEqual(propertyGraph, null);
-
-      const contextGraph = extractGraph(store, context);
-      const expectedGraph = extractGraph(store, output);
-      const apocDocumentsAsString = getContent(store, propertyGraph);
-
-      checkIfcorrectOutput(
-        apocDocumentsAsString,
-        contextGraph.getQuads(null, null, null, null),
-        expectedGraph
-      );
-    });
-  }
-}
 
 function checkIfcorrectOutput(graphContent: string, context: RDF.Quad[], expected: N3.Store) {
   const apocDocuments = stringToApocDocuments(graphContent);

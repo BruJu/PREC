@@ -1,11 +1,20 @@
 @prefix prec: <http://bruy.at/prec#> .
 
-prec:testMetaData prec:pgPath "../../data/ex1_potus.json" ;
-                  prec:contextPath "../../data/ex1_potus.ttl" ;
-                  prec:pgSource <https://neo4j.com/developer/neo4j-apoc/> .
+[] a prec:UnitTest ;
+  prec:propertyGraph "../../data/ex1_potus.json"^^prec:relativePath ;
+  prec:context "../../data/ex1_precc.ttl"^^prec:relativePath ;
+  prec:output _:output .
 
-_:joe a <http://dbpedia.org/ontology/Person>;
-    <https://schema.org/givenName> "Joseph";
-    <https://schema.org/familyName> "Biden".
-_:usa a <http://dbpedia.org/ontology/Country>;
-    <http://example.org/countryName> "United States of America".
+[] a prec:UnitTest ;
+  prec:propertyGraph "../../data/ex1_potus.json"^^prec:relativePath ;
+  prec:context "../../data/ex1_prsc.ttl"^^prec:relativePath ;
+  prec:output _:output .
+
+_:output {
+    _:joe a <http://dbpedia.org/ontology/Person>;
+        <https://schema.org/givenName> "Joseph";
+        <https://schema.org/familyName> "Biden".
+    _:usa a <http://dbpedia.org/ontology/Country>;
+        <http://example.org/countryName> "United States of America".
+}
+

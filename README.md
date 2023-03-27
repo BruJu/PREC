@@ -23,10 +23,10 @@ example files.
 - `npm install --save-dev`
 
 - Example 1: A Property Graph with a node about the POTUS
-    - `npx ts-node prec.ts apoc2rdf data\ex1_potus.json -c data\ex1_potus.ttl`
+    - `npx ts-node prec.ts apoc2rdf data\ex1_potus.json -c data\ex1_prsc.ttl`
     - `data\ex1_potus.json` contains the exportation of a Neo4J Property Graph
     about the POTUS and the USA.
-    - `data\ex1_potus.ttl` is a context. *In this project, we call a*
+    - `data\ex1_prsc.ttl` is a context. *In this project, we call a*
     *Context a Turtle File that describes a mapping from the elements of Property*
     *Graph to an RDF ontology*. This context maps labels of the PG into IRIs
     mainly from DBpedia and Schema.org

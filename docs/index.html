@@ -406,7 +406,7 @@
 
           <p>
             After cloning the repo, test it by running
-            `npx ts-node apoc2rdf prec.ts data\ex2_annlikesdan1.json -c data\ex2_anndan_prsc.ttl`
+            `npx ts-node apoc2rdf prec.ts data\ex2_annlikesdan1.json -c data\ex2_prsc.ttl`
           </p>
           <pre data-transform="updateExample"
             data-content-type="text/turtle"
@@ -1953,46 +1953,17 @@
         </ul>
       </p>
       
-      <h3>IRIs used for unit test using external files</h3>
+      <h3>Used IRIs</h3>
 
       <ul>
         <li>
-          <dfn class="lint-ignore">http://bruy.at/prec#testMetaData</dfn>:
-          Subject of triples that are inputs for `z_prec.js`. The triples with
-          `prec:testMetaData` as a subject won't be tested against the actual
-          output.
-        </li>
-        <li>
-          <dfn class="lint-ignore">http://bruy.at/prec#pgPath</dfn>:
-          Relative path of the expected output file to the structure of the
-          property graph.
-        </li>
-        <li>
-          <dfn class="lint-ignore">http://bruy.at/prec#pgSource</dfn>:
-          An IRI that corresponds used to the method to obtain the Property
-          Graph structure.
-          <br>
-          Only `https://neo4j.com/developer/neo4j-apoc/` is currently supported.
-          It corresponds for the output of the `apoc.export.json.all` function in Neo4J.
-        </li>
-        <li>
-          <dfn class="lint-ignore">http://bruy.at/prec#contextPath</dfn>:
-          Relative path of the expected output file to the used context.
-        </li>
-      </ul>
-
-
-      <h3>IRIs used for unit test fully contained in a single Turtle file</h3>
-
-      <ul>
-        <li>
-          <dfn class="lint-ignore">http://bruy.at/prec#kind</dfn>:
-          If the turtle file contains `prec:testMetaData prec:kind "SmallExamples ."`,
-          it means this turtle file contains multiple tests.
-        </li>
-        <li>
-          <dfn class="lint-ignore">http://bruy.at/prec#unitTest</dfn>:
+          <dfn class="lint-ignore">http://bruy.at/prec#UnitTest</dfn>:
           Type of a single unit test
+        </li>
+        <li>
+          <dfn class="lint-ignore">http://bruy.at/prec#relativePath</dfn>:
+          Datatype used when the input / context is not the string itself but
+          located in the file described by the literal.
         </li>
         <li>
           <dfn class="lint-ignore">http://bruy.at/prec#context</dfn>:
@@ -2006,8 +1977,8 @@
           `prec:output` states what is the expected output.
           <br>
           `_:someTest prec:output _:output` means that the unit test
-          `_:someTest` expects the content of the graph `_:output` as the output
-          of PREC.
+          `_:someTest` expects the content of the named graph `_:output` as the
+          output of PREC.
         </li>
         <li>
           <dfn class="lint-ignore">http://bruy.at/prec#propertyGraph</dfn>:

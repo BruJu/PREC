@@ -1,0 +1,21 @@
+PREFIX prec: <http://bruy.at/prec#>
+PREFIX pvar: <http://bruy.at/prec-trans#>
+PREFIX pgo:  <http://ii.uwb.edu.pl/pgo#>
+PREFIX dbpedia: <http://dbpedia.org/ontology/>
+PREFIX schema: <https://schema.org/>
+
+
+_:PersonRule a prec:PRSCNodeRule ;
+  prec:label "PERSON" ;
+  prec:propertyKey "name", "givenName" ;
+  prec:produces
+    << pvar:self a dbpedia:Person >> ,
+    << pvar:self schema:givenName "givenName"^^prec:valueOf >> ,
+    << pvar:self schema:familyName "name"^^prec:valueOf >> .
+  
+_:CountryRule a prec:PRSCNodeRule ;
+  prec:label "COUNTRY" ;
+  prec:propertyKey "name" ;
+  prec:produces
+    << pvar:self a dbpedia:Country >> ,
+    << pvar:self <http://example.org/countryName> "name"^^prec:valueOf >> .

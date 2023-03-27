@@ -1,0 +1,87 @@
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix prec: <http://bruy.at/prec#> .
+@prefix ex:   <http://example.org/> .
+
+# UNIT TEST I: WITH PRSC
+
+# I.1: An edge unique context
+_:prscTest a prec:UnitTest ;
+  prec:propertyGraph "../../data/ex2_annlikesdan1.json"^^prec:relativePath ;
+  prec:context       "../../data/ex2_prsc.ttl"^^prec:relativePath ;
+  prec:output        _:prscOutput .
+
+_:prscOutput {
+  _:ann ex:hasLabel ex:person ; ex:name "Ann" .
+  _:dan ex:hasLabel ex:person ; ex:name "Dan" .
+  _:ann ex:loves _:dan .
+}
+
+
+
+# I.2: A (trully) well behaved context
+
+_:prscWbTest a prec:UnitTest ;
+  prec:propertyGraph "../../data/ex2_annlikesdan1.json"^^prec:relativePath ;
+  prec:context       "../../data/ex2_prsc_wb.ttl"^^prec:relativePath ;
+  prec:output        _:prscWbOutput .
+
+_:prscWbOutput {
+  _:ann ex:hasLabel ex:person ; ex:name "Ann" .
+  _:dan ex:hasLabel ex:person ; ex:name "Dan" .
+  
+  _:like rdf:type ex:Like ;
+    ex:from _:ann ;
+    ex:content_producer _:dan .
+}
+
+# I.3: With 3 likes instead of one -> like is not edge-unique anymore
+
+_:prscTestInformationLoss a prec:UnitTest ;
+  prec:propertyGraph "../../data/ex2_annlikesdan3.json"^^prec:relativePath ;
+  prec:context       "../../data/ex2_prsc.ttl"^^prec:relativePath ;
+  prec:output        _:prscOutput .
+
+
+_:prscWbTestNoInformationLoss a prec:UnitTest ;
+  prec:propertyGraph "../../data/ex2_annlikesdan1.json"^^prec:relativePath ;
+  prec:context       "../../data/ex2_prsc_wb.ttl"^^prec:relativePath ;
+  prec:output        _:prscWbOutput .
+
+_:prscWbTestNoInformationLoss {
+  _:ann ex:hasLabel ex:person ; ex:name "Ann" .
+  _:dan ex:hasLabel ex:person ; ex:name "Dan" .
+  
+  _:like1 rdf:type ex:Like ;
+    ex:from _:ann ;
+    ex:content_producer _:dan .
+  
+  _:like2 rdf:type ex:Like ;
+    ex:from _:ann ;
+    ex:content_producer _:dan .
+  
+  _:like3 rdf:type ex:Like ;
+    ex:from _:ann ;
+    ex:content_producer _:dan .
+}
+
+
+
+# UNIT TEST II: WITH PREC-C
+
+_:preccTest a prec:UnitTest ;
+  prec:propertyGraph "../../data/ex2_annlikesdan1.json"^^prec:relativePath ;
+  prec:context       "../../data/ex2_precc.ttl"^^prec:relativePath ;
+  prec:output _:preccOutput .
+
+_:preccOutput {
+  _:ann a <http://dbpedia.org/ontology/Person> ;
+    <https://schema.org/name> "Ann".
+
+  _:dan a <http://dbpedia.org/ontology/Person> ;
+    <https://schema.org/name> "Dan".
+
+  _:like
+    ex:likedBy _:ann ;
+    ex:contentCreator _:dan ;
+    rdf:type <https://example.org/likes> .
+}

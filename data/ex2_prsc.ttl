@@ -3,16 +3,15 @@ PREFIX pvar: <http://bruy.at/prec-trans#>
 PREFIX ex:   <http://example.org/>
 PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
+# PRSC = Presque = Almost
+
 ex:PersonForm a prec:PRSCNodeRule ;
   prec:label "Person" ;
   prec:propertyKey "name" ;
   prec:produces
-    << pvar:node ex:hasLabel ex:person >> ,
-    << pvar:node ex:name "name"^^prec:valueOf >> .
+    << pvar:self ex:hasLabel ex:person >> ,
+    << pvar:self ex:name "name"^^prec:valueOf >> .
 
 ex:LovesForm a prec:PRSCEdgeRule ;
   prec:label "Likes" ;
-  prec:produces
-    << pvar:edge rdf:type ex:Like >>,
-    << pvar:edge ex:from pvar:source >>,
-    << pvar:edge ex:content_producer pvar:destination >> .
+  prec:produces << pvar:source ex:loves pvar:destination >> .
