@@ -79,7 +79,7 @@
       <ul>
         <li>[= PREC-0 =], a Property Graph to RDF graph converter</li>
         <li><dfn>PRSC</dfn> (PG to RDF, Schema-based Converter; pronounced like the french word <em>Presque</em>), an RDF Graph generated from PREC-0 to more readable graphs converter, based on schemas.</li>
-        <li><dfn>PREC-C</dfn> (PREC-Context), an RDF Graph generated from PREC-0 to more readable graphs converter</li>
+        <li><dfn data-lt="PREC-Context">PREC-C</dfn> (PREC-Context), an RDF Graph generated from PREC-0 to more readable graphs converter</li>
       </ul>
 
       <p>
@@ -305,6 +305,66 @@
           </ul>
         </p>
       </section>
+
+      <section>
+        <h3>The templating system</h3>
+
+        <p>
+          PREC uses a custom templating system. Triples that should be produced
+          by a rule are the ones described by embed triples used as the object
+          of triples for which the predicate is <em>prec:produces</em>.
+        </p>
+
+        <p>
+          When the triples are produced, some terms, usually in the
+          <em>pvar</em> namespace are replaced with terms depending on the
+          data from the property graph.
+        </p>
+
+        <p>
+          Each triple that is used as an object of <em>prec:produces</em> is
+          called a <dfn>template triple</dfn>. The set of all template triples
+          of a resource, <em>i.e.</em> for a given resource, the set of all
+          objects of triples that have as the subject the resource and as the
+          predicate <em>prec:produces</em>, is named a
+          <dfn>template graph</dfn>.
+        </p>
+
+        <aside class="example" title="A template graph">
+
+          <p>
+            In the following example, the rule `ex:PersonForm` is applied for
+            the nodes that have the label "Person". For these node, one triple
+            will be produced: the one described by the triple
+            `ex:PersonForm prec:produces << pvar:self ex:hasLabel ex:Person >>`.
+            However, `pvar:self` will be replaced by a blank node or an IRI
+            specific to each node for which the rule applies.
+          </p>
+          <pre data-transform="updateExample"
+            data-content-type="text/turtle"
+            class="nohighlight"
+          >
+            <!--
+              PREFIX prec: <http://bruy.at/prec#>
+              PREFIX pvar: <http://bruy.at/prec-trans#>
+              PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+              PREFIX ex:   <http://example.org/>
+
+              ex:PersonForm a prec:PRSCNodeRule ;
+                prec:label "Person" ;
+                prec:produces
+                  << pvar:self ex:hasLabel ex:person >> .
+            -->
+          </pre>
+        </aside>
+
+        <p>
+          This templating system allows the user to write triples that are
+          very close to the one that are produced. Moreover, because there are
+          no variables, template graphs can be written in plain Turtle-star
+          files.
+        </p>
+      </section>
     </section>
 
     <section>
@@ -317,60 +377,123 @@
           the list of labels and the list of properties of the element.
         </p>
 
+        <p>
+          This kind of context identify every node and edges to a schema, and the
+          transformation of every schema from PG to RDF must be defined.
+        </p>
 
-      <p>
-        This kind of context identify every node and edges to a schema, and the
-        transformation of every schema from PG to RDF must be defined.
-      </p>
+        <section>
+          <h3>Writing PRSC rules</h3>
 
-      <strong>List of valid IRIS for a PRSC rule are:</strong>
-      <ul>
-        <li>`prec:PRSCNodeRule` - Type for rules that target nodes</li>
-        <li>`prec:PRSCEdgeRule` - Type for rules that target edges.</li>
-        <li>`prec:label` - A label the node must have</li>
-        <li>`prec:propertyKey` - A property the node must have</li>
-        <li>`prec:produces` - describes how to represent the elements that complies to the rule</li>
-      </ul>
+          <strong>List of valid IRIs for a PRSC rule are:</strong>
+          <ul>
+            <li>`prec:PRSCNodeRule` - Type for rules that target nodes</li>
+            <li>`prec:PRSCEdgeRule` - Type for rules that target edges.</li>
+            <li>`prec:label` - A label the node must have</li>
+            <li>`prec:propertyKey` - A property the node must have</li>
+            <li>`prec:produces` - describes how to represent the elements that complies to the rule</li>
+          </ul>
 
-      <strong>Placeholders for the template part (objects of prec:produces)</strong>
-      <ul>
-        <li>`pvar:self` - The identifier for the element (node or edge)</li>
-        <li>`pvar:source` - Edges only, source of the edge</li>
-        <li>`pvar:destination` - Edges only, destination of the edge</li>
-        <li>`"property key"^^prec:valueOf` - Placeholder for the value of the property "property name"</li>
-      </ul>
+          <strong>Placeholders for the template graph</strong>
+          <ul>
+            <li>`pvar:self` - The identifier for the element (node or edge)</li>
+            <li>`pvar:source` - Edges only, source of the edge</li>
+            <li>`pvar:destination` - Edges only, destination of the edge</li>
+            <li>`"property key"^^prec:valueOf` - Placeholder for the value of the property "property name"</li>
+          </ul>
+          
+          <aside class="example" title="Example of a PRSC context">
 
-      
-      <aside class="example" title="Example of a PRSC context">
+          <p>
+            After cloning the repo, test it by running
+            `npx ts-node apoc2rdf prec.ts data\ex2_annlikesdan1.json -c data\ex2_anndan_prsc.ttl`
+          </p>
+          <pre data-transform="updateExample"
+            data-content-type="text/turtle"
+            class="nohighlight"
+          >
+            <!--
+              PREFIX prec: <http://bruy.at/prec#>
+              PREFIX pvar: <http://bruy.at/prec-trans#>
+              PREFIX ex:   <http://example.org/>
+              PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+              ex:PersonForm a prec:PRSCNodeRule ;
+                prec:label "Person" ;
+                prec:propertyKey "name" ;
+                prec:produces
+                  << pvar:self ex:hasLabel ex:person >> ,
+                  << pvar:self ex:name "name"^^prec:valueOf >> .
+
+              ex:LovesForm a prec:PRSCEdgeRule ;
+                prec:label "Likes" ;
+                prec:produces << pvar:source ex:loves pvar:destination >> .
+            -->
+          </pre>
+
+          TODO: an example PG and the resulting RDF graph
+        </aside>
+      </section>
+
+
+      <section>
+        <h3>Well-behaved PRSC contexts</h3>
 
         <p>
-          After cloning the repo, test it by running
-          `npx ts-node apoc2rdf prec.ts data\ex2_annlikesdan1.json -c data\ex2_anndan_prsc.ttl`
+          The PRSC contexts that follow the given rules are said Well-behaved:
+          <ul>
+            <li>All template triples contain the term `pvar:self`</li>
+            <li>
+              All rules have a <em>signature template triple</em>, a triple
+              whose [= characterization =] can only be found for this rule.
+            </li>
+            <li>
+              All properties must have a <em>unique template triple</em>, a
+              triple whose [= characterization =] is unique among the
+              template triples inside the template graph of the rule. If the
+              element is an edge, the source and the destination must also have
+              a unique template triple.
+            </li>
+            <li>
+              <em>Edge-unique extension:</em>> Edge rules can violate the first
+              criterion if all template triples in the template graph contain
+              `pvar:source`, `pvar:destination`, are
+              <em>signature template triples</em> and
+              <em>unique template triples</em>.
+            </li>
+          </ul>
         </p>
-        <pre data-transform="updateExample"
-          data-content-type="text/turtle"
-          class="nohighlight"
-        >
-          <!--
-            PREFIX prec: <http://bruy.at/prec#>
-            PREFIX pvar: <http://bruy.at/prec-trans#>
-            PREFIX ex:   <http://example.org/>
-            PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-            ex:PersonForm a prec:PRSCNodeRule ;
-              prec:label "Person" ;
-              prec:propertyKey "name" ;
-              prec:produces
-                << pvar:node ex:hasLabel ex:person >> ,
-                << pvar:node ex:name "name"^^prec:valueOf >> .
+        <p>
+          The <dfn data-lt="characterization">characterization of a template
+            triple</dfn> can be considered as being equal to the triple where:
+            <ul>
+              <li>Terms in the `pvar` namespace and blank nodes are
+                substituted with the term `pvar:element`
+              </li>
+              <li>
+                Literals, including the one whose datatype is `prec:valueOf` are
+                substituted with the literal `"Literal"`.
+              </li>
+            </ul>
+        </p>
 
-            ex:LovesForm a prec:PRSCEdgeRule ;
-              prec:label "Likes" ;
-              prec:produces << pvar:source ex:loves pvar:destination >> .
-          -->
-        </pre>
-
-      </aside>
+        <p>
+          If an RDF graph is generated from a PRSC well behaved context:
+          <ul>
+            <li>
+              The RDF graph conversion is guaranted to not lose any information
+              compared with the property graph.
+            </li>
+            <li>
+              The inverse operation, <em>i.e.</em> converting the RDF graph
+              back into the original PREC-0 graph, and by extension to an
+              isomorphic property graph to the one that produced it, can be
+              performed by the PREC engine.
+            </li>
+          </ul>
+        </p>
+      </section>
     </section>
 
     <section>
@@ -381,7 +504,7 @@
 
       
         <p>
-          Unlike PRSC context that only have rules for nodes and edges, PREC-C
+          Unlike PRSC contexts that only have rules for nodes and edges, PREC-C
           context ruleset can target node, edges and properties.
         </p>
 
@@ -1520,8 +1643,8 @@
               class="nohighlight"
             >
               <!--
-              _:node1 a pgo:Node, [ rdfs:label "Person" ] .
-              _:node2 a pgo:Node, [ rdfs:label "Animal" ] .
+              _:node1 a pgo:Node ; [ rdfs:label "Person" ] .
+              _:node2 a pgo:Node ; [ rdfs:label "Animal" ] .
               -->
             </pre>
 
@@ -1820,6 +1943,8 @@
       </section>
     </section>
 
+    </section>
+
     <section class="informative">
       <h2>Test infrastructure</h2>
 
@@ -1834,6 +1959,7 @@
         <li>where are the inputs by using `prec:testMetaData` as a subject</li>
         <li>the expected triples generated by PREC. Blank nodes are used as wildcards.</li>
         </ul>
+      </p>
       
       <h3>Unit test using external files</h3>
       
