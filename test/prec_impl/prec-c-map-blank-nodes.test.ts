@@ -1,6 +1,6 @@
 import assert from 'assert';
 import * as utility from "../utility";
-import PREC_C from "../../src/prec/graph-reducer";
+import applyContext from "../../src/prec/apply-context";
 
 module.exports = () => {
   describe("Blank node mapping", () => {
@@ -10,7 +10,7 @@ module.exports = () => {
 
       let context = utility.turtleToQuads("pgo:Node prec:mapBlankNodesToPrefix <http://totoland/> .");
 
-      PREC_C(store, context);
+      applyContext(store, context);
       
       assert.strictEqual(store.size, 1);
       assert.strictEqual(store.getQuads()[0].subject.termType, "NamedNode")

@@ -1,7 +1,7 @@
 import { PropertyGraph, PGBuild } from "../mock-pg/pg-implem";
 import { fromTinkerPop } from '../../src/prec/graph-builder';
 import { turtleToQuads, turtleToDStar, checkOutput } from "../utility";
-import { applyPRSC, ContextType, getContextType } from "../../src/prec/graph-reducer";
+import { applyPRSC, ContextType, getContextType } from "../../src/prec/apply-context";
 import assert from 'assert';
 import { revertPRSC } from "../../src/prsc";
 import * as RDF from "@rdfjs/types";

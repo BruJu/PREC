@@ -28,7 +28,7 @@ import { extractFromNeo4jProtocole } from './prec-0/from-cypher';
 import { getNodesOfType } from './rdf/path-travelling';
 import PseudoPGBuilder, { insertIntoGremlin, makeCypherQuery, PseudoPGEdge, PseudoPGNode } from './prec-0-1/proto-pg';
 import DStar from './dataset';
-import graphReducer, { ContextType, getContextType } from './prec/graph-reducer';
+import applyContext, { ContextType, getContextType } from './prec/apply-context';
 import { filenameToArrayOfQuads, outputTheStore } from './rdf/parsing';
 
 import { APOCDocument, CypherEntry } from "./prec-0/PGDefinitions";
@@ -281,7 +281,7 @@ function applyContextIfAnyAndPrint(
   contextPath: string | undefined
 ) {
   if (contextPath !== undefined) {
-    graphReducer(dataset, filenameToArrayOfQuads(contextPath));
+    applyContext(dataset, filenameToArrayOfQuads(contextPath));
   }
 
   outputDStar(dataset, prefixes);
@@ -324,7 +324,7 @@ export function stringToApocDocuments(fileContent: string): APOCDocument[] {
  */
 export function apocToRDF(documents: APOCDocument[], contextQuads: Quad[] = []): DStar {
   const store = neo4jJsToStore(documents)[0];
-  graphReducer(store, contextQuads);
+  applyContext(store, contextQuads);
   return store;
 }
 
@@ -340,7 +340,7 @@ export function apocToRDF(documents: APOCDocument[], contextQuads: Quad[] = []):
  */
 export function cypherJsontoRDF(cypherResult: CypherEntry[], contextQuads: Quad[] = []): DStar {
   const store = neo4JCypherToStore(cypherResult)[0];
-  graphReducer(store, contextQuads);
+  applyContext(store, contextQuads);
   return store;
 }
 
@@ -367,7 +367,7 @@ export async function gremlinToPREC0Graph(connection: DriverRemoteConnection) {
  */
 export async function gremlinToRDF(connection: DriverRemoteConnection, context: Quad[] = []) {
   return gremlinToPREC0Graph(connection).then(prec0Graph => {
-    graphReducer(prec0Graph, context);
+    applyContext(prec0Graph, context);
     return prec0Graph;
   });
 }
@@ -388,7 +388,7 @@ export async function cypherToRDF(connection: Driver, context?: Quad[]) {
     const [dataset, _] = neo4JProtocoleToStore(output.nodes, output.edges);
 
     if (context !== undefined) {
-      graphReducer(dataset, context);
+      applyContext(dataset, context);
     }
 
     return dataset;

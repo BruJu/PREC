@@ -1,7 +1,7 @@
 import * as utility from "./utility";
 import { checkOutput } from "./utility";
 import * as graphBuilder from '../src/prec/graph-builder';
-import graphReducer from "../src/prec/graph-reducer";
+import applyContext from "../src/prec/apply-context";
 import { PropertyGraph } from "./mock-pg/pg-implem";
 
 function runATest_(
@@ -13,7 +13,7 @@ function runATest_(
   it(graphName + " x " + contextName, function() {
     const store   = utility.turtleToDStar(dict[graphName]);
     const context = utility.turtleToQuads(dict[contextName]);
-    graphReducer(store, context);
+    applyContext(store, context);
 
     const expectedStore = utility.turtleToDStar(expected);
     checkOutput(dict[graphName], dict[contextName], store, expectedStore);
@@ -24,7 +24,7 @@ function test(name: string, source: string, context: string, expected: string) {
   it(name, function () {
     const store = utility.turtleToDStar(source);
     const ctx   = utility.turtleToQuads(context);
-    graphReducer(store, ctx);
+    applyContext(store, ctx);
 
     const expectedStore = utility.turtleToDStar(expected);
     checkOutput(source, context, store, expectedStore);
@@ -36,7 +36,7 @@ function testFromMockPG(name: string, source: PropertyGraph, context: string, ex
     const { nodes, edges } = source.convertToProductFromTinkerProp() as any;
     const store = graphBuilder.fromTinkerPop(nodes, edges)[0];
     const ctx = utility.turtleToQuads(context);
-    graphReducer(store, ctx);
+    applyContext(store, ctx);
 
     const expectedStore = utility.turtleToDStar(expected);
     checkOutput("", context, store, expectedStore);
