@@ -78,8 +78,8 @@
       <p><a href="https://github.com/BruJu/PREC/">PREC</a> is composed of three modules:</p>
       <ul>
         <li>[= PREC-0 =], a Property Graph to RDF graph converter</li>
-        <li><dfn>PRSC</dfn> (PG to RDF, Schema-based Converter; pronounced like the french word <em>Presque</em>), an RDF Graph generated from PREC-0 to more readable graphs converter, based on schemas.</li>
-        <li><dfn data-lt="PREC-Context">PREC-C</dfn> (PREC-Context), an RDF Graph generated from PREC-0 to more readable graphs converter</li>
+        <li>[= PRSC =] (PG to RDF, Schema-based Converter; pronounced like the french word <em>Presque</em>), an RDF Graph generated from PREC-0 to more readable graphs converter, based on schemas.</li>
+        <li>[= PREC-C =] (PREC-Context), an RDF Graph generated from PREC-0 to more readable graphs converter</li>
       </ul>
 
       <p>
@@ -117,10 +117,6 @@
         <a href="https://w3c.github.io/rdf-star/cg-spec/editors_draft.html#turtle-star">Turtle-Star</a>
         format.
       </p>
-
-      <aside class="warning" title="(Un)stability of the ontology">
-        <p>This ontology is currently very tentative and is subject to change.</p>
-      </aside>
 
       <aside class="note" title="Terminology">
         <p>
@@ -339,7 +335,7 @@
     </section>
 
     <section>
-      <h2>PRSC - Schema driven mapping</h3>
+      <h2><dfn>PRSC</dfn> - Schema driven mapping</h3>
 
         <p>
           PRSC contexts are contexts that transform all nodes and edges that
@@ -377,8 +373,15 @@
 
           <p>
             After cloning the repo, test it by running
-            `npx ts-node apoc2rdf prec.ts data\ex2_annlikesdan1.json -c data\ex2_prsc.ttl`
+            `npx ts-node prec apoc2rdf data\ex2_annlikesdan1.json -c data\ex2_prsc.ttl`
           </p>
+
+          <p><strong>Property graph:</strong> (its Neo4j APOC representation is stored in `data\ex2_annlikesdan1.json`)</p>
+          <pre>
+            ( ann   :Person { name: "Ann" } ) -[ :likes ]-> ( dann :Person { name: "Dan" } )
+          </pre>
+
+          <p><strong>PRSC context:</strong></p>
           <pre data-transform="updateExample"
             data-content-type="text/turtle"
             class="nohighlight"
@@ -402,7 +405,29 @@
             -->
           </pre>
 
-          TODO: an example PG and the resulting RDF graph
+          <p><strong>Output:</strong></p>
+          <pre data-transform="updateExample"
+            data-content-type="text/turtle"
+            class="nohighlight"
+          >
+          <!--
+            @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+            @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+            @prefix pgo: <http://ii.uwb.edu.pl/pgo#>.
+            @prefix prec: <http://bruy.at/prec#>.
+            @prefix nodeLabel: <http://www.example.org/vocab/node/label/>.
+            @prefix nodeProperty: <http://www.example.org/vocab/node/property/>.
+            @prefix edgeLabel: <http://www.example.org/vocab/edge/label/>.
+            @prefix edgeProperty: <http://www.example.org/vocab/edge/property/>.
+
+            _:node9 <http://example.org/hasLabel> <http://example.org/person>;
+                <http://example.org/name> "Ann";
+                <http://example.org/loves> _:node10.
+            _:node10 <http://example.org/hasLabel> <http://example.org/person>;
+                <http://example.org/name> "Dan".
+          -->
+        </pre>
+
         </aside>
       </section>
 
@@ -411,7 +436,7 @@
         <h3>Well-behaved PRSC contexts</h3>
 
         <p>
-          The PRSC contexts that follow the given rules are said Well-behaved:
+          The PRSC contexts that follow the given rules are said well-behaved:
           <ul>
             <li>All template triples contain the term `pvar:self`</li>
             <li>
@@ -432,6 +457,16 @@
               <em>signature template triples</em> and
               <em>unique template triples</em>.
             </li>
+          </ul>
+        </p>
+
+        <p>
+          You can check if a PRSC context is well-behaved with
+          `npx ts-node prec prscCheckWellBehaved path-to-your-context`:
+          <ul>
+            <li>`npx ts-node prec prscCheckWellBehaved data\ex2_prsc_wb.ttl`: Ok</li>
+            <li>`npx ts-node prec prscCheckWellBehaved data\ex2_prsc.ttl`: Ok thanks to the edge-unique extension</li>
+            <li>`npx ts-node prec prscCheckWellBehaved data\ex2_prsc_bad.ttl`: Not ok because a property is missing</li>
           </ul>
         </p>
 
@@ -468,7 +503,7 @@
     </section>
 
     <section>
-      <h2>PREC-C - Low level mapping</h2>
+      <h2><dfn data-lt="PREC-Context">PREC-C</dfn> - Low level mapping</h2>
       
         <p>
           Unlike PRSC contexts that only have rules for nodes and edges, PREC-C

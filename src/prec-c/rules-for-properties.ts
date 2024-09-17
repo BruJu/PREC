@@ -261,40 +261,42 @@ function instanciateProperty(
     ]
   )) as RDF.Quad[]);
 
-  // Split the template into 4 parts
+  // Split the template into 2 parts
   const pattern = r.reduce(
     (previous, quad) => {
       let containerName;
 
-      containerName = "mandatory";
-
       if (QuadStar.containsTerm(quad, $variable("individualValue"))) {
-        containerName += "Individual";
+        containerName = "withIndividualValue" as const;
+      } else {
+        containerName = "always" as const;
       }
 
-      (previous as any)[containerName].push(quad);
+      previous[containerName].push(quad);
       
       return previous;
     },
     {
-      mandatory: [] as RDF.Quad[],
-      mandatoryIndividual: [] as RDF.Quad[]
+      always: [] as RDF.Quad[],
+      withIndividualValue: [] as RDF.Quad[]
     }
   );
 
   const individualValues = extractIndividualValues(
     input,
     bindings.propertyValue as RDF.Quad_Object,
-    pattern.mandatoryIndividual.length === 0
+    pattern.withIndividualValue.length === 0
   );
 
-  let addedQuads = [];
+  let addedQuads: RDF.Quad[] = [];
   for (const holder of holders) {
     bindings.holder = holder;
-    addedQuads.push(...bindVariables(bindings as Bindings, pattern.mandatory));
+    addedQuads.push(...bindVariables(bindings as Bindings, pattern.always));
 
-    let indiv = bindVariables(bindings as Bindings, pattern.mandatoryIndividual)
-    addedQuads.push(...individualValues.flatMap(value => bindVariables({ "individualValue": value }, indiv)));
+    const indiv: RDF.Quad[] = bindVariables(bindings as Bindings, pattern.withIndividualValue)
+    addedQuads.push(...individualValues.flatMap(
+      value => bindVariables({ "individualValue": value }, indiv)
+    ));
   }
 
   let result: InstanciateResult = {
