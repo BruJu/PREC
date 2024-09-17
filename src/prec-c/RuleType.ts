@@ -25,15 +25,15 @@ export type RuleDomain = {
   readonly SubstitutionPredicate: RDF.NamedNode;
   
   /** Property holder substitution term (where are the properties going?) */
-  readonly PropertyHolderSubstitutionTerm: RDF.Term | null;
+  readonly SelfIdentityIs: RDF.Term | null;
 
-
-  readonly EntityIsHeuristic: RDF.NamedNode[][] | null;
+  /** Heuristic rules to detect the self identity / holder of properties */
+  readonly SelfIdentityHeuristic: RDF.NamedNode[][] | null;
 }
 
 export type Template = {
   quads: RDF.Quad[];
-  entityIs: RDF.Term[];
+  selfIs: RDF.Term[];
 }
 
 export interface Priorisable {

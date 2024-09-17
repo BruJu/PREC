@@ -49,14 +49,14 @@ function areEquivalentTemplates(name: string, domain: RuleDomain, rule1: string,
     );
 
     assert.ok(
-      isomorphic(nestTerms(template1.entityIs), nestTerms(template2.entityIs)),
+      isomorphic(nestTerms(template1.selfIs), nestTerms(template2.selfIs)),
       'terms should be iso'
     );
   });
 }
 
 
-function notEquivalentEntity(name: string, domain: RuleDomain, rule1: string, rule2: string) {
+function notEquivalentHolder(name: string, domain: RuleDomain, rule1: string, rule2: string) {
   it(name, () => {
     const template1 = loadTemplate(rule1, domain);
     const template2 = loadTemplate(rule2, domain);
@@ -67,20 +67,20 @@ function notEquivalentEntity(name: string, domain: RuleDomain, rule1: string, ru
     );
 
     assert.ok(
-      !isomorphic(nestTerms(template1.entityIs), nestTerms(template2.entityIs)),
+      !isomorphic(nestTerms(template1.selfIs), nestTerms(template2.selfIs)),
       'terms should not be iso'
     );
   });
 }
 
-function cantFindEntity(name: string, domain: RuleDomain, rule: string) {
+function cantFindHolder(name: string, domain: RuleDomain, rule: string) {
   it (name, () => {
     const template = loadTemplate(rule, domain);
 
     assert.ok(
-      template.entityIs.length === 0,
-      'should not be able to find entity but found <' + 
-      template.entityIs.map(t => termToString(t)).join("/") +
+      template.selfIs.length === 0,
+      'should not be able to find self identity but found <' + 
+      template.selfIs.map(t => termToString(t)).join("/") +
       ">"
     );
   })
@@ -95,35 +95,34 @@ const PrecRDFReification = `
   `;
 
 const PrecZeroProperty = `
-<< pvar:entity           pvar:propertyKey           pvar:propertyNode      >> ,
+<< pvar:holder           pvar:propertyKey           pvar:propertyNode      >> ,
 << pvar:propertyNode     rdf:value                  pvar:propertyValue     >> ,
-<< pvar:propertyNode     rdf:type                   prec:PropertyKeyValue  >> ,
-<< pvar:propertyNode     prec:hasMetaProperties     pvar:metaPropertyNode  >>
+<< pvar:propertyNode     rdf:type                   prec:PropertyKeyValue  >>
 `;
 
 const PrecDirectTriples = `
-<< pvar:entity pvar:propertyKey pvar:propertyValue >>
+<< pvar:holder pvar:propertyKey pvar:propertyValue >>
 `;
 
 const PrecCombined = `
-  << pvar:entity       pvar:propertyKey pvar:propertyNode     >> ,
+  << pvar:holder       pvar:propertyKey pvar:propertyNode     >> ,
   << pvar:propertyNode rdf:value        pvar:propertyValue    >> ,
   << pvar:propertyNode rdf:type         prec:PropertyKeyValue >>
 `;
 
 
 module.exports = () => {
-  describe("Implicit entity deduction", () => {
+  describe("Implicit self identity deduction", () => {
     
     areEquivalentTemplates(
       "The same template is itself", // testing the test
       EdgeRules.domain,      
       `
-        prec:edgeIs pvar:edge ;
+        prec:selfIs pvar:edge ;
         prec:produces ${PrecRDFReification} .
       `,
       `
-        prec:edgeIs pvar:edge ;
+        prec:selfIs pvar:edge ;
         prec:produces ${PrecRDFReification} .
       `
     );
@@ -133,17 +132,17 @@ module.exports = () => {
       EdgeRules.domain,
       ` prec:produces ${PrecRDFReification} .`,
       `
-        prec:edgeIs pvar:edge ;
+        prec:selfIs pvar:edge ;
         prec:produces ${PrecRDFReification} .
       `
     );
 
-    notEquivalentEntity(
+    notEquivalentHolder(
       "Can override",
       EdgeRules.domain,
       ` prec:produces ${PrecRDFReification} .`,
       `
-        prec:edgeIs :toto ;
+        prec:selfIs :toto ;
         prec:produces ${PrecRDFReification} .
       `
     );
@@ -153,7 +152,7 @@ module.exports = () => {
       EdgeRules.domain,
       ` prec:produces << pvar:source pvar:edgeIRI pvar:destination >> .`,
       `
-        prec:edgeIs     << pvar:source pvar:edgeIRI pvar:destination >> ;
+        prec:selfIs     << pvar:source pvar:edgeIRI pvar:destination >> ;
         prec:produces << pvar:source pvar:edgeIRI pvar:destination >> .
       `
     );
@@ -164,7 +163,7 @@ module.exports = () => {
       ` prec:produces << pvar:source pvar:edgeIRI pvar:destination >> .`,
       `
         prec:produces << pvar:source pvar:edgeIRI pvar:destination >> ;
-        prec:edgeIs << pvar:source pvar:edgeIRI pvar:destination >> .
+        prec:selfIs << pvar:source pvar:edgeIRI pvar:destination >> .
       `
     );
 
@@ -174,7 +173,7 @@ module.exports = () => {
       ` prec:produces ${PrecZeroProperty} .`,
       `
         prec:produces ${PrecZeroProperty} ;
-        prec:entityIs  pvar:metaPropertyNode .
+        prec:selfIs  pvar:propertyNode .
       `
     );
 
@@ -184,7 +183,7 @@ module.exports = () => {
       ` prec:produces ${PrecDirectTriples} .`,
       `
         prec:produces ${PrecDirectTriples} ;
-        prec:entityIs  << pvar:entity pvar:propertyKey pvar:propertyValue >> .
+        prec:selfIs  << pvar:holder pvar:propertyKey pvar:propertyValue >> .
       `
     );
 
@@ -194,16 +193,16 @@ module.exports = () => {
       ` prec:produces ${PrecCombined} .`,
       `
         prec:produces ${PrecCombined} ;
-        prec:entityIs   pvar:propertyNode .
+        prec:selfIs   pvar:propertyNode .
       `
     );
 
-    cantFindEntity("Should not be able to find any entity in an empty rule",
+    cantFindHolder("Should not be able to find any self identity in an empty rule",
       PropertyRules.domain,
       ` prec:_ prec:_ . `
     );
 
-    cantFindEntity("should not be able to find any entity if edge is broken",
+    cantFindHolder("should not be able to find any self identity if edge is broken",
       EdgeRules.domain,
       `
       prec:produces << :myGraph :hasNode        pvar:source      >> ;

@@ -34,7 +34,7 @@ module.exports = function (test: PrecCApplicationTester) {
       PGOProperty: `
         prec:Properties prec:templatedBy [
           prec:produces
-            << pvar:entity       pgo:hasProperty pvar:propertyNode  >> ,
+            << pvar:holder       pgo:hasProperty pvar:propertyNode  >> ,
             << pvar:propertyNode pgo:key         pvar:label         >> ,
             << pvar:propertyNode pgo:value       pvar:propertyValue >>
         ] .

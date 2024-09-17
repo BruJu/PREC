@@ -4,7 +4,7 @@
 
 ## https//bruy.at/prec-trans#edge
 
-## https//bruy.at/prec-trans#entity
+## https//bruy.at/prec-trans#holder
 
 ## https//bruy.at/prec-trans#source
 

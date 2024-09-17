@@ -30,7 +30,7 @@ ex:pgoEdge a prec:EdgeModel ;
     << pvar:edge pgo:startNode pvar:source        >> ,
     << pvar:edge pgo:endNode   pvar:destination   >> ,
     << pvar:edge pgo:label     pvar:label         >> ;
-  prec:edgeIs pvar:edge .
+  prec:selfIs pvar:edge .
 
 prec:Relationships prec:templatedBy ex:pgoEdge .
 prec:NodeLabels    prec:templatedBy ex:pgoNodeLabel .
@@ -40,7 +40,7 @@ prec:NodeLabels    prec:templatedBy ex:pgoNodeLabel .
 prec:NodeProperties    prec:templatedBy ex:pgoNodeProperty .
 ex:pgoNodeProperty a prec:PropertyModel ;
   prec:produces
-    << pvar:entity       pgo:hasNodeProperty  pvar:propertyNode     >> ,
+    << pvar:holder       pgo:hasNodeProperty  pvar:propertyNode     >> ,
     << pvar:propertyNode pgo:key              pvar:label             >> ,
     << pvar:propertyNode pgo:value            pvar:propertyValue     >> ,
     << pvar:propertyNode a pgo:Property >> ,
@@ -50,7 +50,7 @@ ex:pgoNodeProperty a prec:PropertyModel ;
 prec:RelationshipProperties    prec:templatedBy ex:pgoEdgeProperty .
 ex:pgoEdgeProperty a prec:PropertyModel ;
   prec:produces
-    << pvar:entity       pgo:hasEdgeProperty  pvar:propertyNode     >> ,
+    << pvar:holder       pgo:hasEdgeProperty  pvar:propertyNode     >> ,
     << pvar:propertyNode pgo:key              pvar:label             >> ,
     << pvar:propertyNode pgo:value            pvar:propertyValue     >> ,
     << pvar:propertyNode a pgo:Property >> ,
@@ -60,7 +60,7 @@ ex:pgoEdgeProperty a prec:PropertyModel ;
 prec:MetaProperties    prec:templatedBy ex:pgoMetaProperty .
 ex:pgoMetaProperty a prec:PropertyModel ;
   prec:produces
-    << pvar:entity      pgo:hasProperty      pvar:propertyNode     >> ,
+    << pvar:holder      pgo:hasProperty      pvar:propertyNode     >> ,
     << pvar:propertyNode pgo:key              pvar:label             >> ,
     << pvar:propertyNode pgo:value            pvar:propertyValue     >> ,
     << pvar:propertyNode a pgo:Property >> ,

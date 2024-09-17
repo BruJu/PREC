@@ -25,12 +25,13 @@ class PropertiesRuleClass implements RuleType {
     ShortcutIRI          : prec.IRIOfProperty,
     SubstitutionPredicate: prec.propertyIRI,
     
-    PropertyHolderSubstitutionTerm: prec.entityIs,
-    EntityIsHeuristic: [
+    SelfIdentityIs: prec.selfIs,
+    SelfIdentityHeuristic: [
       [pvar.metaPropertyNode],
       [pvar.propertyNode],
-      [pvar.entity, pvar.propertyKey, pvar.propertyValue  ],
-      [pvar.entity, pvar.propertyKey, pvar.individualValue],
+      [pvar.self],
+      [pvar.holder, pvar.propertyKey, pvar.propertyValue  ],
+      [pvar.holder, pvar.propertyKey, pvar.individualValue],
     ]
   };
 
@@ -110,13 +111,13 @@ class PropertyRule implements FilterProvider {
     }
 
     if (reservedFor.node && reservedFor.edge) {
-      this.conditions.push([$quad($variable("entity"), rdf.type, pgo.Node)]);
-      this.conditionsAlternative.push([$quad($variable("entity"), rdf.type, pgo.Edge)]);
+      this.conditions.push([$quad($variable("holder"), rdf.type, pgo.Node)]);
+      this.conditionsAlternative.push([$quad($variable("holder"), rdf.type, pgo.Edge)]);
     } else if (reservedFor.node) {
-      this.conditions.push([$quad($variable("entity"), rdf.type, pgo.Node)]);
+      this.conditions.push([$quad($variable("holder"), rdf.type, pgo.Node)]);
       this.conditionsAlternative = null;
     } else if (reservedFor.edge) {
-      this.conditionsAlternative.push([$quad($variable("entity"), rdf.type, pgo.Edge)]);
+      this.conditionsAlternative.push([$quad($variable("holder"), rdf.type, pgo.Edge)]);
       this.conditions = null;
     } else {
       this.conditionsAlternative = null;
@@ -130,7 +131,7 @@ class PropertyRule implements FilterProvider {
   ) {
     if (object.termType === 'Literal') {
       conditions.push([
-        $quad($variable("entity"), labelType , $variable("label")),
+        $quad($variable("holder"), labelType , $variable("label")),
         $quad($variable("label") , rdfs.label, object           )
       ]);
     } else {
@@ -148,12 +149,12 @@ class PropertyRule implements FilterProvider {
     .map(conditions => ({
       source: [
         $quad($variable("property"), prec.__appliedPropertyRule, prec._NoPropertyRuleFound),
-        $quad($variable("entity")  , $variable("propertyKey")   , $variable("property")     )
+        $quad($variable("holder")  , $variable("propertyKey")   , $variable("property")     )
       ],
       conditions: conditions!,
       destination: [
         $quad($variable("property"), prec.__appliedPropertyRule, this.ruleNode        ),
-        $quad($variable("entity")  , $variable("propertyKey")  , $variable("property"))
+        $quad($variable("holder")  , $variable("propertyKey")  , $variable("property"))
       ]
     }))
   }
@@ -164,19 +165,18 @@ class PropertyRule implements FilterProvider {
 //            ==== CONTEXT APPLICATION ==== CONTEXT APPLICATION ==== 
 
 /**
- * Return the type of the entity in the dataset, supposing it is either a node,
+ * Return the type of the holder in the dataset, supposing it is either a node,
  * an edge or a property, and these types are exclusive.
  * @param dataset The dataset
- * @param entity The entity
- * @returns The type of the entity if it is not a property, its PGO type
- * (`pgo.Node` or `pgo.Edge`) if it is one
+ * @param holder The holder
+ * @returns The type of the holder
  */
-function findTypeOfEntity(dataset: DStar, entity: RDF.Quad_Subject): RDF.NamedNode {
-  if (dataset.has($quad(entity, rdf.type, pgo.Node))) {
+function findTypeOfEntity(dataset: DStar, holder: RDF.Quad_Subject): RDF.NamedNode {
+  if (dataset.has($quad(holder, rdf.type, pgo.Node))) {
     return prec.NodeProperties;
   }
 
-  if (dataset.has($quad(entity, rdf.type, pgo.Edge))) {
+  if (dataset.has($quad(holder, rdf.type, pgo.Edge))) {
     return prec.EdgeProperties;
   }
 
@@ -186,7 +186,7 @@ function findTypeOfEntity(dataset: DStar, entity: RDF.Quad_Subject): RDF.NamedNo
 
 function applyMark(destination: DStar, mark: RDF.Quad, input: DStar, context: Context) {
   const src = [
-    $quad($variable("entity"), $variable("propertyKey"), mark.subject),
+    $quad($variable("holder"), $variable("propertyKey"), mark.subject),
     $quad(mark.subject, rdf.value, $variable("propertyValue")),
     $quad(mark.subject, rdf.type , prec.PropertyKeyValue)
   ];
@@ -202,7 +202,7 @@ function applyMark(destination: DStar, mark: RDF.Quad, input: DStar, context: Co
   const bindings = bindingss[0];
   bindings.property = mark.subject;
 
-  const typeOfHolder = findTypeOfEntity(input, bindings.entity as RDF.Quad_Subject);
+  const typeOfHolder = findTypeOfEntity(input, bindings.holder as RDF.Quad_Subject);
   const template = context.findPropertyTemplate(mark.object as RDF.Quad_Subject, typeOfHolder).quads;
   const { produced, usedProperties, listsToKeep } = instanciateProperty(input, mark.subject, template, context);
 
@@ -238,7 +238,7 @@ function instanciateProperty(
   context: Context
 ): InstanciateResult {
   const src = [
-    $quad($variable("entity"), $variable("propertyKey"), propertyNode),
+    $quad($variable("holder"), $variable("propertyKey"), propertyNode),
     $quad(propertyNode, rdf.value, $variable("propertyValue")),
     $quad(propertyNode, rdf.type , prec.PropertyKeyValue)
   ];
@@ -247,15 +247,16 @@ function instanciateProperty(
   bindings.label = input.getQuads(bindings.propertyKey as RDF.Quad_Subject, rdfs.label, null, $defaultGraph)[0].object;
   bindings.property = propertyNode;
 
-  const entities = deepResolve(bindings.entity as RDF.Quad_Subject, input, context);
+  const holders = deepResolve(bindings.holder as RDF.Quad_Subject, input, context);
 
   // Build the patterns to map to
   const r = (srcTemplate.map(term => QuadStar.remapPatternWithVariables(term,
     [
-      [$variable("entity")          , pvar.entity          ],
+      [$variable("holder")          , pvar.holder          ],
       [$variable("propertyKey")     , pvar.propertyKey     ],
       [$variable("label")           , pvar.label           ],
       [$variable("property")        , pvar.propertyNode    ],
+      [$variable("property")        , pvar.self            ],
       [$variable("propertyValue")   , pvar.propertyValue   ],
       [$variable("individualValue") , pvar.individualValue ],
       [$variable("metaPropertyNode"), pvar.metaPropertyNode],
@@ -303,8 +304,8 @@ function instanciateProperty(
   })();
 
   let addedQuads = [];
-  for (const entity of entities) {
-    bindings.entity = entity;
+  for (const holder of holders) {
+    bindings.holder = holder;
     addedQuads.push(...bindVariables(bindings as Bindings, pattern.mandatory));
 
     let indiv = bindVariables(bindings as Bindings, pattern.mandatoryIndividual)
@@ -375,7 +376,7 @@ function deepResolve(termToResolve: RDF.Quad_Subject, inputDataset: DStar, conte
       inputDataset.getQuads(termToResolve, prec.__appliedEdgeRule, null, $defaultGraph)[0]
       .object as RDF.Quad_Subject;
     
-    return context.findEdgeTemplate(ruleNode).entityIs
+    return context.findEdgeTemplate(ruleNode).selfIs
       .map(theEntityTemplate => {
         const trueEntityTemplate = QuadStar.remapPatternWithVariables(
           theEntityTemplate,
@@ -395,14 +396,14 @@ function deepResolve(termToResolve: RDF.Quad_Subject, inputDataset: DStar, conte
     const binding = inputDataset.matchAndBind([
       $quad($variable('propertyNode'), prec.hasMetaProperties, termToResolve),
       $quad($variable('propertyNode'), prec.__appliedPropertyRule, $variable('ruleNode')),
-      $quad($variable('entity'), $variable('whatever'), $variable('propertyNode'))
+      $quad($variable('holder'), $variable('whatever'), $variable('propertyNode'))
     ])[0];
     
     const ruleNode = binding.ruleNode as RDF.Quad_Subject;
     const propertyNode = binding.propertyNode as RDF.Quad_Subject;
 
-    return context.findPropertyTemplate(ruleNode, findTypeOfEntity(inputDataset, binding.entity as RDF.Quad_Subject))
-      .entityIs
+    return context.findPropertyTemplate(ruleNode, findTypeOfEntity(inputDataset, binding.holder as RDF.Quad_Subject))
+      .selfIs
       .map(term => $quad(term as RDF.Quad_Subject, prec._, prec._))
       .map(me => instanciateProperty(inputDataset, propertyNode, [me], context).produced)
       .flatMap(producedQuads => producedQuads.map(quad => quad.subject));

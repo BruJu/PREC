@@ -20,8 +20,8 @@ class NLRuleClass implements RuleType {
     ShortcutIRI          : prec.IRIOfNodeLabel,
     SubstitutionPredicate: prec.nodeLabelIRI,
   
-    PropertyHolderSubstitutionTerm: null,
-    EntityIsHeuristic: null,
+    SelfIdentityIs: null,
+    SelfIdentityHeuristic: null,
   };
 
   readonly mark = prec.__appliedNodeRule;

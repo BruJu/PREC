@@ -271,7 +271,7 @@ class SplitNamespace {
 }
 
 export function readRawTemplate(dataset: DStar, template: RDF.Term, ruleDomain: RuleDomain)
-: { templateGraph: RDF.Quad[], entityIs: RDF.Term[] }
+: { templateGraph: RDF.Quad[], selfIs: RDF.Term[] }
 {
   // Load the abstract template
   let templateGraph = dataset.getQuads(template, prec.produces, null, $defaultGraph)
@@ -292,25 +292,25 @@ export function readRawTemplate(dataset: DStar, template: RDF.Term, ruleDomain: 
 
     if (allPositions.some(position => forbiddenTerms.has(templateQuad[position]))) {
       const str = "Invalid template, pvar:(metaP|p)roperty(Object|Predicate) are obsolete. Use [] "
-        + termToString(ruleDomain.PropertyHolderSubstitutionTerm) + " instead."
+        + termToString(ruleDomain.SelfIdentityIs) + " instead."
 
       throw Error(str);
     }
   }
     
-  let entityIs: RDF.Term[] = [];
+  let selfIs: RDF.Term[] = [];
       
-  if (ruleDomain.PropertyHolderSubstitutionTerm !== null) {
-    entityIs = dataset
-      .getQuads(template, ruleDomain.PropertyHolderSubstitutionTerm, null, $defaultGraph)
+  if (ruleDomain.SelfIdentityIs !== null) {
+    selfIs = dataset
+      .getQuads(template, ruleDomain.SelfIdentityIs, null, $defaultGraph)
       .map(q => q.object);
 
-    if (entityIs.length === 0) {
-      entityIs = findImplicitEntity(ruleDomain.EntityIsHeuristic || [], templateGraph) || [];
+    if (selfIs.length === 0) {
+      selfIs = findImplicitSelfIdentity(ruleDomain.SelfIdentityHeuristic || [], templateGraph) || [];
     }
   }
 
-  return { templateGraph, entityIs };
+  return { templateGraph, selfIs };
 }
 
 /**
@@ -339,7 +339,7 @@ function _buildTemplate(dataset: DStar, materializations: SplitDefMaterializatio
     }
   }
     
-  const { templateGraph, entityIs } = readRawTemplate(dataset, template, ruleDomain);
+  const { templateGraph, selfIs } = readRawTemplate(dataset, template, ruleDomain);
 
   function remapFunc(term: RDF.Quad) {
     return QuadStar.eventuallyRebuildQuad(
@@ -350,7 +350,7 @@ function _buildTemplate(dataset: DStar, materializations: SplitDefMaterializatio
 
   return {
     quads: templateGraph.map(remapFunc),
-    entityIs: entityIs.map(term => remapFunc($quad(prec._, prec._, term as RDF.Quad_Object)).object)
+    selfIs: selfIs.map(term => remapFunc($quad(prec._, prec._, term as RDF.Quad_Object)).object)
   };
 }
 
@@ -367,7 +367,7 @@ function isAMainComponentOf(term: RDF.Term, quad: RDF.Quad): boolean {
     || quad.graph.equals(term);
 }
 
-function findImplicitEntity(searchedTermss: RDF.NamedNode[][], quads: RDF.Quad[]) {
+function findImplicitSelfIdentity(searchedTermss: RDF.NamedNode[][], quads: RDF.Quad[]) {
   for (const searchedTerms of searchedTermss) {
     const c = quads.filter(q => searchedTerms.every(term => isAMainComponentOf(term, q)));
 

@@ -22,8 +22,8 @@ class EdgesRuleClass implements RuleType {
     ShortcutIRI          : prec.IRIOfEdgeLabel,
     SubstitutionPredicate: prec.edgeIRI,
   
-    PropertyHolderSubstitutionTerm: prec.edgeIs,
-    EntityIsHeuristic: [
+    SelfIdentityIs: prec.selfIs,
+    SelfIdentityHeuristic: [
       [pvar.edge],
       [pvar.self],
       [pvar.source, pvar.edgeIRI, pvar.destination]

@@ -16,13 +16,13 @@ prec:EdgeProperties prec:templatedBy prec:pgoEdgeProperty .
 prec:Edges          prec:templatedBy prec:pgoEdgeRepresentation .
 
 prec:pgoNodeProperty prec:produces
-    << pvar:entity pgo:hasNodeProperty pvar:propertyNode >> ,
+    << pvar:holder pgo:hasNodeProperty pvar:propertyNode >> ,
     << pvar:propertyNode pgo:key pvar:label >> ,
     << pvar:propertyNode pgo:value pvar:propertyValue >> ,
     << pvar:propertyNode rdf:type pgo:Property >> .
 
 prec:pgoEdgeProperty prec:produces
-    << pvar:entity pgo:hasEdgeProperty pvar:propertyNode >> ,
+    << pvar:holder pgo:hasEdgeProperty pvar:propertyNode >> ,
     << pvar:propertyNode pgo:key pvar:label >> ,
     << pvar:propertyNode pgo:value pvar:propertyValue >> ,
     << pvar:propertyNode rdf:type pgo:Property >> .
@@ -32,7 +32,7 @@ prec:pgoEdgeRepresentation prec:produces
     << pvar:edge pgo:endNode            pvar:destination    >> ,
     << pvar:edge pgo:label              pvar:edgeIRI        >> ,
     << pvar:edge rdf:type               pgo:Edge            >> ;
-  prec:edgeIs pvar:edge .
+  prec:selfIs pvar:edge .
 
 # -- Some IRIs
 

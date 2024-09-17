@@ -58,7 +58,7 @@ module.exports = function (test: PrecCApplicationTester) {
       `
         prec:Edges prec:templatedBy [
           prec:produces << << pvar:source pvar:edgeIRI pvar:destination >> :isA :triple >> ;
-          prec:edgeIs        << pvar:destination pvar:edgeIRI pvar:source >>
+          prec:selfIs        << pvar:destination pvar:edgeIRI pvar:source >>
         ] .
 
         prec:Properties prec:templatedBy [
@@ -70,7 +70,7 @@ module.exports = function (test: PrecCApplicationTester) {
                 << :thatIs :valued pvar:propertyValue >>
               >>
               :isOnTheReversed
-              << :theThing :named pvar:entity >>
+              << :theThing :named pvar:holder >>
             >>
         ] .
       `,

@@ -28,8 +28,8 @@ module.exports = function (testFromPREC0: TestFromPREC0) {
         prec:KeepProvenance prec:flagState false .
     
         prec:CartesianProduct a prec:PropertyTemplate ;
-          prec:produces << pvar:entity pvar:propertyKey pvar:individualValue >> ;
-          prec:entityIs << pvar:entity pvar:propertyKey pvar:individualValue >> .
+          prec:produces << pvar:holder pvar:propertyKey pvar:individualValue >> ;
+          prec:selfIs << pvar:holder pvar:propertyKey pvar:individualValue >> .
         
         [] a prec:PropertyRule ;
           prec:propertyKey "Property" ;
@@ -76,22 +76,22 @@ module.exports = function (testFromPREC0: TestFromPREC0) {
     testFromPREC0(
       "Regular property conversion",
       simpleProperty,
-      templatedBy("<< pvar:entity pvar:propertyKey pvar:propertyValue >>"),
+      templatedBy("<< pvar:holder pvar:propertyKey pvar:propertyValue >>"),
       ':node a pgo:Node ; :k ( "a" "b" "c" ) .'
     );
 
     testFromPREC0(
       "Only keep individual values",
       simpleProperty,
-      templatedBy("<< pvar:entity pvar:propertyKey pvar:individualValue >>"),
+      templatedBy("<< pvar:holder pvar:propertyKey pvar:individualValue >>"),
       ':node a pgo:Node ; :k "a", "b", "c" .'
     );
 
     testFromPREC0(
       "Keep both",
       simpleProperty,
-      templatedBy("<< pvar:entity pvar:propertyKey pvar:individualValue >> ,"
-          + "\n << pvar:entity :usedList pvar:propertyValue >>"),
+      templatedBy("<< pvar:holder pvar:propertyKey pvar:individualValue >> ,"
+          + "\n << pvar:holder :usedList pvar:propertyValue >>"),
       ':node a pgo:Node ; :k "a", "b", "c" ; :usedList ( "a" "b" "c" ) .'
     );
   });
