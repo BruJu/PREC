@@ -94,19 +94,17 @@ describe("Property convertion", () => {
         rdf:value "NAME VALUE 1" .
         
       :name_value_2 a prec:PropertyKeyValue ;
-        rdf:value "NAME VALUE 2" ;
-        prec:hasMetaProperties :name_value_2_meta_properties .
+        rdf:value "NAME VALUE 2" .
         
       :town_value a prec:PropertyKeyValue ;
-        rdf:value "LYON" ;
-        prec:hasMetaProperties :town_value_meta_properties .
+        rdf:value "LYON" .
         
-      :name_value_2_meta_properties :description :name_value_2_meta_properties_description .
+      :name_value_2 :description :name_value_2_meta_properties_description .
 
       :name_value_2_meta_properties_description a prec:PropertyKeyValue ;
         rdf:value "NAME VALUE 2: Meta Property" .
         
-      :town_value_meta_properties
+      :town_value
         :description :town_value_meta_properties_description ;
         :name :town_value_meta_properties_name .
         
@@ -234,16 +232,14 @@ describe("Property convertion", () => {
           rdf:value "NAME VALUE 1" .
         
         :name_value_2 a prec:PropertyKeyValue ;
-          rdf:value "NAME VALUE 2" ;
-          prec:hasMetaProperties :name_value_2_meta_properties .
+          rdf:value "NAME VALUE 2"  .
         
         :town_value a prec:PropertyKeyValue ;
-          rdf:value "LYON" ;
-          prec:hasMetaProperties :town_value_meta_properties .
+          rdf:value "LYON" .
         
-        :name_value_2_meta_properties :description "NAME VALUE 2: Meta Property" .
+        :name_value_2 :description "NAME VALUE 2: Meta Property" .
         
-        :town_value_meta_properties
+        :town_value
           :description "Not like the animal" ;
           :name "Capital of Lights" .
       `

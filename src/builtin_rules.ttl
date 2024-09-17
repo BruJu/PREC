@@ -76,9 +76,8 @@ prec:propertyValue a prec:SubstitutionPredicate ; prec:substitutionTarget pvar:p
 # pvar:holder           pvar:propertyKey       pvar:propertyNode
 # pvar:propertyNode     rdf:value              pvar:propertyValue
 # pvar:propertyNode     a prec:PropertyKeyValue .
-# pvar:propertyNode     prec:hasMetaProperties     pvar:MetaPropertyNode   # optional
 # 
-# [] prec:selfIs pvar:metaPropertyNode .
+# [] prec:selfIs pvar:propertyNode .
 #
 # For meta properties, the property rule is applied recursively.
 #
@@ -86,12 +85,11 @@ prec:propertyValue a prec:SubstitutionPredicate ; prec:substitutionTarget pvar:p
 # pvar:propertyKey   a prec:PropertyKey   .
 
 prec:Prec0Property a prec:PropertyTemplate ;
-  prec:selfIs pvar:metaPropertyNode ;
+  prec:selfIs pvar:propertyNode ;
   prec:produces
     << pvar:holder           pvar:propertyKey           pvar:propertyNode      >> ,
     << pvar:propertyNode     rdf:value                  pvar:propertyValue     >> ,
-    << pvar:propertyNode     rdf:type                   prec:PropertyKeyValue  >> ,
-    << pvar:propertyNode     prec:hasMetaProperties     pvar:metaPropertyNode  >> .
+    << pvar:propertyNode     rdf:type                   prec:PropertyKeyValue  >> .
 
 prec:DirectTriples a prec:PropertyTemplate ;
   prec:selfIs   << pvar:holder pvar:propertyKey pvar:propertyValue >> ;
@@ -102,13 +100,6 @@ prec:DirectTriples a prec:PropertyTemplate ;
     property with at least twice the same value.
     """@en
     .
-
-prec:CombinedBlankNodes a prec:PropertyTemplate ;
-  prec:selfIs pvar:propertyNode ;
-  prec:produces
-    << pvar:entity       pvar:propertyKey pvar:propertyNode     >> ,
-    << pvar:propertyNode rdf:value        pvar:propertyValue    >> ,
-    << pvar:propertyNode rdf:type         prec:PropertyKeyValue >> .
 
 
 ##################

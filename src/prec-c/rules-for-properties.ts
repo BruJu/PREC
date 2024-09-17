@@ -27,7 +27,6 @@ class PropertiesRuleClass implements RuleType {
     
     SelfIdentityIs: prec.selfIs,
     SelfIdentityHeuristic: [
-      [pvar.metaPropertyNode],
       [pvar.propertyNode],
       [pvar.self],
       [pvar.holder, pvar.propertyKey, pvar.propertyValue  ],
@@ -258,8 +257,7 @@ function instanciateProperty(
       [$variable("property")        , pvar.propertyNode    ],
       [$variable("property")        , pvar.self            ],
       [$variable("propertyValue")   , pvar.propertyValue   ],
-      [$variable("individualValue") , pvar.individualValue ],
-      [$variable("metaPropertyNode"), pvar.metaPropertyNode],
+      [$variable("individualValue") , pvar.individualValue ]
     ]
   )) as RDF.Quad[]);
 
@@ -268,11 +266,7 @@ function instanciateProperty(
     (previous, quad) => {
       let containerName;
 
-      if (QuadStar.containsTerm(quad, $variable("metaPropertyNode"))) {
-        containerName = "optional";
-      } else {
-        containerName = "mandatory";
-      }
+      containerName = "mandatory";
 
       if (QuadStar.containsTerm(quad, $variable("individualValue"))) {
         containerName += "Individual";
@@ -284,9 +278,7 @@ function instanciateProperty(
     },
     {
       mandatory: [] as RDF.Quad[],
-      optional: [] as RDF.Quad[],
-      mandatoryIndividual: [] as RDF.Quad[],
-      optionalIndividual: [] as RDF.Quad[]
+      mandatoryIndividual: [] as RDF.Quad[]
     }
   );
 
@@ -294,14 +286,7 @@ function instanciateProperty(
     input,
     bindings.propertyValue as RDF.Quad_Object,
     pattern.mandatoryIndividual.length === 0
-    && pattern.optionalIndividual.length === 0
   );
-    
-  const metaProperties = (() => {
-    const theQuads = input.getQuads(propertyNode, prec.hasMetaProperties, null, $defaultGraph);
-    if (theQuads.length === 0) return null;
-    return theQuads[0].object;
-  })();
 
   let addedQuads = [];
   for (const holder of holders) {
@@ -310,20 +295,6 @@ function instanciateProperty(
 
     let indiv = bindVariables(bindings as Bindings, pattern.mandatoryIndividual)
     addedQuads.push(...individualValues.flatMap(value => bindVariables({ "individualValue": value }, indiv)));
-
-
-    if (metaProperties !== null) {
-      let [opt1, optN] = bindMultipleVariableSets(
-        [bindings as Bindings, { metaPropertyNode: metaProperties }],
-        [
-          pattern.optional,
-          pattern.optionalIndividual
-        ]
-      );
-
-      addedQuads.push(...opt1);
-      addedQuads.push(...individualValues.flatMap(value => bindVariables({ "individualValue": value }, optN)));
-    }
   }
 
   let result: InstanciateResult = {
@@ -394,13 +365,12 @@ function deepResolve(termToResolve: RDF.Quad_Subject, inputDataset: DStar, conte
       });
   } else if (myType.equals(prec.MetaProperties)) {
     const binding = inputDataset.matchAndBind([
-      $quad($variable('propertyNode'), prec.hasMetaProperties, termToResolve),
-      $quad($variable('propertyNode'), prec.__appliedPropertyRule, $variable('ruleNode')),
-      $quad($variable('holder'), $variable('whatever'), $variable('propertyNode'))
+      $quad(termToResolve, prec.__appliedPropertyRule, $variable('ruleNode')),
+      $quad($variable('holder'), $variable('whatever'), termToResolve)
     ])[0];
     
     const ruleNode = binding.ruleNode as RDF.Quad_Subject;
-    const propertyNode = binding.propertyNode as RDF.Quad_Subject;
+    const propertyNode = termToResolve;
 
     return context.findPropertyTemplate(ruleNode, findTypeOfEntity(inputDataset, binding.holder as RDF.Quad_Subject))
       .selfIs
@@ -441,12 +411,4 @@ function extractIndividualValues(dataset: DStar, propertyValue: RDF.Quad_Object,
   }
 
   return result;
-}
-
-function bindMultipleVariableSets(listOfBindings: Bindings[], pattern: RDF.Quad[][]) {
-  for (let bindings of listOfBindings) {
-    pattern = bindVariables(bindings, pattern);
-  }
-
-  return pattern;
 }

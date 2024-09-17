@@ -215,35 +215,6 @@
           <a href="http://ii.uwb.edu.pl/pgo#Property">pgo:Property</a> in the
           PREC-0 modelization.</p>
         </section>
-        
-        <section>
-          <h4><dfn data-lt="prec:hasMetaProperties">http://bruy.at/prec#hasMetaProperties</dfn></h4>
-
-          <p>States to which (RDF) node the meta properties of a property are
-            attached to.</p>
-
-            <aside class="example">
-              <p>Bob lives in Paris and is a tenant of his appartment.</p>
-
-              <pre data-transform="updateExample"
-                 data-content-type="text/turtle"
-                 class="nohighlight"
-              >
-                <!--
-                _:bob :live_in [
-                    rdf:type prec:PropertyKeyValue ;
-                    rdf:value "Paris" ;
-                    prec:hasMetaProperties [
-                        :status [ rdf:value "Tenant" ; rdf:type prec:PropertyKeyValue ]
-                    ]
-                ] .
-                
-                :live_in a prec:PropertyKey .
-                :status  a prec:PropertyKey .
-                -->
-              </pre>
-            </aside>
-        </section>
       </section>
 
     </section>
@@ -733,7 +704,6 @@
             <!--
             _:eitherTheNodeOrTheEdge :propertyKey _:aBlankNode .
             _:aBlankNode rdf:value "The value of the property" .
-            _:aBlankNode prec:hasMetaProperties _:aNodeWithTheMetaPropertiesIfAny .
             
             :propertyKey a prec:PropertyKey ; rdfs:label "The name of the property" .
             _:aBlankNode a prec:PropertyKeyValue .
@@ -948,20 +918,29 @@
             <h5><dfn data-lt="prec:Prec0Property">http://bruy.at/prec#Prec0Property</dfn></h5>
 
             <p>
-              Properties are modeled in the format presented in the
-              [= prec:hasMetaProperties =] example. This is the default
-              behaviour.
+             This is the default behaviour.
             </p>
-          </section>
 
-          <section>
-            <h5><dfn data-lt="prec:CombinedBlankNodes">http://bruy.at/prec#CombinedBlankNodes</dfn></h5>
+            
+            <aside class="example">
+              <p>Bob lives in Paris and is a tenant of his appartment.</p>
 
-            <p>
-              Properties are modeled in the same format as
-              [= prec:Prec0Property =], but the `propertyValue` and the
-              `metaProperty` nodes are merged.
-            </p>
+              <pre data-transform="updateExample"
+                 data-content-type="text/turtle"
+                 class="nohighlight"
+              >
+                <!--
+                _:bob :lives_in [
+                    rdf:type prec:PropertyKeyValue ;
+                    rdf:value "Paris" ;
+                    :status [ rdf:value "Tenant" ; rdf:type prec:PropertyKeyValue ]
+                ] .
+                
+                :lives_in a prec:PropertyKey ; rdfs:label "lives_in" .
+                :status  a prec:PropertyKey  ; rdfs:label "status" .
+                -->
+              </pre>
+            </aside>
           </section>
 
           <section>
@@ -1129,7 +1108,6 @@
               <li>`pvar:property`: The blank node that represents the property.</li>
               <li>`pvar:propertyValue`: The literal that contains the property value.</li>
               <li>`pvar:individualValue`: Most of the time equals to `propertyValue`. If `propertyValue` is an rdf list, `individualValue` will match each individual literal contained in the list instead of the list itself.</li>
-              <li>`pvar:metaPropertyNode`: The blank node that contains every meta property, as described in [= prec:hasMetaProperties =]</li>
               <li>`prec:selfIs`: The term to which the meta properties must be bound.</li>
             </ul>
 

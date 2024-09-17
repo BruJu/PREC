@@ -72,6 +72,7 @@ function hasForbiddenTerms(quads: RDF.Quad[]): RDF.Term[] | null {
     prec.edgeIs, prec.entityIs,
     pvar.entity /* pvar:holder */ , 
     prec.SubstitutionTerm /* prec:SubstitutionPredicate */,
+    pvar.metaPropertyNode /* Meta properties are now held by pvar:propertyNode / pvar:self */, 
   ]);
 
   const seenTerms = new TermSet();

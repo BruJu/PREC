@@ -15,9 +15,8 @@ module.exports = function (testFromPREC0: TestFromPREC0) {
         :node a pgo:Node ;
           :property [
             a prec:PropertyKeyValue ; rdf:value ( "A" "B" "C" "D" "E" ) ;
-            prec:hasMetaProperties [
-              :property [ a prec:PropertyKeyValue ; rdf:value ( 1 2 3 ) ]
-            ]
+
+            :property [ a prec:PropertyKeyValue ; rdf:value ( 1 2 3 ) ]
           ] .
         
         :property a prec:PropertyKey, prec:CreatedPropertyKey ;
@@ -116,9 +115,7 @@ module.exports = function (testFromPREC0: TestFromPREC0) {
       :property1_bn a prec:PropertyKeyValue ; rdf:value "Value 1" .
       :property2_bn a prec:PropertyKeyValue ; rdf:value "Value 2" .
       
-      :property2_bn prec:hasMetaProperties :meta_property .
-
-      :meta_property :property1 :meta_property_bn .
+      :property2_bn :property1 :meta_property_bn .
       :meta_property_bn a prec:PropertyKeyValue ; rdf:value "TheMetaProperty" .
     `;
 

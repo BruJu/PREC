@@ -17,7 +17,7 @@ import { rdf, rdfs, pgo, prec } from '../PRECNamespace';
  * Converts a list of nodes and edges from a Neo4J property graph into an
  * RDF/JS dataset that contains the PREC-0 RDF Graph.
  * 
- * @param {*} neo4jJavascriptArray The list of Json objects exported from
+ * @param neo4jJavascriptArray The list of Json objects exported from
  * Neo4J APOC plugin.
  */
 export function neo4jJsToStore(
@@ -389,8 +389,7 @@ class BuilderForTPProperties extends RDFGraphBuilder<TinkerPopProperties> {
 
       // META
       if (propertyObject.meta !== undefined) {
-        let metaNode = DataFactory.blankNode();
-        this._addQuad(o, prec.hasMetaProperties, metaNode);
+        let metaNode = o;
         
         for (let metaKey in propertyObject.meta) {
           let metaValue = propertyObject.meta[metaKey];
