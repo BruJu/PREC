@@ -36,7 +36,7 @@ function sortArrayByPriority(array: Priorisable[]) {
     } else if (rhs[0] === undefined) {
       return 1;
     } else if (lhs[0] !== rhs[0]) {
-      return rhs[0] - lhs[0];
+      return lhs[0] - rhs[0];
     }
 
     // Our priority

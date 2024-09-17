@@ -102,21 +102,21 @@
 :priorityGraphBase prec:testIsBaseOf :allPriority, :animalPriority, :foodPriority, :defaultPriority .
 
 :allPriority {
-    :prop_food_name   prec:priority 1 .
+    :prop_food_name   prec:priority 3 .
     :prop_animal_name prec:priority 2 .
-    :prop_all_name    prec:priority 3 .
+    :prop_all_name    prec:priority 1 .
 }
 
 :animalPriority {
     :prop_food_name   prec:priority 2 .
-    :prop_animal_name prec:priority 3 .
-    :prop_all_name    prec:priority 1 .
+    :prop_animal_name prec:priority 1 .
+    :prop_all_name    prec:priority 3 .
 }
 
 :foodPriority {
-    :prop_food_name   prec:priority 3 .
+    :prop_food_name   prec:priority 1 .
     :prop_animal_name prec:priority 2 .
-    :prop_all_name    prec:priority 1 .
+    :prop_all_name    prec:priority 3 .
 }
 
 :allPriorityResult    { _:egg a :Food, :Animal ; :all_name    "Oeufs" . }
