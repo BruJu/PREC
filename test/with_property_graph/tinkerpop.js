@@ -20,7 +20,7 @@ const fromGremlin = require('../../src/prec-0/from-gremlin');
  * :> g.V().drop().iterate()
  * 
  * 
- * Note that the : and the :> are important
+ * Note that the : and the :> are part of the command
  */
 
 // TODO: how to delete a graph?
