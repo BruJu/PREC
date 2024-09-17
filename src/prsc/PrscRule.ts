@@ -8,7 +8,8 @@ import DStar from "../dataset";
 import { $defaultGraph, $quad, prec, precValueOf, pvar, rdf } from '../PRECNamespace';
 import { followAll, followThrough } from "../rdf/path-travelling";
 import * as QuadStar from '../rdf/quad-star';
-import { characterizeTriple, extractBnsIn, PRSCContextViolation, SignatureTripleOf } from "./PrscContext";
+import { characterizeTriple, extractBnsIn } from "./index";
+import { PRSCContextViolation, SignatureTripleOf } from "./PrscContext";
 
 const xsdString = DataFactory.namedNode("http://www.w3.org/2001/XMLSchema#string");
 
@@ -19,7 +20,7 @@ const xsdString = DataFactory.namedNode("http://www.w3.org/2001/XMLSchema#string
 export type PRSCRule = {
   /** An RDF term to uniquely identify this rule */
   readonly identity: RDF.Quad_Subject;
-  /** The kind of the PG elements: either a node or an edge */
+  /** The kind of the PG element: either a node or an edge */
   readonly kind: 'edge' | 'node';
   /** The list of labels of the type */
   readonly labels: string[];
@@ -101,7 +102,7 @@ export function buildRule(context: DStar, identity: RDF.Quad_Subject)
  * - it is in a graph whose name is in object position of (identity, prec:produces, -)
  * - There exists a path between a blank node used in a quoted triple of prec:produces
  * and a blank node used in the default graph in object position.
- * @param context The template graph
+ * @param context The context graph
  * @param identity The rule identifier
  * @returns The list of triples that composes the template graph
  */
@@ -162,7 +163,7 @@ function readTemplate(context: DStar, identity: RDF.Quad_Subject): RDF.Quad[] {
  * Find the signature of every given rule.
  * 
  * The signatures are returned in the format (Signature Triple, the rule).
- * Users that want to ensure that all rules has a signature must check if
+ * Users that want to ensure that all rules have a signature must check if
  * the result.length === rules.length.
  * @param rules The list of rules
  */
@@ -184,7 +185,7 @@ export function findSignatureOfRules(rules: PRSCRule[]): SignatureTripleOf[] {
         // not ok: This template triple is shared by several rules
         found.set(characterized, null);
       } else {
-        // f === null, we know this template triple is not signature
+        // f === null, we already know this template triple is not signature
       }
     };
   }

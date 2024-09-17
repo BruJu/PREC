@@ -3,7 +3,7 @@ import { fromTinkerPop } from '../../src/prec/graph-builder';
 import { turtleToQuads, turtleToDStar, checkOutput } from "../utility";
 import { applyPRSC, ContextType, getContextType } from "../../src/prec/graph-reducer";
 import assert from 'assert';
-import { revertPrecC } from "../../src/prsc/PrscContext";
+import { revertPRSC } from "../../src/prsc";
 import * as RDF from "@rdfjs/types";
 
 enum RevertableType {
@@ -35,11 +35,11 @@ function test(
     checkOutput("", context, store, expectedStore);
 
     if (revertable === true) {
-      const prec0Graph = revertPrecC(expectedStore, ctx);
+      const prec0Graph = revertPRSC(expectedStore, ctx);
       checkOutput("PRSC reversiblity", context, prec0Graph, cleanSource);
     } else if (revertable === RevertableType.ShouldThrow
       || revertable === RevertableType.ShouldThrowForNow) {
-      assert.throws(() => revertPrecC(expectedStore, ctx));
+      assert.throws(() => revertPRSC(expectedStore, ctx));
     }
   });
 }

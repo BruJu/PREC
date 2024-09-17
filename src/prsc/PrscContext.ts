@@ -7,17 +7,14 @@ import * as RDFString from 'rdf-string';
 import DStar from "../dataset";
 import {
   rdf, rdfs, pgo, prec, pvar,
-  $quad, $literal, $variable, $defaultGraph,
+  $quad, $variable, $defaultGraph,
   precValueOf
 } from '../PRECNamespace';
 
 import { followThrough } from "../rdf/path-travelling";
 import { eventuallyRebuildQuad } from "../rdf/quad-star";
 import { buildRule, findSignatureOfRules, PRSCRule } from "./PrscRule";
-import { rdfToPREC0 } from "./prsc-reversion";
 export { PRSCRule };
-
-const pvarPrefix = "http://bruy.at/prec-trans#";
 
 ////////////////////////////////////////////////////////////////////////////////
 // General purpose utilty functions
@@ -36,9 +33,19 @@ export function haveSameStrings(lhs: string[], rhs: string[]): boolean {
 ////////////////////////////////////////////////////////////////////////////////
 // Schema detection
 
+/**
+ * A PRSC context = a mapping from PG types to template graphs
+ */
 export class PRSCContext {
   prscRules: PRSCRule[] = [];
 
+  /**
+   * Build a PRSC context from a context = a list of RDF triples with
+   * PRSC node rules and PRSC edge rules
+   * @param contextQuads The list of RDF triples that composes the context
+   * @returns A PRSC context object, or a list of violations for a well-formed
+   * PRSC context
+   */
   static build(contextQuads: RDF.Quad[]): { context: PRSCContext } | { violations: PRSCContextViolation[] } {
     const rules: PRSCRule[] = [];
     const violations: PRSCContextViolation[] = [];
@@ -72,29 +79,43 @@ export class PRSCContext {
     this.prscRules = rules;
   }
 
-  apply(dataset: DStar): DStar {
+  /**
+   * Converts the PG provided as PREC-0 graph into a idiomatic RDF graph using
+   * this context
+   * @param dataset The PREC-0 property graph
+   * @returns The produced RDF graph
+   */
+  apply(pg: DStar): DStar {
     let result = new DStar();
 
-    for (const pgElement of dataset.match(null, rdf.type, pgo.Node, $defaultGraph)) {
-      this.produceQuads(dataset, pgElement.subject, 'node', result);
+    for (const pgElement of pg.match(null, rdf.type, pgo.Node, $defaultGraph)) {
+      this.produceQuads(pg, pgElement.subject, 'node', result);
     }
 
-    for (const pgElement of dataset.match(null, rdf.type, pgo.Edge, $defaultGraph)) {
-      this.produceQuads(dataset, pgElement.subject, 'edge', result);
+    for (const pgElement of pg.match(null, rdf.type, pgo.Edge, $defaultGraph)) {
+      this.produceQuads(pg, pgElement.subject, 'edge', result);
     }
 
     return result;
   }
 
-  private produceQuads(dataset: DStar, element: RDF.Quad_Subject, t: 'node' | 'edge', result: DStar) {
+  /**
+   * Add into result the RDF triples produced from the given PG element with this context
+   * @param pg The PREC-0 property graph
+   * @param element The PG element
+   * @param t Is the element a node or an edge?
+   * @param result The output RDF graph
+   */
+  private produceQuads(pg: DStar, element: RDF.Quad_Subject, t: 'node' | 'edge', result: DStar) {
     const toLabel = t === 'node' ? rdf.type : rdf.predicate;
 
+    // The labels and property key-values of the PG element
     let pgElement = {
-      labels: dataset.matchAndBind([
+      labels: pg.matchAndBind([
         $quad(element, toLabel, $variable('labelIRI')),
         $quad($variable('labelIRI'), rdfs.label, $variable('label'))
       ]).map(binding => (binding.label as RDF.Term).value),
-      properties: dataset.matchAndBind([
+      properties: pg.matchAndBind([
         $quad(element, $variable('propertyKey'), $variable('blankNode')),
         $quad($variable('propertyKey'), rdfs.label, $variable('propertyNameLabel')),
         $quad($variable('blankNode'), rdf.value, $variable('value'))
@@ -112,6 +133,7 @@ export class PRSCContext {
       }, {} as {[propName: string]: RDF.Quad_Object})
     };
 
+    // Find the rule from the type of the PG element
     const rule = this.prscRules.find(rule => {
       if (rule.kind !== t) return false;
       if (!haveSameStrings(rule.labels, pgElement.labels)) return false;
@@ -123,71 +145,33 @@ export class PRSCContext {
       throw Error(`No rule matches the PG ${t} mapped to ${RDFString.termToString(element)}`);
     }
 
+    // Build the RDF triples from the template graph and the type of the PG element
     buildRdfTriplesFromRule(
       result, 
       rule.template, element, pgElement.properties,
-      t === 'edge' ? followThrough(dataset, element, rdf.subject)! as RDF.Quad_Subject : undefined,
-      t === 'edge' ? followThrough(dataset, element, rdf.object )! as RDF.Quad_Subject : undefined
+      t === 'edge' ? followThrough(pg, element, rdf.subject)! as RDF.Quad_Subject : undefined,
+      t === 'edge' ? followThrough(pg, element, rdf.object )! as RDF.Quad_Subject : undefined
     );
   }
 
+  /**
+   * Return the list of all rules with their role (node, edge or edge-unique) and one
+   * signature template triple
+   * @returns All signatures
+   */
   getAllSignatures(): SignatureTripleOf[] {
     return findSignatureOfRules(this.prscRules);
   }
-}
-
-/** A pair with a rule and (one of) its signature triple. */
-export type SignatureTripleOf = {
-  rule: PRSCRule;
-  kind: 'node' | 'edge' | 'edge-unique';
-  signature: RDF.Quad;
-};
-
-export type PRSCContextViolation = { identity: RDF.Quad_Subject } & (
-  { type: 'rule_bad_type_qtt', message: string }
-  | { type: 'rule_given_bad_type', foundType: RDF.Quad_Object }
-  | { type: 'template_has_invalid_prop_name', propName: string }
-);
-
-export function violationsToString(violations: PRSCContextViolation[], delimiter: string = " ; "): string {
-  return violations.map(violation => violationToString(violation)).join(delimiter);
-}
-
-export function violationToString(violation: PRSCContextViolation): string {
-  if (violation.type === 'rule_bad_type_qtt') {
-    return `${RDFString.termToString(violation.identity)} does not have exactly one type`;
-  } else if (violation.type === 'rule_given_bad_type') {
-    return `${RDFString.termToString(violation.identity)} has the type ${RDFString.termToString(violation.foundType)} `
-      + 'which is different from the expected types prec:PRSCNodeRule and prec:PRSCEdgeRule.'
-  } else if (violation.type === 'template_has_invalid_prop_name') {
-    return RDFString.termToString(violation.identity)
-      + " uses the property name " + violation.propName
-      + " in its template but it is not a property in the described type."
-  } else {
-    return 'Unknown violation';
-  }
-}
-
-export function unwrapContext(r: { context: PRSCContext } | { violations: PRSCContextViolation[] }): PRSCContext {
-  if ('violations' in r) {
-    throw Error("The given schema is invalid: " + violationsToString(r.violations));
-  }
-
-  return r.context;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// ==== Structural description graph -> Idiomatic Graph
-
-export default function precCwithPRSC(dataset: DStar, contextQuads: RDF.Quad[]): DStar {
-  const context = unwrapContext(PRSCContext.build(contextQuads));
-  return context.apply(dataset);
 }
 
 /**
  * Produce the triples related to the PG element `pgElement` in the output
  * graph by instantiating the template graph with the values contained in the
  * PREC-0 format PG.
+ * 
+ * Basically the build function in papers, but the relevant information inside
+ * the PG is provided inside the `properties`, `source` and `destination`
+ * parameters.
  * 
  * @param output The graph that will be filled
  * @param templateGraph The template graph
@@ -236,39 +220,66 @@ function buildRdfTriplesFromRule(
   });
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-// ==== Structural description graph <- Idiomatic Graph
-
-export function revertPrecC(dataset: DStar, contextQuads: RDF.Quad[]): DStar {
-  const context = unwrapContext(PRSCContext.build(contextQuads));
-  return rdfToPREC0(dataset, context);
-}
-
+/** A pair with a rule and (one of) its signature triple. */
+export type SignatureTripleOf = {
+  rule: PRSCRule;
+  kind: 'node' | 'edge' | 'edge-unique';
+  signature: RDF.Quad;
+};
 
 /**
- * Characterize the triple
- * 
- * IRI -> IRI
- * Blank Node and pvar -> B (the literal "BlankNode")
- * Literals and Literals datatyped precValueOf -> L (the literal "Literal")
+ * Error types for invalid PRSC context
  */
-export function characterizeTriple(quad: RDF.Quad) {
-  return eventuallyRebuildQuad(quad, term => {
-    if (term.termType === 'Literal') {
-      return $literal("Literal", precValueOf);
-    } else if (term.termType === 'BlankNode') {
-      return $literal('BlankNode', prec._placeholder);
-    } else if (term.termType === 'NamedNode' && term.value.startsWith(pvarPrefix)) {
-      return $literal('BlankNode', prec._placeholder);
-    } else {
-      return term;
-    }
-  });
+export type PRSCContextViolation = { identity: RDF.Quad_Subject } & (
+  { type: 'rule_bad_type_qtt', message: string }
+  | { type: 'rule_given_bad_type', foundType: RDF.Quad_Object }
+  | { type: 'template_has_invalid_prop_name', propName: string }
+);
+
+/**
+ * Convert a list of PRSC context violations to a string
+ */
+export function violationsToString(violations: PRSCContextViolation[], delimiter: string = " ; "): string {
+  return violations.map(violation => violationToString(violation)).join(delimiter);
+}
+
+/**
+ * Convert a PRSC context violation to a string
+ */
+export function violationToString(violation: PRSCContextViolation): string {
+  if (violation.type === 'rule_bad_type_qtt') {
+    return `${RDFString.termToString(violation.identity)} does not have exactly one type`;
+  } else if (violation.type === 'rule_given_bad_type') {
+    return `${RDFString.termToString(violation.identity)} has the type ${RDFString.termToString(violation.foundType)} `
+      + 'which is different from the expected types prec:PRSCNodeRule and prec:PRSCEdgeRule.'
+  } else if (violation.type === 'template_has_invalid_prop_name') {
+    return RDFString.termToString(violation.identity)
+      + " uses the property name " + violation.propName
+      + " in its template but it is not a property in the described type."
+  } else {
+    return 'Unknown violation';
+  }
+}
+
+/**
+ * Return the context built from a list of context RDF triples, but throws if
+ * there were any violations.
+ * @param r The output of `PRSCContext.build(contextTriples)`
+ * @returns `r.context`
+ */
+export function unwrapContext(r: { context: PRSCContext } | { violations: PRSCContextViolation[] }): PRSCContext {
+  if ('violations' in r) {
+    throw Error("The given schema is invalid: " + violationsToString(r.violations));
+  }
+
+  return r.context;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Give the list of blank nodes inside the given quad
+ */
 export function extractBnsIn(quad: RDF.Quad): RDF.BlankNode[] {
   let result: RDF.BlankNode[] = [];
 

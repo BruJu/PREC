@@ -2,7 +2,8 @@ import TermMap from "@rdfjs/term-map";
 import TermSet from "@rdfjs/term-set";
 import * as RDF from "@rdfjs/types";
 import DStar from "../dataset";
-import { characterizeTriple, extractBnsIn, haveSameStrings, PRSCContext, PRSCRule, SignatureTripleOf } from "./PrscContext";
+import { characterizeTriple, extractBnsIn } from './index';
+import { haveSameStrings, PRSCContext, PRSCRule, SignatureTripleOf } from "./PrscContext";
 import * as RDFString from 'rdf-string';
 import {
   $blankNode, $quad, $literal,
@@ -15,7 +16,7 @@ import { DataFactory } from "n3";
 
 const ex = namespace("http://www.example.org/", { factory: DataFactory });
 
-/** A Blank Node Property Graph described with its types and projections */
+/** A Blank Node Property Graph described by the projection of each PG element */
 type RDFPGraph = {
   /** List of nodes */ nodes: RDFPGNode[];
   /** List of edges */ edges: RDFPGEdge[];
@@ -38,8 +39,8 @@ type RDFPGEdge = RDFPGElement & {
 };
 
 /**
- * Conver thte given RDF graph into an PREC-0 RDF-graph by using the given
- * Well-behaved PRSC context.
+ * Convert the given RDF graph into a PREC-0 RDF graph by using the given
+ * well-behaved PRSC context.
  * @param rdfGraph The RDF graph
  * @param context The well behaved PRSC context
  * @returns The PREC-0 graph.
@@ -73,7 +74,7 @@ function rdfToRDFPG(rdfGraph: RDF.DatasetCore, context: PRSCContext): RDFPGraph 
 /**
  * Convert a Blank Node Property Graph into the PREC-0 graph
  * @param typedBlankNodePropertyGraph The PG to convert
- * @returns The PREC0 graph
+ * @returns The PREC-0 graph
  */
 function toPREC0(typedBlankNodePropertyGraph: RDFPGraph) {
   const elements = [
@@ -153,7 +154,7 @@ function findElements(rdfGraph: RDF.DatasetCore): RDF.BlankNode[] {
  * @returns The mapping from the elements to their types
  */
 function findTypeOfElements(rdfGraph: RDF.DatasetCore, signatures: SignatureTripleOf[], elements: RDF.BlankNode[]) {
-  // Map-pize the signatures
+  // Map-ize the signatures
   const signaturesMap = new TermMap<RDF.Quad, SignatureTripleOf>();
   for (const signature of signatures) {
     if (signature.kind === 'edge-unique') continue;
@@ -247,7 +248,7 @@ function associateTriplesWithElements(
 
     const edges = bns.filter(bn => typeOf.get(bn)?.kind === 'edge');
     if (edges.length > 1) {
-      throw Error("More than one edge found in an edge");
+      throw Error("More than one edge found in an edge triple");
     } else if (edges.length === 1) {
       addInBuiltFrom(edges[0], quad);
     } else {
@@ -256,7 +257,7 @@ function associateTriplesWithElements(
       if (nodes.length === 2) {
         edgeUniqueQuads.push(quad);
       } else {
-        throw Error("Found a a triple with 0 edge and >= 3 nodes");
+        throw Error("Found a triple with 0 edge and >= 3 nodes");
       }
     }
   }
@@ -289,7 +290,7 @@ function buildPropertyGraph(
 
     if (!haveSameStrings([...properties.keys()], typeOfElement.properties)) {
       throw Error(
-        "An element do not have all its properties "
+        "An element does not have all its properties "
         + RDFString.termToString(element)
         + " ; Expected: " + typeOfElement.properties.join("/")
         + " - Actual: " + [...properties.keys()].join("/")
@@ -394,14 +395,14 @@ function computeProperties(
 /** A path in an RDF triple */
 type AccessorPath = ('subject' | 'predicate' | 'object')[];
 
-/** A way to access data in RDF triples */
+/** A way to access data in RDF triples through a path */
 class Accessor {
   /** The information that can be found */
   readonly information: string | NodePlaceholder;
   /** The path to travel to read it */
   readonly path: AccessorPath;
 
-  /** Return the term located at the position described by this object */
+  /** Return the term located at the position described by this accessor */
   access(term: RDF.Quad): RDF.Term | undefined {
     return Accessor.follow(term, this.path, 0);
   }
@@ -414,7 +415,7 @@ class Accessor {
    * @param i The position from which to follow the path
    * @returns The term located at the described path
    */
-  static follow(term: RDF.Term, path: AccessorPath, i: number): RDF.Term | undefined {
+  private static follow(term: RDF.Term, path: AccessorPath, i: number): RDF.Term | undefined {
     if (i === path.length) return term;
     if (term.termType !== 'Quad') return undefined;
     return this.follow(term[path[i]], path, i + 1);
@@ -427,12 +428,22 @@ class Accessor {
   }
 
   /**
-   * Generate an accessor to extract all placeholders in the given template
+   * Generate accessors to extract all placeholders in the given template
    * triple (expect the self placeholder).
    * @param templateTriple The template triple
    * @returns The list of all accessors.
    */
   static generate(templateTriple: RDF.Quad): Accessor[] {
+    /**
+     * - If on a term, if the term is a placeholder, then
+     * create an accessor that tells that the information
+     * stored in the placeholder can be directly accessed.
+     * - If on a triple:
+     *   - Call itself on the subject, predicate, object
+     *   - On returned accessors, add the fact that we have
+     *   to go throught the subject, predicate or object
+     *   to access the information.
+     */
     function visit(templateTerm: RDF.Term): Accessor[] {
       if (templateTerm.termType === 'BlankNode') {
         return [];
@@ -472,8 +483,22 @@ class Accessor {
   }
 }
 
+/**
+ * Return the list of all valuable information stored in the
+ * template graph = the location of all property value of PG elements,
+ * and the source and destination of PG edges, inside the template graph.
+ * 
+ * Return the list of :
+ * - unique template triple
+ * (unique = there should only be one matching triple in the produced RDF graph),
+ * - For each template triple, all information stored by it and where to find it
+ * (for example, "the value of the name property" is stored in object position).
+ * @param templateGraph The template graph
+ * @returns The list of all unique template triples and the information it
+ * contains (and where)
+ */
 function computeAccessibleProperties(templateGraph: RDF.Quad[]): TermMap<RDF.Quad, Accessor[]> {
-  // Compute unique template triples
+  // Compute the list of unique template triples
   const uniqueTemplates = new TermMap<RDF.Quad, RDF.Quad | null>();
 
   for (const templateTriple of templateGraph) {
@@ -487,7 +512,7 @@ function computeAccessibleProperties(templateGraph: RDF.Quad[]): TermMap<RDF.Qua
     }
   }
 
-  // Build accessors
+  // Build the list accessors for each unique template triples
   const allAccessors = new TermMap<RDF.Quad, Accessor[]>();
 
   for (const [kappaValue, uniqueTemplateTriple] of uniqueTemplates.entries()) {
@@ -526,11 +551,13 @@ function extractEdgeUniques(edgeUniqueQuads: RDF.Quad[], signatures: SignatureTr
       if (generator === undefined) {
         kappaToGenerator.set(kappaValue, { template: templateTriple, rule: rule });
       } else if (generator.rule === rule) {
+        // Not unique ->
         // Can not use this template triple as it is not unique, but we can
-        // still manage to revert if we ignore both templates
+        // still manage to revert if we ignore both templates (this one and the previously found one)
         generator.template = null;
       } else {
-        throw Error(`Not all triples in edge unique type ${RDFString.termToString(rule.identity)} are signature and unique`);
+        // Not signature -> no recovery
+        throw Error(`Not all triples in edge unique type ${RDFString.termToString(rule.identity)} are signatures and uniques`);
       }
     }
   }

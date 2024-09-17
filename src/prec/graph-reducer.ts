@@ -8,7 +8,7 @@ import * as RDF from "@rdfjs/types";
 
 import { rdf, pgo, prec, $defaultGraph, pvar } from '../PRECNamespace';
 
-import prsc from '../prsc/PrscContext';
+import prsc from '../prsc';
 import { termToString } from 'rdf-string';
 
 // =============================================================================

@@ -8,7 +8,7 @@ import {
   $quad, $literal, $blankNode,
   precValueOf, pvarSelf, pvarSource, pvarDestination
 } from '../src/PRECNamespace';
-import { characterizeTriple } from '../src/prsc/PrscContext';
+import { characterizeTriple } from '../src/prsc';
 
 const ex   = namespace("http://example.org/"       , { factory: DataFactory });
 

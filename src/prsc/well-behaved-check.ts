@@ -2,7 +2,8 @@ import TermMap from '@rdfjs/term-map';
 import TermSet from "@rdfjs/term-set";
 import * as RDF from "@rdfjs/types";
 import * as RDFString from 'rdf-string';
-import { characterizeTriple, haveSameStrings, PRSCContext } from './PrscContext';
+import { characterizeTriple } from './index';
+import { haveSameStrings, PRSCContext } from './PrscContext';
 import { PRSCRule, findSignatureOfRules } from './PrscRule';
 import { precValueOf, pvarDestination, pvarEdge, pvarNode, pvarSelf, pvarSource } from "../PRECNamespace";
 import * as QuadStar from '../rdf/quad-star';
@@ -95,15 +96,15 @@ export function noValueLoss(rule: PRSCRule): boolean {
   for (const templateTriple of kappaToTriple.values()) {
     if (templateTriple === null) continue;
 
-    const args = extractArgs(templateTriple);
+    const placeholders = extractPlaceholders(templateTriple);
 
-    for (const arg of args) {
-      if (arg === NodePlaceholder.Source) {
+    for (const placeholder of placeholders) {
+      if (placeholder === NodePlaceholder.Source) {
         foundValues.src = true;
-      } else if (arg === NodePlaceholder.Destination) {
+      } else if (placeholder === NodePlaceholder.Destination) {
         foundValues.dest = true;
       } else {
-        foundValues.labels.add(arg);
+        foundValues.labels.add(placeholder);
       }
     }
   }
@@ -116,7 +117,7 @@ export function noValueLoss(rule: PRSCRule): boolean {
 
 
 /** Extract the list of placeholders in the template triple */
-function extractArgs(templateTriple: RDF.Quad): (string | NodePlaceholder)[] {
+function extractPlaceholders(templateTriple: RDF.Quad): (string | NodePlaceholder)[] {
   let result: (string | NodePlaceholder)[] = [];
 
   function visit(term: RDF.Term) {
