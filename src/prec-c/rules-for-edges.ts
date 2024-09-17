@@ -14,13 +14,13 @@ import {
 
 class EdgesRuleClass implements RuleType {
   readonly domain: RuleDomain = {
-    RuleType          : prec.EdgeRule,
-    DefaultTemplate   : prec.RDFReification,
-    MainLabel         : prec.label,
-    PossibleConditions: [prec.sourceLabel, prec.destinationLabel],
-    TemplateBases     : [prec.Edges],
-    ShortcutIRI       : prec.IRIOfEdgeLabel,
-    SubstitutionTerm  : prec.edgeIRI,
+    RuleType             : prec.EdgeRule,
+    DefaultTemplate      : prec.RDFReification,
+    MainLabel            : prec.label,
+    PossibleConditions   : [prec.sourceLabel, prec.destinationLabel],
+    TemplateBases        : [prec.Edges],
+    ShortcutIRI          : prec.IRIOfEdgeLabel,
+    SubstitutionPredicate: prec.edgeIRI,
   
     PropertyHolderSubstitutionTerm: prec.edgeIs,
     EntityIsHeuristic: [

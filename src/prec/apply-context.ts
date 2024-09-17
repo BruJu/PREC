@@ -68,6 +68,7 @@ function hasForbiddenTerms(quads: RDF.Quad[]): RDF.Term[] | null {
     prec.prsc_edge /* use prec:PRSCEdgeRule */,
     prec.nodeLabel, prec.edgeLabel, /* use prec:label */
     prec._valueOf, prec.prsc_valueOf, /* use "propertyKey"^^prec:valueOf */
+    prec.SubstitutionTerm /* prec:SubstitutionPredicate */,
   ]);
 
   const seenTerms = new TermSet();

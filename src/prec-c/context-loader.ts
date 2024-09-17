@@ -588,7 +588,7 @@ export function replaceSynonyms(dataset: DStar) {
  * 
  * The fully developed rule is:
  * ```
- * [] a <IRIs.RuleType> ; <IRIs.MainLabel> label ; <IRIs.SubstitutionTerm> iri .
+ * [] a <IRIs.RuleType> ; <IRIs.MainLabel> label ; <IRIs.SubstitutionPredicate> iri .
  * ```
  * with prec:IRIOfThing = `IRIs.ShortcutIRI`
  * 
@@ -610,9 +610,9 @@ export function removeSugarForRules(dstar: DStar, IRIs: RuleDomain) {
     }
 
     const ruleNode = $blankNode("SugarRule[" + label.value + "=>" + iri.value + "]");
-    dstar.add($quad(ruleNode, rdf.type             , IRIs.RuleType));
-    dstar.add($quad(ruleNode, IRIs.MainLabel       , label));
-    dstar.add($quad(ruleNode, IRIs.SubstitutionTerm, iri));
+    dstar.add($quad(ruleNode, rdf.type                  , IRIs.RuleType));
+    dstar.add($quad(ruleNode, IRIs.MainLabel            , label));
+    dstar.add($quad(ruleNode, IRIs.SubstitutionPredicate, iri));
   }
 
   dstar.removeQuads(sugared);

@@ -12,13 +12,13 @@ import {
 
 class NLRuleClass implements RuleType {
   readonly domain: RuleDomain = {
-    RuleType          : prec.NodeLabelRule,
-    DefaultTemplate   : prec.NodeLabelsTypeOfLabelIRI,
-    MainLabel         : prec.label,
-    PossibleConditions: [],
-    TemplateBases     : [prec.NodeLabels],
-    ShortcutIRI       : prec.IRIOfNodeLabel,
-    SubstitutionTerm  : prec.nodeLabelIRI,
+    RuleType             : prec.NodeLabelRule,
+    DefaultTemplate      : prec.NodeLabelsTypeOfLabelIRI,
+    MainLabel            : prec.label,
+    PossibleConditions   : [],
+    TemplateBases        : [prec.NodeLabels],
+    ShortcutIRI          : prec.IRIOfNodeLabel,
+    SubstitutionPredicate: prec.nodeLabelIRI,
   
     PropertyHolderSubstitutionTerm: null,
     EntityIsHeuristic: null,

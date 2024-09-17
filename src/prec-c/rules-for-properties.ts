@@ -13,17 +13,17 @@ import { termToString } from 'rdf-string';
 
 class PropertiesRuleClass implements RuleType {
   readonly domain: RuleDomain = {
-    RuleType          : prec.PropertyRule,
-    DefaultTemplate   : prec.Prec0Property,
-    MainLabel         : prec.propertyKey,
-    PossibleConditions: [prec.label, prec.onKind],
+    RuleType             : prec.PropertyRule,
+    DefaultTemplate      : prec.Prec0Property,
+    MainLabel            : prec.propertyKey,
+    PossibleConditions   : [prec.label, prec.onKind],
     TemplateBases: [
       prec.NodeProperties,
       prec.EdgeProperties,
       prec.MetaProperties
     ],
-    ShortcutIRI       : prec.IRIOfProperty,
-    SubstitutionTerm  : prec.propertyIRI,
+    ShortcutIRI          : prec.IRIOfProperty,
+    SubstitutionPredicate: prec.propertyIRI,
     
     PropertyHolderSubstitutionTerm: prec.entityIs,
     EntityIsHeuristic: [

@@ -1366,7 +1366,7 @@
               Like [= prec:Edges =], it is possible to define a target
               template for edge rules by using the [= prec:templatedBy =]
               predicate. It is also possible to apply any
-              [= prec:SubstitutionTerm =]s, and not only
+              [= prec:SubstitutionPredicate =]s, and not only
               [= prec:edgeIRI =].
             </p>
           </section>
@@ -1588,7 +1588,7 @@
                 prec:label "Like" ;
                 prec:sourceLabel "Animal" ;
                 prec:priority 1 ;
-                prec:edgeIRI ex:kind_of_accepts .
+                prec:edgeIRI ex:kinds_of_accept .
               -->
             </pre>
           </aside>
@@ -1688,7 +1688,7 @@
               </li>
               <li>
                 <dfn data-lt="prec:nodeLabelIRI">http://bruy.at/prec#nodeLabelIRI</dfn>:
-                The [= prec:SubstitutionTerm =] for `pvar:nodeLabelIRI`
+                The [= prec:SubstitutionPredicate =] for `pvar:nodeLabelIRI`
               </li>
               <li>
                 <dfn data-lt="prec:NodeLabelsTypeOfLabelIRI">http://bruy.at/prec#NodeLabelsTypeOfLabelIRI</dfn>:
@@ -1794,18 +1794,18 @@
 
         <p>
           The reason why [= prec:edgeIRI =] can modify the template is
-          because it is defined as a [= prec:SubstitutionTerm =] for
+          because it is defined as a [= prec:SubstitutionPredicate =] for
           `pvar:edgeIRI`: when used in a rule,
           [= prec:edgeIRI =] will look for every `pvar:edgeIRI`
           occurrence, and replace it with something else.
         </p>
 
         <section>
-          <h4><dfn data-lt="prec:SubstitutionTerm">http://bruy.at/prec#SubstitutionTerm</dfn></h4>
+          <h4><dfn data-lt="prec:SubstitutionPredicate">http://bruy.at/prec#SubstitutionPredicate</dfn></h4>
 
           <p>
             The type of substitution terms. To be effective, a
-            [= prec:SubstitutionTerm =] should have a value for
+            [= prec:SubstitutionPredicate =] should have a value for
             [= prec:substitutionTarget =].
           </p>
         </section>
@@ -1825,7 +1825,7 @@
               class="nohighlight"
             >
               <!--
-              prec:subject a prec:SubstitutionTerm ;
+              prec:subject a prec:SubstitutionPredicate ;
                 prec:substitutionTarget rdf:subject.
               -->
             </pre>
