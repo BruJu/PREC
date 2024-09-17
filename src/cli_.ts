@@ -26,7 +26,7 @@ import {
 
 import { extractFromNeo4jProtocole } from './prec-0/from-cypher';
 import { getNodesOfType } from './rdf/path-travelling';
-import PseudoPGBuilder, { insertIntoGremlin, makeCypherQuery, PseudoPGEdge, PseudoPGNode } from './prec-0-1/proto-pg';
+import PseudoPGBuilder, { insertIntoGremlin, makeCypherQuery, PseudoPGEdge, PseudoPGNode } from './prec-0/prec-0-reversion';
 import DStar from './dataset';
 import applyContext, { ContextType, getContextType } from './prec/apply-context';
 import { filenameToArrayOfQuads, outputTheStore } from './rdf/parsing';
@@ -34,7 +34,8 @@ import { filenameToArrayOfQuads, outputTheStore } from './rdf/parsing';
 import { APOCDocument, CypherEntry } from "./prec-0/PGDefinitions";
 import fromGremlin from './prec-0/from-gremlin';
 
-import { PRSCContext, revertPrecC, violationToString } from './prsc/PrscContext';
+import { revertPRSC } from './prsc';
+import { PRSCContext, violationToString } from './prsc/PrscContext';
 
 import gremlin from 'gremlin';
 import { Driver } from 'neo4j-driver';
@@ -411,7 +412,7 @@ function revertRdfGraphToPseudoPg(rdfPath: string, options: any) {
     }
 
     const dstar = new DStar(quads);
-    const prec0Graph = revertPrecC(dstar, ctxQuads);
+    const prec0Graph = revertPRSC(dstar, ctxQuads);
     quads = [...prec0Graph];
   }
 

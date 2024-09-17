@@ -1,5 +1,3 @@
-'use strict';
-
 import { BlankNode, Literal, Quad, Quad_Graph, Quad_Object, Quad_Predicate, Quad_Subject } from "@rdfjs/types";
 import { APOCDocument, CypherEdge, CypherEntry, CypherNode, IdentityTo, TinkerPopEdge, TinkerPopNode, TinkerPopProperties } from "../prec-0/PGDefinitions";
 
