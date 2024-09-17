@@ -8,26 +8,25 @@ import Context from "./Context";
  */
 export type RuleDomain = {
   /** The type of the rules */
-  readonly RuleType          : RDF.NamedNode;
+  readonly RuleType             : RDF.NamedNode;
   /** The default template for the data affected by this rule */
-  readonly DefaultTemplate   : RDF.Term;
+  readonly DefaultTemplate      : RDF.Term;
   /** The predicate to address the label of the element */
-  readonly MainLabel         : RDF.NamedNode;
+  readonly MainLabel            : RDF.NamedNode;
   /** The possible conditions */
-  readonly PossibleConditions: RDF.Term[];
+  readonly PossibleConditions   : RDF.Term[];
   /**
    * The list of domain nodes
    */
-  readonly TemplateBases     : (RDF.NamedNode | RDF.BlankNode)[]
+  readonly TemplateBases        : (RDF.NamedNode | RDF.BlankNode)[]
   /** The term used for short rules (`:name prec:IRIOFProperty "Name".`) */
-  readonly ShortcutIRI       : RDF.NamedNode;
-  /** The substitution term for the label */
-  readonly SubstitutionTerm  : RDF.NamedNode;
+  readonly ShortcutIRI          : RDF.NamedNode;
+  /** The substitution predicate for the label */
+  readonly SubstitutionPredicate: RDF.NamedNode;
   
   /** Property holder substitution term (where are the properties going?) */
   readonly PropertyHolderSubstitutionTerm: RDF.Term | null;
 
-  // TODO: Use real substitutions instead of this
 
   readonly EntityIsHeuristic: RDF.NamedNode[][] | null;
 }

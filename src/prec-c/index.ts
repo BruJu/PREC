@@ -51,7 +51,7 @@ function ruleBasedProduction(dataset: DStar, context: Context): DStar {
 
   const preservedLabels = new TermSet<RDF.Term>();
   
-  for (const nepManager of context.entityManagers) {
+  for (const nepManager of context.nepManagers) {
     const ruleType = nepManager.ruleset;
 
     for (const mark of dataset.getQuads(null, ruleType.mark, null, $defaultGraph)) {

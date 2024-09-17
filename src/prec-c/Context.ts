@@ -18,11 +18,11 @@ import { prec } from '../PRECNamespace';
  * uses proper IRIs and easier to use reification representations.
  */
 export default class Context {
-  edges: XX.EntitiesManager;
-  properties: XX.EntitiesManager;
-  nodeLabels: XX.EntitiesManager;
+  edges: XX.NEPManager;
+  properties: XX.NEPManager;
+  nodeLabels: XX.NEPManager;
 
-  entityManagers: XX.EntitiesManager[];
+  nepManagers: XX.NEPManager[];
 
   keepProvenance: boolean;
   blankNodeMapping: { [domain: string]: string; };
@@ -32,28 +32,28 @@ export default class Context {
     XX.addBuiltIn(dataset, __dirname + "/../builtin_rules.ttl");
     XX.replaceSynonyms(dataset);
 
-    const substitutionTerms = new XX.SubstitutionTerms(dataset);
+    const substitutionPredicates = new XX.SubstitutionPredicates(dataset);
 
     XX.removeSugarForRules(dataset, RulesForEdges.domain);
-    this.edges      = new XX.EntitiesManager(dataset, substitutionTerms, RulesForEdges);
+    this.edges      = new XX.NEPManager(dataset, substitutionPredicates, RulesForEdges);
     
     XX.removeSugarForRules(dataset, RulesForProperties.domain);
     XX.copyPropertiesValuesToSpecificProperties(dataset);
-    this.properties = new XX.EntitiesManager(dataset, substitutionTerms, RulesForProperties);
+    this.properties = new XX.NEPManager(dataset, substitutionPredicates, RulesForProperties);
 
     XX.removeSugarForRules(dataset, RulesForNodeLabels.domain   );
-    this.nodeLabels = new XX.EntitiesManager(dataset, substitutionTerms, RulesForNodeLabels);
+    this.nodeLabels = new XX.NEPManager(dataset, substitutionPredicates, RulesForNodeLabels);
 
-    this.entityManagers = [this.edges, this.properties, this.nodeLabels];
+    this.nepManagers = [this.edges, this.properties, this.nodeLabels];
 
     this.keepProvenance = trueIfUndefined(XX.keepProvenance(dataset));
     this.blankNodeMapping = XX.readBlankNodeMapping(dataset);
   }
 
   produceMarks(dataset: DStar) {
-    for (const entityManager of this.entityManagers) {
-      entityManager.ruleset.addInitialMarks(dataset);
-      entityManager.refineRules(dataset);
+    for (const nepManager of this.nepManagers) {
+      nepManager.ruleset.addInitialMarks(dataset);
+      nepManager.refineRules(dataset);
     }
   }
 

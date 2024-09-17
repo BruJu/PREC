@@ -51,12 +51,12 @@ function sortArrayByPriority(array: Priorisable[]) {
 ////////////////////////////////////////////////////////////////////////////////
 
 /** Manager for a list of terms that are substituable in a given context. */
-export class SubstitutionTerms {
+export class SubstitutionPredicates {
   data: { key: RDF.Term, value: RDF.Term }[];
   keys: RDF.Term[];
 
   /**
-   * Build a `SubstitutionTerms` with the subsitution terms described in the
+   * Build a `SubstitutionPredicates` with the subsitution terms described in the
    * context dataset.
    * @param dataset A dataset that contains all the quads of the context
    */
@@ -92,8 +92,8 @@ export class SubstitutionTerms {
 ////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
-//  --- ENTITIES MANAGER  ---  ENTITIES MANAGER  ---    ENTITIES MANAGER  ---  
-//  --- ENTITIES MANAGER  ---  ENTITIES MANAGER  ---    ENTITIES MANAGER  ---  
+//  --- NEP MANAGER  ---  NEP MANAGER  ---    NEP MANAGER  ---  
+//  --- NEP MANAGER  ---  NEP MANAGER  ---    NEP MANAGER  ---  
 
 type SplitDef = {
   type: RDF.Term | undefined;
@@ -124,8 +124,8 @@ class SplitNamespace {
    * @param ruleNode The node that represents the rule
    * @param Cls A dict that contains the IRI related to the kind of rules
    * to manage.
-   * @param substitutionTerms The list of substitution
-   * terms known in the context graph.
+   * @param substitutionPredicates The list of substitution predicates known in
+   * the context graph.
    * @returns An object with the data about the node. Throws if the rule is
    * invalid.
    * 
@@ -155,7 +155,7 @@ class SplitNamespace {
     contextDataset: DStar,
     ruleNode: RDF.Quad_Subject,
     Cls: RuleDomain,
-    substitutionTerms: SubstitutionTerms
+    substitutionPredicates: SubstitutionPredicates
   ) {
     let r: SplitDef = {
       type: undefined,
@@ -210,8 +210,8 @@ class SplitNamespace {
           throw errorMalformedRule(`prec:templatedBy should have at most one value.`);
         
         r.materialization.templatedBy = quad.object;
-      } else if (PrecUtils.termIsIn(quad.predicate, substitutionTerms.getKeys())) {
-        let substitutedTerm = substitutionTerms.get(quad.predicate)!;
+      } else if (PrecUtils.termIsIn(quad.predicate, substitutionPredicates.getKeys())) {
+        let substitutedTerm = substitutionPredicates.get(quad.predicate)!;
         r.materialization.substitutions.push([substitutedTerm, quad.object]);
       } else {
         throw errorMalformedRule(`Unknown predicate ${quad.predicate.value}`);
@@ -385,9 +385,9 @@ function findImplicitEntity(searchedTermss: RDF.NamedNode[][], quads: RDF.Quad[]
 }
 
 /**
- * A manager manage every rules of a kind
+ * A manager manage all rules of a kind
  */
-export class EntitiesManager {
+export class NEPManager {
   /** List of rules to apply */
   iriRemapper: FilterProvider[] = [];
 
@@ -397,13 +397,13 @@ export class EntitiesManager {
   ruleset: RuleType;
 
   /**
-   * Build an `EntitiesManager` from the `contextDataset`.
+   * Build a `NEPManager` from the `contextDataset`.
    * @param contextDataset The store that contains the context
-   * @param substitutionTerms The list of term substitutions
+   * @param substitutionPredicates The list of substitutions predicates
    * @param Cls The class that manages an individual rule. It must also
    * contain as static data the list of IRIs related to this rule.
    */
-  constructor(contextDataset: DStar, substitutionTerms: SubstitutionTerms, Cls: RuleType) {
+  constructor(contextDataset: DStar, substitutionPredicates: SubstitutionPredicates, Cls: RuleType) {
     this.ruleset = Cls;
     const domain = Cls.domain;
 
@@ -416,7 +416,7 @@ export class EntitiesManager {
 
     for (const templateName of domain.TemplateBases) {
       // Read the node, ensure it just have a template
-      const splitted = SplitNamespace.splitDefinition(contextDataset, templateName, domain, substitutionTerms);
+      const splitted = SplitNamespace.splitDefinition(contextDataset, templateName, domain, substitutionPredicates);
       SplitNamespace.throwIfNotMaterializationOnly(splitted, templateName);
 
       // The template can be used to compute other templates
@@ -431,7 +431,7 @@ export class EntitiesManager {
     let existingNodes: {[k: string]: RDF.Quad_Subject} = {};
 
     for (let quad of contextDataset.getQuads(null, rdf.type, domain.RuleType, $defaultGraph)) {
-      const splitted = SplitNamespace.splitDefinition(contextDataset, quad.subject, domain, substitutionTerms);
+      const splitted = SplitNamespace.splitDefinition(contextDataset, quad.subject, domain, substitutionPredicates);
       SplitNamespace.throwIfHaveNoCondition(splitted, quad.subject, domain);
 
       let conditions = JSON.stringify(splitted.conditions);

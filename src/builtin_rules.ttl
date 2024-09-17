@@ -117,4 +117,4 @@ prec:CombinedBlankNodes a prec:PropertyTemplate ;
 prec:NodeLabelsTypeOfLabelIRI a prec:NodeLabelTemplate ;
   prec:produces << pvar:node rdf:type pvar:nodeLabelIRI >> .
 
-prec:nodeLabelIRI a prec:SubstitutionTerm ; prec:substitutionTarget pvar:nodeLabelIRI .
+prec:nodeLabelIRI a prec:SubstitutionPredicate ; prec:substitutionTarget pvar:nodeLabelIRI .
