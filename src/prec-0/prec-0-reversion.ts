@@ -1,6 +1,6 @@
 import * as WasmTree from "@bruju/wasm-tree";
 import * as RDF from "@rdfjs/types";
-import { extractAndDeletePropertyValue, ExtractedPropertyValue, getRealLabel, readPropertyName } from "../prec-0/Prec0DatasetUtil";
+import { extractAndDeletePropertyValue, ExtractedPropertyValue, getRealLabel, readPropertyName } from "./prec-0-dataset-util";
 import { hasNamedGraph, isRdfStar, areDisjointTypes, getNodesOfType, getPathsFrom, RDFPathPartial, followThrough, hasExpectedPaths, RDFPath } from "../rdf/path-travelling";
 
 import gremlin from 'gremlin';
@@ -9,6 +9,8 @@ import DriverRemoteConnection = gremlin.driver.DriverRemoteConnection;
 
 import { rdf, rdfs, prec, pgo, $quad, $defaultGraph } from '../PRECNamespace';
 
+//! A set of classes and functions to store the content of a PREC-0 PG to a
+//! "classic" PG API.
 
 export type PseudoPGNode = {
   id: string;
