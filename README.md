@@ -41,7 +41,9 @@ It is possible to import PREC to get access to functions to produce RDF graphs
 from a Gremin or a Neo4j connection. The produced output will be an
 [RDF/JS DatasetCore](https://rdf.js.org/dataset-spec/#datasetcore-interface).
 
-*Example*: In this example, we want to count the number of nodes and edges in
+### Example 1
+
+In this example, we want to count the number of nodes and edges in
 a local instance of a Neo4j property graph. Because simply looking at
 Neo4j Desktop or using properly the Neo4j JS API would be too easy, we are going
 to use PREC and count the nodes and edges in the PG thanks to the produced RDF
@@ -71,6 +73,66 @@ cypherToRDF(driver)
 })
 .finally(() => driver.close());
 ```
+
+### Example 2
+
+You can also provide a [context](https://bruy.at/prec) in the form of a list of RDF/JS quads to drive the conversion.
+
+```js
+// Property Graph API
+import neo4j from 'neo4j-driver';
+// Some useful RDF imports
+import * as N3 from 'n3';
+// PREC
+import { cypherToRDF } from 'prec';
+
+// Example Cypher query:
+// create ( alice :PERSON  { name: 'Alice' } ) -[:KNOWS]-> ( bob :PERSON { name: 'Bobby' } )
+
+// Open the connection
+const auth = neo4j.auth.basic('neo4j', 'password');
+const driver = neo4j.driver('neo4j://localhost:7687/neo4j', auth);
+
+// Context
+const contextText = `
+PREFIX prec: <http://bruy.at/prec#>
+PREFIX pvar: <http://bruy.at/prec-trans#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/#>
+PREFIX : <http://example.org/>
+
+_:PersonRule a prec:PRSCNodeRule ;
+  prec:label "PERSON" ;
+  prec:propertyKey "name" ;
+  prec:produces
+    << pvar:self a foaf:Person >> ,
+    << pvar:self foaf:name "name"^^prec:valueOf >> .
+
+_:CountryRule a prec:PRSCEdgeRule ;
+  prec:label "KNOWS" ;
+  prec:produces
+    << pvar:source foaf:knows pvar:destination >> ,
+    << pvar:self :occurrenceOf << pvar:source foaf:knows pvar:destination >> >> .
+`
+
+const contextQuads = new N3.Parser().parse(contextText);
+
+// Build an RDF graph
+cypherToRDF(driver, contextQuads)
+.then(graph => {
+  // Print the RDF graph
+  console.log(new N3.Writer().quadsToString(graph.getQuads()));
+})
+.finally(() => driver.close());
+
+// Expected output:
+// _:node0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/#Person> .
+// _:node0 <http://xmlns.com/foaf/0.1/#name> "Alice" .
+// _:node0 <http://xmlns.com/foaf/0.1/#knows> _:node1 .
+// _:node1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/#Person> .
+// _:node1 <http://xmlns.com/foaf/0.1/#name> "Bobby" .
+// _:edge0 <http://example.org/occurrenceOf> <<_:node0 <http://xmlns.com/foaf/0.1/#knows> _:node1>> .
+```
+
 
 ## Using PREC with CLI
 
