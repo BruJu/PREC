@@ -60,6 +60,7 @@
     "files": [
         "build/prec.js",
         "build/prec.d.ts",
-        "build/src/**"
+        "build/src/**",
+        "docs/prec-terminology.drawio.png"
     ]
 }
